@@ -1,0 +1,72 @@
+This video demonstrates how to download and install DrRacket, the
+programming environment used throughout this course.
+
+I'll demonstrate installing DrRacket on a Mac system, but the steps
+are similar on Windows and Linux.
+
+To begin, make sure you're connected to the internet and open a web
+browser.
+
+(pause)
+
+Navigate to racket-lang.org.
+
+(pause)
+
+Follow the Download link.
+
+This brings you to a page tailored to your operating system and the
+current version of Racket.
+
+If you need an installer for a different operating system, select it
+from the drop-down menu.
+
+If you need a different version of Racket, follow the "All Versions"
+link.
+
+Since I want the latest version for Mac, I click the installer link.
+
+It may take a few minutes to download depending on your internet
+connection.  After the download is complete, open the file.
+
+(pause)
+
+Copy the Racket folder into your Applications folder.
+
+Once copied, navigate to the Applications folder and launch the
+DrRacket program like you would any other application.
+
+The first time you run DrRacket, you may be prompted to confirm that
+you want to run a program downloaded from the internet.  Press Open.
+
+You should see a short splash screen, after which the main DrRacket
+window is displayed.
+
+DrRacket is a programming environment for several different
+prorgramming languages and you will need to choose a particular
+language before you get started.
+
+Select the menu from the bottom left corner that say "No Language
+Chosen" and select "Choose Language".
+
+We will be using the Teaching Langauge: Beginning Student.  Select
+this option and press OK.
+
+A Run button will appear in the top right corner of the window.
+
+Press Run to activate the Beginning Student Language.  Notice DrRacket
+now displays "Beggining Student" in the lower pane of the window.
+
+You can now exit DrRacket; there is no need to save this file.
+
+At this point DrRacket is installed.  We can close these folders
+and eject the installer disk.
+
+To return to DrRacket, launch like you would any other application.
+
+DrRacket will remember your language selection and start ready to
+develop Beginning Student programs.
+
+Subsequent videoes will show how to actually use DrRacket to develop
+programs.
+
