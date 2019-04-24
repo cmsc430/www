@@ -1,0 +1,43 @@
+.boxedtable {
+
+    background-color: inherit;
+    border-collapse:collapse;
+}
+
+.boxedtable td {
+    border: 1px solid black;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.version {
+visibility:hidden;
+}
+
+.strike {
+    text-decoration: line-through;
+}
+
+.accessibility-link {
+   float: right;
+}
+
+.tocset td a.tocviewselflink {
+   color: black;
+   text-decoration: underline;
+}
+
+.ExerciseBody {
+  padding: 0px 0px 0.5em 10px;
+  border-left-style: solid;
+  border-width: 5px;
+  border-color: orange;
+  background-color: #ffebcd;
+}
+
+.Exercise {
+   font-weight: bold;
+   background-color: #ffb167;
+   padding: 5px 0px 5px 10px;
+   margin-left: -10px;
+}
