@@ -1,0 +1,38 @@
+language: racket
+sudo: required
+dist: trusty
+env:
+  global:
+  - RACKET_DIR=~/racket
+  - WWW_DIR=/fs/www/class
+  matrix:
+  - RACKET_VERSION=7.3
+before_install:
+- git clone https://github.com/greghendershott/travis-racket.git
+- cat travis-racket/install-racket.sh | bash
+- export PATH="${RACKET_DIR}/bin:${PATH}"
+install: 
+before_script:
+- export DISPLAY=:99.0
+- sh -e /etc/init.d/xvfb start
+- sleep 3
+script:
+- cd www
+- make main
+- mv main cmsc430
+- cd ..
+addons:
+  ssh_known_hosts: junkfood.cs.umd.edu
+before_deploy:
+- openssl aes-256-cbc -K $encrypted_38f5f53c68a8_key -iv $encrypted_38f5f53c68a8_iv
+  -in deploy_rsa.enc -out deploy_rsa -d
+- eval "$(ssh-agent -s)"
+- chmod 600 /tmp/deploy_rsa
+- ssh-add /tmp/deploy_rsa
+deploy:
+- provider: script
+  skip_cleanup: true
+  script: rsync -rvzp $TRAVIS_BUILD_DIR/www/cmsc430 dvanhorn@junkfood.cs.umd.edu:$WWW_DIR/fall2019
+  on:
+    branch: master
+    condition: "$RACKET_VERSION='7.3'"
