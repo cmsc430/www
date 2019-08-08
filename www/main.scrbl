@@ -19,7 +19,16 @@
 
 @emph{Fall, @year}
 
+@emph{Lectures: Tuesday & Thursday, 2-3:15pm, CSIC 2117}
+
+@emph{Professor: @link["https://www.cs.umd.edu/~dvanhorn/"]{David Van Horn}}
+
 @image[#:scale 1/2 #:style float-right]{img/wizard.png}
+
+CMSC 430 is an introduction to compilers.  Its major goal is to arm
+students with the ability to design, implement, and extend a
+programming language. Throughout the course, students will design and
+implement several related languages.
 
 
 @bold{Assumptions:} This course assumes you know the material in CMSC
