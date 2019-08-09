@@ -31,6 +31,7 @@
 @verbatim{
 TODO:
 - write about match
+- give an example of a recursive function on lists
 - write style section
 - move OCaml to Racket into lecture notes, keep this minimal
 - give some more examples
@@ -432,7 +433,7 @@ A program is a sequence of definitions or expressions.
   (e ::= (e e ...) (δ e ...) sv x (λ (x ...) e) (quasiquote qq) (match e [p e] ...))
   (qq ::= (qq ...) sv x (unquote e))
   (sv ::= b n s)
-  (p ::= (quasiquote r) b n x s)
+  (p ::= (quasiquote r) b n x s (cons p p))
   (r ::= b n x s (unquote p))
   (s ::= string)
   (b ::= #t #f)
