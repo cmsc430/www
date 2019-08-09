@@ -49,8 +49,8 @@ familiarity with programming in C and Assembly.
 subject to change until the start of the semester.
 
 @;include-section{texts.scrbl}
+@include-section{syllabus.scrbl}
 @include-section{schedule.scrbl}
-
 @include-section{racket.scrbl}
 
 @;include-section{labs.scrbl}
