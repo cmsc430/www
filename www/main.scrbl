@@ -31,9 +31,19 @@ programming language. Throughout the course, students will design and
 implement several related languages.
 
 
+@tabular[#:style 'boxed 
+         #:row-properties '(bottom-border ())
+	 (list (list @bold{Staff} 'cont 'cont 'cont)
+	       (list @bold{Name} @bold{Office} @elem{@bold{E-mail}} @elem{@bold{Hours}})
+	       (list @link["https://www.cs.umd.edu/~dvanhorn"]{David Van Horn} @elem{5250 @IRB} "dvanhorn@cs.umd.edu" "TBD")
+         (list "Sankha Narayan Guria" @elem{TBD @IRB} "sankha@cs.umd.edu" "TBD")
+         (list "Ivan Quiles-Rodriguez" @elem{TBD @IRB} "iquiles@umd.edu" "TBD"))]
+
+
 @bold{Assumptions:} This course assumes you know the material in CMSC
-330.  In particular, you need to know how to program in a typed
-functional programming language like OCaml.
+330 and CMSC 216.  In particular, you need to know how to program in a
+functional programming language like OCaml and some
+familiarity with programming in C and Assembly.
 
 @bold{Disclaimer:} All information on this web page is tentative and
 subject to change until the start of the semester.
