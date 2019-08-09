@@ -30,6 +30,7 @@
 
 @verbatim{
 TODO:
+- write about match
 - write style section
 - move OCaml to Racket into lecture notes, keep this minimal
 - give some more examples
