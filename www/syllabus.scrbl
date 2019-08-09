@@ -11,6 +11,8 @@
 @verbatim{
 TODO:
 * describe Github classroom in computing environment
+* describe exams, final project
+* videos
 }
 
 @section{Prerequisites and Description}
