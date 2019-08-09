@@ -8,9 +8,8 @@
 
 (define IRB (link "https://maps.google.com/maps?q=BRENDAN+IRIBE+CENTER%2c+College+Park%2c+MD&z=18" "IRB"))
 
-#|
-(define m1-date "Oct 1")
-(define m2-date "Nov 5")
-(define final-date "Dec 14, 8--10 am")
-(define elms-url "https://myelms.umd.edu/courses/1227887")
-|#
+
+(define m1-date "TBD")
+(define m2-date "TBD")
+(define final-date "TBD")
+(define elms-url "https://myelms.umd.edu/courses/1267289")
