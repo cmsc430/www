@@ -1,4 +1,4 @@
 #lang scribble/manual
-@title[#:style 'unnumbered]{Assignment 1: Racket Warm-up}
+@title[#:tag "Assignment 1" #:style 'unnumbered]{Assignment 1: Racket Warm-up}
 
 TBD.
