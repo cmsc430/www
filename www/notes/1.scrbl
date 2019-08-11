@@ -9,6 +9,8 @@
 
 @section{Our object language(s): Core Racket}
 
+@include-section{1/ocaml-to-racket.scrbl}
+
 @section{Compiler 0}
 
 
