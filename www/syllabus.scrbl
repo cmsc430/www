@@ -383,3 +383,8 @@ to students, the instructors reserve the right to change any
 information on this syllabus or in other course materials.  Such
 changes will be announced and prominently displayed at the top of the
 syllabus.
+
+@section{Course Materials}
+
+Portions of the course materials are based on material developed by
+Ranjit Jhala and Joe Gibbs Politz.
