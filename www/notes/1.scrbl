@@ -217,14 +217,14 @@ Racket has many advanced features beyond what you saw in 330, but we
 won't be using them; in the few cases we do, I’ll explain them as we
 go.
 
-@section{Our metalanguage: Racket}
+@;section{Our metalanguage: Racket}
 
-@section{Our target language: x86}
+@;section{Our target language: x86}
 
-@section{Our object language(s): Core Racket}
+@;section{Our object language(s): Core Racket}
 
 @include-section{1/ocaml-to-racket.scrbl}
 
-@section{Compiler 0}
+@;section{Compiler 0}
 
 
