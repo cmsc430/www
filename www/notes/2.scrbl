@@ -17,6 +17,34 @@
      (let ((s (file->string (syntax->datum #'fn))))
        #`(filebox (tt n) (form #,s)))]))
 
+@(require (only-in xml cdata)
+         racket/port
+	 racket/system
+         scribble/core
+         scribble/base
+         scribble/html-properties)
+
+@(define (fancy-c s)
+   (fancyverbatim "c" s))
+
+@(define (fancy-nasm s)
+   (fancyverbatim "nasm" s))
+
+@(define (fancy-make s)
+   (fancyverbatim "makefile" s))
+
+@(define (fancyverbatim l . d)
+  (define in (apply string-append (append (list "```" l "\n") d '("\n```"))))
+  (with-input-from-string in
+    (lambda ()
+      (elem #:style (style #f (list 
+                               (xexpr-property
+                                (cdata #f #f
+                                       (with-output-to-string
+                                         (lambda ()
+                                           (system "pandoc --syntax-definition fish.xml --syntax-definition nasm.xml -f markdown -t html"))))
+                                (cdata #f #f ""))))))))
+
 
 @table-of-contents[]
 
@@ -140,11 +168,12 @@ i.e. a well-formed Abscond program, then it runs the intepreter and
 displays the result.
 
 For example:
-@verbatim{
-$ echo 42 > 42.scm
-$ racket abscond-interp.rkt 42.scm
+@filebox[@emph{shell}]{
+@fancyverbatim["fish"]|{
+> echo 42 > 42.scm
+> racket abscond-interp.rkt 42.scm
 42
-}
+}|}
 
 Even though the semantics is obvious, we can provide a formal
 definition of Abscond using @bold{operational semantics}.
@@ -239,22 +268,7 @@ So our compiler will emit x86 assembly code.  To make our lives a bit
 easier, we will write the run-time system in C.  Let's start with the
 Abscond runtime:
 
-@filebox-include[verbatim "main.c" "notes/2/main.c"]
-
-@;{
-@filebox[@tt{main.c}]{
-@verbatim|{
-#include <stdio.h>
-#include <inttypes.h>
-
-int64_t enter_abscond();
-
-int main(int argc, char** argv) {
-  int64_t result = enter_abscond();
-  printf("%" PRId64 "\n", result);
-  return 0;
-}}|}
-}
+@filebox-include[fancy-c "main.c" "notes/2/main.c"]
 
 This C program provides the main entry point for running an Abscond
 program.  It must be linked against an object file that provides the
@@ -271,9 +285,10 @@ The runtime system calls the function and prints the result.
 We can compile the run-time system to get an object file.  We'll use
 @tt{gcc} for compiling C:
 
-@verbatim|{
-$ gcc -m64 -c -o main.o main.c
-}|
+@filebox[@emph{shell}]{
+@fancyverbatim["fish"]|{
+> gcc -m64 -c -o main.o main.c
+}|}
 
 This creates @tt{main.o}; linking this file together with an object
 file that contains @tt{enter_abscond} will produce an executable that,
@@ -287,17 +302,7 @@ example.  Let's say the Abscond program is @racket[42].  What should
 the assembly code for this program look like?  Here we have to learn a
 bit about the x86-64 assembly language.
 
-@; does work with tabs?
-@;{filebox-include[verbatim "42.s" "notes/2/42.s"]}
-
-@filebox[@tt{42.s}]{
-@verbatim|{
-	global _abscond_entry
-	section .text
-_abscond_entry:
-	mov rax, 42
-	ret
-}|}
+@filebox-include[fancy-nasm "42.s" "notes/2/42.s"]
 
 Above is a x86-64 program, written in NASM syntax.  We will be using
 @tt{nasm} as our assembler in this class because it is widely used and
@@ -327,25 +332,29 @@ caller.}
 To assemble this program into an object file, we can run the @tt{nasm}
 assembler:
 
-@verbatim|{
-$ nasm -f macho64 -o 42.o 42.s
-}|
+@filebox[@emph{shell}]{
+@fancyverbatim["fish"]|{
+> nasm -f macho64 -o 42.o 42.s
+}|}
 
 This creates @tt{42.o}, an object file containing the instructions
 above (in binary format).
 
 We can link this file with the run-time to produce an executable file:
 
-@verbatim|{
-$ ld -lc main.o 42.o -o 42.run
+@filebox[@emph{shell}]{
+@fancyverbatim["fish"]|{
+> ld -lc main.o 42.o -o 42.run
 }|
+}
 
 This creates the file @tt{42.run}, an exectuable program:
 
-@verbatim|{
-$ ./42.run
+@filebox[@emph{shell}]{
+@fancyverbatim["fish"]|{
+> ./42.run
 42
-}|
+}|}
 
 We now have a working example.  The remaining work will be to design a
 compiler that takes an Abscond program and emits a file like
@@ -427,31 +436,34 @@ code:
 @filebox-include[codeblock "abscond-compile.rkt" "notes/2/abscond-compile.rkt"]
 
 Example:
-@verbatim|{
-$ racket abscond-compile.rkt 42.scm
+
+@filebox[@emph{shell}]{
+@fancyverbatim["fish"]|{
+> racket abscond-compile.rkt 42.scm
   	global _abscond_entry
 	section .text
 _abscond_entry:
 	mov rax, 42
 	ret
-}|
+}|}
 
 Using a Makefile, we can capture the whole compilation dependencies as:
 
-@filebox-include[verbatim "Makefile" "notes/2/Makefile"]
+@filebox-include[fancy-make "Makefile" "notes/2/Makefile"]
 
 And now compiling Abscond programs is easy-peasy:
 
-@verbatim|{
-$ make 42.run
+@filebox[@emph{shell}]{
+@fancyverbatim["fish"]|{
+> make 42.run
 gcc -c main.c -o main.o
 racket abscond-compile.rkt 42.scm > 42.s
 nasm -f macho64 -o 42.o 42.s
 ld -lc main.o 42.o -o 42.run
 rm 42.o 42.s
-$ ./42.run
+> ./42.run
 42
-}|
+}|}
 
 
 
@@ -475,24 +487,27 @@ adds up to much more efficient programs.  Just to demonstrate, here's
 a single data point measuring the difference between interpreting and
 compiling Abscond programs:
 
-@verbatim|{
-$ time racket abscond-interp.rkt 42.scm
+@filebox[@emph{shell}]{
+@fancyverbatim["fish"]|{
+> time racket abscond-interp.rkt 42.scm
 42
 
 real	0m0.273s
 user	0m0.215s
 sys	0m0.053s
-}|
+}|}
 
 Compiling:
-@verbatim|{
-$ time ./42.run 
+
+@filebox[@emph{shell}]{
+@fancyverbatim["fish"]|{
+> time ./42.run 
 42
 
 real	0m0.014s
 user	0m0.002s
 sys	0m0.004s
-}|
+}|}
 
 
 @;{
