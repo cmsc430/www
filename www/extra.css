@@ -1,3 +1,4 @@
+
 .boxedtable {
 
     background-color: inherit;
@@ -40,4 +41,17 @@ visibility:hidden;
    background-color: #ffb167;
    padding: 5px 0px 5px 10px;
    margin-left: -10px;
+}
+
+.tocset {
+    background-color: hsl(293, 33%, 90%);
+}
+
+a, .toclink, .toptoclink, .tocviewlink, .tocviewselflink, .tocviewtoggle, .plainlink, 
+.techinside, .techoutside:hover, .techinside:hover {
+    color: hsl(296, 100%, 22%);
+}
+
+.boxed {
+    background: linear-gradient(to bottom left, hsl(0, 0%, 99%) 0%, hsl(293, 33%, 90%) 100%);
 }
