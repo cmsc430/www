@@ -1,4 +1,5 @@
 #lang scribble/manual
+@(require "../../fancyverb.rkt")
 @(require scribble/core racket/list)
 @(require (for-label racket))
 @(require redex/reduction-semantics
@@ -14,7 +15,15 @@
 
 @(core-racket '(require racket/match))
 
-@(define-syntax-rule (ex e ...) (examples #:eval core-racket #:label #f e ...))
+@(define-syntax-rule (ex e ...)
+  (filebox (emph "Racket REPL")
+    (examples #:eval core-racket #:label #f e ...)))
+
+@(define (ocaml-repl . s)
+  (filebox (emph "OCaml REPL")
+    (apply fancyverbatim "ocaml" s)))
+
+
 
 @title[#:tag-prefix "notes"]{From OCaml to Racket}
 
@@ -32,8 +41,9 @@
 Let's start by looking at something you know: OCaml.  In OCaml,
 expressions can include literals for numbers, strings, booleans.  Here
 we are using the OCaml read-eval-print-loop (REPL) to type in examples
-and evaluate their results: 
-@verbatim{
+and evaluate their results:
+
+@ocaml-repl{
 # 8;;
 - : int = 8
 # "ocaml";;
@@ -69,7 +79,7 @@ the same so far.
 
 OCaml uses an infix notation for writing operations.
 
-@verbatim{
+@ocaml-repl{
 # 1 + 2 * 2;;
 - : int = 5
 }
@@ -77,7 +87,7 @@ OCaml uses an infix notation for writing operations.
 The order of operations follows the usual mathematical precendence
 rules (which you must memorize), or you can use parentheses to indicate grouping:
 
-@verbatim{
+@ocaml-repl{
 # 1 + (2 * 2);;
 - : int = 5
 # (1 + 2) * 2;;
@@ -86,7 +96,7 @@ rules (which you must memorize), or you can use parentheses to indicate grouping
 
 Extraneous parenthesis are fine:
 
-@verbatim{
+@ocaml-repl{
 # (((1))) + ((2 * 2));;
 - : int = 5
 }
@@ -130,7 +140,7 @@ applied, hence the error.
 
 OCaml also has a notation for writing functions:
 
-@verbatim{
+@ocaml-repl{
 # fun x y -> x + y;;
 - : int -> int -> int = <fun>
 }
@@ -140,7 +150,7 @@ produces their sum.
 
 To apply it, we can write it justapoxed with arguments:
 
-@verbatim{
+@ocaml-repl{
 # (fun x y -> x + y) 3 4;;
 - : int = 7
 }
@@ -153,7 +163,7 @@ Applying such a function to fewer than 2 arguments will do a
 @emph{partial} function application, which will produce a function
 that take the remaining arguments:
 
-@verbatim{
+@ocaml-repl{
 # (fun x y -> x + y) 3;;
 - : int -> int = <fun>
 }
@@ -161,14 +171,14 @@ that take the remaining arguments:
 To encode functions that must be given two arguments, a tuple can be
 used:
 
-@verbatim{
+@ocaml-repl{
 # fun (x, y) -> x + y;;
 - : int * int -> int = <fun>
 }
 
 To apply such a function, it must be given a pair of integers:
 
-@verbatim{
+@ocaml-repl{
 # (fun (x, y) -> x + y) (3, 4);;
 - : int = 7
 }
@@ -176,7 +186,7 @@ To apply such a function, it must be given a pair of integers:
 The use of @tt{(x, y)} here in the function parameters is actually a
 @emph{pattern}.  This can be understood as shorthand for:
 
-@verbatim{
+@ocaml-repl{
 # fun p -> match p with (x, y) -> x + y;;
 - : int * int -> int = <fun>
 }
@@ -224,7 +234,7 @@ error (and not perform partial function application):
 At the top-level in OCaml, variables can be defined with @tt{let} and
 @tt{let rec}:
 
-@verbatim{
+@ocaml-repl{
 # let x = 3;; 
 val x : int = 3
 # let y = 4;;
@@ -258,7 +268,7 @@ In Racket, variables are defined with the @racket[define] form:
 
 In OCaml, function definitions can be written as:
 
-@verbatim{
+@ocaml-repl{
 # let rec fact n = 
     match n with 
     | 0 -> 1 
@@ -286,7 +296,7 @@ OCaml has a built-in list datatype.  The empty list is written @tt{[]}
 and @tt{::} is an operation for ``consing'' an element on to a list.
 So to build a list with three integer elements, 1, 2, and 3, you'd write:
 
-@verbatim{
+@ocaml-repl{
 # 1 :: 2 :: 3 :: [];;
 - : int list = [1; 2; 3]
 }
@@ -306,7 +316,7 @@ The notation @racket[(list 1 2 3)] is shorthand for the above.
 There is a slight difference here.  For one, OCaml lists must be @emph{homogeneous}.  You can have a list
 of strings or a list of numbers, but you can't have a list of strings @emph{and} numbers.
 
-@verbatim{
+@ocaml-repl{
 # ["a"; 3];;
 Error: This expression has type int but an expression was expected of type
          string
@@ -338,7 +348,7 @@ polymorphic variants.  (This is not the idiomatic OCaml programming,
 which would instead use a plain old variant and datatype, but it
 corresponds more closely to the style of Racket code we will write.)
 
-@verbatim{
+@ocaml-repl{
 # `Leaf;;
 - : [> `Leaf ] = `Leaf
 # `Node (5, `Leaf, `Leaf);;
@@ -347,14 +357,14 @@ corresponds more closely to the style of Racket code we will write.)
 
 We can define a datatype for binary trees:
 
-@verbatim{
+@ocaml-repl{
 # type bt = [ `Leaf | `Node of int * bt * bt ];;
 type bt = [ `Leaf | `Node of int * bt * bt ]
 }
 
 And functions operating on binary trees can be defined by pattern matching:
 
-@verbatim{
+@ocaml-repl{
 # let rec sum bt = 
     match bt with
     | `Leaf -> 0
@@ -364,7 +374,7 @@ val sum : ([< `Leaf | `Node of int * 'a * 'a ] as 'a) -> int = <fun>
 }
 
 To use the @tt{sum} function:
-@verbatim{
+@ocaml-repl{
 # sum (`Node (5, `Node (7, `Leaf, `Leaf), `Leaf));;
 - : int = 12
 }
