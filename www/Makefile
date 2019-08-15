@@ -9,6 +9,7 @@ test: clean
 
 $(course):
 	scribble --htmls ++style extra.css \
+		++style fancyverb.css \
 		++extra accessibility.js \
 		++xref-in setup/xref load-collections-xref \
 		--redirect-main http://docs.racket-lang.org/ \
