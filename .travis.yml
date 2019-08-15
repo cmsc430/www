@@ -17,7 +17,8 @@ before_install:
 - mkdir -p "$PANDOC"
 - if [[ ! -f "$PANDOC/pandoc.deb" ]]; then curl -L "$PANDOC_DEB" > "$PANDOC/pandoc.deb" && dpkg -x "$PANDOC/pandoc.deb" "$PANDOC"; fi
 - export PATH="$PANDOC/usr/bin:$PATH"
-- if [[ ! -f "$RACKET_DIR" ]]; then git clone https://github.com/greghendershott/travis-racket.git && cat travis-racket/install-racket.sh | bash; fi
+- if [[ ! -f "$RACKET_DIR" ]]; then git clone https://github.com/greghendershott/travis-racket.git; fi
+- if [[ ! -f "$RACKET_DIR" ]]; then git cat travis-racket/install-racket.sh | bash; fi
 - export PATH="${RACKET_DIR}/bin:${PATH}"
 install: 
 before_script:
