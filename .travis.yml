@@ -7,6 +7,9 @@ env:
   - WWW_DIR=/fs/www/class
   matrix:
   - RACKET_VERSION=7.3
+addons:
+  apt_packages:
+    - pandoc
 before_install:
 - git clone https://github.com/greghendershott/travis-racket.git
 - cat travis-racket/install-racket.sh | bash
