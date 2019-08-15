@@ -5,19 +5,19 @@ env:
   global:
   - RACKET_DIR=~/racket
   - WWW_DIR=/fs/www/class
-  - PANDOC="$HOME/.pandoc"
+  - PANDOC=~/.pandoc
   - PANDOC_DEB="https://github.com/jgm/pandoc/releases/download/2.7.3/pandoc-2.7.3-1-amd64.deb"
   matrix:
   - RACKET_VERSION=7.3
 cache:
   directories:
     - "$PANDOC"
+    - "$RACKET_DIR"
 before_install:
 - mkdir -p "$PANDOC"
 - if [[ ! -f "$PANDOC/pandoc.deb" ]]; then curl -L "$PANDOC_DEB" > "$PANDOC/pandoc.deb" && dpkg -x "$PANDOC/pandoc.deb" "$PANDOC"; fi
 - export PATH="$PANDOC/usr/bin:$PATH"
-- git clone https://github.com/greghendershott/travis-racket.git
-- cat travis-racket/install-racket.sh | bash
+- if [[ ! -f "$RACKET_DIR" ]]; then git clone https://github.com/greghendershott/travis-racket.git && cat travis-racket/install-racket.sh | bash; fi
 - export PATH="${RACKET_DIR}/bin:${PATH}"
 install: 
 before_script:
