@@ -1,7 +1,8 @@
 #lang scribble/manual
 @title[#:style 'unnumbered]{Week 2: The First Few Compilers}
 @(require redex/reduction-semantics
-          redex/pict (only-in pict scale))
+          redex/pict (only-in pict scale)
+	  "../fancyverb.rkt")
 
 @(require scribble/examples racket/sandbox)
 @(define ev
@@ -16,35 +17,6 @@
     [(_ form n fn)
      (let ((s (file->string (syntax->datum #'fn))))
        #`(filebox (tt n) (form #,s)))]))
-
-@(require (only-in xml cdata)
-         racket/port
-	 racket/system
-         scribble/core
-         scribble/base
-         scribble/html-properties)
-
-@(define (fancy-c s)
-   (fancyverbatim "c" s))
-
-@(define (fancy-nasm s)
-   (fancyverbatim "nasm" s))
-
-@(define (fancy-make s)
-   (fancyverbatim "makefile" s))
-
-@(define (fancyverbatim l . d)
-  (define in (apply string-append (append (list "```" l "\n") d '("\n```"))))
-  (with-input-from-string in
-    (lambda ()
-      (elem #:style (style #f (list 
-                               (xexpr-property
-                                (cdata #f #f
-                                       (with-output-to-string
-                                         (lambda ()
-                                           (system "pandoc --syntax-definition fish.xml --syntax-definition nasm.xml -f markdown -t html"))))
-                                (cdata #f #f ""))))))))
-
 
 @table-of-contents[]
 
