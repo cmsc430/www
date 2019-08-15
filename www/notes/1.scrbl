@@ -1,5 +1,5 @@
 #lang scribble/manual
-@title[#:style 'unnumbered]{Week 1: Introduction}
+@title[#:style 'unnumbered #:tag "week1"]{Week 1: Introduction}
 
 @table-of-contents[]
 
