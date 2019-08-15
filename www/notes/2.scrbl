@@ -1,5 +1,5 @@
 #lang scribble/manual
-@title[#:style 'unnumbered]{Week 2: The First Few Compilers}
+@title[#:style 'unnumbered #:tag "week2"]{Week 2: The First Few Compilers}
 @(require redex/reduction-semantics
           redex/pict (only-in pict scale)
 	  "../fancyverb.rkt")

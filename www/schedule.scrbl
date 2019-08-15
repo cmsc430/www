@@ -17,11 +17,11 @@
          #:row-properties '(bottom-border)
          (list (list @bold{Week} @bold{Tuesday} @bold{Thursday})
                (list @wk{Aug 27} 
-                     @elem{Overview, Racket}
+                     @secref["week1"]
                      'cont)
                
                (list @wk{Sep 3} 
-                     @elem{A First Compiler}
+                     @secref["week2"]
                      'cont)
                
                (list @wk{Sep 10} 
