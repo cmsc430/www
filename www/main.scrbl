@@ -36,7 +36,7 @@ implement several related languages.
 	 (list (list @bold{Staff} 'cont 'cont 'cont)
 	       (list @bold{Name} @bold{Office} @elem{@bold{E-mail}} @elem{@bold{Hours}})
 	       (list @link["https://www.cs.umd.edu/~dvanhorn"]{David Van Horn} @elem{5250 @IRB} "dvanhorn@cs.umd.edu" "TBD")
-               (list "Sankha Narayan Guria" @elem{TBD @IRB} "sankha@cs.umd.edu" "TBD")
+               (list @link["https://sankhs.com/"]{Sankha Narayan Guria} @elem{TBD @IRB} "sankha@cs.umd.edu" "TBD")
                (list "Tasnim Kabir" @elem{TBD @IRB} "tkabir1@cs.umd.edu" "TBD")
                (list "Ivan Quiles-Rodriguez" @elem{TBD @IRB} "iquiles@umd.edu" "TBD")
                (list "John Kastner" @elem{TBD @IRB} "kastner@umd.edu" "TBD"))]
