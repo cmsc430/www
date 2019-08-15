@@ -37,7 +37,8 @@ implement several related languages.
 	       (list @bold{Name} @bold{Office} @elem{@bold{E-mail}} @elem{@bold{Hours}})
 	       (list @link["https://www.cs.umd.edu/~dvanhorn"]{David Van Horn} @elem{5250 @IRB} "dvanhorn@cs.umd.edu" "TBD")
          (list "Sankha Narayan Guria" @elem{TBD @IRB} "sankha@cs.umd.edu" "TBD")
-         (list "Ivan Quiles-Rodriguez" @elem{TBD @IRB} "iquiles@umd.edu" "TBD"))]
+         (list "Ivan Quiles-Rodriguez" @elem{TBD @IRB} "iquiles@umd.edu" "TBD"))
+	 (list "John Kastner" @elem{TBD @IRB} "kastner@umd.edu" "TBD")]
 
 
 @bold{Assumptions:} This course assumes you know the material in CMSC
