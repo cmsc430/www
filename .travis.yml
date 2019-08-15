@@ -9,6 +9,7 @@ env:
   - RACKET_VERSION=7.3
 before_install:
 - sudo apt-get install -y pandoc
+- pandoc -v
 - git clone https://github.com/greghendershott/travis-racket.git
 - cat travis-racket/install-racket.sh | bash
 - export PATH="${RACKET_DIR}/bin:${PATH}"
