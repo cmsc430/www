@@ -5,6 +5,9 @@
          scribble/base
          scribble/html-properties)
 
+(define PANDOC
+  "pandoc --syntax-definition fish.xml --syntax-definition nasm.xml --syntax-definition ocaml.xml -f markdown -t html")
+
 (define (fancy-c s)
   (fancyverbatim "c" s))
 
@@ -23,5 +26,5 @@
                                 (cdata #f #f
                                        (with-output-to-string
                                          (lambda ()
-                                           (system "pandoc --syntax-definition fish.xml --syntax-definition nasm.xml -f markdown -t html"))))
+                                           (system PANDOC))))
                                 (cdata #f #f ""))))))))
