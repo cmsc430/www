@@ -12,13 +12,14 @@ env:
 cache:
   directories:
     - "$PANDOC"
+    - "$RACKET_DIR"
     - travis-racket
 before_install:
 - mkdir -p "$PANDOC"
 - if [[ ! -f "$PANDOC/pandoc.deb" ]]; then curl -L "$PANDOC_DEB" > "$PANDOC/pandoc.deb" && dpkg -x "$PANDOC/pandoc.deb" "$PANDOC"; fi
 - export PATH="$PANDOC/usr/bin:$PATH"
 - if [[ ! -f "travis-racket/install-racket.sh" ]]; then git clone https://github.com/greghendershott/travis-racket.git; fi
-- cat travis-racket/install-racket.sh | bash
+- if [[ ! -d "$RACKET_DIR/bin" ]]; then cat travis-racket/install-racket.sh | bash; fi
 - export PATH="${RACKET_DIR}/bin:${PATH}"
 install: 
 before_script:
