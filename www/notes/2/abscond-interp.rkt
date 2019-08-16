@@ -11,5 +11,3 @@
       (unless (integer? p)
         (error "syntax error" p))
       (writeln (abscond-interp p)))))
-
-
