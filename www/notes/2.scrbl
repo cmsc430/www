@@ -2,7 +2,8 @@
 @title[#:style 'unnumbered #:tag "week2"]{Week 2: The First Few Compilers}
 @(require redex/reduction-semantics
           redex/pict (only-in pict scale)
-	  "../fancyverb.rkt")
+	  "../fancyverb.rkt"
+	  "../utils.rkt")
 
 @(require scribble/examples racket/sandbox)
 @(define ev
@@ -17,6 +18,12 @@
     [(_ form n fn)
      (let ((s (file->string (syntax->datum #'fn))))
        #`(filebox (tt n) (form #,s)))]))
+
+@(define (shellbox . s)
+   (parameterize ([current-directory (build-path (current-directory) "notes/2/")])
+     (filebox (emph "shell")
+              (fancyverbatim "fish" (apply shell s)))))
+
 
 @table-of-contents[]
 
@@ -140,12 +147,8 @@ i.e. a well-formed Abscond program, then it runs the intepreter and
 displays the result.
 
 For example:
-@filebox[@emph{shell}]{
-@fancyverbatim["fish"]|{
-> echo 42 > 42.scm
-> racket abscond-interp.rkt 42.scm
-42
-}|}
+@shellbox["echo 42 > 42.scm" "racket abscond-interp.rkt 42.scm"]
+
 
 Even though the semantics is obvious, we can provide a formal
 definition of Abscond using @bold{operational semantics}.
@@ -257,10 +260,7 @@ The runtime system calls the function and prints the result.
 We can compile the run-time system to get an object file.  We'll use
 @tt{gcc} for compiling C:
 
-@filebox[@emph{shell}]{
-@fancyverbatim["fish"]|{
-> gcc -m64 -c -o main.o main.c
-}|}
+@shellbox["gcc -m64 -c -o main.o main.c"]
 
 This creates @tt{main.o}; linking this file together with an object
 file that contains @tt{enter_abscond} will produce an executable that,
@@ -304,29 +304,22 @@ caller.}
 To assemble this program into an object file, we can run the @tt{nasm}
 assembler:
 
-@filebox[@emph{shell}]{
-@fancyverbatim["fish"]|{
-> nasm -f macho64 -o 42.o 42.s
-}|}
+@shellbox[
+  (format "nasm -f ~a -o 42.o 42.s"
+          (case (system-type 'os)
+            [(macosx) "macho64"]
+            [(unix) "elf64"]))]
 
 This creates @tt{42.o}, an object file containing the instructions
 above (in binary format).
 
 We can link this file with the run-time to produce an executable file:
 
-@filebox[@emph{shell}]{
-@fancyverbatim["fish"]|{
-> ld -lc main.o 42.o -o 42.run
-}|
-}
+@shellbox["ld -lc main.o 42.o -o 42.run"]
 
 This creates the file @tt{42.run}, an exectuable program:
 
-@filebox[@emph{shell}]{
-@fancyverbatim["fish"]|{
-> ./42.run
-42
-}|}
+@shellbox["./42.run"]
 
 We now have a working example.  The remaining work will be to design a
 compiler that takes an Abscond program and emits a file like
@@ -409,15 +402,7 @@ code:
 
 Example:
 
-@filebox[@emph{shell}]{
-@fancyverbatim["fish"]|{
-> racket abscond-compile.rkt 42.scm
-  	global _abscond_entry
-	section .text
-_abscond_entry:
-	mov rax, 42
-	ret
-}|}
+@shellbox["racket abscond-compile.rkt 42.scm"]
 
 Using a Makefile, we can capture the whole compilation dependencies as:
 
@@ -425,19 +410,7 @@ Using a Makefile, we can capture the whole compilation dependencies as:
 
 And now compiling Abscond programs is easy-peasy:
 
-@filebox[@emph{shell}]{
-@fancyverbatim["fish"]|{
-> make 42.run
-gcc -c main.c -o main.o
-racket abscond-compile.rkt 42.scm > 42.s
-nasm -f macho64 -o 42.o 42.s
-ld -lc main.o 42.o -o 42.run
-rm 42.o 42.s
-> ./42.run
-42
-}|}
-
-
+@shellbox["make 42.run" "./42.run"]
 
 It's worth taking stock of what we have at this point, compared to the
 interpreter approach.  To run the interpreter requires all of Racket
@@ -459,27 +432,11 @@ adds up to much more efficient programs.  Just to demonstrate, here's
 a single data point measuring the difference between interpreting and
 compiling Abscond programs:
 
-@filebox[@emph{shell}]{
-@fancyverbatim["fish"]|{
-> time racket abscond-interp.rkt 42.scm
-42
-
-real	0m0.273s
-user	0m0.215s
-sys	0m0.053s
-}|}
+@shellbox["time racket abscond-interp.rkt 42.scm"]
 
 Compiling:
 
-@filebox[@emph{shell}]{
-@fancyverbatim["fish"]|{
-> time ./42.run 
-42
-
-real	0m0.014s
-user	0m0.002s
-sys	0m0.004s
-}|}
+@shellbox["time ./42.run"]
 
 
 @;{

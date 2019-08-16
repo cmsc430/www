@@ -1,5 +1,6 @@
+
 #lang racket
-(provide exercise float-right panopto-vid)
+(provide exercise float-right panopto-vid shell)
 (require scribble/base scribble/core scribble/html-properties)
 
 (define exercise-body-style
@@ -32,3 +33,24 @@
                             (allowfullscreen . "")
                             (style . "padding: 0px; border: 1px solid #464646;")))))))
 
+;; calls proc and produces stdout appendde w/ stderr as a string
+(define (with-output-to-string/err proc)
+  (define os "")
+  (define es "")
+  (set! os (call-with-output-string
+            (lambda (o)
+              (set! es
+                    (call-with-output-string
+                     (λ (e)
+                       (parameterize ([current-output-port o]
+                                      [current-error-port e])
+                         (proc))))))))
+  (string-append os es))
+
+(define (shell . cs)
+  (match cs
+    ['() ""]
+    [(cons c cs)
+     (string-append "> " c "\n"
+                    (with-output-to-string/err (λ () (system #:set-pwd? #t c)))
+                    (apply shell cs))]))
