@@ -1,5 +1,5 @@
 %.run: %.o main.o
-	ld -lc main.o $< -o $@
+	gcc main.o $< -o $@
 
 main.o: main.c
 	gcc -c main.c -o main.o
