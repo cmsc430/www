@@ -19,6 +19,7 @@ before_install:
 - git clone https://github.com/greghendershott/travis-racket.git
 - cat travis-racket/install-racket.sh | bash
 - export PATH="${RACKET_DIR}/bin:${PATH}"
+- sudo apt-get install -y nasm
 install: 
 before_script:
 - export DISPLAY=:99.0
