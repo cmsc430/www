@@ -29,7 +29,7 @@ before_script:
 script:
 - cd www
 - make main
-- test -f notes/2/42.run
+- -test -f notes/2/42.run
 - mv main cmsc430
 - cd ..
 
