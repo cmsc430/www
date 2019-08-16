@@ -5,12 +5,17 @@
 	  "../fancyverb.rkt"
 	  "../utils.rkt")
 
+@(require (for-label racket))
+
 @(require scribble/examples racket/sandbox)
 @(define ev
-  (parameterize ([sandbox-output 'string]
-                 [sandbox-error-output 'string]
-                 [sandbox-memory-limit 50])
-    (make-evaluator 'racket #:requires '("notes/2/asm-printer.rkt"))))
+  (call-with-trusted-sandbox-configuration
+    (lambda ()
+     (parameterize ([sandbox-output 'string]
+                    [sandbox-error-output 'string]
+                    [sandbox-memory-limit 50]
+		    [current-directory  (build-path (current-directory-for-user) "notes/2/")])
+       (make-evaluator 'racket #:requires '("asm-printer.rkt" "asm-interp.rkt" rackunit))))))
 
 @(require (for-syntax racket/base racket/file))
 @(define-syntax (filebox-include stx)
@@ -25,8 +30,6 @@
      (filebox (emph "shell")
               (fancyverbatim "fish" (apply shell s)))))
 
-
-@;{ Have to compile 42.s (at expand time) before listing it }
 @(require (for-syntax "../utils.rkt"))
 @(define-syntax (shell-expand stx)
    (syntax-case stx ()
@@ -35,6 +38,7 @@
         (begin (apply shell (syntax->datum #'(s ...)))
 	       #'(void)))]))
 
+@;{ Have to compile 42.s (at expand time) before listing it }
 @(shell-expand "echo 42 > 42.scm" "racket abscond-compile.rkt 42.scm > 42.s")
 
 @table-of-contents[]
@@ -137,26 +141,13 @@ produces it's meaning:
 We can even write a command line program for interpreting Abscond programs.
 Save the following in a file @tt{abscond-interp.rkt}:
 
-@filebox[@tt{abscond-interp.rkt}]{
-@codeblock|{
-#lang racket
+@filebox-include[codeblock "abscond-interp.rkt" "notes/2/abscond-interp.rkt"]
 
-; Expr -> Integer
-; Interpreter for Abscond
-(define (abscond-interp e)
-  e)
-
-(with-input-from-file (vector-ref (current-command-line-arguments) 0)
-  (λ ()
-    (let ((p (read)))
-      (unless (integer? p) (error "syntax error" p))
-      (displayln (abscond-interp p)))))
-}|}
-
-The details here aren't important, but this program @racket[read]s the
-contents of a file given on the command line.  If it's an integer,
-i.e. a well-formed Abscond program, then it runs the intepreter and
-displays the result.
+The details here aren't important (and you won't be asked to write
+this kind of code), but this program @racket[read]s the contents of a
+file given on the command line.  If it's an integer, i.e. a
+well-formed Abscond program, then it runs the intepreter and displays
+the result.
 
 For example:
 @shellbox["echo 42 > 42.scm" "racket abscond-interp.rkt 42.scm"]
@@ -205,9 +196,9 @@ Characterizing the correctness of the interpreter boils down to the
 following statement:
 
 
-For all expressions @racket[e] and integers @racket[i], if
-(@racket[e],@racket[i]) in @render-term[A eval], then
-@racket[(abscond-interp e)] equals @racket[i].
+@bold{Interpreter Correctness}: @emph{For all expressions @racket[e]
+and integers @racket[i], if (@racket[e],@racket[i]) in @render-term[A
+eval], then @racket[(abscond-interp e)] equals @racket[i].}
 
 We now have a complete (if overly simple) programming language with an
 operational semantics and an interpreter, which is (obviously)
@@ -449,6 +440,107 @@ compiling Abscond programs:
 Compiling:
 
 @shellbox["time -p ./42.run"]
+
+@subsection{But is it @emph{Correct}?}
+
+At this point, we have a compiler for Abscond.  But is it correct?
+
+Ultimately, we want the compiler to capture the operational semantics
+of our language (the ground truth of what programs mean).  However,
+from a practical stand-point, relating the compiler to the intepreter
+may be more straightforward.  What's nice about the interpreter is we
+can run it, so we can @emph{test} the compiler against the
+interpreter.  Moreover, since we claimed the interpreter is correct
+(wrt to the semantics), testing the compiler against the interpreter
+is a way of testing it against the semantics, indirectlyl.  If the
+compiler and interpreter agree on all possible inputs, then the
+compiler is correct with respect to the semantics since it is
+equivalent to the interpreter, and the interpreter is correct.
+
+So, in this setting, means we have the following equivaluence:
+
+@verbatim|{
+(interp-abscond e) = (interp-asm (compile-abscond e))
+}|
+
+But we don't actually have @racket[interpret-asm], a function that
+interprets the Asm code we generate.  Instead we printed the code and
+had @tt{gcc} assembly and link it into an executable, which the OS
+could run.  But this is a minor distinction.  We can write
+@racket[interp-asm] to interact with the OS to do all of these steps.
+
+Here's such a definition.  (Again: the details here are not important
+and we won't ask you to write or understand this code, but roughly,
+all it's doing is writing emitting assembly (to a temporary file) and
+calling @tt{make} to build the executable, then running it and parsing
+the result:
+
+@filebox-include[codeblock "asm-interp.rkt" "notes/2/asm-interp.rkt"]
+
+This is actually a handy tool to have for experimenting with
+compilation within Racket:
+
+@examples[#:eval ev
+(interp-asm (compile-abscond 42))
+(interp-asm (compile-abscond 37))
+(interp-asm (compile-abscond -8))
+]
+
+This of course agrees with what we will get from the interpreter:
+
+@examples[#:eval ev
+(abscond-interp 42)
+(abscond-interp 37)
+(abscond-interp -8)
+]
+
+We can turn this in a @emph{property-based test}, i.e. a function that
+computes a test expressing a single instance of our compiler
+correctness claim:
+@examples[#:eval ev
+(define (check-compiler e)
+  (check-eqv? (abscond-interp e)
+              (interp-asm (compile-abscond e))))
+
+(check-compiler 42)
+(check-compiler 37)
+(check-compiler -8)
+]
+
+This is a powerful testing technique when combined with random
+generation.  Since our correctness claim should hold for @emph{all}
+Abscond programs, we can randomly generate @emph{any} Abscond program
+and check that it holds.
+
+@examples[#:eval ev
+(check-compiler (random 100))
+
+; test 10 random programs
+(for ([i (in-range 10)])
+  (check-compiler (random 10000)))
+]
+
+The last expression is taking 10 samples from the space of Abscond
+programs in @math{[0,10000)} and checking the compiler correctness
+claim on them.  If the claim doesn't hold for any of these samples, a
+test failure would be reported.
+
+Finding an input to @racket[check-compiler] that fails would
+@emph{refute} the compiler correctness claim and mean that we have a
+bug.  On the other hand we gain more confidence with each passing
+test.  While passing tests increase our confidence, we cannot test all
+possible inputs this way, so we can't be sure our compiler is correct
+by testing alone.  To really be sure, we'd need to write a
+@emph{proof}, but that's beyond the scope of this class.
+
+At this point we have not found a counter-example to compiler
+correctness.  It's tempting to declare victory.  But... can you think
+of a valid input (i.e. some integer) that might refute the correctness
+claim?
+
+Think on it.
+
+  
 
 
 @;{
