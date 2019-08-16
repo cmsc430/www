@@ -25,6 +25,10 @@
               (fancyverbatim "fish" (apply shell s)))))
 
 
+@;{ Have to compile 42.s before listing it }
+
+@(void (shell "echo 42 > 42.s" "racket abscond-compile.rkt 42.scm"))
+
 @table-of-contents[]
 
 @section{Let's Make a Programming Language!}
