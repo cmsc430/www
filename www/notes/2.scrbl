@@ -19,15 +19,23 @@
      (let ((s (file->string (syntax->datum #'fn))))
        #`(filebox (tt n) (form #,s)))]))
 
+
 @(define (shellbox . s)
    (parameterize ([current-directory (build-path (current-directory) "notes/2/")])
      (filebox (emph "shell")
               (fancyverbatim "fish" (apply shell s)))))
 
 
-@;{ Have to compile 42.s before listing it }
+@;{ Have to compile 42.s (at expand time) before listing it }
+@(require (for-syntax "../utils.rkt"))
+@(define-syntax (shell-expand stx)
+   (syntax-case stx ()
+     [(_ s ...)
+      (parameterize ([current-directory (build-path (current-directory) "notes/2/")])
+        (begin (apply shell (syntax->datum #'(s ...)))
+	       #'(void)))]))
 
-@(void (shell "echo 42 > 42.s" "racket abscond-compile.rkt 42.scm"))
+@(shell-expand "echo 42 > 42.scm" "racket abscond-compile.rkt 42.scm > 42.s")
 
 @table-of-contents[]
 
@@ -278,7 +286,8 @@ example.  Let's say the Abscond program is @racket[42].  What should
 the assembly code for this program look like?  Here we have to learn a
 bit about the x86-64 assembly language.
 
-@filebox-include[fancy-nasm "42.s" "notes/2/42.s"]
+@;FIXME
+@;filebox-include[fancy-nasm "42.s" "notes/2/42.s"]
 
 Above is a x86-64 program, written in NASM syntax.  We will be using
 @tt{nasm} as our assembler in this class because it is widely used and
