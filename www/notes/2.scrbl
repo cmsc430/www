@@ -286,8 +286,7 @@ example.  Let's say the Abscond program is @racket[42].  What should
 the assembly code for this program look like?  Here we have to learn a
 bit about the x86-64 assembly language.
 
-@;FIXME
-@;filebox-include[fancy-nasm "42.s" "notes/2/42.s"]
+@filebox-include[fancy-nasm "42.s" "notes/2/42.s"]
 
 Above is a x86-64 program, written in NASM syntax.  We will be using
 @tt{nasm} as our assembler in this class because it is widely used and
@@ -328,7 +327,7 @@ above (in binary format).
 
 We can link this file with the run-time to produce an executable file:
 
-@shellbox["ld -lc main.o 42.o -o 42.run"]
+@shellbox["gcc main.o 42.o -o 42.run"]
 
 This creates the file @tt{42.run}, an exectuable program:
 
@@ -445,11 +444,11 @@ adds up to much more efficient programs.  Just to demonstrate, here's
 a single data point measuring the difference between interpreting and
 compiling Abscond programs:
 
-@shellbox["time racket abscond-interp.rkt 42.scm"]
+@shellbox["time -p racket abscond-interp.rkt 42.scm"]
 
 Compiling:
 
-@shellbox["time ./42.run"]
+@shellbox["time -p ./42.run"]
 
 
 @;{
