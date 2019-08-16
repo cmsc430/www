@@ -6,7 +6,10 @@
          scribble/html-properties)
 
 (define PANDOC
-  "pandoc --syntax-definition fish.xml --syntax-definition nasm.xml --syntax-definition ocaml.xml -f markdown -t html")
+  (format "pandoc ~a -f markdown -t html"
+          (apply string-append
+                 (map (λ (f) (format "--syntax-definition ~a " (build-path (current-directory-for-user) f)))
+                      '("fish.xml" "nasm.xml" "ocaml.xml")))))
 
 (define (fancy-c s)
   (fancyverbatim "c" s))
