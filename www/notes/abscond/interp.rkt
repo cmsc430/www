@@ -1,5 +1,5 @@
 #lang racket
-(provide (all-defined))
+(provide (all-defined-out))
 
 ; Expr -> Integer
 ; Interpreter for Abscond

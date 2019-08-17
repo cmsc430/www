@@ -1,6 +1,6 @@
 #lang racket
 (provide (all-defined-out))
-(require "asm-printer.rkt")
+(require "printer.rkt")
 
 ;; Asm -> Integer
 ;; Interpret (by assemblying, linking, and exec'ing) x86-64 code
