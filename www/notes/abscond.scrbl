@@ -6,6 +6,10 @@
 	  "../fancyverb.rkt"
 	  "../utils.rkt")
 
+@(define saved-cwd (current-directory))
+@(define notes (build-path (current-directory) "notes"))
+@(current-directory notes)
+
 @(require scribble/examples racket/sandbox)
 @(define ev
   (call-with-trusted-sandbox-configuration
@@ -19,13 +23,14 @@
 @(require (for-syntax racket/base racket/file))
 @(define-syntax (filebox-include stx)
   (syntax-case stx ()
-    [(_ form n fn)
-     (let ((s (file->string (syntax->datum #'fn))))
-       #`(filebox (tt n) (form #,s)))]))
+    [(_ form fn)
+    (parameterize ([current-directory (build-path (current-directory) "notes")])
+      (let ((s (file->string (syntax->datum #'fn))))
+        #`(filebox (link (string-append "code/" fn) (tt fn)) (form #,s))))]))
 
 
 @(define (shellbox . s)
-   (parameterize ([current-directory (build-path (current-directory) "notes/abscond/")])
+   (parameterize ([current-directory (build-path notes "abscond")])
      (filebox (emph "shell")
               (fancyverbatim "fish" (apply shell s)))))
 
@@ -33,7 +38,7 @@
 @(define-syntax (shell-expand stx)
    (syntax-case stx ()
      [(_ s ...)
-      (parameterize ([current-directory (build-path (current-directory) "notes/abscond/")])
+      (parameterize ([current-directory (build-path (current-directory) "notes" "abscond")])
         (begin (apply shell (syntax->datum #'(s ...)))
 	       #'(void)))]))
 
@@ -139,7 +144,7 @@ produces it's meaning:
 We can even write a command line program for interpreting Abscond programs.
 Save the following in a file @tt{interp.rkt}:
 
-@filebox-include[codeblock "interp.rkt" "notes/abscond/interp.rkt"]
+@filebox-include[codeblock "abscond/interp.rkt"]
 
 The details here aren't important (and you won't be asked to write
 this kind of code), but this program @racket[read]s the contents of a
@@ -244,7 +249,7 @@ So our compiler will emit x86 assembly code.  To make our lives a bit
 easier, we will write the run-time system in C.  Let's start with the
 Abscond runtime:
 
-@filebox-include[fancy-c "main.c" "notes/abscond/main.c"]
+@filebox-include[fancy-c "abscond/main.c"]
 
 This C program provides the main entry point for running an Abscond
 program.  It must be linked against an object file that provides the
@@ -275,7 +280,7 @@ example.  Let's say the Abscond program is @racket[42].  What should
 the assembly code for this program look like?  Here we have to learn a
 bit about the x86-64 assembly language.
 
-@filebox-include[fancy-nasm "42.s" "notes/abscond/42.s"]
+@filebox-include[fancy-nasm "abscond/42.s"]
 
 Above is a x86-64 program, written in NASM syntax.  We will be using
 @tt{nasm} as our assembler in this class because it is widely used and
@@ -387,7 +392,7 @@ Writing the @racket[compile-abscond] function is easy:
 To convert back to the concrete NASM syntax, we can write a (few)
 function(s), which we'll place in its own module:
 
-@filebox-include[codeblock "asm/printer.rkt" "notes/abscond/asm/printer.rkt"]
+@filebox-include[codeblock "abscond/asm/printer.rkt"]
 
 @#reader scribble/comment-reader
 (examples #:eval ev
@@ -399,7 +404,7 @@ Putting it all together, we can write a command line compiler much
 like the command line interpreter before, except now we emit assembly
 code:
 
-@filebox-include[codeblock "abscond/compile.rkt" "notes/abscond/compile.rkt"]
+@filebox-include[codeblock "abscond/compile.rkt"]
 
 Example:
 
@@ -407,7 +412,7 @@ Example:
 
 Using a Makefile, we can capture the whole compilation dependencies as:
 
-@filebox-include[fancy-make "Makefile" "notes/abscond/Makefile"]
+@filebox-include[fancy-make "abscond/Makefile"]
 
 And now compiling Abscond programs is easy-peasy:
 
@@ -480,7 +485,7 @@ all it's doing is writing emitting assembly (to a temporary file) and
 calling @tt{make} to build the executable, then running it and parsing
 the result:
 
-@filebox-include[codeblock "asm/interp.rkt" "notes/abscond/asm/interp.rkt"]
+@filebox-include[codeblock "abscond/asm/interp.rkt"]
 
 This is actually a handy tool to have for experimenting with
 compilation within Racket:
@@ -546,3 +551,6 @@ of a valid input (i.e. some integer) that might refute the correctness
 claim?
 
 Think on it.  In the meantime, let's move on.
+
+@;{ end }
+@(current-directory saved-cwd)
