@@ -6,6 +6,7 @@
           redex/pict (only-in pict scale)
 	  "../fancyverb.rkt"
 	  "../utils.rkt"
+	  "utils.rkt"
 	  "ev.rkt")
 
 @(define saved-cwd (current-directory))
@@ -16,21 +17,12 @@
 @(ev '(current-directory (build-path (current-directory-for-user) "notes/abscond/")))
 @(ev '(require "asm/interp.rkt" "asm/printer.rkt" rackunit))
 
-@(require (for-syntax racket/base racket/file))
-@(define-syntax (filebox-include stx)
-  (syntax-case stx ()
-    [(_ form fn)
-    (parameterize ([current-directory (build-path (current-directory) "notes")])
-      (let ((s (file->string (syntax->datum #'fn))))
-        #`(filebox (link (string-append "code/" fn) (tt fn)) (form #,s))))]))
-
-
 @(define (shellbox . s)
    (parameterize ([current-directory (build-path notes "abscond")])
      (filebox (emph "shell")
               (fancyverbatim "fish" (apply shell s)))))
 
-@(require (for-syntax "../utils.rkt"))
+@(require (for-syntax "../utils.rkt" racket/base))
 @(define-syntax (shell-expand stx)
    (syntax-case stx ()
      [(_ s ...)
@@ -365,7 +357,7 @@ as we see more X86 instructions, but for now it is very simple:
 ;; | `rax
 )
 
-So the AST reprentation of our example is:
+So the AST representation of our example is:
 
 @racketblock[
 '(entry
