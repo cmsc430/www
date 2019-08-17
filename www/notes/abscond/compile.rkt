@@ -1,9 +1,10 @@
 #lang racket
-(require "asm-printer.rkt")
- 
+(provide (all-defined-out))
+(require "asm/printer.rkt")
+
 ;; Expr -> Asm
 (define (compile-abscond e)
-  `(abscond_entry
+  `(entry
     (mov rax ,e)
     ret))
 
