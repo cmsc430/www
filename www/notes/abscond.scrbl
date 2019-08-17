@@ -216,7 +216,7 @@ program is the @bold{run-time system}.
 So in general, the relationship between an interpreter and compiler is
 
 @verbatim{
-(interp-source e) = (interp-target (compile-source e))
+(source-interp e) = (target-interp (source-compile e))
 }
 
 We can in principle choose any target language we'd like.  For this
@@ -276,8 +276,8 @@ bit about the x86-64 assembly language.
 
 @filebox-include[fancy-nasm "abscond/42.s"]
 
-@margin-note{Note: on MacOSX, labels must be prepending with
-"@tt{_}".}
+@margin-note{Note: on macOS, labels must be prepended with @tt{_},
+while on Linux they are not; e.g. @tt{_entry} vs @tt{entry}.}
 
 Above is a x86-64 program, written in NASM syntax.  We will be using
 @tt{nasm} as our assembler in this class because it is widely used and
@@ -313,7 +313,7 @@ assembler:
             [(macosx) "macho64"]
             [(unix) "elf64"]))]
 
-@margin-note{Note: on MacOSX, the format option @tt{-f} should be
+@margin-note{Note: on macOS, the format option @tt{-f} should be
 @tt{macho64}; on Linux it should be @tt{elf64}.}
 
 This creates @tt{42.o}, an object file containing the instructions
@@ -394,7 +394,7 @@ function(s), which we'll place in its own module:
 
 @filebox-include[codeblock "abscond/asm/printer.rkt"]
 
-@margin-note{Note: the printer takes care of the MacOSX vs Linux label
+@margin-note{Note: the printer takes care of the macOS vs Linux label
 convention by detecting the underlying system and printing
 appropriately.}
 
@@ -414,10 +414,10 @@ Example:
 
 Using a Makefile, we can capture the whole compilation dependencies as:
 
-@filebox-include[fancy-make "abscond/Makefile"]
-
 @margin-note{Note: the appropriate object file format is detected
 based on the operating system.}
+
+@filebox-include[fancy-make "abscond/Makefile"]
 
 And now compiling Abscond programs is easy-peasy:
 
