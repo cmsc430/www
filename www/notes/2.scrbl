@@ -3,7 +3,8 @@
 @(require redex/reduction-semantics
           redex/pict (only-in pict scale)
 	  "../fancyverb.rkt"
-	  "../utils.rkt")
+	  "../utils.rkt"
+	  "2/blackmail-semantics.rkt")
 
 @(require (for-label racket))
 
@@ -15,7 +16,7 @@
                     [sandbox-error-output 'string]
                     [sandbox-memory-limit 50]
 		    [current-directory  (build-path (current-directory-for-user) "notes/2/")])
-       (make-evaluator 'racket #:requires '("asm-printer.rkt" "asm-interp.rkt" rackunit))))))
+       (make-evaluator 'racket #:requires '("asm-printer.rkt" "asm-interp.rkt" "blackmail-interp.rkt" rackunit))))))
 
 @(require (for-syntax racket/base racket/file))
 @(define-syntax (filebox-include stx)
@@ -165,17 +166,17 @@ defined inductively using @emph{inference rules}.  For such a simple
 language, just a single inference rule suffices:
 
 @(define-judgment-form A
-  #:mode (eval I O)
-  #:contract (eval e i)
+  #:mode (𝑨 I O)
+  #:contract (𝑨 e i)
   [----------
-   (eval i i)])
+   (𝑨 i i)])
 
-@(centered (render-judgment-form eval))
+@(centered (render-judgment-form 𝑨))
 
-Here, we are defining a binary relation, called @render-term[A eval] ,
+Here, we are defining a binary relation, called @render-term[A 𝑨],
 and saying every integer paired with itself is in the relation.  So
-@math{(2,2)} is in @render-term[A eval], @math{(5,5)} is in
-@render-term[A eval], and so on.
+@math{(2,2)} is in @render-term[A 𝑨], @math{(5,5)} is in
+@render-term[A 𝑨], and so on.
 
 The inference rules define the binary relation by defining the
 @emph{evidence} for being in the relation.  The rule makes use of
@@ -198,7 +199,7 @@ following statement:
 
 @bold{Interpreter Correctness}: @emph{For all expressions @racket[e]
 and integers @racket[i], if (@racket[e],@racket[i]) in @render-term[A
-eval], then @racket[(abscond-interp e)] equals @racket[i].}
+𝑨], then @racket[(abscond-interp e)] equals @racket[i].}
 
 We now have a complete (if overly simple) programming language with an
 operational semantics and an interpreter, which is (obviously)
@@ -445,14 +446,21 @@ Compiling:
 
 At this point, we have a compiler for Abscond.  But is it correct?
 
+Here is a statement of compiler correctness:
+
+@bold{Compiler Correctness}: @emph{For all expressions @racket[e] and
+integers @racket[i], if (@racket[e],@racket[i]) in @render-term[A
+𝑨], then @racket[(asm-interp (abscond-compile e))] equals
+@racket[i].}
+
 Ultimately, we want the compiler to capture the operational semantics
 of our language (the ground truth of what programs mean).  However,
 from a practical stand-point, relating the compiler to the intepreter
 may be more straightforward.  What's nice about the interpreter is we
 can run it, so we can @emph{test} the compiler against the
 interpreter.  Moreover, since we claimed the interpreter is correct
-(wrt to the semantics), testing the compiler against the interpreter
-is a way of testing it against the semantics, indirectlyl.  If the
+(w.r.t. to the semantics), testing the compiler against the interpreter
+is a way of testing it against the semantics, indirectly.  If the
 compiler and interpreter agree on all possible inputs, then the
 compiler is correct with respect to the semantics since it is
 equivalent to the interpreter, and the interpreter is correct.
@@ -494,7 +502,7 @@ This of course agrees with what we will get from the interpreter:
 (abscond-interp -8)
 ]
 
-We can turn this in a @emph{property-based test}, i.e. a function that
+We can turn this in a @bold{property-based test}, i.e. a function that
 computes a test expressing a single instance of our compiler
 correctness claim:
 @examples[#:eval ev
@@ -527,8 +535,10 @@ test failure would be reported.
 
 Finding an input to @racket[check-compiler] that fails would
 @emph{refute} the compiler correctness claim and mean that we have a
-bug.  On the other hand we gain more confidence with each passing
-test.  While passing tests increase our confidence, we cannot test all
+bug.  Such an input is called a @bold{counter-example}. 
+
+On the other hand we gain more confidence with each passing test.
+While passing tests increase our confidence, we cannot test all
 possible inputs this way, so we can't be sure our compiler is correct
 by testing alone.  To really be sure, we'd need to write a
 @emph{proof}, but that's beyond the scope of this class.
@@ -538,9 +548,151 @@ correctness.  It's tempting to declare victory.  But... can you think
 of a valid input (i.e. some integer) that might refute the correctness
 claim?
 
-Think on it.
+Think on it.  In the meantime, let's move on.
 
-  
+@section{Let's Do It Again!}
+
+We've seen all the essential peices (a grammar, an AST data type
+definition, an operational semantics, an interpreter, a compiler,
+etc.) for implementing a programming language, albeit for an amazingly
+simple language.
+
+We will now, through a process of @bold{iterative refinement}, grow
+the language to have an interesting set of features.
+
+@subsection{Blackmail: incrementing and decrementing}
+
+Our second language, which subsumes Abscond, is @bold{Blackmail}.
+Expressions in Blackmail include integer literals and increment and
+decrement operations.  It's still a dead simple language, but at least
+programs @emph{do} something.
+
+@subsection{Abstract syntax for Blackmail}
+
+A Blackmail program consists of a single expression, and the grammar
+of expressions is:
+
+@centered{@render-language[B]}
+
+So, @racket[0], @racket[120], and @racket[-42] are Blackmail programs,
+but so are @racket['(add1 0)], @racket['(sub1 120)], @racket['(add1
+(add1 (add1 -42)))].
+
+A datatype for representing expressions can be defined as:
+
+@#reader scribble/comment-reader
+(racketblock
+;; type Expr = 
+;; | Integer
+;; | `(add1 ,Expr)
+;; | `(sub1 ,Expr)
+)
+
+
+@subsection{Meaning of Blackmail programs}
+
+The meaning of a Blackmail program depends on the form of the expression:
+
+@itemlist[
+@item{the meaning of an integer literal is just the integer itself,}
+@item{the meaning of an increment expression is one more than the meaning of its subexpression, and}
+@item{the meaning of a decrement expression is one less than the meaning of its subexpression.}]
+
+The operational semantics reflects this dependence on the form of the
+expression by having three rules, one for each kind of expression:
+
+@(require (for-syntax racket/match))
+@(define ((rewrite s) lws)
+   (define lhs (list-ref lws 2))
+   (define rhs (list-ref lws 3))
+   (list "" lhs (string-append " " (symbol->string s) " ") rhs ""))
+
+@(with-unquote-rewriter
+   (lambda (lw)
+     (build-lw (lw-e lw) (lw-line lw) (lw-line-span lw) (lw-column lw) (lw-column-span lw)))
+   (with-compound-rewriters (['+ (rewrite '+)]
+                             ['- (rewrite '–)])
+     (centered (begin (judgment-form-cases '(0)) (render-judgment-form 𝑩))
+               (hspace 4)
+               (begin (judgment-form-cases '(1)) (render-judgment-form 𝑩))
+	       (hspace 4)
+	       (begin (judgment-form-cases '(2)) (render-judgment-form 𝑩)))))
+
+The first rule looks familiar; it's exactly the semantics of integers
+from Abscond.  The second and third rule are more involved.  In
+particular, they have @bold{premises} above the line.  If the premises
+are true, the @bold{conclusion} below the line is true as well.  These
+rules are @emph{conditional} on the premises being true.  This is in
+contrast to the first rule, which applies unconditionally.
+
+We can understand these rules as saying the following:
+@itemlist[
+@item{For all integers @math{i}, @math{(i,i)} is in @render-term[B 𝑩].}
+
+@item{For expressions @math{e_0} and all integers @math{i_0} and
+@math{i_1}, if @math{(e_0,i_0)} is in @render-term[B 𝑩] and @math{i_1
+= i_0 + 1}, then @math{(@RACKET['(add1 (UNSYNTAX @math{e_0}))], i_1)}
+is in @render-term[B 𝑩].}
+
+@item{For expressions @math{e_0} and all integers @math{i_0} and
+@math{i_1}, if @math{(e_0,i_0)} is in @render-term[B 𝑩] and @math{i_1
+= i_0 - 1}, then @math{(@RACKET['(sub1 (UNSYNTAX @math{e_0}))], i_1)}
+is in @render-term[B 𝑩].}
+]
+
+These rules are @bold{inductive}.  We start from the meaning of
+integers and if we have the meaning of an expression, we can construct
+the meaning of a larger expression.
+
+This may seem a bit strange at the moment, but it helps to view the
+semantics through its correspondence with an interpreter, which given
+an expression @math{e}, computes an integer @math{i}, such that
+@math{(e,i)} is in @render-term[B 𝑩].
+
+Just as there are three rules, there will be three cases to the
+interpreter, one for each form of expression:
+
+@filebox-include[codeblock "blackmail-interp.rkt" "notes/2/blackmail-interp.rkt"]
+
+@examples[#:eval ev
+(blackmail-interp 42)
+(blackmail-interp -7)
+(blackmail-interp '(add1 42))
+(blackmail-interp '(sub1 8))
+(blackmail-interp '(add1 (add1 (add1 8))))
+]
+
+Here's how to connect the dots between the semantics and interpreter:
+the interpreter is computing, for a given expression @math{e}, the
+integer @math{i}, such that @math{(e,i)} is in @render-term[B 𝑩].  The
+interpreter uses pattern matching to determine the form of the
+expression, which determines which rule of the semantics applies.
+
+@itemlist[
+
+@item{if @math{e} is an integer @math{i}, then we're done: this is the
+right-hand-side of the pair @math{(e,i)} in @render-term[B 𝑩].}
+
+@item{if @math{e} is an expression @RACKET['(add1 (UNSYNTAX
+@math{e_0}))], then we recursively use the interpreter to compute
+@math{i_0} such that @math{(e_0,i_0)} is in @render-term[B 𝑩].  But
+now we can compute the right-hand-side by adding 1 to @math{i_0}.}
+
+@item{if @math{e} is an expression @RACKET['(sub1 (UNSYNTAX
+@math{e_0}))], then we recursively use the interpreter to compute
+@math{i_0} such that @math{(e_0,i_0)} is in @render-term[B 𝑩].  But
+now we can compute the right-hand-side by substracting 1 from @math{i_0}.}
+
+]
+
+This explaination of the correspondence is essentially a proof (by
+induction) of the interpreter's correctness:
+
+@bold{Interpreter Correctness}: @emph{For all Blackmail expressions
+@racket[e] and integers @racket[i], if (@racket[e],@racket[i]) in
+@render-term[B 𝑩], then @racket[(blackmail-interp e)] equals
+@racket[i].}
+
 
 
 @;{
