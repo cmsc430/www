@@ -1,4 +1,5 @@
 UNAME := $(shell uname)
+.PHONY: test
 
 ifeq ($(UNAME), Darwin)
   format=macho64
@@ -20,3 +21,6 @@ main.o: main.c
 
 clean:
 	rm *.o *.s *.run
+
+test: 42.run
+	@test "$(shell ./42.run)" = "42"
