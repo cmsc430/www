@@ -15,7 +15,9 @@ $(course):
 		--redirect-main http://docs.racket-lang.org/ \
 		$(course).scrbl
 	mkdir -p $(course)/code/
-	cp -r notes/abscond/ $(course)/code/abscond/
+	cd notes ; \
+		tar -c `git ls-files -X .gitignore abscond blackmail` | \
+		(cd ../main/code ; tar -x) ; cd ../..
 
 clean:
 	rm -rf $(course)
