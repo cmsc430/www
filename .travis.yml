@@ -29,11 +29,11 @@ before_script:
 script:
 - cd www
 - make main
-- test -f notes/2/42.scm
-- test -f notes/2/42.s
-- test -f notes/2/42.o
-- test -f notes/2/main.o
-- test -f notes/2/42.run
+- test -f notes/abscond/42.scm
+- test -f notes/abscond/42.s
+- test -f notes/abscond/42.o
+- test -f notes/abscond/main.o
+- test -f notes/abscond/42.run
 - mv main cmsc430
 - cd ..
 
