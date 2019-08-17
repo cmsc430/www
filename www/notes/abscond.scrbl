@@ -1,24 +1,20 @@
 #lang scribble/manual
 
 @(require (for-label racket))
-@(require redex/reduction-semantics
+@(require scribble/examples
+	  redex/reduction-semantics	  
           redex/pict (only-in pict scale)
 	  "../fancyverb.rkt"
-	  "../utils.rkt")
+	  "../utils.rkt"
+	  "ev.rkt")
 
 @(define saved-cwd (current-directory))
 @(define notes (build-path (current-directory) "notes"))
 @(current-directory notes)
 
-@(require scribble/examples racket/sandbox)
-@(define ev
-  (call-with-trusted-sandbox-configuration
-    (lambda ()
-     (parameterize ([sandbox-output 'string]
-                    [sandbox-error-output 'string]
-                    [sandbox-memory-limit 50]
-		    [current-directory  (build-path (current-directory-for-user) "notes/abscond/")])
-       (make-evaluator 'racket #:requires '("asm/printer.rkt" "asm/interp.rkt" rackunit))))))
+
+@(ev '(current-directory (build-path (current-directory-for-user) "notes/abscond/")))
+@(ev '(require "asm/interp.rkt" "asm/printer.rkt" rackunit))
 
 @(require (for-syntax racket/base racket/file))
 @(define-syntax (filebox-include stx)
@@ -141,8 +137,7 @@ produces it's meaning:
 (abscond-interp -8)
 )
 
-We can even write a command line program for interpreting Abscond programs.
-Save the following in a file @tt{interp.rkt}:
+We can even write a command line program for interpreting Abscond programs:
 
 @filebox-include[codeblock "abscond/interp.rkt"]
 
@@ -153,8 +148,7 @@ well-formed Abscond program, then it runs the intepreter and displays
 the result.
 
 For example:
-@shellbox["echo 42 > 42.scm" "racket interp.rkt 42.scm"]
-
+@shellbox["echo 42 > 42.scm" "racket -t interp.rkt -m 42.scm"]
 
 Even though the semantics is obvious, we can provide a formal
 definition of Abscond using @bold{operational semantics}.
@@ -282,21 +276,24 @@ bit about the x86-64 assembly language.
 
 @filebox-include[fancy-nasm "abscond/42.s"]
 
+@margin-note{Note: on MacOSX, labels must be prepending with
+"@tt{_}".}
+
 Above is a x86-64 program, written in NASM syntax.  We will be using
 @tt{nasm} as our assembler in this class because it is widely used and
 available on most platforms.
 
 @itemlist[#:style 'numbered
 
-@item{The first line declares a global label (@tt{_enter_abscond}), an
+@item{The first line declares a global label (@tt{entry}), an
 entry point in to the code below.}
 
 @item{The next line declares the start of a section of code consisting
 of textual instructions.}
 
-@item{The third line contains the @tt{_enter_abscond} label, i.e. the
-start of the @tt{enter_abscond} code.  When the run-time systems calls
-@tt{enter_abscond}, it will jump to this point in the code.}
+@item{The third line contains the @tt{entry} label, i.e. the start of
+the @tt{entry} code.  When the run-time systems calls @tt{entry}, it
+will jump to this point in the code.}
 
 @item{The fourth line is an instruction to move the integer literal 42
 into the @tt{rax} register.  By convention, whatever is in the
@@ -315,6 +312,9 @@ assembler:
           (case (system-type 'os)
             [(macosx) "macho64"]
             [(unix) "elf64"]))]
+
+@margin-note{Note: on MacOSX, the format option @tt{-f} should be
+@tt{macho64}; on Linux it should be @tt{elf64}.}
 
 This creates @tt{42.o}, an object file containing the instructions
 above (in binary format).
@@ -339,7 +339,7 @@ will be a function with the following signature:
 @#reader scribble/comment-reader
 (racketblock
 ;; Expr -> Asm
-(define (compile-abscond e) ...)
+(define (abscond-compile e) ...)
 )
 
 Where @tt{Asm} is a data type for representing assembly programs,
@@ -368,23 +368,23 @@ as we see more X86 instructions, but for now it is very simple:
 So the AST reprentation of our example is:
 
 @racketblock[
-'(abscond_entry
+'(entry
   (mov rax 42)
   ret)
 ]
 
-Writing the @racket[compile-abscond] function is easy:
+Writing the @racket[abscond-compile] function is easy:
 
 @#reader scribble/comment-reader
 (examples #:eval ev 
 ;; Expr -> Asm
-(define (compile-abscond e)
+(define (abscond-compile e)
   `(entry
     (mov rax ,e)
     ret))
 
-(compile-abscond 42)
-(compile-abscond 38)
+(abscond-compile 42)
+(abscond-compile 38)
 )
 
 
@@ -394,11 +394,13 @@ function(s), which we'll place in its own module:
 
 @filebox-include[codeblock "abscond/asm/printer.rkt"]
 
+@margin-note{Note: the printer takes care of the MacOSX vs Linux label
+convention by detecting the underlying system and printing
+appropriately.}
+
 @#reader scribble/comment-reader
 (examples #:eval ev
-(display-asm (compile-abscond 42)))
-
-
+(asm-display (abscond-compile 42)))
                    
 Putting it all together, we can write a command line compiler much
 like the command line interpreter before, except now we emit assembly
@@ -413,6 +415,9 @@ Example:
 Using a Makefile, we can capture the whole compilation dependencies as:
 
 @filebox-include[fancy-make "abscond/Makefile"]
+
+@margin-note{Note: the appropriate object file format is detected
+based on the operating system.}
 
 And now compiling Abscond programs is easy-peasy:
 
@@ -438,7 +443,7 @@ adds up to much more efficient programs.  Just to demonstrate, here's
 a single data point measuring the difference between interpreting and
 compiling Abscond programs:
 
-@shellbox["time -p racket interp.rkt 42.scm"]
+@shellbox["time -p racket -t interp.rkt -m 42.scm"]
 
 Compiling:
 
@@ -469,15 +474,15 @@ equivalent to the interpreter, and the interpreter is correct.
 
 So, in this setting, means we have the following equivaluence:
 
-@verbatim|{
-(interp-abscond e) = (interp-asm (compile-abscond e))
-}|
+@verbatim{
+(abscond-interp e) @emph{equals} (asm-interp (abscond-compile e))
+}
 
 But we don't actually have @racket[interpret-asm], a function that
 interprets the Asm code we generate.  Instead we printed the code and
 had @tt{gcc} assembly and link it into an executable, which the OS
 could run.  But this is a minor distinction.  We can write
-@racket[interp-asm] to interact with the OS to do all of these steps.
+@racket[asm-interp] to interact with the OS to do all of these steps.
 
 Here's such a definition.  (Again: the details here are not important
 and we won't ask you to write or understand this code, but roughly,
@@ -491,9 +496,9 @@ This is actually a handy tool to have for experimenting with
 compilation within Racket:
 
 @examples[#:eval ev
-(interp-asm (compile-abscond 42))
-(interp-asm (compile-abscond 37))
-(interp-asm (compile-abscond -8))
+(asm-interp (abscond-compile 42))
+(asm-interp (abscond-compile 37))
+(asm-interp (abscond-compile -8))
 ]
 
 This of course agrees with what we will get from the interpreter:
@@ -510,7 +515,7 @@ correctness claim:
 @examples[#:eval ev
 (define (check-compiler e)
   (check-eqv? (abscond-interp e)
-              (interp-asm (compile-abscond e))))
+              (asm-interp (abscond-compile e))))
 
 (check-compiler 42)
 (check-compiler 37)

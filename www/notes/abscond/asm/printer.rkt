@@ -28,7 +28,7 @@
     [_ symbol->string]))
 
 ;; Asm -> Void
-(define (display-asm a)
+(define (asm-display a)
   ;; entry point will be first label
   (let ((g (findf symbol? a)))
     (display 
