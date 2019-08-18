@@ -69,7 +69,7 @@ assembler, but when von Neumann found out about it he was very angry,
 saying that it was a waste of a valuable scientific computing
 instrument to use it to do clerical work.}}
 
-@subsection{What does a Compiler @emph{look} like?}
+@subsection[#:tag "What does a Compiler look like?"]{What does a Compiler @emph{look} like?}
 
 @image{img/compiler-pipeline.png}
 Compiler Pipeline

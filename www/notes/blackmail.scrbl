@@ -321,7 +321,57 @@ implemented.
   (check-compiler (random-expr)))
 ]
 
+@section{Looking back, looking forward}
 
+We've now built two compilers; enough to start observing a pattern.
+
+Recall the phases of a compiler described in
+@secref["What does a Compiler look like?"].
+Let's identify these peices in the two
+compilers we've written:
+
+@itemlist[
+@item{@bold{Parsed} into a data structure called an @bold{Abstract Syntax Tree}
+
+@itemlist[@item{we use @tt{read} to parse text into a s-expression}]}
+
+@item{@bold{Checked} to make sure code is well-formed (and well-typed)
+
+@itemlist[@item{we use a predicate, @racket[integer?] for Abscond and
+@racket[expr?] for Blackmail, to check whether an s-expression is a
+well-formed AST}]}
+
+@item{@bold{Simplified} into some convenient @bold{Intermediate Representation}
+
+@itemlist[@item{we don't do any; the AST is the IR}]}
+
+@item{@bold{Optimized} into (equivalent) but faster program
+
+@itemlist[@item{we don't do any}]}
+
+@item{@bold{Generated} into assembly x86
+
+@itemlist[@item{we use @racket[abscond-compile] and @racket[blackmail-compile] to generate assembly (in AST form),
+  and use @racket[asm-display] to print concrete X86-64}]}
+
+@item{@bold{Linked} against a run-time (usually written in C)
+
+@itemlist[@item{we link against our run-time written in @tt{main.c}}]}
+
+]
+
+Our recipe for building compiler involves:
+
+@itemlist[#:style 'ordered
+@item{Build intuition with @bold{examples},}
+@item{Model problem with @bold{data types},}
+@item{Implement compiler via @bold{type-transforming-functions},}
+@item{Validate compiler via @bold{tests}.}
+]
+
+As we move forward, the language we are compiling will grow.  As the
+language grows, you should apply this recipe to grow the compiler
+along with the language.
 
 
 @;{ end }
