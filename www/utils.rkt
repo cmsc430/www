@@ -37,6 +37,7 @@
 (define (with-output-to-string/err proc)
   (define os "")
   (define es "")
+  (define r #f)
   (set! os (call-with-output-string
             (lambda (o)
               (set! es
@@ -44,7 +45,8 @@
                      (λ (e)
                        (parameterize ([current-output-port o]
                                       [current-error-port e])
-                         (proc))))))))
+                         (set! r (proc)))))))))
+  (unless r (error (string-append os es)))
   (string-append os es))
 
 (define (shell . cs)
