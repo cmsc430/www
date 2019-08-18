@@ -14,7 +14,7 @@
 @(current-directory notes)
 
 @(ev '(current-directory (build-path (current-directory-for-user) "notes/blackmail/")))
-@(ev '(require "interp.rkt" "asm/printer.rkt"))
+@(ev '(require "interp.rkt" "compile.rkt" "asm/printer.rkt" "asm/interp.rkt"))
 
 @(define (shellbox . s)
    (parameterize ([current-directory (build-path notes "blackmail")])
@@ -243,8 +243,85 @@ another function to compile the expression:
 
 @filebox-include[codeblock "blackmail/compile.rkt"]
 
-Notice that @racket[compile-compile-e] is defined by structural
+Notice that @racket[blackmail-compile-e] is defined by structural
 recursion, much like the interpreter.
+
+
+We can now try out a few examples:
+
+@ex[
+(blackmail-compile '(add1 (add1 40)))
+(blackmail-compile '(sub1 8))
+(blackmail-compile '(add1 (add1 (sub1 (add1 -8)))))
+]
+
+And give a command line wrapper for parsing, checking, and compiling
+files:
+
+@filebox-include[codeblock "blackmail/compile-file.rkt"]
+
+Here it is in action:
+
+@shellbox["echo \"(add1 (add1 9))\" > add1-add1-9.scm"
+          "racket -t compile-file.rkt -m add1-add1-9.scm"]
+
+And using the same @link["code/blackmail/Makefile"]{@tt{Makefile}}
+setup as in Abscond, we capture the whole compilation process with a
+single command:
+
+@shellbox["make add1-add1-9.run" "./add1-add1-9.run"]
+
+Likewise, to test the compiler from within Racket, we use the same
+@link["code/blackmail/asm/interp.rkt"]{@tt{asm/interp.rkt}} code to
+encapsulate running assembly code:
+
+@ex[
+(asm-interp (blackmail-compile '(add1 (add1 40))))
+(asm-interp (blackmail-compile '(sub1 8)))
+(asm-interp (blackmail-compile '(add1 (add1 (sub1 (add1 -8))))))
+]
+
+@section{Correctness and random testing}
+
+We can state correctness similarly to how it was stated for Abscond:
+
+@bold{Compiler Correctness}: @emph{For all expressions @racket[e] and
+integers @racket[i], if (@racket[e],@racket[i]) in @render-term[B
+𝑩], then @racket[(asm-interp (blackmail-compile e))] equals
+@racket[i].}
+
+
+And we can test this claim by comparing the results of running
+compiled and interpreted programs, leading to the following property,
+which hopefully holds:
+
+@ex[
+(define (check-compiler e)
+  (check-eqv? (blackmail-interp e)
+              (asm-interp (blackmail-compile e))))]
+
+The problem, however, is that generating random Blackmail programs is
+less obvious compared to generating random Abscond programs
+(i.e. random integers).  Randomly generating programs for testing is
+its own well studied and active research area.  To side-step this
+wrinkle, we have provided a small utility for generating random
+Blackmail programs (@link["code/blackmail/random.rkt"]{random.rkt}),
+which you can use, without needing the understand how it was
+implemented.
+
+@ex[
+(require "random.rkt")
+(random-expr)
+(random-expr)
+(random-expr)
+(random-expr)
+(random-expr)
+(asm-display (blackmail-compile (random-expr)))
+(for ([i (in-range 10)])
+  (check-compiler (random-expr)))
+]
+
+
 
 
 @;{ end }
