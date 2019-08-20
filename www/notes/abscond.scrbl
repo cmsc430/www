@@ -13,6 +13,7 @@
 @(define notes (build-path (current-directory) "notes"))
 @(current-directory notes)
 
+@(define codeblock-include (make-codeblock-include #'here))
 
 @(ev '(current-directory (build-path (current-directory-for-user) "notes/abscond/")))
 @(ev '(require "asm/interp.rkt" "asm/printer.rkt" rackunit))
@@ -131,7 +132,7 @@ produces it's meaning:
 
 We can even write a command line program for interpreting Abscond programs:
 
-@filebox-include[codeblock "abscond/interp.rkt"]
+@codeblock-include["abscond/interp.rkt"]
 
 The details here aren't important (and you won't be asked to write
 this kind of code), but this program @racket[read]s the contents of a
@@ -384,7 +385,7 @@ Writing the @racket[abscond-compile] function is easy:
 To convert back to the concrete NASM syntax, we can write a (few)
 function(s), which we'll place in its own module:
 
-@filebox-include[codeblock "abscond/asm/printer.rkt"]
+@codeblock-include["abscond/asm/printer.rkt"]
 
 @margin-note{Note: the printer takes care of the macOS vs Linux label
 convention by detecting the underlying system and printing
@@ -398,7 +399,7 @@ Putting it all together, we can write a command line compiler much
 like the command line interpreter before, except now we emit assembly
 code:
 
-@filebox-include[codeblock "abscond/compile.rkt"]
+@codeblock-include["abscond/compile.rkt"]
 
 Example:
 
@@ -482,7 +483,7 @@ all it's doing is writing emitting assembly (to a temporary file) and
 calling @tt{make} to build the executable, then running it and parsing
 the result:
 
-@filebox-include[codeblock "abscond/asm/interp.rkt"]
+@codeblock-include["abscond/asm/interp.rkt"]
 
 This is actually a handy tool to have for experimenting with
 compilation within Racket:
