@@ -1,6 +1,10 @@
 #lang racket/base
-(provide ev)
-(require racket/sandbox)
+(provide ev ex)
+(require racket/sandbox scribble/manual scribble/examples)
+
+(define-syntax-rule (ex e ...)
+  (filebox (emph "Examples")
+    (examples #:eval ev #:label #f e ...)))
 
 (define ev
   (call-with-trusted-sandbox-configuration
