@@ -23,7 +23,7 @@
     [l (string-append (label->string l) ":\n")]))
 
 (define (opcode2? x)
-  (memq x '(mov add sub cmp mul)))
+  (memq x '(mov add sub cmp imul)))
 
 ;; Arg -> String
 (define (arg->string a)
