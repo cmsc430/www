@@ -11,9 +11,11 @@
 (define (blackmail-compile-e e)
   (match e
     [(? integer? i) `((mov rax ,i))]
-    [`(add1 ,e)
-     (append (blackmail-compile-e e)
-             `((add rax 1)))]
-    [`(sub1 ,e)
-     (append (blackmail-compile-e e)
-             `((sub rax 1)))]))
+    [`(add1 ,e0)
+     (let ((c0 (blackmail-compile-e e0)))
+       `(,@c0
+         (add rax 1)))]
+    [`(sub1 ,e0)
+     (let ((c0 (blackmail-compile-e e0)))
+       `(,@c0
+         (sub rax 1)))]))

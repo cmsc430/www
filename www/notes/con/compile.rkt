@@ -12,22 +12,26 @@
 ;; Expr CEnv -> Asm
 (define (con-compile-e e c)
   (match e
-    [(? symbol? x)
-     (match (lookup x c)
-       [i `((mov rax (offset rsp ,i)))])]
-    [`(let ((,x ,e0)) ,e1)
-     (append (con-compile-e e0 c)
-             '((add rsp -8)
-               (mov (offset rsp 0) rax))
-             (con-compile-e e1 (cons x c))
-             '((add rsp 8)))]    
     [(? integer? i) `((mov rax ,i))]
-    [`(add1 ,e)
-     (append (con-compile-e e c)
-             `((add rax 1)))]
-    [`(sub1 ,e)
-     (append (con-compile-e e c)
-             `((sub rax 1)))]))
+    [(? symbol? x)
+     (let ((i (lookup x c)))
+       `((mov rax (offset rsp ,i))))]
+    [`(let ((,x ,e0)) ,e1)
+     (let ((c0 (dupe-compile-e e0 c))
+           (c1 (dupe-compile-e e1 (cons x c))))
+       `(,@c0
+         (add rsp -8)
+         (mov (offset rsp 0) rax)
+         ,@c1
+         (add rsp 8)))]
+    [`(add1 ,e0)
+     (let ((c0 (blackmail-compile-e e0)))
+       `(,@c0
+         (add rax 1)))]
+    [`(sub1 ,e0)
+     (let ((c0 (blackmail-compile-e e0)))
+       `(,@c0
+         (sub rax 1)))]))
 
 ;; Variable CEnv -> Natural
 (define (lookup x cenv)
