@@ -476,7 +476,7 @@ could run.  But this is a minor distinction.  We can write
 
 Here's such a definition.  (Again: the details here are not important
 and we won't ask you to write or understand this code, but roughly,
-all it's doing is writing emitting assembly (to a temporary file) and
+all it's doing is emitting assembly (to a temporary file) and
 calling @tt{make} to build the executable, then running it and parsing
 the result.)
 
