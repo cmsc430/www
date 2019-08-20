@@ -13,7 +13,7 @@
 
 @(ev '(require rackunit))
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "abscond" f))))))
-	   '("interp.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
 @(define (shellbox . s)
    (parameterize ([current-directory (build-path notes "abscond")])
@@ -29,7 +29,7 @@
 	       #'(void)))]))
 
 @;{ Have to compile 42.s (at expand time) before listing it }
-@(shell-expand "echo 42 > 42.scm" "racket -t compile.rkt -m 42.scm > 42.s")
+@(shell-expand "echo 42 > 42.scm" "racket -t compile-file.rkt -m 42.scm > 42.s")
 
 
 @title{Let's Make a Programming Language!}
@@ -360,14 +360,10 @@ So the AST representation of our example is:
 
 Writing the @racket[abscond-compile] function is easy:
 
+@codeblock-include["abscond/compile.rkt"]
+
 @#reader scribble/comment-reader
 (examples #:eval ev 
-;; Expr -> Asm
-(define (abscond-compile e)
-  `(entry
-    (mov rax ,e)
-    ret))
-
 (abscond-compile 42)
 (abscond-compile 38)
 )
@@ -391,11 +387,11 @@ Putting it all together, we can write a command line compiler much
 like the command line interpreter before, except now we emit assembly
 code:
 
-@codeblock-include["abscond/compile.rkt"]
+@codeblock-include["abscond/compile-file.rkt"]
 
 Example:
 
-@shellbox["racket -t compile.rkt -m 42.scm"]
+@shellbox["racket -t compile-file.rkt -m 42.scm"]
 
 Using a Makefile, we can capture the whole compilation dependencies as:
 
