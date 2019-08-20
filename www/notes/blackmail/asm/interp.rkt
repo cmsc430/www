@@ -13,7 +13,7 @@
       #:exists 'truncate
       (λ ()
         (asm-display a)))
-    (system (format "make -s -C ~a ~a" dir t.run))
+    (system (format "(cd ~a && make -s ~a)" dir t.run))
     (delete-file t.s)
     (with-input-from-string
         (with-output-to-string
