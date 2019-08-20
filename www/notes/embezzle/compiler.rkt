@@ -102,7 +102,7 @@
   (match p
     ['+ 'add]
     ['- 'sub]
-    ['* 'mul]))
+    ['* 'imul]))
 
 ;; Variable CEnv -> Natural
 (define (lookup x cenv)
