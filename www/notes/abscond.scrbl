@@ -12,8 +12,8 @@
 @(define codeblock-include (make-codeblock-include #'here))
 
 @(ev '(require rackunit))
-@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "blackmail" f))))))
-	   '("asm/interp.rkt" "asm/printer.rkt"))
+@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "abscond" f))))))
+	   '("interp.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
 @(define (shellbox . s)
    (parameterize ([current-directory (build-path notes "abscond")])
@@ -113,13 +113,7 @@ The meaning of an Abscond program is simply the number itself.  So
 We can write an ``interpreter'' that consumes an expression and
 produces it's meaning:
 
-@#reader scribble/comment-reader
-(examples #:eval ev #:no-prompt #:label #f
-;; Expr -> Integer
-;; Interpreter for Abscond
-(define (abscond-interp e)
-  e)
-)
+@codeblock-include["abscond/interp.rkt"]
 
 @#reader scribble/comment-reader
 (examples #:eval ev
@@ -127,9 +121,10 @@ produces it's meaning:
 (abscond-interp -8)
 )
 
-We can even write a command line program for interpreting Abscond programs:
+We can add a command line wrapper program for interpreting Abscond
+programs saved in files:
 
-@codeblock-include["abscond/interp.rkt"]
+@codeblock-include["abscond/interp-file.rkt"]
 
 The details here aren't important (and you won't be asked to write
 this kind of code), but this program @racket[read]s the contents of a
@@ -138,7 +133,7 @@ well-formed Abscond program, then it runs the intepreter and displays
 the result.
 
 For example:
-@shellbox["echo 42 > 42.scm" "racket -t interp.rkt -m 42.scm"]
+@shellbox["echo 42 > 42.scm" "racket -t interp-file.rkt -m 42.scm"]
 
 Even though the semantics is obvious, we can provide a formal
 definition of Abscond using @bold{operational semantics}.
@@ -433,7 +428,7 @@ adds up to much more efficient programs.  Just to demonstrate, here's
 a single data point measuring the difference between interpreting and
 compiling Abscond programs:
 
-@shellbox["time -p racket -t interp.rkt -m 42.scm"]
+@shellbox["time -p racket -t interp-file.rkt -m 42.scm"]
 
 Compiling:
 
