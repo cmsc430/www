@@ -9,25 +9,22 @@
 	  "utils.rkt"
 	  "ev.rkt")
 
-@(define saved-cwd (current-directory))
-@(define notes (build-path (current-directory) "notes"))
-@(current-directory notes)
-
 @(define codeblock-include (make-codeblock-include #'here))
 
-@(ev '(current-directory (build-path (current-directory-for-user) "notes/abscond/")))
-@(ev '(require "asm/interp.rkt" "asm/printer.rkt" rackunit))
+@(ev '(require rackunit))
+@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "blackmail" f))))))
+	   '("asm/interp.rkt" "asm/printer.rkt"))
 
-@(define (shellbox . s)
+@(define (shellbox . s) "asdfasd" #;
    (parameterize ([current-directory (build-path notes "abscond")])
      (filebox (emph "shell")
               (fancyverbatim "fish" (apply shell s)))))
 
-@(require (for-syntax "../utils.rkt" racket/base))
+@(require (for-syntax "../utils.rkt" racket/base "utils.rkt"))
 @(define-syntax (shell-expand stx)
    (syntax-case stx ()
      [(_ s ...)
-      (parameterize ([current-directory (build-path (current-directory) "notes" "abscond")])
+      (parameterize ([current-directory (build-path notes "abscond")])
         (begin (apply shell (syntax->datum #'(s ...)))
 	       #'(void)))]))
 
@@ -549,6 +546,4 @@ of a valid input (i.e. some integer) that might refute the correctness
 claim?
 
 Think on it.  In the meantime, let's move on.
-
-@;{ end }
-@(current-directory saved-cwd)
+}

@@ -11,29 +11,21 @@
 
 @(define codeblock-include (make-codeblock-include #'here))
 
-@(define saved-cwd (current-directory))
-@(define notes (build-path (current-directory) "notes"))
-@(current-directory notes)
-
-@(ev '(current-directory (build-path (current-directory-for-user) "notes/blackmail/")))
-@(ev '(require "interp.rkt" "compile.rkt" "asm/printer.rkt" "asm/interp.rkt"))
+@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "blackmail" f))))))
+	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
 @(define (shellbox . s)
    (parameterize ([current-directory (build-path notes "blackmail")])
      (filebox (emph "shell")
               (fancyverbatim "fish" (apply shell s)))))
 
-@(require (for-syntax "../utils.rkt" racket/base))
+@(require (for-syntax "../utils.rkt" racket/base "utils.rkt"))
 @(define-syntax (shell-expand stx)
    (syntax-case stx ()
      [(_ s ...)
-      (parameterize ([current-directory (build-path (current-directory) "notes" "blackmail")])
+      (parameterize ([current-directory (build-path notes "blackmail")])
         (begin (apply shell (syntax->datum #'(s ...)))
 	       #'(void)))]))
-
-@(define-syntax-rule (ex e ...)
-  (filebox (emph "Examples")
-    (examples #:eval ev #:label #f e ...)))
 
 @;{ Have to compile 42.s (at expand time) before listing it }
 @(shell-expand "echo '(add1 (add1 40))' > add1-add1-40.scm" "racket -t compile-file.rkt -m add1-add1-40.scm > add1-add1-40.s")
@@ -312,7 +304,7 @@ which you can use, without needing the understand how it was
 implemented.
 
 @ex[
-(require "random.rkt")
+(eval:alts (require "random.rkt") (require "notes/blackmail/random.rkt"))
 (random-expr)
 (random-expr)
 (random-expr)
@@ -374,7 +366,3 @@ Our recipe for building compiler involves:
 As we move forward, the language we are compiling will grow.  As the
 language grows, you should apply this recipe to grow the compiler
 along with the language.
-
-
-@;{ end }
-@(current-directory saved-cwd)
