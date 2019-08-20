@@ -15,7 +15,7 @@
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "blackmail" f))))))
 	   '("asm/interp.rkt" "asm/printer.rkt"))
 
-@(define (shellbox . s) "asdfasd" #;
+@(define (shellbox . s)
    (parameterize ([current-directory (build-path notes "abscond")])
      (filebox (emph "shell")
               (fancyverbatim "fish" (apply shell s)))))
