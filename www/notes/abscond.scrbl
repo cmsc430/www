@@ -478,7 +478,7 @@ Here's such a definition.  (Again: the details here are not important
 and we won't ask you to write or understand this code, but roughly,
 all it's doing is writing emitting assembly (to a temporary file) and
 calling @tt{make} to build the executable, then running it and parsing
-the result:
+the result.)
 
 @codeblock-include["abscond/asm/interp.rkt"]
 
