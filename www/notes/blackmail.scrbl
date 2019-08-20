@@ -9,6 +9,8 @@
 	  "utils.rkt"
 	  "ev.rkt")
 
+@(define codeblock-include (make-codeblock-include #'here))
+
 @(define saved-cwd (current-directory))
 @(define notes (build-path (current-directory) "notes"))
 @(current-directory notes)
@@ -77,7 +79,7 @@ A datatype for representing expressions can be defined as:
 A predicate for recognizing well-formed expressions is more involved
 than Abscond, but still straightforward:
 
-@filebox-include[codeblock "blackmail/syntax.rkt"]
+@codeblock-include["blackmail/syntax.rkt"]
 
 @section{Meaning of Blackmail programs}
 
@@ -141,7 +143,7 @@ an expression @math{e}, computes an integer @math{i}, such that
 Just as there are three rules, there will be three cases to the
 interpreter, one for each form of expression:
 
-@filebox-include[codeblock "blackmail/interp.rkt"]
+@codeblock-include["blackmail/interp.rkt"]
 
 @examples[#:eval ev
 (blackmail-interp 42)
@@ -241,7 +243,7 @@ The compiler consists of two functions: the first, which is given a
 program, emits the entry point and return instructions, invoking
 another function to compile the expression:
 
-@filebox-include[codeblock "blackmail/compile.rkt"]
+@codeblock-include["blackmail/compile.rkt"]
 
 Notice that @racket[blackmail-compile-e] is defined by structural
 recursion, much like the interpreter.
@@ -258,7 +260,7 @@ We can now try out a few examples:
 And give a command line wrapper for parsing, checking, and compiling
 files:
 
-@filebox-include[codeblock "blackmail/compile-file.rkt"]
+@codeblock-include["blackmail/compile-file.rkt"]
 
 Here it is in action:
 
