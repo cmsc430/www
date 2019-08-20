@@ -1,6 +1,7 @@
 #lang racket
 (provide (all-defined-out))
-(require "printer.rkt")
+(require "printer.rkt" racket/runtime-path)
+(define-runtime-path dir "..")
 
 ;; Asm -> Integer
 ;; Interpret (by assemblying, linking, and exec'ing) x86-64 code
@@ -12,7 +13,7 @@
       #:exists 'truncate
       (λ ()
         (asm-display a)))
-    (system (format "make -s ~a" t.run))
+    (system (format "make -C ~a -s ~a" dir t.run))
     (delete-file t.s)
     (with-input-from-string
         (with-output-to-string
