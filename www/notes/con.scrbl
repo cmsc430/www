@@ -16,7 +16,8 @@
 
 @(define codeblock-include (make-codeblock-include #'h))
 
-@(ev `(require (file ,(path->string (build-path notes "con/interp.rkt")))))
+@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "con" f))))))
+	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
 @title{Local binding}
 
@@ -119,7 +120,7 @@ expression, @tt{(let ((y 2)) x)}, means 2 since the body expression,
 @tt{x}, means 7 since the nearest enclosing binding for @tt{x} is to
 @tt{7}.}
 
-@item{@tt{(let ((x 7)) (let ((x 2)) x))}: this means 7 since the body
+@item{@tt{(let ((x 7)) (let ((x 2)) x))}: this means 2 since the body
 expression, @tt{(let ((x 2)) x)}, means 2 since the body expression,
 @tt{x}, means 7 since the nearest enclosing binding for @tt{x} is to
 @tt{2}.}
@@ -237,3 +238,64 @@ examples given earlier:
 @render-term[C 𝑪], then @racket[(con-interp e)] equals
 @racket[i].}
 
+@section{An Example of Con compilation}
+
+Suppose we want to compile @racket['(let ((x 7)) (add1 x))].  There
+are two new forms we need to compile: the @racket['(let ((x ...))
+...)] part and the @racket['x] part in the body.
+
+We already know how to compile the @racket['(add1 ...)] part and the
+@racket[7] part.
+
+What needs to happen?  Compiling the @racket[7] part will emit
+instructions that, when run, leave @racket[7] in the @racket['rax]
+register.  Compiling the @racket['(add1 ...)] part relies on the
+result of evaluating it's subexpression to be in @racket['rax] when it
+increments it.  So, compile the variable binding needs to stash the
+@racket[7] somewhere and compiling the variable occurrence needs to
+retrieve that stashed value.  After the let expression has been run,
+the stashed value should go away since the variable is no longer in
+scope.
+
+This ``stashing'' of values follows a stack discipline.  When entering
+a let, after the right-hand side has been run, the result should be
+pushed.  When evaluating a variable occurrence, the bound value is on
+the stack.  After exiting the let, the stack can be popped.
+
+Suppose we want to compile @racket['(let ((x 7)) (let ((y 2)) (add1
+x)))].  Using the intuition developed so far, we should push 7, push
+8, and then run the body.  But notice that the value of @racket['x] is
+no longer on the top of the stack; @racket['y] is.  So to retrieve the
+value of @racket['x] we need jump past the @racket['y].  But
+calculating these offsets is pretty straightforward.  In this example
+there is one binding between the binding of @racket['x] and this
+occurrence.  Since we push every time we enter a let and pop every
+time we leave, the number of bindings between an occurrence and its
+binder is exactly the offset from the top of the stack we need use.
+
+@filebox-include-fake[codeblock "con/asm/ast.rkt"]{
+#lang racket
+;; type Arg =
+;; ...
+;; | `(offset ,Reg ,Integer)
+ 
+;; type Reg =
+;; ...
+;; | `rsp
+}
+
+@codeblock-include["con/asm/printer.rkt"]
+@codeblock-include["con/compile.rkt"]
+
+
+@ex[
+(eval:error (asm-display (con-compile 'x)))
+(asm-display (con-compile '(let ((x 7)) x)))
+(asm-display (con-compile '(let ((x 7)) 2)))
+(asm-display (con-compile '(let ((x 7)) (add1 x))))
+(asm-display (con-compile '(let ((x (add1 7))) x)))
+(asm-display (con-compile '(let ((x 7)) (let ((y 2)) x))))
+(asm-display (con-compile '(let ((x 7)) (let ((x 2)) x))))
+(eval:error (asm-display (con-compile '(let ((x (add1 x))) x))))
+(asm-display (con-compile '(let ((x 7)) (let ((x (add1 x))) x))))
+]
