@@ -17,19 +17,19 @@
      (let ((i (lookup x c)))
        `((mov rax (offset rsp ,i))))]
     [`(let ((,x ,e0)) ,e1)
-     (let ((c0 (dupe-compile-e e0 c))
-           (c1 (dupe-compile-e e1 (cons x c))))
+     (let ((c0 (con-compile-e e0 c))
+           (c1 (con-compile-e e1 (cons x c))))
        `(,@c0
          (add rsp -8)
          (mov (offset rsp 0) rax)
          ,@c1
          (add rsp 8)))]
     [`(add1 ,e0)
-     (let ((c0 (blackmail-compile-e e0)))
+     (let ((c0 (con-compile-e e0 c)))
        `(,@c0
          (add rax 1)))]
     [`(sub1 ,e0)
-     (let ((c0 (blackmail-compile-e e0)))
+     (let ((c0 (con-compile-e e0 c)))
        `(,@c0
          (sub rax 1)))]))
 
