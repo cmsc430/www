@@ -1,25 +1,28 @@
 #lang scribble/manual
 
 @(require (for-label (except-in racket ...)))
+@;(require (for-label (file "/Users/dvanhorn/git/cmsc430-www/www/notes/con/interp.rkt")))
 @(require redex/pict
+          racket/runtime-path
           scribble/examples
-	  "con/semantics.rkt"
+	  (except-in "con/semantics.rkt" ext lookup)
+	  (prefix-in sem: (only-in "con/semantics.rkt" ext lookup))
+          #;(file "/Users/dvanhorn/git/cmsc430-www/www/notes/con/interp.rkt")
 	  "utils.rkt"
 	  "ev.rkt"
 	  "../utils.rkt")
 
-@(define saved-cwd (current-directory))
-@(define notes (build-path (current-directory) "notes"))
-@(current-directory notes)
 
-@(define-syntax-rule (ex e ...)
-  (filebox (emph "Examples")
-    (examples #:eval ev #:label #f e ...)))
 
-@(ev '(current-directory (build-path (current-directory-for-user) "notes/con/")))
-@(ev '(require "interp.rkt"))
+@(define codeblock-include (make-codeblock-include #'h))
+
+@(ev `(require (file ,(path->string (build-path notes "con/interp.rkt")))))
 
 @title{Local binding}
+
+@;defmodule[(file "/Users/dvanhorn/git/cmsc430-www/www/notes/con/interp.rkt")]
+@;declare-exporting[(file "/Users/dvanhorn/git/cmsc430-www/www/notes/con/interp.rkt")]
+@;defidform/inline[con-interp]
 
 Let's now consider add a notion of @bold{local binding} to our target
 language.
@@ -59,12 +62,16 @@ Together this leads to the following grammar for Con:
 
 Which can be modeled with the following data type definition:
 
-@filebox-include[codeblock "con/ast.rkt"]
+@codeblock-include["con/ast.rkt"]
 
 We will also need a predicate for well-formed Con expressions, but
 let's return to this after considering the semantics and interpreter.
 
 @section{Meaning of Con programs}
+
+@;(declare-exporting ,`(file ,(path->string (build-path notes "con/interp.rkt"))))
+
+
 
 The meaning of Con programs depends on the form of the expression and
 in the case of integers, increments, and decrements, the meaning is
@@ -186,12 +193,12 @@ variable binding and one for lookup up a variable binding in an
 environment:
 
 @centered{
-@render-metafunction[ext #:contract? #t]
+@render-metafunction[sem:ext #:contract? #t]
 
 @(with-atomic-rewriter
   'undefined
   "⊥"
-  (render-metafunction lookup #:contract? #t))}
+  (render-metafunction sem:lookup #:contract? #t))}
 
 The operational semantics for Con is then defined as a binary relation
 @render-term[C 𝑪], which says that @math{(e,i)} in @render-term[C 𝑪],
@@ -208,7 +215,7 @@ expression.  Environments are represented as lists of associations
 between variables and integers.  There are two helper functions for
 @racket[ext] and @racket[lookup]:
 
-@filebox-include[codeblock "con/interp.rkt"]
+@codeblock-include["con/interp.rkt"]
 
 We can confirm the interpreter computes the right result for the
 examples given earlier:
@@ -230,6 +237,3 @@ examples given earlier:
 @render-term[C 𝑪], then @racket[(con-interp e)] equals
 @racket[i].}
 
-
-@;{ end }
-@(current-directory saved-cwd)
