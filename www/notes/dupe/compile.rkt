@@ -37,11 +37,10 @@
            (c1 (dupe-compile-e e1 c))
            (c2 (dupe-compile-e e2 c)))
        (match (gen-if-labels)
-         [(list if-t if-f if-x)       
+         [(list if-f if-x)       
           `(,@c0
             (cmp rax 0)
             (jne ,if-f)
-            ,if-t
             ,@c1
             (jmp ,if-x)
             ,if-f
@@ -57,14 +56,13 @@
        [#t 0]
        [#f (add1 (lookup x cenv))])]))
 
-;; -> [List Label Label Label]
+;; -> [List Label Label]
 ;; Guaranteed to be unique on each call
 (define gen-if-labels
   (let ((i 0))
     (λ ()
       (set! i (add1 i))
-      (list (lab "t" i)
-            (lab "f" i)
+      (list (lab "f" i)
             (lab "x" i)))))
 
 ;; String Integer -> Symbol
