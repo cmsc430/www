@@ -11,8 +11,9 @@
 
 @(define codeblock-include (make-codeblock-include #'here))
 
+@(ev '(require rackunit))
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "blackmail" f))))))
-	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+	   '("interp.rkt" "compile.rkt" "random.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
 @(define (shellbox . s)
    (parameterize ([current-directory (build-path notes "blackmail")])
@@ -304,7 +305,7 @@ which you can use, without needing the understand how it was
 implemented.
 
 @ex[
-(eval:alts (require "random.rkt") (require "notes/blackmail/random.rkt"))
+(eval:alts (require "random.rkt") (void))
 (random-expr)
 (random-expr)
 (random-expr)
