@@ -1,35 +1,47 @@
 #lang racket
 (provide (all-defined-out))
 
-;; type CEnv = [Listof Variable]
-
 ;; Expr -> Asm
 (define (compile e)
   `(entry
-    ,@(compile-e e)
+    ,@(compile-e e '())
     ret))
 
-;; Expr -> Asm
-(define (compile-e e)
+
+(define true-rep  #b10011111)
+(define false-rep #b00011111)
+(define fixnum-shift 2)
+
+;; ANF CEnv -> Asm
+(define (compile-e e c)
   (match e
-    [(? integer? i) `((mov rax ,i))]
+    [(? integer? i) `((mov rax ,(arithmetic-shift i fixnum-shift)))]
+    [#t `((mov rax ,true-rep))]
+    [#f `((mov rax ,false-rep))]
     [`(add1 ,e0)
-     (let ((c0 (compile-e e0)))
+     (let ((c0 (compile-e e0 c)))
        `(,@c0
-         (add rax 1)))]    
+         (add rax ,(arithmetic-shift 1 fixnum-shift))))]
     [`(sub1 ,e0)
-     (let ((c0 (compile-e e0)))
+     (let ((c0 (compile-e e0 c)))
        `(,@c0
-         (sub rax 1)))]
-    [`(if (zero? ,e0) ,e1 ,e2)
-     (let ((c0 (compile-e e0))
-           (c1 (compile-e e1))
-           (c2 (compile-e e2)))
+         (sub rax ,(arithmetic-shift 1 fixnum-shift ))))]
+
+    ;; FIXME
+    [`(zero? ,e0) '...]    
+    [`(if ,e0 ,e1 ,e2)
+     (let ((c0 (compile-e e0 c))
+           (c1 (compile-e e1 c))
+           (c2 (compile-e e2 c)))
+
+
+       ;; FIXME
        (match (gen-if-labels)
-         [(list if-f if-x)
+         [(list if-t if-f if-x)       
           `(,@c0
             (cmp rax 0)
             (jne ,if-f)
+            ,if-t
             ,@c1
             (jmp ,if-x)
             ,if-f
