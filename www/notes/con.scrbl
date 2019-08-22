@@ -18,7 +18,7 @@
 	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
 
-@title{Con: branching with conditionals}
+@title[#:tag "Con"]{Con: branching with conditionals}
 
 Let's now consider add a notion of @bold{conditionals} to our target
 language.
