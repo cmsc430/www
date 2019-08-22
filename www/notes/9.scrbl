@@ -1,3 +1,3 @@
 #lang scribble/manual
-@title[#:style 'unnumbered]{Week 9}
+@title[#:style 'unnumbered #:tag "week9"]{Week 9: Garbage collection}
 
