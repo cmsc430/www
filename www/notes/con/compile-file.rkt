@@ -10,4 +10,4 @@
     (λ ()
       (let ((p (read)))
         (unless (expr? p) (error "syntax error" p))
-        (asm-display (con-compile p))))))
+        (asm-display (compile p))))))

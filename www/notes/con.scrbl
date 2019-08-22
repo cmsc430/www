@@ -125,7 +125,7 @@ Correctness...
 @;{
 @bold{Interpreter Correctness}: @emph{For all Con expressions
 @racket[e] and integers @racket[i], if (@racket[e],@racket[i]) in
-@render-term[C 𝑪], then @racket[(con-interp e)] equals
+@render-term[C 𝑪], then @racket[(interp e)] equals
 @racket[i].}
 }
 
@@ -147,8 +147,8 @@ We omit the printer code, which is mundane.  See
 
 
 @ex[
-(asm-interp (con-compile '(if (zero? 0) 1 2)))
-(asm-interp (con-compile '(if (zero? 3) 1 2)))
-(asm-interp (con-compile '(if (zero? 0) (if (zero? 0) 8 9) 2)))
-(asm-interp (con-compile '(if (zero? (if (zero? 2) 1 0)) 4 5)))
+(asm-interp (compile '(if (zero? 0) 1 2)))
+(asm-interp (compile '(if (zero? 3) 1 2)))
+(asm-interp (compile '(if (zero? 0) (if (zero? 0) 8 9) 2)))
+(asm-interp (compile '(if (zero? (if (zero? 2) 1 0)) 4 5)))
 ]
