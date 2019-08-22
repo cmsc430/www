@@ -3,5 +3,5 @@
 
 ; Expr -> Integer
 ; Interpret given expression
-(define (abscond-interp e)
+(define (interp e)
   e)

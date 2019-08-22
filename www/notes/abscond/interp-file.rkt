@@ -11,4 +11,4 @@
       (let ((c (read-line)) ; ignore #lang racket line
             (p (read)))
         (unless (integer? p) (error "syntax error" p))
-        (writeln (abscond-interp p))))))
+        (writeln (interp p))))))
