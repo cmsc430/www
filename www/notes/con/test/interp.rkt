@@ -2,7 +2,7 @@
 (require "../interp.rkt" "../asm/interp.rkt" rackunit)
 
 (define (run e)
-  (con-interp e))
+  (interp e))
 
 ;; Abscond examples
 (check-equal? (run 7) 7)
