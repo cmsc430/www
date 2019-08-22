@@ -24,3 +24,11 @@
                         (if (zero? 1) 1 2)
                         7))
               7)
+
+;; Dupe examples
+(check-equal? (run '(if #t 3 4)) 3)
+(check-equal? (run '(if #f 3 4)) 4)
+(check-equal? (run '(if  0 3 4)) 3)
+(check-equal? (run '(zero? 4)) #f)
+(check-equal? (run '(zero? 0)) #t)
+
