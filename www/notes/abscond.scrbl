@@ -34,7 +34,9 @@
 @(shell-expand "echo '#lang racket\n42' > 42.rkt" "racket -t compile-file.rkt -m 42.rkt > 42.s")
 
 
-@title{Let's Make a Programming Language!}
+@title[#:tag "Abscond"]{Abscond: a language of numbers}
+
+@emph{Let's Make a Programming Language!}
 
 A compiler is just one (optional!) component of a @emph{programming
 language}.  So if you want to make a compiler, you must first settle
@@ -80,7 +82,6 @@ training to understand.
 
 We will use a combination of each.
 
-@section{Abscond: a language of numbers}
 
 To begin, let's start with a dead simple programming language called
 @bold{Abscond}.  The only kind of expression in Abscond are integer

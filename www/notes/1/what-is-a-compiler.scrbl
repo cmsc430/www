@@ -1,9 +1,5 @@
 #lang scribble/manual
-@title[#:style 'unnumbered #:tag "week1"]{Week 1: Introduction}
-
-@table-of-contents[]
-
-@section{What @emph{is} a Compiler?}
+@title{What @emph{is} a Compiler?}
 
 A function that maps an @emph{input} string to an @emph{output}
 string.
@@ -42,7 +38,7 @@ Key Requirements on output program:
 microprocessor, web browser).}  
 ]
 
-@subsection{A Bit of History}
+@section{A Bit of History}
 
 Compilers were invented to @link["http://worrydream.com/dbx/"]{avoid writing machine code by hand}.
 
@@ -69,7 +65,7 @@ assembler, but when von Neumann found out about it he was very angry,
 saying that it was a waste of a valuable scientific computing
 instrument to use it to do clerical work.}}
 
-@subsection[#:tag "What does a Compiler look like?"]{What does a Compiler @emph{look} like?}
+@section[#:tag "What does a Compiler look like?"]{What does a Compiler @emph{look} like?}
 
 @image{img/compiler-pipeline.png}
 Compiler Pipeline
@@ -85,7 +81,7 @@ An input source program is converted to an executable binary in many stages:
 @item{@bold{Linked} against a run-time (usually written in C)}
 ]
 
-@subsection{What is CMSC 430?}
+@section{What is CMSC 430?}
 
 @itemlist[
 @item{A bridge between two worlds
@@ -116,7 +112,7 @@ A sequel to both those classes.
 }
 ]
 
-@subsection{How to write a Compiler?}
+@section{How to write a Compiler?}
 
 General recipe, applies to any large system
 
@@ -135,11 +131,11 @@ We will
 
 (Yes, loops forever, but we will hit Ctrl-C in 15 weeks...)
 
-@subsection{Mechanics}
+@section{Mechanics}
 
 See @secref{Syllabus}.
 
-@subsection{What will @emph{we} do?}
+@section{What will @emph{we} do?}
 
 Write @emph{a compiler} for @tt{NanoML -> X86}
 
@@ -162,7 +158,7 @@ So we will write @emph{many} compilers:
 @item{Garbage Collection}
 ]
 
-@subsection{What will @emph{you} learn?}
+@section{What will @emph{you} learn?}
 
 @bold{Core principles of compiler construction}
 
@@ -189,7 +185,7 @@ So we will write @emph{many} compilers:
 @item{How to test & validate}
 ]
 
-@subsection{What do you @emph{need to know}?}
+@section{What do you @emph{need to know}?}
 
 This 430 depends very heavily on CMSC 330.
 
@@ -208,7 +204,7 @@ Also @bold{depends on} CMSC 216
 @item{Experience with some assembly (x86)}
 ]
 
-@subsection{A few words on the medium of instruction}
+@section{A few words on the medium of instruction}
 
 We will use @link["https://racket-lang.org/"]{Racket} which, for our
 purposes is like Ocaml but with nicer syntax.
@@ -222,9 +218,3 @@ go.
 @;section{Our target language: x86}
 
 @;section{Our object language(s): Core Racket}
-
-@include-section{1/ocaml-to-racket.scrbl}
-
-@;section{Compiler 0}
-
-

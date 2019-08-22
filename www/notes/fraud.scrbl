@@ -1,13 +1,12 @@
 #lang scribble/manual
 
 @(require (for-label (except-in racket ...)))
-@;(require (for-label (file "/Users/dvanhorn/git/cmsc430-www/www/notes/dupe/interp.rkt")))
 @(require redex/pict
           racket/runtime-path
           scribble/examples
-	  (except-in "dupe/semantics.rkt" ext lookup)
-	  (prefix-in sem: (only-in "dupe/semantics.rkt" ext lookup))
-          #;(file "/Users/dvanhorn/git/cmsc430-www/www/notes/dupe/interp.rkt")
+	  (except-in "fraud/semantics.rkt" ext lookup)
+	  (prefix-in sem: (only-in "fraud/semantics.rkt" ext lookup))
+          #;(file "/Users/dvanhorn/git/cmsc430-www/www/notes/fraud/interp.rkt")
 	  "utils.rkt"
 	  "ev.rkt"
 	  "../utils.rkt")
@@ -16,21 +15,20 @@
 
 @(define codeblock-include (make-codeblock-include #'h))
 
-@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "dupe" f))))))
+@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "fraud" f))))))
 	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
-@title{Local binding}
+@title{Fraud: local binding and variables}
 
-@;defmodule[(file "/Users/dvanhorn/git/cmsc430-www/www/notes/dupe/interp.rkt")]
-@;declare-exporting[(file "/Users/dvanhorn/git/cmsc430-www/www/notes/dupe/interp.rkt")]
+@;defmodule[(file "/Users/dvanhorn/git/cmsc430-www/www/notes/fraud/interp.rkt")]
+@;declare-exporting[(file "/Users/dvanhorn/git/cmsc430-www/www/notes/fraud/interp.rkt")]
 @;defidform/inline[interp]
 
 Let's now consider add a notion of @bold{local binding} to our target
 language.
 
-@section{Dupe: local binding and variables}
 
-We'll call it @bold{Dupe}.
+We'll call it @bold{Fraud}.
 
 We will use the following syntax to bind local variables:
 
@@ -51,30 +49,30 @@ allows for any number of bindings to be made with @racket[let]:
 }
 
 We adopt this specialization of Racket's let syntax so that you can
-always take a Dupe program and run it in Racket to confirm what it
+always take a Fraud program and run it in Racket to confirm what it
 should produce.
 
 Adding a notion of variable binding also means we need to add
 variables to the syntax of expressions.
 
-Together this leads to the following grammar for Dupe:
+Together this leads to the following grammar for Fraud:
 
 @centered{@render-language[D-pre]}
 
 Which can be modeled with the following data type definition:
 
-@codeblock-include["dupe/ast.rkt"]
+@codeblock-include["fraud/ast.rkt"]
 
-We will also need a predicate for well-formed Dupe expressions, but
+We will also need a predicate for well-formed Fraud expressions, but
 let's return to this after considering the semantics and interpreter.
 
-@section{Meaning of Dupe programs}
+@section{Meaning of Fraud programs}
 
-@;(declare-exporting ,`(file ,(path->string (build-path notes "dupe/interp.rkt"))))
+@;(declare-exporting ,`(file ,(path->string (build-path notes "fraud/interp.rkt"))))
 
 
 
-The meaning of Dupe programs depends on the form of the expression and
+The meaning of Fraud programs depends on the form of the expression and
 in the case of integers, increments, and decrements, the meaning is
 the same as in the prior languages.
 
@@ -201,7 +199,7 @@ environment:
   "⊥"
   (render-metafunction sem:lookup #:contract? #t))}
 
-The operational semantics for Dupe is then defined as a binary relation
+The operational semantics for Fraud is then defined as a binary relation
 @render-term[D 𝑫], which says that @math{(e,i)} in @render-term[D 𝑫],
 only when @math{e} evaluates to @math{i} in the empty environment
 according to @render-term[D 𝑫𝒓]:
@@ -216,7 +214,7 @@ expression.  Environments are represented as lists of associations
 between variables and integers.  There are two helper functions for
 @racket[ext] and @racket[lookup]:
 
-@codeblock-include["dupe/interp.rkt"]
+@codeblock-include["fraud/interp.rkt"]
 
 We can confirm the interpreter computes the right result for the
 examples given earlier:
@@ -233,12 +231,12 @@ examples given earlier:
 (interp '(let ((x 7)) (let ((x (add1 x))) x)))
 ]
 
-@bold{Interpreter Correctness}: @emph{For all Dupe expressions
+@bold{Interpreter Correctness}: @emph{For all Fraud expressions
 @racket[e] and integers @racket[i], if (@racket[e],@racket[i]) in
 @render-term[D 𝑫], then @racket[(interp e)] equals
 @racket[i].}
 
-@section{An Example of Dupe compilation}
+@section{An Example of Fraud compilation}
 
 Suppose we want to compile @racket['(let ((x 7)) (add1 x))].  There
 are two new forms we need to compile: the @racket['(let ((x ...))
@@ -273,7 +271,7 @@ occurrence.  Since we push every time we enter a let and pop every
 time we leave, the number of bindings between an occurrence and its
 binder is exactly the offset from the top of the stack we need use.
 
-@filebox-include-fake[codeblock "dupe/asm/ast.rkt"]{
+@filebox-include-fake[codeblock "fraud/asm/ast.rkt"]{
 #lang racket
 ;; type Arg =
 ;; ...
@@ -284,8 +282,8 @@ binder is exactly the offset from the top of the stack we need use.
 ;; | `rsp
 }
 
-@codeblock-include["dupe/asm/printer.rkt"]
-@codeblock-include["dupe/compile.rkt"]
+@codeblock-include["fraud/asm/printer.rkt"]
+@codeblock-include["fraud/compile.rkt"]
 
 
 @ex[

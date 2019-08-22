@@ -17,12 +17,11 @@
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "con" f))))))
 	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
-@title{Conditional computation}
+
+@title{Con: branching with conditionals}
 
 Let's now consider add a notion of @bold{conditionals} to our target
 language.
-
-@section{Con: branching with conditionals}
 
 We'll call it @bold{Con}.
 
