@@ -14,24 +14,27 @@
      (string-append "\tadd " (arg->string a1) ", " (arg->string a2) "\n")]
     [`(sub ,a1 ,a2)
      (string-append "\tsub " (arg->string a1) ", " (arg->string a2) "\n")]
+    [`(cmp ,a1 ,a2)
+     (string-append "\tcmp " (arg->string a1) ", " (arg->string a2) "\n")]
+    [`(jmp ,l)
+     (string-append "\tjmp " (label->string l) "\n")]
+    [`(je ,l)
+     (string-append "\tje " (label->string l) "\n")]
+    [`(jne ,l)
+     (string-append "\tjne " (label->string l) "\n")]
     [`ret "\tret\n"]
-    [`(push ,r)
-     (string-append "\tpush " (reg->string r) "\n")]
-    #;[`(pop ,r) "\tpop " (reg->string r) "\n"]
     [l (string-append (label->string l) ":\n")]))
 
 ;; Arg -> String
 (define (arg->string a)
   (match a
     [(? reg?) (reg->string a)]
-    [`(offset ,r ,i)
-     (string-append "[" (reg->string r) " + " (number->string (* i 8)) "]")]
     [(? integer?) (number->string a)]))
 
 ;; Any -> Boolean
 (define (reg? x)
   (and (symbol? x)
-       (memq x '(rax rsp))))
+       (memq x '(rax))))
 
 ;; Reg -> String
 (define (reg->string r)
