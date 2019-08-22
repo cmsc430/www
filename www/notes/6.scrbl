@@ -1,2 +1,2 @@
 #lang scribble/manual
-@title[#:style 'unnumbered]{Week 6}
+@title[#:style 'unnumbered #:tag "week6"]{Week 6: Functions and tail-calls}

@@ -1,2 +1,2 @@
 #lang scribble/manual
-@title[#:style 'unnumbered]{Week 4}
+@title[#:style 'unnumbered #:tag "week4"]{Week 4: Binary operations, ANF, and booleans}
