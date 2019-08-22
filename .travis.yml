@@ -27,8 +27,9 @@ before_script:
 - sleep 3
 
 script:
-- make -C www main
+- raco make www
 - raco test www
+- make -C www main
 - mv www/main www/cmsc430
 
 addons:
