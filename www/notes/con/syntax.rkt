@@ -9,8 +9,8 @@
     [(? integer? i) #t]
     [`(add1 ,x) (expr? x)]
     [`(sub1 ,x) (expr? x)]
-    [`(let ((,x ,y)) ,z)
-     (and (symbol? x)
+    [`(if (zero? ,x) ,y ,z)
+     (and (expr? x)
           (expr? y)
           (expr? z))]
     [_ #f]))

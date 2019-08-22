@@ -18,16 +18,16 @@
        `((mov rax (offset rsp ,i))))]
     [`(let ((,x ,e0)) ,e1)
      (let ((c0 (dupe-compile-e e0 c))
-           (c1 (dupe-compile-e e1 (cons x c))))           
+           (c1 (dupe-compile-e e1 (cons x c))))
        `(,@c0
          (add rsp -8)
          (mov (offset rsp 0) rax)
          ,@c1
-         (add rsp 8)))]    
+         (add rsp 8)))]
     [`(add1 ,e0)
      (let ((c0 (dupe-compile-e e0 c)))
        `(,@c0
-         (add rax 1)))]    
+         (add rax 1)))]
     [`(sub1 ,e0)
      (let ((c0 (dupe-compile-e e0 c)))
        `(,@c0
@@ -47,15 +47,6 @@
             ,@c2
             ,if-x)]))]))
 
-;; Variable CEnv -> Natural
-(define (lookup x cenv)
-  (match cenv
-    ['() (error "undefined variable:" x)]
-    [(cons y cenv)
-     (match (symbol=? x y)
-       [#t 0]
-       [#f (add1 (lookup x cenv))])]))
-
 ;; -> [List Label Label]
 ;; Guaranteed to be unique on each call
 (define gen-if-labels
@@ -68,3 +59,13 @@
 ;; String Integer -> Symbol
 (define (lab s i)
   (string->symbol (string-append "if_" s "_" (number->string i))))
+
+
+;; Variable CEnv -> Natural
+(define (lookup x cenv)
+  (match cenv
+    ['() (error "undefined variable:" x)]
+    [(cons y cenv)
+     (match (symbol=? x y)
+       [#t 0]
+       [#f (add1 (lookup x cenv))])]))
