@@ -28,6 +28,7 @@ before_script:
 
 script:
 - make -C www main
+- raco test www
 - mv www/main www/cmsc430
 
 addons:
