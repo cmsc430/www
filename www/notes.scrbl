@@ -3,10 +3,13 @@
 
 @local-table-of-contents[#:style 'immediate-only]
 
-@include-section{notes/1.scrbl}
-@include-section{notes/2.scrbl}
-@include-section{notes/3.scrbl}
-@include-section{notes/4.scrbl}
+@include-section{notes/1/what-is-a-compiler.scrbl}
+@include-section{notes/1/ocaml-to-racket.scrbl}
+@include-section{notes/abscond.scrbl}
+@include-section{notes/blackmail.scrbl}
+@include-section{notes/con.scrbl}
+@;include-section{notes/dupe.scrbl}
+@include-section{notes/fraud.scrbl}
 @include-section{notes/5.scrbl}
 @include-section{notes/6.scrbl}
 @include-section{notes/7.scrbl}
