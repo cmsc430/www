@@ -29,7 +29,7 @@
 	       #'(void)))]))
 
 @;{ Have to compile 42.s (at expand time) before listing it }
-@(shell-expand "echo 42 > 42.scm" "racket -t compile-file.rkt -m 42.scm > 42.s")
+@(shell-expand "echo '#lang racket\n42' > 42.rkt" "racket -t compile-file.rkt -m 42.rkt > 42.s")
 
 
 @title{Let's Make a Programming Language!}
@@ -133,7 +133,7 @@ well-formed Abscond program, then it runs the intepreter and displays
 the result.
 
 For example:
-@shellbox["echo 42 > 42.scm" "racket -t interp-file.rkt -m 42.scm"]
+@shellbox["echo '#lang racket\n42' > 42.rkt" "racket -t interp-file.rkt -m 42.rkt"]
 
 Even though the semantics is obvious, we can provide a formal
 definition of Abscond using @bold{operational semantics}.
@@ -391,7 +391,7 @@ code:
 
 Example:
 
-@shellbox["racket -t compile-file.rkt -m 42.scm"]
+@shellbox["racket -t compile-file.rkt -m 42.rkt"]
 
 Using a Makefile, we can capture the whole compilation dependencies as:
 
@@ -424,7 +424,7 @@ adds up to much more efficient programs.  Just to demonstrate, here's
 a single data point measuring the difference between interpreting and
 compiling Abscond programs:
 
-@shellbox["time -p racket -t interp-file.rkt -m 42.scm"]
+@shellbox["time -p racket -t interp-file.rkt -m 42.rkt"]
 
 Compiling:
 
