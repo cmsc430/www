@@ -1,5 +1,5 @@
 #lang scribble/manual
-@title{What @emph{is} a Compiler?}
+@title[#:tag "Intro"]{What @emph{is} a Compiler?}
 
 A function that maps an @emph{input} string to an @emph{output}
 string.

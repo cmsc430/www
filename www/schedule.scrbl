@@ -17,15 +17,15 @@
          #:row-properties '(bottom-border)
          (list (list @bold{Week} @bold{Tuesday} @bold{Thursday})
                (list @wk{Aug 27} 
-                     @secref["week1"]
-                     'cont)
+                     @secref["Intro"]
+                     @secref["OCaml to Racket"])
                
                (list @wk{Sep 3} 
-                     @secref["week2"]
-                     'cont)
+                     @secref["Abscond"]
+                     @secref["Blackmail"])
                
                (list @wk{Sep 10} 
-                     @elem{TBD}
+                     @secref["Con"]
                      'cont)
                
                (list @wk{Sep 17} 

@@ -25,7 +25,7 @@
 
 
 
-@title[#:tag-prefix "notes"]{From OCaml to Racket}
+@title[#:tag "OCaml to Racket"]{From OCaml to Racket}
 
 @verbatim{
 - write about match
@@ -229,7 +229,7 @@ error (and not perform partial function application):
 (eval:error ((λ (x y) (+ x y)) 3))
 ]
 
-@section{Definitions}
+@section[#:tag-prefix "ocaml"]{Definitions}
 
 At the top-level in OCaml, variables can be defined with @tt{let} and
 @tt{let rec}:
