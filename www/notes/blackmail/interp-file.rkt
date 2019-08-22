@@ -8,6 +8,7 @@
 (define (main fn)
   (with-input-from-file fn
     (λ ()
-      (let ((p (read)))
-        (unless (expr? p) (error "syntax error" p))
-        (writeln (blackmail-interp p))))))
+      (let ((c (read-line)))
+        (let ((p (read)))
+          (unless (expr? p) (error "syntax error" p))
+          (writeln (blackmail-interp p)))))))

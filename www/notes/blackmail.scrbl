@@ -29,7 +29,7 @@
 	       #'(void)))]))
 
 @;{ Have to compile 42.s (at expand time) before listing it }
-@(shell-expand "echo '(add1 (add1 40))' > add1-add1-40.scm" "racket -t compile-file.rkt -m add1-add1-40.scm > add1-add1-40.s")
+@(shell-expand "echo '#lang racket\n(add1 (add1 40))' > add1-add1-40.rkt" "racket -t compile-file.rkt -m add1-add1-40.rkt > add1-add1-40.s")
 
 @title{Let's Do It Again!}
 
@@ -257,8 +257,8 @@ files:
 
 Here it is in action:
 
-@shellbox["echo \"(add1 (add1 9))\" > add1-add1-9.scm"
-          "racket -t compile-file.rkt -m add1-add1-9.scm"]
+@shellbox["echo \"#lang racket\\n(add1 (add1 9))\" > add1-add1-9.rkt"
+          "racket -t compile-file.rkt -m add1-add1-9.rkt"]
 
 And using the same @link["code/blackmail/Makefile"]{@tt{Makefile}}
 setup as in Abscond, we capture the whole compilation process with a
