@@ -27,7 +27,7 @@ before_script:
 - sleep 3
 
 script:
-- raco make www
+- raco make www/main.scrbl
 - raco test www
 - make -C www main
 - mv www/main www/cmsc430
