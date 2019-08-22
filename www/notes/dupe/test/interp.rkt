@@ -2,7 +2,7 @@
 (require "../interp.rkt" "../asm/interp.rkt" rackunit)
 
 (define (run e)
-  (dupe-interp e))
+  (interp e))
 
 (check-equal? (run 7) 7)
 (check-equal? (run -8) -8)
