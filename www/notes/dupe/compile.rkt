@@ -4,38 +4,38 @@
 ;; type CEnv = [Listof Variable]
 
 ;; Expr -> Asm
-(define (dupe-compile e)
+(define (compile e)
   (append '(entry)
-          (dupe-compile-e e '())
+          (compile-e e '())
           '(ret)))
 
 ;; Expr CEnv -> Asm
-(define (dupe-compile-e e c)
+(define (compile-e e c)
   (match e
     [(? integer? i) `((mov rax ,i))]
     [(? symbol? x)
      (let ((i (lookup x c)))
        `((mov rax (offset rsp ,i))))]
     [`(let ((,x ,e0)) ,e1)
-     (let ((c0 (dupe-compile-e e0 c))
-           (c1 (dupe-compile-e e1 (cons x c))))
+     (let ((c0 (compile-e e0 c))
+           (c1 (compile-e e1 (cons x c))))
        `(,@c0
          (add rsp -8)
          (mov (offset rsp 0) rax)
          ,@c1
          (add rsp 8)))]
     [`(add1 ,e0)
-     (let ((c0 (dupe-compile-e e0 c)))
+     (let ((c0 (compile-e e0 c)))
        `(,@c0
          (add rax 1)))]
     [`(sub1 ,e0)
-     (let ((c0 (dupe-compile-e e0 c)))
+     (let ((c0 (compile-e e0 c)))
        `(,@c0
          (sub rax 1)))]
     [`(if (zero? ,e0) ,e1 ,e2)
-     (let ((c0 (dupe-compile-e e0 c))
-           (c1 (dupe-compile-e e1 c))
-           (c2 (dupe-compile-e e2 c)))
+     (let ((c0 (compile-e e0 c))
+           (c1 (compile-e e1 c))
+           (c2 (compile-e e2 c)))
        (match (gen-if-labels)
          [(list if-f if-x)       
           `(,@c0

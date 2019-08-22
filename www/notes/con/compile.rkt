@@ -4,27 +4,27 @@
 ;; type CEnv = [Listof Variable]
 
 ;; Expr -> Asm
-(define (con-compile e)
+(define (compile e)
   `(entry
-    ,@(con-compile-e e)
+    ,@(compile-e e)
     ret))
 
 ;; Expr -> Asm
-(define (con-compile-e e)
+(define (compile-e e)
   (match e
     [(? integer? i) `((mov rax ,i))]
     [`(add1 ,e0)
-     (let ((c0 (con-compile-e e0)))
+     (let ((c0 (compile-e e0)))
        `(,@c0
          (add rax 1)))]    
     [`(sub1 ,e0)
-     (let ((c0 (con-compile-e e0)))
+     (let ((c0 (compile-e e0)))
        `(,@c0
          (sub rax 1)))]
     [`(if (zero? ,e0) ,e1 ,e2)
-     (let ((c0 (con-compile-e e0))
-           (c1 (con-compile-e e1))
-           (c2 (con-compile-e e2)))
+     (let ((c0 (compile-e e0))
+           (c1 (compile-e e1))
+           (c2 (compile-e e2)))
        (match (gen-if-labels)
          [(list if-f if-x)
           `(,@c0

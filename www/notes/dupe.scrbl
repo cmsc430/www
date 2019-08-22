@@ -23,7 +23,7 @@
 
 @;defmodule[(file "/Users/dvanhorn/git/cmsc430-www/www/notes/dupe/interp.rkt")]
 @;declare-exporting[(file "/Users/dvanhorn/git/cmsc430-www/www/notes/dupe/interp.rkt")]
-@;defidform/inline[dupe-interp]
+@;defidform/inline[interp]
 
 Let's now consider add a notion of @bold{local binding} to our target
 language.
@@ -209,8 +209,8 @@ according to @render-term[D 𝑫𝒓]:
 @(show-judgment 𝑫 0 1)
 
 The interpreter closely mirrors the semantics.  The top-level
-@racket[dupe-interp] function relies on a helper function
-@racket[dupe-interp-env] that takes an expression and environment and
+@racket[interp] function relies on a helper function
+@racket[interp-env] that takes an expression and environment and
 computes the result.  It is defined by structural recursion on the
 expression.  Environments are represented as lists of associations
 between variables and integers.  There are two helper functions for
@@ -222,20 +222,20 @@ We can confirm the interpreter computes the right result for the
 examples given earlier:
 
 @ex[
-(eval:error (dupe-interp 'x))
-(dupe-interp '(let ((x 7)) x))
-(dupe-interp '(let ((x 7)) 2))
-(dupe-interp '(let ((x 7)) (add1 x)))
-(dupe-interp '(let ((x (add1 7))) x))
-(dupe-interp '(let ((x 7)) (let ((y 2)) x)))
-(dupe-interp '(let ((x 7)) (let ((x 2)) x)))
-(eval:error (dupe-interp '(let ((x (add1 x))) x)))
-(dupe-interp '(let ((x 7)) (let ((x (add1 x))) x)))
+(eval:error (interp 'x))
+(interp '(let ((x 7)) x))
+(interp '(let ((x 7)) 2))
+(interp '(let ((x 7)) (add1 x)))
+(interp '(let ((x (add1 7))) x))
+(interp '(let ((x 7)) (let ((y 2)) x)))
+(interp '(let ((x 7)) (let ((x 2)) x)))
+(eval:error (interp '(let ((x (add1 x))) x)))
+(interp '(let ((x 7)) (let ((x (add1 x))) x)))
 ]
 
 @bold{Interpreter Correctness}: @emph{For all Dupe expressions
 @racket[e] and integers @racket[i], if (@racket[e],@racket[i]) in
-@render-term[D 𝑫], then @racket[(dupe-interp e)] equals
+@render-term[D 𝑫], then @racket[(interp e)] equals
 @racket[i].}
 
 @section{An Example of Dupe compilation}
@@ -289,13 +289,13 @@ binder is exactly the offset from the top of the stack we need use.
 
 
 @ex[
-(eval:error (asm-display (dupe-compile 'x)))
-(asm-display (dupe-compile '(let ((x 7)) x)))
-(asm-display (dupe-compile '(let ((x 7)) 2)))
-(asm-display (dupe-compile '(let ((x 7)) (add1 x))))
-(asm-display (dupe-compile '(let ((x (add1 7))) x)))
-(asm-display (dupe-compile '(let ((x 7)) (let ((y 2)) x))))
-(asm-display (dupe-compile '(let ((x 7)) (let ((x 2)) x))))
-(eval:error (asm-display (dupe-compile '(let ((x (add1 x))) x))))
-(asm-display (dupe-compile '(let ((x 7)) (let ((x (add1 x))) x))))
+(eval:error (asm-display (compile 'x)))
+(asm-display (compile '(let ((x 7)) x)))
+(asm-display (compile '(let ((x 7)) 2)))
+(asm-display (compile '(let ((x 7)) (add1 x))))
+(asm-display (compile '(let ((x (add1 7))) x)))
+(asm-display (compile '(let ((x 7)) (let ((y 2)) x))))
+(asm-display (compile '(let ((x 7)) (let ((x 2)) x))))
+(eval:error (asm-display (compile '(let ((x (add1 x))) x))))
+(asm-display (compile '(let ((x 7)) (let ((x (add1 x))) x))))
 ]

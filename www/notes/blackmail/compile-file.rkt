@@ -11,4 +11,4 @@
       (let ((c (read-line)))
         (let ((p (read)))
           (unless (expr? p) (error "syntax error" p))
-          (asm-display (blackmail-compile p)))))))
+          (asm-display (compile p)))))))

@@ -8,6 +8,7 @@
 (define (main fn)
   (with-input-from-file fn
     (λ ()
-      (let ((p (read)))
+      (let ((c (read-line))
+            (p (read)))
         (unless (expr? p) (error "syntax error" p))
-        (asm-display (dupe-compile p))))))
+        (asm-display (compile p))))))

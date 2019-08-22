@@ -139,11 +139,11 @@ interpreter, one for each form of expression:
 @codeblock-include["blackmail/interp.rkt"]
 
 @examples[#:eval ev
-(blackmail-interp 42)
-(blackmail-interp -7)
-(blackmail-interp '(add1 42))
-(blackmail-interp '(sub1 8))
-(blackmail-interp '(add1 (add1 (add1 8))))
+(interp 42)
+(interp -7)
+(interp '(add1 42))
+(interp '(sub1 8))
+(interp '(add1 (add1 (add1 8))))
 ]
 
 Here's how to connect the dots between the semantics and interpreter:
@@ -174,7 +174,7 @@ induction) of the interpreter's correctness:
 
 @bold{Interpreter Correctness}: @emph{For all Blackmail expressions
 @racket[e] and integers @racket[i], if (@racket[e],@racket[i]) in
-@render-term[B 𝑩], then @racket[(blackmail-interp e)] equals
+@render-term[B 𝑩], then @racket[(interp e)] equals
 @racket[i].}
 
 @section{An Example of Blackmail compilation}
@@ -238,16 +238,16 @@ another function to compile the expression:
 
 @codeblock-include["blackmail/compile.rkt"]
 
-Notice that @racket[blackmail-compile-e] is defined by structural
+Notice that @racket[compile-e] is defined by structural
 recursion, much like the interpreter.
 
 
 We can now try out a few examples:
 
 @ex[
-(blackmail-compile '(add1 (add1 40)))
-(blackmail-compile '(sub1 8))
-(blackmail-compile '(add1 (add1 (sub1 (add1 -8)))))
+(compile '(add1 (add1 40)))
+(compile '(sub1 8))
+(compile '(add1 (add1 (sub1 (add1 -8)))))
 ]
 
 And give a command line wrapper for parsing, checking, and compiling
@@ -271,9 +271,9 @@ Likewise, to test the compiler from within Racket, we use the same
 encapsulate running assembly code:
 
 @ex[
-(asm-interp (blackmail-compile '(add1 (add1 40))))
-(asm-interp (blackmail-compile '(sub1 8)))
-(asm-interp (blackmail-compile '(add1 (add1 (sub1 (add1 -8))))))
+(asm-interp (compile '(add1 (add1 40))))
+(asm-interp (compile '(sub1 8)))
+(asm-interp (compile '(add1 (add1 (sub1 (add1 -8))))))
 ]
 
 @section{Correctness and random testing}
@@ -282,7 +282,7 @@ We can state correctness similarly to how it was stated for Abscond:
 
 @bold{Compiler Correctness}: @emph{For all expressions @racket[e] and
 integers @racket[i], if (@racket[e],@racket[i]) in @render-term[B
-𝑩], then @racket[(asm-interp (blackmail-compile e))] equals
+𝑩], then @racket[(asm-interp (compile e))] equals
 @racket[i].}
 
 
@@ -292,8 +292,8 @@ which hopefully holds:
 
 @ex[
 (define (check-compiler e)
-  (check-eqv? (blackmail-interp e)
-              (asm-interp (blackmail-compile e))))]
+  (check-eqv? (interp e)
+              (asm-interp (compile e))))]
 
 The problem, however, is that generating random Blackmail programs is
 less obvious compared to generating random Abscond programs
@@ -311,7 +311,7 @@ implemented.
 (random-expr)
 (random-expr)
 (random-expr)
-(asm-display (blackmail-compile (random-expr)))
+(asm-display (compile (random-expr)))
 (for ([i (in-range 10)])
   (check-compiler (random-expr)))
 ]
@@ -346,7 +346,7 @@ well-formed AST}]}
 
 @item{@bold{Generated} into assembly x86
 
-@itemlist[@item{we use @racket[abscond-compile] and @racket[blackmail-compile] to generate assembly (in AST form),
+@itemlist[@item{we use @racket[abscond-compile] and @racket[compile] to generate assembly (in AST form),
   and use @racket[asm-display] to print concrete X86-64}]}
 
 @item{@bold{Linked} against a run-time (usually written in C)
