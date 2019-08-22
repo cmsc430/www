@@ -31,7 +31,9 @@
 @;{ Have to compile 42.s (at expand time) before listing it }
 @(shell-expand "echo '#lang racket\n(add1 (add1 40))' > add1-add1-40.rkt" "racket -t compile-file.rkt -m add1-add1-40.rkt > add1-add1-40.s")
 
-@title{Let's Do It Again!}
+@title[#:tag "Blackmail"]{Blackmail: incrementing and decrementing}
+
+@emph{Let's Do It Again!}
 
 We've seen all the essential peices (a grammar, an AST data type
 definition, an operational semantics, an interpreter, a compiler,
@@ -41,7 +43,6 @@ simple language.
 We will now, through a process of @bold{iterative refinement}, grow
 the language to have an interesting set of features.
 
-@section{Blackmail: incrementing and decrementing}
 
 Our second language, which subsumes Abscond, is @bold{Blackmail}.
 Expressions in Blackmail include integer literals and increment and
@@ -316,6 +317,7 @@ implemented.
   (check-compiler (random-expr)))
 ]
 
+
 @section{Looking back, looking forward}
 
 We've now built two compilers; enough to start observing a pattern.
@@ -367,3 +369,4 @@ Our recipe for building compiler involves:
 As we move forward, the language we are compiling will grow.  As the
 language grows, you should apply this recipe to grow the compiler
 along with the language.
+
