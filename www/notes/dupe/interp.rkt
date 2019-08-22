@@ -5,6 +5,7 @@
 (define (interp e)
   (match e
     [(? integer? i) i]
+    [(? boolean? b) b]
     [`(add1 ,e0)
      (add1 (interp e0))]
     [`(sub1 ,e0)
