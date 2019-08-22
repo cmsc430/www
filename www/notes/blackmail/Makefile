@@ -16,7 +16,7 @@ main.o: main.c
 %.o: %.s
 	nasm -f $(format) -o $@ $<
 
-%.s: %.scm
+%.s: %.rkt
 	racket -t compile-file.rkt -m $< > $@
 
 clean:
