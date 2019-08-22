@@ -1,9 +1,11 @@
 #lang scribble/manual
 
-@(require (for-label racket))
+@(require (for-label (except-in racket compile)))
 @(require scribble/examples
 	  redex/reduction-semantics	  
-          redex/pict (only-in pict scale)
+          redex/pict
+	  (only-in pict scale)
+	  (only-in racket system)
 	  "../fancyverb.rkt"
 	  "../utils.rkt"
 	  "utils.rkt"
@@ -117,8 +119,8 @@ produces it's meaning:
 
 @#reader scribble/comment-reader
 (examples #:eval ev
-(abscond-interp 42)
-(abscond-interp -8)
+(interp 42)
+(interp -8)
 )
 
 We can add a command line wrapper program for interpreting Abscond
@@ -133,7 +135,7 @@ well-formed Abscond program, then it runs the intepreter and displays
 the result.
 
 For example:
-@shellbox["echo '#lang racket\n42' > 42.rkt" "racket -t interp-file.rkt -m 42.rkt"]
+@shellbox["echo '#lang racket\\n42' > 42.rkt" "racket -t interp-file.rkt -m 42.rkt"]
 
 Even though the semantics is obvious, we can provide a formal
 definition of Abscond using @bold{operational semantics}.
@@ -180,7 +182,7 @@ following statement:
 
 @bold{Interpreter Correctness}: @emph{For all expressions @racket[e]
 and integers @racket[i], if (@racket[e],@racket[i]) in @render-term[A
-𝑨], then @racket[(abscond-interp e)] equals @racket[i].}
+𝑨], then @racket[(interp e)] equals @racket[i].}
 
 We now have a complete (if overly simple) programming language with an
 operational semantics and an interpreter, which is (obviously)
@@ -324,7 +326,7 @@ will be a function with the following signature:
 @#reader scribble/comment-reader
 (racketblock
 ;; Expr -> Asm
-(define (abscond-compile e) ...)
+(define (compile e) ...)
 )
 
 Where @tt{Asm} is a data type for representing assembly programs,
@@ -358,14 +360,14 @@ So the AST representation of our example is:
   ret)
 ]
 
-Writing the @racket[abscond-compile] function is easy:
+Writing the @racket[compile] function is easy:
 
 @codeblock-include["abscond/compile.rkt"]
 
 @#reader scribble/comment-reader
 (examples #:eval ev 
-(abscond-compile 42)
-(abscond-compile 38)
+(compile 42)
+(compile 38)
 )
 
 
@@ -381,7 +383,7 @@ appropriately.}
 
 @#reader scribble/comment-reader
 (examples #:eval ev
-(asm-display (abscond-compile 42)))
+(asm-display (compile 42)))
                    
 Putting it all together, we can write a command line compiler much
 like the command line interpreter before, except now we emit assembly
@@ -430,6 +432,18 @@ Compiling:
 
 @shellbox["time -p ./42.run"]
 
+Because Abscond is a subset of Racket, we can even compare results
+against interpreting the program directly in Racket:
+
+@shellbox["touch 42.rkt # forces interpreter to be used"
+          "time -p racket 42.rkt"]
+
+Moreover, we can compare our compiled code to code compiled by Racket:
+
+@shellbox["raco make 42.rkt"
+	  "time -p racket 42.rkt"]
+
+
 @section{But is it @emph{Correct}?}
 
 At this point, we have a compiler for Abscond.  But is it correct?
@@ -438,7 +452,7 @@ Here is a statement of compiler correctness:
 
 @bold{Compiler Correctness}: @emph{For all expressions @racket[e] and
 integers @racket[i], if (@racket[e],@racket[i]) in @render-term[A
-𝑨], then @racket[(asm-interp (abscond-compile e))] equals
+𝑨], then @racket[(asm-interp (compile e))] equals
 @racket[i].}
 
 Ultimately, we want the compiler to capture the operational semantics
@@ -456,7 +470,7 @@ equivalent to the interpreter, and the interpreter is correct.
 So, in this setting, means we have the following equivaluence:
 
 @verbatim{
-(abscond-interp e) @emph{equals} (asm-interp (abscond-compile e))
+(interp e) @emph{equals} (asm-interp (compile e))
 }
 
 But we don't actually have @racket[interpret-asm], a function that
@@ -466,7 +480,7 @@ could run.  But this is a minor distinction.  We can write
 @racket[asm-interp] to interact with the OS to do all of these steps.
 
 Here's such a definition.  (Again: the details here are not important
-and we won't ask you to write or understand this code, but roughly,
+and we won't ask you to write or understand this code, but roughly,q
 all it's doing is emitting assembly (to a temporary file) and
 calling @tt{make} to build the executable, then running it and parsing
 the result.)
@@ -477,17 +491,17 @@ This is actually a handy tool to have for experimenting with
 compilation within Racket:
 
 @examples[#:eval ev
-(asm-interp (abscond-compile 42))
-(asm-interp (abscond-compile 37))
-(asm-interp (abscond-compile -8))
+(asm-interp (compile 42))
+(asm-interp (compile 37))
+(asm-interp (compile -8))
 ]
 
 This of course agrees with what we will get from the interpreter:
 
 @examples[#:eval ev
-(abscond-interp 42)
-(abscond-interp 37)
-(abscond-interp -8)
+(interp 42)
+(interp 37)
+(interp -8)
 ]
 
 We can turn this in a @bold{property-based test}, i.e. a function that
@@ -495,8 +509,8 @@ computes a test expressing a single instance of our compiler
 correctness claim:
 @examples[#:eval ev
 (define (check-compiler e)
-  (check-eqv? (abscond-interp e)
-              (asm-interp (abscond-compile e))))
+  (check-eqv? (interp e)
+              (asm-interp (compile e))))
 
 (check-compiler 42)
 (check-compiler 37)

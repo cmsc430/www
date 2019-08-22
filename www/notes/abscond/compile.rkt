@@ -2,7 +2,7 @@
 (provide (all-defined-out))
 
 ;; Expr -> Asm
-(define (abscond-compile e)
+(define (compile e)
   `(entry
     (mov rax ,e)
     ret))
