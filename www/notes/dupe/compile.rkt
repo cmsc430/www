@@ -15,15 +15,13 @@
     [(? integer? i) `((mov rax ,i))]
     [(? symbol? x)
      (let ((i (lookup x c)))
-       `((mov rax (offset rsp ,i))))]
+       `((mov rax (offset rsp ,(- (add1 i))))))]
     [`(let ((,x ,e0)) ,e1)
      (let ((c0 (compile-e e0 c))
            (c1 (compile-e e1 (cons x c))))
        `(,@c0
-         (add rsp -8)
-         (mov (offset rsp 0) rax)
-         ,@c1
-         (add rsp 8)))]
+         (mov (offset rsp ,(- (add1 (length c)))) rax)
+         ,@c1))]
     [`(add1 ,e0)
      (let ((c0 (compile-e e0 c)))
        `(,@c0
@@ -60,12 +58,11 @@
 (define (lab s i)
   (string->symbol (string-append "if_" s "_" (number->string i))))
 
-
 ;; Variable CEnv -> Natural
 (define (lookup x cenv)
   (match cenv
     ['() (error "undefined variable:" x)]
     [(cons y cenv)
      (match (symbol=? x y)
-       [#t 0]
-       [#f (add1 (lookup x cenv))])]))
+       [#t (length cenv)]
+       [#f (lookup x cenv)])]))
