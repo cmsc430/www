@@ -257,14 +257,14 @@ files:
 
 Here it is in action:
 
-@shellbox["echo \"#lang racket\\n(add1 (add1 9))\" > add1-add1-9.rkt"
-          "racket -t compile-file.rkt -m add1-add1-9.rkt"]
+@shellbox["echo \"#lang racket\\n(add1 (add1 40))\" > add1-add1-40.rkt"
+          "racket -t compile-file.rkt -m add1-add1-40.rkt"]
 
 And using the same @link["code/blackmail/Makefile"]{@tt{Makefile}}
 setup as in Abscond, we capture the whole compilation process with a
 single command:
 
-@shellbox["make add1-add1-9.run" "./add1-add1-9.run"]
+@shellbox["make add1-add1-40.run" "./add1-add1-40.run"]
 
 Likewise, to test the compiler from within Racket, we use the same
 @link["code/blackmail/asm/interp.rkt"]{@tt{asm/interp.rkt}} code to
