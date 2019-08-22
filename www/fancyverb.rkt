@@ -3,12 +3,15 @@
 (require (only-in xml cdata)
          scribble/core
          scribble/base
-         scribble/html-properties)
+         scribble/html-properties
+         racket/runtime-path)
+
+(define-runtime-path here ".")
 
 (define PANDOC
   (format "pandoc ~a -f markdown -t html"
           (apply string-append
-                 (map (λ (f) (format "--syntax-definition ~a " (build-path (current-directory-for-user) f)))
+                 (map (λ (f) (format "--syntax-definition ~a " (build-path here f)))
                       '("fish.xml" "nasm.xml" "ocaml.xml")))))
 
 (define (fancy-c s)
