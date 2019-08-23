@@ -1,8 +1,6 @@
 #lang racket
 (provide (all-defined-out))
 
-;; type CEnv = [Listof Variable]
-
 ;; Expr -> Asm
 (define (compile e)
   `(entry
