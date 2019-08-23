@@ -4,6 +4,7 @@
 @(require redex/pict
           racket/runtime-path
           scribble/examples
+          "../fancyverb.rkt"
 	  "utils.rkt"
 	  "ev.rkt"
 	  "dupe/semantics.rkt"
@@ -143,7 +144,7 @@ Suppose we want to compile ...
 
 Run-time support...
 
-@codeblock-include["dupe/main.c"]
+@filebox-include[fancy-c "dupe/main.c"]
 
 What needs to happen? ...
 
