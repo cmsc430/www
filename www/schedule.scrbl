@@ -26,7 +26,7 @@
                
                (list @wk{Sep 10} 
                      @secref["Con"]
-                     'cont)
+                     @secref["Dupe"])
                
                (list @wk{Sep 17} 
                      @elem{TBD}

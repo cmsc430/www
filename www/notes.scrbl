@@ -8,7 +8,7 @@
 @include-section{notes/abscond.scrbl}
 @include-section{notes/blackmail.scrbl}
 @include-section{notes/con.scrbl}
-@;include-section{notes/dupe.scrbl}
+@include-section{notes/dupe.scrbl}
 @include-section{notes/fraud.scrbl}
 @include-section{notes/5.scrbl}
 @include-section{notes/6.scrbl}
