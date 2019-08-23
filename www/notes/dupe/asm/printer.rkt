@@ -20,10 +20,18 @@
     [`(jne ,l)
      (string-append "\tjne " (label->string l) "\n")]
     [`ret "\tret\n"]
+
+    [`(,(? opcode1? o) ,a1)    
+     (string-append "\t"
+                    (symbol->string o) " "
+                    (arg->string a1) "\n")]    
     [l (string-append (label->string l) ":\n")]))
 
 (define (opcode2? x)
-  (memq x '(mov add sub cmp imul)))
+  (memq x '(mov add sub cmp imul movzx sal or)))
+
+(define (opcode1? x)
+  (memq x '(sete)))
 
 ;; Arg -> String
 (define (arg->string a)
@@ -36,7 +44,7 @@
 ;; Any -> Boolean
 (define (reg? x)
   (and (symbol? x)
-       (memq x '(rax rsp))))
+       (memq x '(rax rsp al eax))))
 
 ;; Reg -> String
 (define (reg->string r)
