@@ -1,7 +1,11 @@
 #lang racket
 (provide (all-defined-out))
 
-;; Expr -> Integer
+;; type Value =
+;; | Integer
+;; | Boolean
+
+;; Expr -> Value
 (define (interp e)
   (match e
     [(? integer? i) i]

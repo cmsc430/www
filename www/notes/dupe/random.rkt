@@ -2,6 +2,7 @@
 (provide (all-defined-out))
 
 ;; Randomly generate an expression
+;; Note: this will often generate programs with type errors
 (define (random-expr)
   (contract-random-generate
    (flat-rec-contract e
