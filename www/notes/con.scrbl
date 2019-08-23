@@ -33,7 +33,7 @@ Together this leads to the following grammar for Con:
 
 Which can be modeled with the following data type definition:
 
-@;codeblock-include["con/ast.rkt"]
+@codeblock-include["con/ast.rkt"]
 
 We will also need a predicate for well-formed Con expressions, but
 let's return to this after considering the semantics and interpreter.
