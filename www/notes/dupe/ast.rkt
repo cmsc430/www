@@ -6,8 +6,3 @@
 ;; | `(sub1 ,Expr)
 ;; | `(zero? ,Expr)
 ;; | `(if ,Expr ,Expr ,Expr)
-
-;; type Prim2 =
-;; | '*
-;; | '+
-;; | '-

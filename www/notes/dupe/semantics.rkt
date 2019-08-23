@@ -1,5 +1,5 @@
 #lang racket
-(provide D 𝑫)
+(provide D 𝑫 is-true is-false)
 (require redex/reduction-semantics
          (only-in "../con/semantics.rkt" C))
 
@@ -21,20 +21,21 @@
    -----------
    (𝑫 (sub1 e_0) i_1)]
 
-  [(𝑫 e_0 i) (where v ,(= (term i) 0))
+  [(𝑫 e_0 i) (side-condition ,(= (term i) 0))
    -----------
-   (𝑫 (zero? e_0) v)]
+   (𝑫 (zero? e_0) #t)]
 
-  [(𝑫 e_0 v_0) (where #f ,(eqv? (term v_0) #f)) (𝑫 e_1 v_1)
+  [(𝑫 e_0 i) (side-condition ,(!= (term i) 0))
+   -----------
+   (𝑫 (zero? e_0) #f)]
+
+  [(𝑫 e_0 v_0) (is-true v_0) (𝑫 e_1 v_1)
    --------
    (𝑫 (if e_0 e_1 e_2) v_1)]
   
-  [(𝑫 e_0 #f) (𝑫 e_2 v_2)
+  [(𝑫 e_0 v_0) (is-false v_0) (𝑫 e_2 v_2)
    --------
    (𝑫 (if e_0 e_1 e_2) v_2)])
-
-(define (!= n1 n2)
-  (not (= n1 n2)))
 
 (module+ test
   (test-judgment-holds (𝑫 7 7))
@@ -49,3 +50,20 @@
   (test-judgment-holds (𝑫 (zero? 1) #f))
   (test-judgment-holds (𝑫 (if (zero? 0) 3 4) 3))
   (test-judgment-holds (𝑫 (if (zero? 1) 3 4) 4)))
+
+(define-judgment-form D
+  #:mode (is-true I)
+  #:contract (is-true v)
+  [-----------
+   (is-true #t)]
+  [----------
+   (is-true i)])
+
+(define-judgment-form D
+  #:mode (is-false I)
+  #:contract (is-false v)
+  [-----------
+   (is-false #f)])
+
+(define (!= n m)
+  (not (= n m)))
