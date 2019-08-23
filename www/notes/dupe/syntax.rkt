@@ -5,7 +5,6 @@
 ;; Is x a well-formed expression?
 (define (expr? x)
   (match x
-    [(? symbol?) #t]
     [(? integer?) #t]
     [(? boolean?) #t]
     [`(add1 ,x) (expr? x)]
