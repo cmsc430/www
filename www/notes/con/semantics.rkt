@@ -20,11 +20,11 @@
    -----------
    (𝑪 (sub1 e_0) i_1)]
 
-  [(𝑪 e_0 i_0) (where #t ,(= (term i_0) 0)) (𝑪 e_1 i_1)
+  [(𝑪 e_0 i_0) (side-condition ,(= (term i_0) 0)) (𝑪 e_1 i_1)
    --------
    (𝑪 (if (zero? e_0) e_1 e_2) i_1)]
   
-  [(𝑪 e_0 i_0) (where #t ,(!= (term i_0) 0)) (𝑪 e_2 i_2)
+  [(𝑪 e_0 i_0) (side-condition ,(!= (term i_0) 0)) (𝑪 e_2 i_2)
    --------
    (𝑪 (if (zero? e_0) e_1 e_2) i_2)])
 

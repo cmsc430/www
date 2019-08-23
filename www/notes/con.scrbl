@@ -8,6 +8,7 @@
 	  #;(prefix-in sem: (only-in "con/semantics.rkt" ext lookup))
 	  "utils.rkt"
 	  "ev.rkt"
+	  "con/semantics.rkt"
 	  "../utils.rkt")
 
 
@@ -29,7 +30,7 @@ We will use the following syntax...
 
 Together this leads to the following grammar for Con:
 
-@;centered{@render-language[D-pre]}
+@centered{@render-language[C]}
 
 Which can be modeled with the following data type definition:
 
@@ -61,6 +62,31 @@ Let's consider some examples:
 
 
 The semantics...
+
+@(define ((rewrite s) lws)
+   (define lhs (list-ref lws 2))
+   (define rhs (list-ref lws 3))
+   (list "" lhs (string-append " " (symbol->string s) " ") rhs ""))
+
+@(require (only-in racket add-between))
+@(define-syntax-rule (show-judgment name i j)
+   (with-unquote-rewriter
+      (lambda (lw)
+        (build-lw (lw-e lw) (lw-line lw) (lw-line-span lw) (lw-column lw) (lw-column-span lw)))
+      (with-compound-rewriters (['+ (rewrite '+)]
+                                ['- (rewrite '–)]
+                                ['= (rewrite '=)]
+				['!= (rewrite '≠)])
+        (apply centered
+	   (add-between 
+             (build-list (- j i)
+	                 (λ (n) (begin (judgment-form-cases (list (+ n i)))
+	                               (render-judgment-form name))))
+             (hspace 4))))))
+
+@(show-judgment 𝑪 0 3)
+@(show-judgment 𝑪 3 5)
+
 
 @;{
 The heart of the semantics is an auxiliary relation, @render-term[C
