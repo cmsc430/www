@@ -15,8 +15,8 @@
      [`(if ,e0 ,e1 ,e2)
       (interp/cps e0 (λ (v)
                        (if v
-                           (interp e1)
-                           (interp e2))))]))
+                           (interp/cps e1 k)
+                           (interp/cps e2 k))))]))
 
 ;; (Value -> Boolean) (Value -> Answer) -> (Value -> Answer)
 (define (assert pred k)
