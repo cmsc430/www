@@ -11,11 +11,15 @@
 (define true-rep  #b10011111)
 (define false-rep #b00011111)
 (define fixnum-shift 2)
+(define bool-bit     8)
 
 ;; ANF CEnv -> Asm
 (define (compile-e e c)
   (match e
-    [(? integer? i) `((mov rax ,(arithmetic-shift i fixnum-shift)))]
+    [(? integer? i)
+     `((mov rax ,(arithmetic-shift i fixnum-shift)))]
+    [(? boolean? b)
+     `((mov rax ,(if b true-rep false-rep)))]
     [#t `((mov rax ,true-rep))]
     [#f `((mov rax ,false-rep))]
     [`(add1 ,e0)
@@ -27,18 +31,24 @@
        `(,@c0
          (sub rax ,(arithmetic-shift 1 fixnum-shift ))))]
 
-    ;; FIXME
-    [`(zero? ,e0) '(...)]
+    [`(zero? ,e0)
+     (let ((c0 (compile-e e0 c)))
+       `(,@c0
+         (cmp rax 0)
+         (sete al)
+         (movzx rax al)
+         (sal rax ,bool-bit)
+         (or eax ,false-rep)))]
+         
     [`(if ,e0 ,e1 ,e2)
      (let ((c0 (compile-e e0 c))
            (c1 (compile-e e1 c))
            (c2 (compile-e e2 c)))
-
        (match (gen-if-labels)
          [(list if-f if-x)
           `(,@c0
-            (cmp rax 0)
-            (jne ,if-f)
+            (cmp rax ,false-rep)
+            (je ,if-f)
             ,@c1
             (jmp ,if-x)
             ,if-f

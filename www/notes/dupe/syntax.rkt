@@ -6,7 +6,8 @@
 (define (expr? x)
   (match x
     [(? symbol?) #t]
-    [(? integer? i) #t]
+    [(? integer?) #t]
+    [(? boolean?) #t]
     [`(add1 ,x) (expr? x)]
     [`(sub1 ,x) (expr? x)]
     [`(zero? ,x) (expr? x)]
