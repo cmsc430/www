@@ -5,7 +5,8 @@
 
 (define-extended-language D C
   (e ::= .... v (if e e e) (zero? e))
-  (v ::= i #t #f))
+  (v ::= i b)
+  (b ::= #t #f))
 
 (define-judgment-form D
   #:mode (𝑫 I O)
