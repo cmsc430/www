@@ -14,8 +14,9 @@
 
 @(define codeblock-include (make-codeblock-include #'h))
 
+@(ev '(require rackunit))
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "dupe" f))))))
-	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+	   '("interp.rkt" "compile.rkt" "random.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
 
 @title[#:tag "Dupe"]{Dupe: a duplicity of types}
@@ -146,6 +147,9 @@ Run-time support...
 
 @filebox-include[fancy-c "dupe/main.c"]
 
+
+@section{A Compiler for Dupe}
+
 What needs to happen? ...
 
 @codeblock-include["dupe/asm/ast.rkt"]
@@ -166,3 +170,71 @@ We omit the printer code, which is mundane.  See
 (asm-interp (compile '(if (zero? 0) (if (zero? 0) 8 9) 2)))
 (asm-interp (compile '(if (zero? (if (zero? 2) 1 0)) 4 5)))
 ]
+
+
+@section{Correctness and testing}
+
+We can randomly generate Dupe programs.  The problem is many randomly
+generated programs will have type errors in them:
+
+@ex[
+(eval:alts (require "random.rkt") (void))
+(random-expr)
+(random-expr)
+(random-expr)
+(random-expr)
+(random-expr)
+(random-expr)
+]
+
+When interpreting programs with type errors, we get @emph{Racket}
+errors, i.e. the Racket functions used in the implementation of the
+interpreter will signal an error:
+@ex[
+(eval:error (interp '(add1 #f)))
+(eval:error (interp '(if (zero? #t) 7 8)))
+]
+
+On the hand, the compiler will simply do something by misinterpreting the meaning
+of the bits:
+@ex[
+(asm-interp (compile '(add1 #f)))
+(asm-interp (compile '(if (zero? #t) 7 8)))
+]
+
+@;codeblock-include["dupe/correct.rkt"]
+
+This complicates testing the correctness of the compiler.  Consider
+our usual appraoch:
+@ex[
+(define (check-correctness e)
+  (check-eqv? (interp e)
+              (asm-interp (compile e))))
+
+(check-correctness '(add1 7))
+(eval:error (check-correctness '(add1 #f)))
+]
+
+This isn't a counter-example to correctness because @racket['(add1
+#f)] is not meaningful according to the semantics.  Consequently the
+interpreter and compiler are free to do anything on this input.
+
+Since we know Racket will signal an error when the interpreter tries
+to interpret a meaningless expression, we can write an alternate
+@racket[check-correctness] function that catches any exceptions and
+produces void, effectively ignoring the test:
+
+@ex[
+(define (check-correctness e)
+  (with-handlers ([exn:fail? void])
+    (check-eqv? (interp e)
+                (asm-interp (compile e)))))
+
+(check-correctness '(add1 7))
+(check-correctness '(add1 #f))
+]
+
+Using this approach, we check the equivalence of the results only when
+the interpreter runs without causing an error.
+
+

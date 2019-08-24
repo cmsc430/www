@@ -18,7 +18,7 @@
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "fraud" f))))))
 	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
-@title{Fraud: local binding and variables}
+@title[#:tag "Fraud"]{Fraud: local binding and variables}
 
 @;defmodule[(file "/Users/dvanhorn/git/cmsc430-www/www/notes/fraud/interp.rkt")]
 @;declare-exporting[(file "/Users/dvanhorn/git/cmsc430-www/www/notes/fraud/interp.rkt")]
@@ -57,7 +57,7 @@ variables to the syntax of expressions.
 
 Together this leads to the following grammar for Fraud:
 
-@centered{@render-language[D-pre]}
+@centered{@render-language[F-pre]}
 
 Which can be modeled with the following data type definition:
 
@@ -161,8 +161,8 @@ environment.  The meaning of a let will depend on the meaning of its
 body with an extended environment that associates its variable binding
 to the value of the right hand side.
 
-The heart of the semantics is an auxiliary relation, @render-term[D
-𝑫𝒓], which relates an expression and an environement to the integer
+The heart of the semantics is an auxiliary relation, @render-term[F
+𝑭𝒓], which relates an expression and an environement to the integer
 the expression evaluates to (in the given environment):
 
 @(define ((rewrite s) lws)
@@ -184,10 +184,10 @@ the expression evaluates to (in the given environment):
 	                               (render-judgment-form name))))
              (hspace 4))))))
 
-@(show-judgment 𝑫𝒓 0 3)
-@(show-judgment 𝑫𝒓 3 5)
+The rules for dealing with the new forms (variables and lets) are:
+@(show-judgment 𝑭𝒓 0 2)
 
-It relies on two functions: one for extending an environment with a
+These rely on two functions: one for extending an environment with a
 variable binding and one for lookup up a variable binding in an
 environment:
 
@@ -199,12 +199,23 @@ environment:
   "⊥"
   (render-metafunction sem:lookup #:contract? #t))}
 
-The operational semantics for Fraud is then defined as a binary relation
-@render-term[D 𝑫], which says that @math{(e,i)} in @render-term[D 𝑫],
-only when @math{e} evaluates to @math{i} in the empty environment
-according to @render-term[D 𝑫𝒓]:
 
-@(show-judgment 𝑫 0 1)
+The remaining rules are just an adaptation of the existing rules from
+Extort to thread the environment through.  For example, here are just
+a couple:
+@(show-judgment 𝑭𝒓 3 5)
+
+And rules for propagating errors through let:
+@(show-judgment 𝑭𝒓 16 18)
+
+
+
+The operational semantics for Fraud is then defined as a binary relation
+@render-term[F 𝑭], which says that @math{(e,i)} in @render-term[F 𝑭],
+only when @math{e} evaluates to @math{i} in the empty environment
+according to @render-term[F 𝑭𝒓]:
+
+@(show-judgment 𝑭 0 1)
 
 The interpreter closely mirrors the semantics.  The top-level
 @racket[interp] function relies on a helper function
@@ -233,7 +244,7 @@ examples given earlier:
 
 @bold{Interpreter Correctness}: @emph{For all Fraud expressions
 @racket[e] and integers @racket[i], if (@racket[e],@racket[i]) in
-@render-term[D 𝑫], then @racket[(interp e)] equals
+@render-term[F 𝑭], then @racket[(interp e)] equals
 @racket[i].}
 
 @section{An Example of Fraud compilation}

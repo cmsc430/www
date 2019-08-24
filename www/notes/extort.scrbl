@@ -4,6 +4,7 @@
 @(require redex/pict
           racket/runtime-path
           scribble/examples
+          "../fancyverb.rkt"
 	  "utils.rkt"
 	  "ev.rkt"
 	  "extort/semantics.rkt"
@@ -14,7 +15,7 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "extort" f))))))
-	   '("interp.rkt" #;"compile.rkt" #;"asm/interp.rkt" #;"asm/printer.rkt"))
+	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
 
 @title[#:tag "Extort"]{Extort: when errors exist}
@@ -66,7 +67,7 @@ We've previously seen the last approach.  Now let's do what Racket
 does and signal an error.
 
 
-The semantics...
+
 
 @(define ((rewrite s) lws)
    (define lhs (list-ref lws 2))
@@ -89,7 +90,10 @@ The semantics...
 	                               (render-judgment-form name))))
              (hspace 4))))))
 
+There are three ways in which an error can be introduced:
 @(show-judgment 𝑬 0 3)
+
+And there are four rules for propagating errors from subexpressions:
 @(show-judgment 𝑬 3 7)
 
 
@@ -122,11 +126,21 @@ What needs to happen? ...
 We omit the printer code, which is mundane.  See
 @link["extort/asm/printer.rkt"]{@tt{asm/printer.rkt}} for details.
 
+We must extend the run-time system with a C function called @tt{error}
+that prints "err" and exits:
+
+@filebox-include[fancy-c "extort/main.c"]
+
 Compiler...
 
-@;codeblock-include["extort/compile.rkt"]
+@codeblock-include["extort/compile.rkt"]
 
-@;{
+Here's the code we generate for @racket['(add1 #f)]:
+@ex[
+(asm-display (compile '(add1 #f)))
+]
+
+Here are some examples running the compiler:
 @ex[
 (asm-interp (compile #t))
 (asm-interp (compile #f))
@@ -136,5 +150,9 @@ Compiler...
 (asm-interp (compile '(if #f 1 2)))
 (asm-interp (compile '(if (zero? 0) (if (zero? 0) 8 9) 2)))
 (asm-interp (compile '(if (zero? (if (zero? 2) 1 0)) 4 5)))
+(asm-interp (compile '(add1 #t)))
+(asm-interp (compile '(sub1 (add1 #f))))
+(asm-interp (compile '(if (zero? #t) 1 2)))
 ]
-}
+
+
