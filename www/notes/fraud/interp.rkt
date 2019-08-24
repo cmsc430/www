@@ -1,29 +1,45 @@
 #lang racket
 (provide (all-defined-out))
 
-;; type REnv = (Listof (List Variable Integer))
+;; type REnv = (Listof (List Variable Value))
 
-;; Expr -> Integer
+;; Expr -> Answer
 (define (interp e)
   (interp-env e '()))
 
 ;; Expr REnv -> Integer
 (define (interp-env e r)
   (match e
-    [(? integer? i) i]               ;; Abscond
-    [`(add1 ,e0)                     ;; Blackmail
-     (+ (interp-env e0 r) 1)]
+    [(? integer? i) i]
+    [(? boolean? b) b]
+    [`(add1 ,e0)
+     (match (interp-env e0 r)
+       [(? integer? i) (add1 i)]
+       [_ 'err])]
     [`(sub1 ,e0)
-     (- (interp-env e0 r) 1)]
-    [`(if (zero? ,e0) ,e1 ,e2)       ;; Con
-     (if (zero? e0)
-         (interp-env e1 r)
-         (interp-env e2 r))]
-    [(? symbol? x)                   ;; Dupe
+     (match (interp-env e0 r)
+       [(? integer? i) (sub1 i)]
+       [_ 'err])]
+    [`(zero? ,e0)
+     (match (interp-env e0 r)
+       [(? integer? i) (zero? i)]
+       [_ 'err])]
+    [`(if ,e0 ,e1 ,e2)
+     (match (interp-env e0 r)
+       ['err 'err]
+       [v
+        (if v
+            (interp-env e1 r)
+            (interp-env e2 r))])]
+
+    [(? symbol? x)
      (lookup r x)]
     [`(let ((,x ,e0)) ,e1)
-     (let ((r0 (ext r x (interp-env e0 r))))
-       (interp-env e1 r0))]))
+     (match (interp-env e0 r)
+       ['err 'err]
+       [v
+        (let ((r0 (ext r x v)))
+          (interp-env e1 r0))])]))
 
 ;; Env Variable -> Integer
 (define (lookup env x)

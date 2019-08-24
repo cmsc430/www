@@ -8,14 +8,11 @@
 ;; Instruction -> String
 (define (instr->string i)
   (match i
-    [`(mov ,a1 ,a2)
-     (string-append "\tmov " (arg->string a1) ", " (arg->string a2) "\n")]
-    [`(add ,a1 ,a2)
-     (string-append "\tadd " (arg->string a1) ", " (arg->string a2) "\n")]
-    [`(sub ,a1 ,a2)
-     (string-append "\tsub " (arg->string a1) ", " (arg->string a2) "\n")]
-    [`(cmp ,a1 ,a2)
-     (string-append "\tcmp " (arg->string a1) ", " (arg->string a2) "\n")]
+    [`(,(? opcode2? o) ,a1 ,a2)
+     (string-append "\t"
+                    (symbol->string o) " "
+                    (arg->string a1) ", "
+                    (arg->string a2) "\n")]
     [`(jmp ,l)
      (string-append "\tjmp " (label->string l) "\n")]
     [`(je ,l)
@@ -23,7 +20,24 @@
     [`(jne ,l)
      (string-append "\tjne " (label->string l) "\n")]
     [`ret "\tret\n"]
+
+    [`(,(? opcode1? o) ,a1)    
+     (string-append "\t"
+                    (symbol->string o) " "
+                    (arg->string a1) "\n")]
+    [`(call ,l)
+     (string-append "\tcall " (label->string l) "\n")]
+    [`(push ,r)
+     (string-append "\tpush " (reg->string r) "\n")]
+    [`(pop ,r)
+     (string-append "\tpop " (reg->string r) "\n")]
     [l (string-append (label->string l) ":\n")]))
+
+(define (opcode2? x)
+  (memq x '(mov add sub cmp imul movzx sal or and)))
+
+(define (opcode1? x)
+  (memq x '(sete)))
 
 ;; Arg -> String
 (define (arg->string a)
@@ -36,7 +50,7 @@
 ;; Any -> Boolean
 (define (reg? x)
   (and (symbol? x)
-       (memq x '(rax rsp))))
+       (memq x '(rax rbx rsp al eax rdi))))
 
 ;; Reg -> String
 (define (reg->string r)
@@ -55,6 +69,7 @@
   ;; entry point will be first label
   (let ((g (findf symbol? a)))
     (display 
-      (string-append "\tglobal " (label->string g) "\n"
-      		     "\tsection .text\n"
-                     (asm->string a)))))
+     (string-append "\tglobal " (label->string g) "\n"
+                    "\textern " (label->string 'error) "\n"
+                    "\tsection .text\n"
+                    (asm->string a)))))

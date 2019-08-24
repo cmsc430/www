@@ -293,7 +293,8 @@ binder is exactly the offset from the top of the stack we need use.
 ;; | `rsp
 }
 
-@codeblock-include["fraud/asm/printer.rkt"]
+@;codeblock-include["fraud/asm/printer.rkt"]
+
 @codeblock-include["fraud/compile.rkt"]
 
 
@@ -307,4 +308,17 @@ binder is exactly the offset from the top of the stack we need use.
 (asm-display (compile '(let ((x 7)) (let ((x 2)) x))))
 (eval:error (asm-display (compile '(let ((x (add1 x))) x))))
 (asm-display (compile '(let ((x 7)) (let ((x (add1 x))) x))))
+]
+
+And running the examples:
+@ex[
+(eval:error (asm-interp (compile 'x)))
+(asm-interp (compile '(let ((x 7)) x)))
+(asm-interp (compile '(let ((x 7)) 2)))
+(asm-interp (compile '(let ((x 7)) (add1 x))))
+(asm-interp (compile '(let ((x (add1 7))) x)))
+(asm-interp (compile '(let ((x 7)) (let ((y 2)) x))))
+(asm-interp (compile '(let ((x 7)) (let ((x 2)) x))))
+(eval:error (asm-interp (compile '(let ((x (add1 x))) x))))
+(asm-interp (compile '(let ((x 7)) (let ((x (add1 x))) x))))
 ]
