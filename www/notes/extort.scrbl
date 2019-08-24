@@ -20,10 +20,11 @@
 
 @title[#:tag "Extort"]{Extort: when errors exist}
 
-Up until now we have worked to maintain a single type of values:
-integers.  This led to some awkwardness in the design of conditionals.
-Let us lift this restriction by considering a multiplicity of types.
-To start, we will consider two: integers and booleans.
+We have added multiple, disjoint types, but mostly swept issues of
+errors under the rug by considering type mismatches as meaningless.
+Now let's redesign the semantics to specify the error behavior of such
+programs.
+
 
 We'll call it @bold{Extort}.
 
