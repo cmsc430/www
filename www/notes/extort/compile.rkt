@@ -18,7 +18,7 @@
 (define fixnum-shift 2)
 (define bool-shift   8)
 
-;; ANF -> Asm
+;; Expr -> Asm
 (define (compile-e e)
   (match e
     [(? integer? i)
@@ -27,7 +27,6 @@
      `((mov rax ,(if b true-rep false-rep)))]
     [#t `((mov rax ,true-rep))]
     [#f `((mov rax ,false-rep))]
-    [`(error) `((jmp err))]
     [`(add1 ,e0)
      (let ((c0 (compile-e e0)))
        `(,@c0
