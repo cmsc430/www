@@ -11,6 +11,8 @@
 @include-section{notes/dupe.scrbl}
 @include-section{notes/extort.scrbl}
 @include-section{notes/fraud.scrbl}
+@include-section{notes/grift.scrbl}
+@;{
 @include-section{notes/5.scrbl}
 @include-section{notes/6.scrbl}
 @include-section{notes/7.scrbl}
@@ -22,3 +24,4 @@
 @include-section{notes/13.scrbl}
 @include-section{notes/14.scrbl}
 @include-section{notes/15.scrbl}
+}
