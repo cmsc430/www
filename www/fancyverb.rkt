@@ -11,7 +11,7 @@
 (define PANDOC
   (format "pandoc ~a -f markdown -t html"
           (apply string-append
-                 (map (λ (f) (format "--syntax-definition ~a " (build-path here f)))
+                 (map (λ (f) (format "--syntax-definition ~a " (build-path here "xml" f)))
                       '("fish.xml" "nasm.xml" "ocaml.xml")))))
 
 (define (fancy-c s)

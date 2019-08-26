@@ -12,7 +12,7 @@
 
 
 @(define accessible
-   (style #f (list (js-addition "accessibility.js")
+   (style #f (list (js-addition "js/accessibility.js")
                    (attributes '((lang . "en"))))))
 
 @title[#:style accessible @courseno]{: Design and Implementation of Programming Languages}
