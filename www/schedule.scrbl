@@ -13,74 +13,74 @@
          #:sep @hspace[1] 
          #:row-properties '(bottom-border)
          (list (list @bold{Week} @bold{Due} @bold{Tuesday} @bold{Thursday})
-               (list @wk{Aug 27}
+               (list @wk{8/27}
 	       	     ""
                      @secref["Intro"]
                      @secref["OCaml to Racket"])
                
-               (list @wk{Sep 3}
+               (list @wk{9/3}
 	       	     @seclink["Assignment 1"]{A1}
                      @secref["Abscond"]
                      @secref["Blackmail"])
 
-               (list @wk{Sep 10}
+               (list @wk{9/10}
 	       	     "A2" @;seclink["Assignment 2"]{A2}
                      @secref["Con"]
                      @secref["Dupe"])
                
-               (list @wk{Sep 17}
+               (list @wk{9/17}
 	       	     "A3" @;seclink["Assignment 3"]{A3}
                      @secref["Extort"]
                      @secref["Fraud"])
                
-               (list @wk{Sep 24}
+               (list @wk{9/24}
 	       	     "A4" @;seclink["Assignment 4"]{A4}
                      @secref["Grift"]
                      @secref["Hustle"])
                
-               (list @wk{Oct 1}
+               (list @wk{10/1}
 	       	     "A5" @;seclink["Assignment 5"]{A5}
                      @elem{TBD}
                      'cont)
                
-               (list @wk{Oct 8}
+               (list @wk{10/8}
 	       	     @bold{M1}
                      @elem{TBD}
                      'cont)
                
-               (list @wk{Oct 15}
+               (list @wk{10/15}
 	       	     "A6"
                      @elem{TBD}
                      'cont)
                
-               (list @wk{Oct 22}
+               (list @wk{10/22}
 	       	     "A7"	       
                      @elem{TBD}
 		     'cont)
                
-               (list @wk{Oct 29}
+               (list @wk{10/29}
 	       	     "A8"	       
                      @elem{TBD}
 		     'cont)
                
-               (list @wk{Nov 5}
+               (list @wk{11/5}
 	       	     "A9"	       
                      @elem{TBD}
 		     'cont)
                
-               (list @wk{Nov 12}
+               (list @wk{11/12}
 	       	     @bold{M2}	       
                      @elem{TBD}
 		     'cont)
                
-               (list @wk{Nov 19}
+               (list @wk{11/19}
 	       	     ""	       
                      @elem{TBD}
 		     'cont)
                
-               (list @wk{Nov 26} "" @elem{TBD} @elem{@bold{Thanksgiving}})
+               (list @wk{11/26} "" @elem{TBD} @elem{@bold{Thanksgiving}})
                
-               (list @wk{Dec 3}
+               (list @wk{12/3}
                      ""     
                      @elem{TBD} 
                      'cont)
