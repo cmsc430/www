@@ -61,3 +61,31 @@ concepts, this is the paper for you.
 }
 
 ]
+
+@section{References}
+
+
+@itemlist[
+
+@item{
+@link["https://www.felixcloutier.com/x86/"]{x86 and amd64 instruction reference}
+
+Derived from the May 2019 version of the (4,922 page!)
+@link["https://software.intel.com/sites/default/files/managed/39/c5/325462-sdm-vol-1-2abcd-3abcd.pdf"]{Intel®
+64 and IA-32 Architectures Software Developer’s Manual}.  We will only
+use a small fraction of these instructions, but this is a
+comprehensive list of what's available on a x86-64 machine.}
+
+@item{@link["https://docs.racket-lang.org/guide/"]{The Racket Guide} 
+
+Intended for those new to Racket, i.e. @emph{you!}}
+
+@item{@link["https://docs.racket-lang.org/reference/"]{The Racket Reference}
+
+The definitive, comprehensive manual for Racket.}
+
+
+]
+
+
+
