@@ -50,22 +50,6 @@ of the course:
   @item{Language design}
   @item{Advanced topics in compilation}]
 
-@section{Computing Resources}
-
-Programming projects can be developed on the
-@link["http://www.grace.umd.edu/"]{GRACE} cluster.
-
-If you have access to another system you are welcome to do your
-development there instead, but all project submissions @bold{must}
-work correctly on the GRACE cluster, and your projects will be graded
-solely based on their results on the cluster. Because language and
-library versions may vary with the installation, in unfortunate
-circumstances a program might work perfectly on your system but not
-work at all on the cluster. Thus we strongly recommend that if you
-develop any project on another system, you should complete it
-@bold{several days early} to have time to address any compatibility
-problems.
-
 @section{Grading}
 
 Grades will be maintained on @link[elms-url]{ELMS}.
@@ -93,17 +77,17 @@ percentages:
 
 
 @make-grade-component-table[
-  (list "Assignments" "55%")
+  (list "Assignments" "45%")
   (list @elem{Quizzes & surveys}    "15%")
   (list "Midterms (2)" "20%")
-  (list "Final project" "10%")]
+  (list "Final project" "20%")]
 
 	 
 
 @section[#:tag "syllabus-assignments"]{Assignments}
 
 There will be weekly programming @secref{Assignments}, due each Tuesday
-at 11:59pm EST.
+at 11:59pm EST unless otherwise noted.
 
 Assignments will be submitted through
 @link["https://classroom.github.com/"]{Github Classroom}.
@@ -123,11 +107,51 @@ bring your clicker to all lectures. You can register your clicker on
 We will drop the 20% lowest clicker quizzes to compensate for your
 absence or other clicker related problems.
 
+@section[#:tag "syllabus-midterms"]{Midterms}
+
+There will be two @secref{Midterms}, which will be @bold{take-home}
+exams.  Exams will be distributed at least 48 hours before the due
+date of the midterm.
+
+@itemlist[
+  @item{Midterm 1: @bold{@m1-date}}
+  @item{Midterm 2: @bold{@m2-date}}
+]
+
+@section[#:tag "syllabus-project"]{Project}
+
+There will be a course @secref{Project} that will be assessed during
+the final exam period for the course:
+
+@itemlist[
+  @item{Final Project Assessment: @bold{@final-date}}
+]
+
+The project description will be distributed approximately 3 weeks
+before the due date.
+
 @;{
 @section{Laptops in class}
 
 Laptops will not be permitted in class during lecture.
 }
+
+@section{Computing Resources}
+
+Programming projects can be developed on the
+@link["http://www.grace.umd.edu/"]{GRACE} cluster.
+
+If you have access to another system you are welcome to do your
+development there instead, but all project submissions @bold{must}
+work correctly on the GRACE cluster, and your projects will be graded
+solely based on their results on the cluster. Because language and
+library versions may vary with the installation, in unfortunate
+circumstances a program might work perfectly on your system but not
+work at all on the cluster. Thus we strongly recommend that if you
+develop any project on another system, you should complete it
+@bold{several days early} to have time to address any compatibility
+problems.
+
 
 @section{Outside-of-class communication with course staff}
 
@@ -178,19 +202,21 @@ Student Conduct (V-1.00(B) University of Maryland Code of Student
 Conduct) and may result in disciplinary action.}
 ]
 
-Missing an @bold{exam} for reasons such as illness, religious observance,
-participation in required university activities, or family or personal
-emergency (such as a serious automobile accident or close relative's
-funeral) will be excused so long as the absence is requested in
-writing at least @bold{2 days} in advance and the student includes
-documentation that shows the absence qualifies as excused; @bold{a
-self-signed note} is not sufficient as exams are Major Scheduled
-Grading Events. For this class, such events are the final exam, and
-the midterm, which will be given in class on the following dates:
+Missing an @bold{exam} for reasons such as illness, religious
+observance, participation in required university activities, or family
+or personal emergency (such as a serious automobile accident or close
+relative's funeral) will be excused so long as the absence is
+requested in writing at least @bold{2 days} in advance and the student
+includes documentation that shows the absence qualifies as excused;
+@bold{a self-signed note} is not sufficient as exams are Major
+Scheduled Grading Events. For this class, such events are the final
+project assessment and midterms, which will be due on the following
+dates:
 
 @itemlist[
-  @item{Midterm: @bold{@m1-date}}
-  @item{Final Exam: @bold{@final-date}}]
+  @item{Midterm 1: @bold{@m1-date}}
+  @item{Midterm 2: @bold{@m2-date}}
+  @item{Final Project Assessment: @bold{@final-date}}]
 
 The final exam is scheduled according to the University Registrar.
 

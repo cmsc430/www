@@ -50,11 +50,13 @@ familiarity with programming in C and Assembly.
 @bold{Disclaimer:} All information on this web page is tentative and
 subject to change until the start of the semester.
 
-@;include-section{texts.scrbl}
 @include-section{syllabus.scrbl}
+@include-section{texts.scrbl}
 @include-section{schedule.scrbl}
 @include-section{notes.scrbl}
 @include-section{assignments.scrbl}
+@include-section{midterms.scrbl}
+@include-section{project.scrbl}
 @include-section{racket.scrbl}
 
 @;include-section{labs.scrbl}
