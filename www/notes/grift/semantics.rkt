@@ -1,5 +1,5 @@
 #lang racket
-(provide G 𝑮)
+(provide G 𝑮 𝑮-r 𝑮-prim 𝑮-type-error)
 (require redex/reduction-semantics
          (only-in "../fraud/semantics.rkt" F 𝑭𝒓))
 
@@ -12,43 +12,55 @@
 (define-judgment-form G
   #:contract (𝑮 e a)
   #:mode (𝑮 I O)
-  [(𝑮𝒓 e () a)
+  [(𝑮-r e () a)
    ----------
    (𝑮 e a)])
 
 (define-extended-judgment-form G 𝑭𝒓
-  #:contract (𝑮𝒓 e r a)
-  #:mode (𝑮𝒓 I I O)
+  #:contract (𝑮-r e r a)
+  #:mode (𝑮-r I I O)
   
-  [(𝑮𝒓 e_0 r a_0) ... (𝑷𝒓𝒊𝒎 (p a_0 ...) a_1)
-   -----------
-   (𝑮𝒓 (p e_0 ...) r a_1)])
+  [(𝑮-r e_0 r a_0) ... (𝑮-prim (p a_0 ...) a_1)
+   ----------- prim
+   (𝑮-r (p e_0 ...) r a_1)])
 
 (define-judgment-form G
-  #:contract (𝑷𝒓𝒊𝒎 (p a ...) a)
-  #:mode (𝑷𝒓𝒊𝒎 I O)
+  #:contract (𝑮-prim (p a ...) a)
+  #:mode (𝑮-prim I O)
 
   [(where i_1 ,(add1 (term i_0)))
-   ---------------
-   (𝑷𝒓𝒊𝒎 (add1 i_0 ) i_1)]
+   --------------- add1
+   (𝑮-prim (add1 i_0 ) i_1)]
 
   [(where i_1 ,(sub1 (term i_0)))
-   ---------------
-   (𝑷𝒓𝒊𝒎 (sub1 i_0 ) i_1)]
+   --------------- sub1
+   (𝑮-prim (sub1 i_0 ) i_1)]
 
   [(where i_2 ,(+ (term i_0) (term i_1)))
-   ---------------
-   (𝑷𝒓𝒊𝒎 (+ i_0 i_1) i_2)]
+   --------------- +
+   (𝑮-prim (+ i_0 i_1) i_2)]
 
   [(where i_2 ,(- (term i_0) (term i_1)))
-   ---------------
-   (𝑷𝒓𝒊𝒎 (- i_0 i_1) i_2)]
+   --------------- minus
+   (𝑮-prim (- i_0 i_1) i_2)]
   
-  [---------------
-   (𝑷𝒓𝒊𝒎 (p _ ... err _ ...) err)]  
+  [--------------- prop-error
+   (𝑮-prim (p v ... err _ ...) err)]  
 
-  [---------------
-   (𝑷𝒓𝒊𝒎 (p _ ... b _ ...) err)])
+  [(𝑮-type-error (p v ...))
+   --------------- type-error
+   (𝑮-prim (p v ...) err)])
+
+(define-judgment-form G
+  ;; Commented out to allow extension (since its buggy in redex)
+  ;; #:contract (𝑮-type-error (p v ...))
+  #:mode (𝑮-type-error I )
+  [(𝑮-type-error (+ b _))]
+  [(𝑮-type-error (+ _ b))]
+  [(𝑮-type-error (- b _))]
+  [(𝑮-type-error (- _ b))]
+  [(𝑮-type-error (add1 b))]
+  [(𝑮-type-error (sub1 b))])
 
 (module+ test
   (test-judgment-holds (𝑮 7 7))
