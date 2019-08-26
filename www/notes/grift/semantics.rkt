@@ -6,7 +6,7 @@
 (define-extended-language G F
   (e ::= .... (p1 e) (p2 e e))
   (p2 ::= + -)
-  (p1 ::= add1 sub1)
+  (p1 ::= add1 sub1 zero?)
   (p ::= p1 p2))
 
 (define-judgment-form G
