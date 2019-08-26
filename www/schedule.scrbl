@@ -6,10 +6,6 @@
 
 @;(TuTh 2-3:15 CSI 2117)
 
-@local-table-of-contents[]
-
-@section[#:style 'unnumbered]{Lecture Material}
-
 @(define (wk d) (nonbreaking (bold d)))
 
 
