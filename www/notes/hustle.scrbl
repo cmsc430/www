@@ -4,7 +4,7 @@
 @(require redex/pict
           racket/runtime-path
           scribble/examples
-	  ;"hustle/semantics.rkt"
+	  "hustle/semantics.rkt"
 	  "utils.rkt"
 	  "ev.rkt"
 	  "../utils.rkt")
@@ -17,6 +17,19 @@
 @title[#:tag "Hustle"]{Hustle: heaps and lists}
 
 @;codeblock-include["hustle/ast.rkt"]
+
+@centered[(render-language H)]
+
+
+@section{Meaning of Hustle programs}
+
+@(judgment-form-cases #f)
+
+@centered[(render-judgment-form 𝑯-𝒆𝒏𝒗)]
+
+@centered[(render-metafunction 𝑯-𝒑𝒓𝒊𝒎 #:contract? #t)]
+
+
 
 @;codeblock-include["hustle/interp.rkt"]
 
