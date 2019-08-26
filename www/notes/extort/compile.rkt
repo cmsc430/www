@@ -9,14 +9,7 @@
     ret
     err
     (push rbp) ; doesn't seem to matter what we push
-    (call error)
-    #;(pop rbp)))
-
-(define true-rep  #b10011111)
-(define false-rep #b00011111)
-(define fixnum-mask #b11)
-(define fixnum-shift 2)
-(define bool-shift   8)
+    (call error)))
 
 ;; Expr -> Asm
 (define (compile-e e)
@@ -25,8 +18,6 @@
      `((mov rax ,(arithmetic-shift i fixnum-shift)))]
     [(? boolean? b)
      `((mov rax ,(if b true-rep false-rep)))]
-    [#t `((mov rax ,true-rep))]
-    [#f `((mov rax ,false-rep))]
     [`(add1 ,e0)
      (let ((c0 (compile-e e0)))
        `(,@c0
@@ -60,6 +51,12 @@
             ,if-f
             ,@c2
             ,if-x)]))]))
+
+(define true-rep  #b10011111)
+(define false-rep #b00011111)
+(define fixnum-mask #b11)
+(define fixnum-shift 2)
+(define bool-shift   8)
 
 (define assert-integer
   `((mov rbx rax)
