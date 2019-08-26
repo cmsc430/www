@@ -34,7 +34,7 @@
                
                (list @wk{Sep 24}
                      @secref["Grift"]
-                     'cont)
+                     @secref["Hustle"])
                
                (list @wk{Oct 1}
                      @elem{TBD}
