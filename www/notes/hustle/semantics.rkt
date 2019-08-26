@@ -31,15 +31,15 @@
   [-----------
    (𝑯-𝒆𝒏𝒗 v r v)]
 
-  
+
   ;; If
-  [(𝑯-𝒆𝒏𝒗 e_0 r v_0) (side-condition (is-true v_0)) (𝑯-𝒆𝒏𝒗 e_1 r v_1)
+  [(𝑯-𝒆𝒏𝒗 e_0 r v_0) (side-condition (is-true v_0)) (𝑯-𝒆𝒏𝒗 e_1 r a)
    --------
-   (𝑯-𝒆𝒏𝒗 (if e_0 e_1 e_2) r v_1)]
-  
-  [(𝑯-𝒆𝒏𝒗 e_0 r v_0) (side-condition (is-false v_0)) (𝑯-𝒆𝒏𝒗 e_2 r v_2)
+   (𝑯-𝒆𝒏𝒗 (if e_0 e_1 e_2) r a)]
+
+  [(𝑯-𝒆𝒏𝒗 e_0 r v_0) (side-condition (is-false v_0)) (𝑯-𝒆𝒏𝒗 e_2 r a)
    --------
-   (𝑯-𝒆𝒏𝒗 (if e_0 e_1 e_2) r v_2)]
+   (𝑯-𝒆𝒏𝒗 (if e_0 e_1 e_2) r a)]
 
   [(𝑯-𝒆𝒏𝒗 e_0 r err)
    --------
@@ -47,19 +47,19 @@
 
 
   ;; Let and variable
-  [(where v (lookup r x))
+  [(where a (lookup r x))
    -----------
-   (𝑯-𝒆𝒏𝒗 x r v)]
+   (𝑯-𝒆𝒏𝒗 x r a)]
 
   [(𝑯-𝒆𝒏𝒗 e_0 r v_0) (𝑯-𝒆𝒏𝒗 e_1 (ext r x v_0) a)
    -----
    (𝑯-𝒆𝒏𝒗 (let ((x e_0)) e_1) r a)]
-  
+
   [(𝑯-𝒆𝒏𝒗 e_0 r err)
    -----------
    (𝑯-𝒆𝒏𝒗 (let ((x e_0)) e_1) r err)]
 
-  
+
   ;; Primitive application
   [(𝑯-𝒆𝒏𝒗 e_0 r a_0) ...
    -----------
@@ -71,6 +71,8 @@
   [(𝑯-𝒑𝒓𝒊𝒎 (p v ... err _ ...)) err]
   [(𝑯-𝒑𝒓𝒊𝒎 (add1 i_0)) ,(+ (term i_0) 1)]
   [(𝑯-𝒑𝒓𝒊𝒎 (sub1 i_0)) ,(- (term i_0) 1)]
+  [(𝑯-𝒑𝒓𝒊𝒎 (zero? 0)) #t]
+  [(𝑯-𝒑𝒓𝒊𝒎 (zero? i)) #f]
   [(𝑯-𝒑𝒓𝒊𝒎 (+ i_0 i_1)) ,(+ (term i_0) (term i_1))]
   [(𝑯-𝒑𝒓𝒊𝒎 (- i_0 i_1)) ,(- (term i_0) (term i_1))]
   [(𝑯-𝒑𝒓𝒊𝒎 (cons v_1 v_2)) (cons v_1 v_2)]
@@ -84,8 +86,8 @@
    ((x v) (x_0 v_0) ...)])
 
 (define-metafunction H
-  lookup : r x -> v or undefined
-  [(lookup () x) undefined]
+  lookup : r x -> a
+  [(lookup () x) err]
   [(lookup ((x v) (x_1 v_1) ...) x) v]
   [(lookup ((x_0 v_0) (x_1 v_1) ...) x)
    (lookup ((x_1 v_1) ...) x)])
@@ -101,13 +103,13 @@
   [(is-false v)  #f])
 
 
-   
+
 (module+ test
   (test-judgment-holds (𝑯 7 7))
   (test-judgment-holds (𝑯 (add1 7) 8))
 
   (test-judgment-holds (𝑯 (add1 #f) err))
-  
+
   (test-judgment-holds (𝑯 (let ((x 7)) 8) 8))
   (test-judgment-holds (𝑯 (let ((x 7)) x) 7))
   (test-judgment-holds (𝑯 (let ((x 7)) (add1 x)) 8))
@@ -121,10 +123,15 @@
                                     (add1 x))))
                           8))
 
+  (test-judgment-holds (𝑯 (zero? 0) #t))
+  (test-judgment-holds (𝑯 (zero? 1) #f))
+  (test-judgment-holds (𝑯 (zero? #f) err))
+
   (test-judgment-holds (𝑯 (+ 1 2) 3))
   (test-judgment-holds (𝑯 (- 1 2) -1))
   (test-judgment-holds (𝑯 (add1 #f) err))
   (test-judgment-holds (𝑯 (if (add1 #f) 1 2) err))
+  (test-judgment-holds (𝑯 (if (zero? #t) (add1 #f) 2) err))
   (test-judgment-holds (𝑯 (+ 1 (add1 #f)) err))
   (test-judgment-holds (𝑯 (+ 1 #f) err))
   (test-judgment-holds (𝑯 (- 1 #f) err))
@@ -145,3 +152,7 @@
   )
 
 
+
+(module+ test
+  ;; Check that the semantics is total function
+  (redex-check H e (redex-match? H (a_0) (judgment-holds (𝑯 e a) a))))
