@@ -28,17 +28,20 @@
 
 @title[#:style 'unnumbered]{Racket}
 
+@;{
 @verbatim{
 TODO:
 - write style section
 - give some more examples
 - mention #lang racket
 }
+}
 
 
 This section gives a concise overview of the subset of Racket we will
 be using for this course.  As we see more features of Racket, this
-document will be expanded to cover the new features.
+document will be expanded to cover the new features.  See
+@secref["OCaml to Racket"] for a tutorial introducing Racket.
 
 @section{Getting Started}
 
@@ -155,9 +158,11 @@ to stand for the value produced by evaluating @render-term[R0 e].
 The @render-term[R0 (define (x_0 x_1 ...) e)] form is shorthand for
 @render-term[R0 (define x_0 (λ (x_1 ...) e))].
 
+@;{
 @section{Style}
 
 TODO: write style guidelines.
+}
 
 @section{Examples}
 
