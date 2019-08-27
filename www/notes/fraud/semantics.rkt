@@ -1,11 +1,12 @@
 #lang racket
-(provide F F-pre 𝑭 𝑭𝒓 lookup ext)
+(provide F F-pre 𝑭 𝑭-𝒆𝒏𝒗 lookup ext)
 (require redex/reduction-semantics
          (only-in "../extort/semantics.rkt" E 𝑬))
 
 ; for use in presentations (informally noting x can't be let, etc.)
 (define-extended-language F-pre E
-  (e ::= .... x (let ((x e)) e))
+  (e ::= .... x (let ((x e)) e) (p e))
+  (p ::= add1 sub1 zero?)
   (x ::= variable))
 
 ;; the real grammar language
@@ -28,103 +29,57 @@
 (define-judgment-form F
   #:contract (𝑭 e a)
   #:mode (𝑭 I O)
-  [(𝑭𝒓 e () a)
-   ----------
+  [(𝑭-𝒆𝒏𝒗 e () a)
+   ---------- "mt-env"
    (𝑭 e a)])
 
-(define-judgment-form F  
-  #:contract (𝑭𝒓 e r a)
-  #:mode (𝑭𝒓 I I O)
-
-  ;; New
-  [(where v (lookup r x))
-   -----------
-   (𝑭𝒓 x r v)]
-
-  [(𝑭𝒓 e_0 r v_0) (where r_1 (ext r x v_0)) (𝑭𝒓 e_1 r_1 v_1)
-   -----
-   (𝑭𝒓 (let ((x e_0)) e_1) r v_1)]
-
-  ;; Extension of Dupe's semantics
-  [-----------
-   (𝑭𝒓 v r v)]
-
-  [(𝑭𝒓 e_0 r i_0) (where i_1 ,(+ (term i_0) 1))
-   -----------
-   (𝑭𝒓 (add1 e_0) r i_1)]
-  
-  [(𝑭𝒓 e_0 r i_0) (where i_1 ,(- (term i_0) 1))
-   -----------
-   (𝑭𝒓 (sub1 e_0) r i_1)]
-
-  [(𝑭𝒓 e_0 r i) (side-condition ,(= (term i) 0))
-   -----------
-   (𝑭𝒓 (zero? e_0) r #t)]
-
-  [(𝑭𝒓 e_0 r i) (side-condition ,(!= (term i) 0))
-   -----------
-   (𝑭𝒓 (zero? e_0) r #f)]
-
-  [(𝑭𝒓 e_0 r v_0) (is-true v_0) (𝑭𝒓 e_1 r v_1)
-   --------
-   (𝑭𝒓 (if e_0 e_1 e_2) r v_1)]
-  
-  [(𝑭𝒓 e_0 r v_0) (is-false v_0) (𝑭𝒓 e_2 r v_2)
-   --------
-   (𝑭𝒓 (if e_0 e_1 e_2) r v_2)]
-
-  ;; Extension of Extort's semantics
-  [--------
-   (𝑭𝒓 (add1 b) r err)]
-
-  [-----------
-   (𝑭𝒓 (sub1 b) r err)]
-
-  [-----------
-   (𝑭𝒓 (zero? b) r err)]
-
-  [(𝑭𝒓 e r err)
-   -----------
-   (𝑭𝒓 (zero? e) r err)]
-
-  [(𝑭𝒓 e r err)
-   -----------
-   (𝑭𝒓 (add1 e) r err)]
-
-  [(𝑭𝒓 e r err)
-   -----------
-   (𝑭𝒓 (sub1 e) r err)]
-
-  [(𝑭𝒓 e r err)
-   -----------
-   (𝑭𝒓 (if e e_0 e_1) r err)]
-
-  ;; Error propagation for Let
-  [(𝑭𝒓 e_0 r err)
-   -----------
-   (𝑭𝒓 (let ((x e_0)) e_1) r err)]
-
-  [(𝑭𝒓 e_0 r v_0) (𝑭𝒓 e_1 r err)
-   -----------
-   (𝑭𝒓 (let ((x e_0)) e_1) r err)])
-
-
 (define-judgment-form F
-  #:mode (is-true I)
-  #:contract (is-true v)
-  [-----------
-   (is-true #t)]
-  [----------
-   (is-true i)])
+  #:contract (𝑭-𝒆𝒏𝒗 e r a)
+  #:mode (𝑭-𝒆𝒏𝒗 I I O)
 
-(define-judgment-form F
-  #:mode (is-false I)
-  #:contract (is-false v)
-  [-----------
-   (is-false #f)])
+  ;; Value
+  [----------- "value"
+   (𝑭-𝒆𝒏𝒗 v r v)]
 
-(define (!= n m)
-  (not (= n m)))
+  ;; If
+  [(𝑭-𝒆𝒏𝒗 e_0 r v_0) (side-condition (is-true v_0)) (𝑭-𝒆𝒏𝒗 e_1 r a)
+   -------- "if-true"
+   (𝑭-𝒆𝒏𝒗 (if e_0 e_1 e_2) r a)]
+
+  [(𝑭-𝒆𝒏𝒗 e_0 r v_0) (side-condition (is-false v_0)) (𝑭-𝒆𝒏𝒗 e_2 r a)
+   -------- "if-false"
+   (𝑭-𝒆𝒏𝒗 (if e_0 e_1 e_2) r a)]
+
+  [(𝑭-𝒆𝒏𝒗 e_0 r err)
+   -------- "if-err"
+   (𝑭-𝒆𝒏𝒗 (if e_0 e_1 e_2) r err)]
+
+  ;; Let and variable
+  [(where a (lookup r x))
+   ----------- "var"
+   (𝑭-𝒆𝒏𝒗 x r a)]
+
+  [(𝑭-𝒆𝒏𝒗 e_0 r v_0) (𝑭-𝒆𝒏𝒗 e_1 (ext r x v_0) a)
+   ----- "let"
+   (𝑭-𝒆𝒏𝒗 (let ((x e_0)) e_1) r a)]
+
+  [(𝑭-𝒆𝒏𝒗 e_0 r err)
+   ----------- "let-err"
+   (𝑭-𝒆𝒏𝒗 (let ((x e_0)) e_1) r err)]
+
+  ;; Primitive application
+  [(𝑭-𝒆𝒏𝒗 e_0 r a_0)
+   ----------- "prim"
+   (𝑭-𝒆𝒏𝒗 (p e_0) r (𝑭-𝒑𝒓𝒊𝒎 (p a_0)))])
+
+(define-metafunction F
+  𝑭-𝒑𝒓𝒊𝒎 : (p a) -> a
+  [(𝑭-𝒑𝒓𝒊𝒎 (p err)) err]
+  [(𝑭-𝒑𝒓𝒊𝒎 (add1 i_0)) ,(+ (term i_0) 1)]
+  [(𝑭-𝒑𝒓𝒊𝒎 (sub1 i_0)) ,(- (term i_0) 1)]
+  [(𝑭-𝒑𝒓𝒊𝒎 (zero? 0)) #t]
+  [(𝑭-𝒑𝒓𝒊𝒎 (zero? i)) #f]
+  [(𝑭-𝒑𝒓𝒊𝒎 _) err])
 
 (define-metafunction F
   ext : r x i -> r
@@ -132,11 +87,21 @@
    ((x i) (x_0 i_0) ...)])
 
 (define-metafunction F
-  lookup : r x -> i or undefined
-  [(lookup () x) undefined]
-  [(lookup ((x i) (x_1 i_1) ...) x) i]
-  [(lookup ((x_0 i_0) (x_1 i_1) ...) x)
-   (lookup ((x_1 i_1) ...) x)])
+  lookup : r x -> a
+  [(lookup () x) err]
+  [(lookup ((x v) (x_1 v_1) ...) x) v]
+  [(lookup ((x_0 v_0) (x_1 v_1) ...) x)
+   (lookup ((x_1 v_1) ...) x)])
+
+(define-metafunction F
+  is-true : v -> boolean
+  [(is-true #f) #f]
+  [(is-true v)  #t])
+
+(define-metafunction F
+  is-false : v -> boolean
+  [(is-false #f) #t]
+  [(is-false v)  #f])
 
 (module+ test
   (test-judgment-holds (𝑭 7 7))
@@ -157,3 +122,9 @@
                                     (add1 x))))
                           8)))
 
+(module+ test
+  (require rackunit)
+  ;; Check that the semantics is total function
+  (redex-check F e
+               (check-true (redex-match? F (a_0) (judgment-holds (𝑭 e a) a)) (term e))
+               #:print? #f))

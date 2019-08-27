@@ -1,9 +1,8 @@
 #lang racket
 (require "../interp.rkt"
-         (only-in "../semantics.rkt" F 𝑭)
+         (only-in "../semantics.rkt" G 𝑮)
          rackunit
          redex/reduction-semantics)
-
 
 (define (run e)
   (interp e))
@@ -23,15 +22,19 @@
 (check-equal? (run '(let ((x 7)) (let ((x (add1 x))) x))) 8)
 
 
+(check-equal? (run 'x) 'err)
+(check-equal? (run '(add1 #f)) 'err)
+(check-equal? (run '(+ 1 2)) 3)
+(check-equal? (run '(zero? 0)) #t)
+(check-equal? (run '(zero? 1)) #f)
+
 ;; check totality of interpreter
-(redex-check F e
-             (check-not-exn (lambda () (run (term e)))
-                            (term e))
+(redex-check G e
+             (check-not-exn (lambda () (run (term e))))
              #:print? #f)
 
 ;; check equivalence of interpreter and semantics
-(redex-check F e
+(redex-check G e
              (check-equal? (list (run (term e)))
-                           (judgment-holds (𝑭 e a) a)
-                           (term e))
+                           (judgment-holds (𝑮 e a) a))
              #:print? #f)

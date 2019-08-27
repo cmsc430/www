@@ -28,17 +28,20 @@
 
 @title[#:style 'unnumbered]{Racket}
 
+@;{
 @verbatim{
 TODO:
 - write style section
 - give some more examples
 - mention #lang racket
 }
+}
 
 
 This section gives a concise overview of the subset of Racket we will
 be using for this course.  As we see more features of Racket, this
-document will be expanded to cover the new features.
+document will be expanded to cover the new features.  See
+@secref["OCaml to Racket"] for a tutorial introducing Racket.
 
 @section{Getting Started}
 
@@ -46,7 +49,27 @@ Racket is available for all major operating systems from:
 
 @centered{@link["https://racket-lang.org/"]{@tt{https://racket-lang.org/}}}
 
-We will be using Racket 7.3, but any version from the past several
+Racket is also available on the
+@link["http://www.grace.umd.edu/"]{GRACE} computing cluster at UMD.
+The executables are located in
+
+@centered{
+@tt{/afs/glue/class/fall2019/cmsc/430/0101/public/racket-7.4/bin/}
+}
+
+For convenience, you can add the following line to your
+@tt{.cshrc.mine} file so that this directory will be added to your
+@tt{PATH} environment variable:
+
+@tt{setenv PATH ${PATH}:"/afs/glue/class/fall2019/cmsc/430/0101/public/racket-7.4/bin/"}
+
+The next time you log in, you should be able to run @tt{racket} or
+@tt{drracket} from the command line without typing out the directory.
+(Note: you will need
+@link["http://www.cs.umd.edu/~nelson/classes/utilities/xforwarding.shtml"]{X11
+forwarding} to use DrRacket or other GUI applications.)
+
+We will be using Racket 7.4, but any version from the past several
 years should work fine.
 
 There are two essential references:
@@ -135,9 +158,11 @@ to stand for the value produced by evaluating @render-term[R0 e].
 The @render-term[R0 (define (x_0 x_1 ...) e)] form is shorthand for
 @render-term[R0 (define x_0 (λ (x_1 ...) e))].
 
+@;{
 @section{Style}
 
 TODO: write style guidelines.
+}
 
 @section{Examples}
 
