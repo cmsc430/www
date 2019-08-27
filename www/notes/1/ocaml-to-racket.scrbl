@@ -27,12 +27,6 @@
 
 @title[#:tag "OCaml to Racket"]{From OCaml to Racket}
 
-@verbatim{
-- write about match
-- give an example of a recursive function on lists
-- reference the notes on a concise overview
-}
-
 @emph{Racket = OCaml with uniform syntax and no types (for now)}
 
 
@@ -290,6 +284,10 @@ Similarly in Racket, function definitions can be written as:
 
 which is shorthand for the definition above using @racket[λ].
 
+Notice both OCaml and Racket have pattern matching forms, which are
+quite useful for writing function in terms of a number of "cases."
+More on this in a minute.
+
 @section{Lists}
 
 OCaml has a built-in list datatype.  The empty list is written @tt{[]}
@@ -335,6 +333,93 @@ So in OCaml, you could make a pair @tt{("a", 3)}.  In Racket, you'd
 write @racket[(cons "a" 3)].  Note this is a pair and not a proper
 list.  In OCaml, tuples and lists are disjoint things.  In Racket,
 lists and tuples (pairs) are made out of the same stuff.
+
+@section{Pattern matching}
+
+OCaml has a very nice pattern matching for letting you express case
+analysis and decomposition in a concise way.
+
+Each pattern maching expression has a sub-expression that produce a
+value to be matched against and a number of clauses.  Each clause has
+a pattern and an expression.  The pattern potentially consists of data
+constructors, variables, and literals.  If the value matches the first
+pattern, meaning the value and the template match up on constructors
+and literals, then the variables are bound to the correspond parts of
+the value, and the right-hand side expression is evaluated.  If the
+value doesn't match, the next pattern is tried, and so on.  It's an
+error if none of the patterns match.
+
+So for example, we can write a functiion that recognize even digits as:
+
+@ocaml-repl{
+# let even_digit n =
+    match n with
+    | 0 -> true
+    | 2 -> true
+    | 4 -> true
+    | 6 -> true
+    | 8 -> true
+    | _ -> false;;
+val even_digit : int -> bool = <fun>
+}
+
+The patterns here, save the last one, are just integer literals.  If
+@tt{n} is the same as any of these integers, the value @tt{true} is
+produced.  The last case uses a "wildcard," which matches anything and
+produces true.
+
+Here's an example that matches a tuple, binding each part of the tuple
+to a name and then using those names to construct a different tuple:
+
+@ocaml-repl{
+# let swap p =
+    match p with
+    | (x, y) -> (y, x);;
+val swap : 'a * 'b -> 'b * 'a = <fun>
+}
+
+Here the pattern uses a data constructor (the tuple constructor).  It
+matches any value that is made with the same constructor.
+
+Here is a recursive function for computing the sum of a list of
+numbers, defined with pattern matching:
+
+@ocaml-repl{
+# let rec sum xs =
+    match xs with 
+    | [] -> 0
+    | x :: xs -> x + (sum xs);;
+val sum : int list -> int = <fun>
+# sum [4; 5; 6];;
+- : int = 15
+}
+
+
+We can do the same in Racket:
+
+@ex[
+(define (even-digit n)
+  (match n
+    [0 #t]
+    [2 #t]
+    [4 #t]
+    [6 #t]
+    [8 #t]
+    [_ #f]))
+
+(define (swap p)
+  (match p
+    [(cons x y) (cons y x)]))
+
+(define (sum xs)
+  (match xs
+    ['() 0]
+    [(cons x xs)
+     (+ x (sum xs))]))
+
+(sum (list 4 5 6))
+]
+
 
 @section{Datatypes}
 
