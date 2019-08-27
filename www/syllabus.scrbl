@@ -155,10 +155,11 @@ problems.
 @section{Outside-of-class communication with course staff}
 
 Course staff will interact with students outside of class in primarily
-three ways: in-person during office hours, electronically via the web
-forum and course web page, and electronically via e-mail. The large
-majority of communication should employ the first two methods,
-reserving e-mail for personal (presumably rare) circumstances.
+three ways: in-person during office hours, electronically via the
+@link["https://piazza.com/umd/fall2019/cmsc430/"]{Piazza} web forum and
+course web page, and electronically via e-mail. The large majority of
+communication should employ the first two methods, reserving e-mail
+for personal (presumably rare) circumstances.
 
 Personalized assistance, e.g., with assignments or exam preparation,
 will be provided during office hours.  Office hours for the
