@@ -8,13 +8,6 @@
 
 @local-table-of-contents[]
 
-@verbatim{
-TODO:
-* describe Github classroom in computing environment
-* describe exams, final project
-* videos
-}
-
 @section{Prerequisites and Description}
 
 @bold{Prerequisite:} a grade of C or better in CMSC330; and permission
@@ -82,7 +75,13 @@ percentages:
   (list "Midterms (2)" "20%")
   (list "Final project" "20%")]
 
-	 
+
+@section[#:tag "syllabus-videos"]{Lecture Videos}
+
+Screen and audio-capture of every lecture will made available via
+Panopto on @link[elms-url]{ELMS}.  Videos should be released within 2
+hours of each lecture.  If a video does not appear, please let the
+instructor know.
 
 @section[#:tag "syllabus-assignments"]{Assignments}
 
@@ -295,17 +294,16 @@ exam and assignment. Please also carefully read the Office of Information
 Technology's @link["http://www.nethics.umd.edu/aup/"]{policy}
 regarding acceptable use of computer accounts.
 
-Assignments and projects are either to be written @bold{solely with
-your assigned partner} or @bold{individually}, as specified in the
-assignment description, therefore cooperation with others or use of
-unauthorized materials on assignment or projects is a violation of the
-University's Code of Academic Integrity. Both the person receiving
-assistance @bold{and the person providing assistance} are in violation
-of the honor code. @bold{Any evidence} of this, or of unacceptable use
-of computer accounts, use of unauthorized materials or cooperation on
-exams or quizzes, or other possible violations of the Honor Code,
-@bold{will be submitted} to the Student Honor Council, which could
-result in an XF for the course, suspension, or expulsion.
+Assignments and projects are to be completed @bold{individually},
+therefore cooperation with others or use of unauthorized materials on
+assignment or projects is a violation of the University's Code of
+Academic Integrity. Both the person receiving assistance @bold{and the
+person providing assistance} are in violation of the honor
+code. @bold{Any evidence} of this, or of unacceptable use of computer
+accounts, use of unauthorized materials or cooperation on exams or
+quizzes, or other possible violations of the Honor Code, @bold{will be
+submitted} to the Student Honor Council, which could result in an XF
+for the course, suspension, or expulsion.
 
 @itemlist[
 
@@ -320,19 +318,17 @@ indicate?", because they convey no information about the contents of an
 assignment.}
 
 @item{When it comes to actually writing an assignment, other than help
-from the instructional staff, a collaborative assignment must solely
-and entirely be your and your partner's own work; an individual
-assignment must solely and entirely be your own work.  Working with
-another student or individual, or using anyone else's work @bold{in
-any way} except as noted in this paragraph, is a violation of the code
-of academic integrity and @bold{will be reported} to the Honor
-Council. You may not discuss design of any part of an assignment with
-anyone except the instructor, teaching assistants, and your assigned
-partner @bold{for that problem set}. Examples of questions you may
-@bold{not} ask others might be "How did you implement this part of the
-assignment?"  or "Please look at my code and help me find my stupid
-syntax error!". You may not use any disallowed source of information
-in creating either the design or code. When writing assignment you are
+from the instructional staff, assignments must solely and entirely be
+your own work.  Working with another student or individual, or using
+anyone else's work @bold{in any way} except as noted in this
+paragraph, is a violation of the code of academic integrity and
+@bold{will be reported} to the Honor Council. You may not discuss
+design of any part of an assignment with anyone except the instructor
+and teaching assistants. Examples of questions you may @bold{not} ask
+others might be "How did you implement this part of the assignment?"
+or "Please look at my code and help me find my stupid syntax
+error!". You may not use any disallowed source of information in
+creating either the design or code. When writing assignment you are
 free to use ideas or @bold{short fragments} of code from
 @bold{published} textbooks or @bold{publicly available} information,
 but the specific source must be cited in a comment in the relevant
