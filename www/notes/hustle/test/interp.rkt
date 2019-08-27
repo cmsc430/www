@@ -39,5 +39,5 @@
  (lambda ()
    (redex-check H e
                 (equal? (list (run (term e)))
-                        (judgment-holds (𝑯 e a) (convert a))))))
-
+                        (judgment-holds (𝑯 e a) (convert a)))
+                #:print? #f)))
