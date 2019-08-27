@@ -14,7 +14,7 @@
 ;; Expr REnv -> Integer
 (define (interp-env e r)
   (match e
-    ['('()) '()]
+    [''() '()]
     [(? value? v) v]
     [(list (? prim? p) es ...)
      (let ((as (interp-env* es r)))
