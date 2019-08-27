@@ -8,13 +8,6 @@
 
 @local-table-of-contents[]
 
-@verbatim{
-TODO:
-* describe Github classroom in computing environment
-* describe exams, final project
-* videos
-}
-
 @section{Prerequisites and Description}
 
 @bold{Prerequisite:} a grade of C or better in CMSC330; and permission
@@ -82,7 +75,13 @@ percentages:
   (list "Midterms (2)" "20%")
   (list "Final project" "20%")]
 
-	 
+
+@section[#:tag "syllabus-videos"]{Lecture Videos}
+
+Screen and audio-capture of every lecture will made available via
+Panopto on @link[elms-url]{ELMS}.  Videos should be released within 2
+hours of each lecture.  If a video does not appear, please let the
+instructor know.
 
 @section[#:tag "syllabus-assignments"]{Assignments}
 
