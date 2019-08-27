@@ -42,6 +42,8 @@ implement several related languages.
                (list "John Kastner" @elem{4172 @AVW} "kastner@umd.edu" "4PM-6PM F"))]
 
 
+@bold{Communications:} @link["https://piazza.com/umd/fall2019/cmsc430/"]{https://piazza.com/umd/fall2019/cmsc430/}
+
 @bold{Assumptions:} This course assumes you know the material in CMSC
 330 and CMSC 216.  In particular, you need to know how to program in a
 functional programming language like OCaml and some
