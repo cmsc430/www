@@ -30,7 +30,6 @@
 @centered[(render-metafunction 𝑯-𝒑𝒓𝒊𝒎 #:contract? #t)]
 
 
-
-@;codeblock-include["hustle/interp.rkt"]
+@codeblock-include["hustle/interp.rkt"]
 
 @;codeblock-include["hustle/compile.rkt"]
