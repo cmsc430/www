@@ -7,47 +7,54 @@
 (define (interp e)
   (interp-env e '()))
 
-;; Expr REnv -> Integer
+;; Expr REnv -> Answer
 (define (interp-env e r)
   (match e
-    [(? integer? i) i]
-    [(? boolean? b) b]
-    [`(add1 ,e0)
-     (match (interp-env e0 r)
-       [(? integer? i) (add1 i)]
-       [_ 'err])]
-    [`(sub1 ,e0)
-     (match (interp-env e0 r)
-       [(? integer? i) (sub1 i)]
-       [_ 'err])]
-    [`(zero? ,e0)
-     (match (interp-env e0 r)
-       [(? integer? i) (zero? i)]
-       [_ 'err])]
+    [(? value? v) v]
+    [(list (? prim? p) e)
+     (let ((a (interp-env e r)))
+       (interp-prim p a))]
     [`(if ,e0 ,e1 ,e2)
      (match (interp-env e0 r)
        ['err 'err]
        [v
         (if v
             (interp-env e1 r)
-            (interp-env e2 r))])]
-
+            (interp-env e2 r))])]    
     [(? symbol? x)
      (lookup r x)]
     [`(let ((,x ,e0)) ,e1)
      (match (interp-env e0 r)
        ['err 'err]
        [v
-        (let ((r0 (ext r x v)))
-          (interp-env e1 r0))])]))
+        (interp-env e1 (ext r x v))])]))
 
-;; Env Variable -> Integer
+;; Any -> Boolean
+(define (prim? x)
+  (and (symbol? x)
+       (memq x '(add1 sub1 zero?))))
+
+;; Any -> Boolean
+(define (value? x)
+  (or (integer? x)
+      (boolean? x)))
+
+;; Prim Answer -> Answer
+(define (interp-prim p a)
+  (match (list p a)
+    [(list p 'err) 'err]
+    [(list 'add1 (? integer? i0)) (+ i0 1)]
+    [(list 'sub1 (? integer? i0)) (- i0 1)]
+    [(list 'zero? (? integer? i0)) (zero? i0)]
+    [_ 'err]))
+
+;; Env Variable -> Answer
 (define (lookup env x)
   (match env
-    ['() (error "undefined variable:" x)]
-    [(cons (list y i) env)
+    ['() 'err]
+    [(cons (list y v) env)
      (match (symbol=? x y)
-       [#t i]
+       [#t v]
        [#f (lookup env x)])]))
 
 ;; Env Variable Integer -> Integer

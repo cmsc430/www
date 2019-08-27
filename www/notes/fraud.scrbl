@@ -162,7 +162,7 @@ body with an extended environment that associates its variable binding
 to the value of the right hand side.
 
 The heart of the semantics is an auxiliary relation, @render-term[F
-𝑭𝒓], which relates an expression and an environement to the integer
+𝑭-𝒆𝒏𝒗], which relates an expression and an environement to the integer
 the expression evaluates to (in the given environment):
 
 @(define ((rewrite s) lws)
@@ -171,7 +171,7 @@ the expression evaluates to (in the given environment):
    (list "" lhs (string-append " " (symbol->string s) " ") rhs ""))
 
 @(require (only-in racket add-between))
-@(define-syntax-rule (show-judgment name i j)
+@(define-syntax-rule (show-judgment name cases)
    (with-unquote-rewriter
       (lambda (lw)
         (build-lw (lw-e lw) (lw-line lw) (lw-line-span lw) (lw-column lw) (lw-column-span lw)))
@@ -179,13 +179,14 @@ the expression evaluates to (in the given environment):
                                 ['- (rewrite '–)])
         (apply centered
 	   (add-between 
-             (build-list (- j i)
-	                 (λ (n) (begin (judgment-form-cases (list (+ n i)))
-	                               (render-judgment-form name))))
+             (map (λ (c) (parameterize ([judgment-form-cases (list c)]
+	                                [judgment-form-show-rule-names #f])
+	                   (render-judgment-form name)))
+	          cases)
              (hspace 4))))))
 
 The rules for dealing with the new forms (variables and lets) are:
-@(show-judgment 𝑭𝒓 0 2)
+@(show-judgment 𝑭-𝒆𝒏𝒗 '("var" "let"))
 
 These rely on two functions: one for extending an environment with a
 variable binding and one for lookup up a variable binding in an
@@ -203,19 +204,20 @@ environment:
 The remaining rules are just an adaptation of the existing rules from
 Extort to thread the environment through.  For example, here are just
 a couple:
-@(show-judgment 𝑭𝒓 3 5)
+@(show-judgment 𝑭-𝒆𝒏𝒗 '("prim"))
+@(show-judgment 𝑭-𝒆𝒏𝒗 '("if-true" "if-false"))
 
 And rules for propagating errors through let:
-@(show-judgment 𝑭𝒓 16 18)
+@(show-judgment 𝑭-𝒆𝒏𝒗 '("let-err"))
 
 
 
 The operational semantics for Fraud is then defined as a binary relation
 @render-term[F 𝑭], which says that @math{(e,i)} in @render-term[F 𝑭],
 only when @math{e} evaluates to @math{i} in the empty environment
-according to @render-term[F 𝑭𝒓]:
+according to @render-term[F 𝑭-𝒆𝒏𝒗]:
 
-@(show-judgment 𝑭 0 1)
+@(show-judgment 𝑭 '("mt-env"))
 
 The interpreter closely mirrors the semantics.  The top-level
 @racket[interp] function relies on a helper function
@@ -231,21 +233,21 @@ We can confirm the interpreter computes the right result for the
 examples given earlier:
 
 @ex[
-(eval:error (interp 'x))
+(interp 'x)
 (interp '(let ((x 7)) x))
 (interp '(let ((x 7)) 2))
 (interp '(let ((x 7)) (add1 x)))
 (interp '(let ((x (add1 7))) x))
 (interp '(let ((x 7)) (let ((y 2)) x)))
 (interp '(let ((x 7)) (let ((x 2)) x)))
-(eval:error (interp '(let ((x (add1 x))) x)))
+(interp '(let ((x (add1 x))) x))
 (interp '(let ((x 7)) (let ((x (add1 x))) x)))
 ]
 
 @bold{Interpreter Correctness}: @emph{For all Fraud expressions
-@racket[e] and integers @racket[i], if (@racket[e],@racket[i]) in
+@racket[e] and values @racket[v], if (@racket[e],@racket[v]) in
 @render-term[F 𝑭], then @racket[(interp e)] equals
-@racket[i].}
+@racket[v].}
 
 @section{An Example of Fraud compilation}
 
