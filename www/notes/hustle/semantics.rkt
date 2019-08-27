@@ -1,5 +1,5 @@
 #lang racket
-(provide H 𝑯 𝑯-𝒆𝒏𝒗 𝑯-𝒑𝒓𝒊𝒎 lookup ext)
+(provide H 𝑯 𝑯-𝒆𝒏𝒗 𝑯-𝒑𝒓𝒊𝒎 lookup ext convert)
 (require redex/reduction-semantics
          (only-in "../grift/semantics.rkt" G))
 
@@ -30,7 +30,6 @@
   ;; Value
   [-----------
    (𝑯-𝒆𝒏𝒗 v r v)]
-
 
   ;; If
   [(𝑯-𝒆𝒏𝒗 e_0 r v_0) (side-condition (is-true v_0)) (𝑯-𝒆𝒏𝒗 e_1 r a)
@@ -103,6 +102,12 @@
   [(is-false v)  #f])
 
 
+;; Convert v to using Racket pairs and null
+(define-metafunction H
+  convert : a -> any
+  [(convert '()) ()]
+  [(convert (cons v_0 v_1)) ,(cons (term (convert v_0)) (term (convert v_1)))]
+  [(convert a) a])
 
 (module+ test
   (test-judgment-holds (𝑯 7 7))
@@ -149,7 +154,9 @@
   (test-judgment-holds (𝑯 (cdr (cons 1 2)) 2))
   (test-judgment-holds (𝑯 (cdr (cons 1 (cons 2 '()))) (cons 2 '())))
   (test-judgment-holds (𝑯 (car (cons (add1 7) '())) 8))
-  )
+
+  (test-equal (term (convert '())) '())
+  (test-equal (term (convert (cons 1 2))) '(1 . 2)))
 
 
 
