@@ -1,8 +1,6 @@
 #lang racket
 (provide (all-defined-out))
 
-;; type REnv = (Listof (List Variable Value))
-
 ;; Expr -> Answer
 (define (interp e)
   (interp-env e '()))
@@ -10,61 +8,64 @@
 ;; Expr REnv -> Integer
 (define (interp-env e r)
   (match e
-    [(? integer? i) i]
-    [(? boolean? b) b]
-    [`(add1 ,e0)
-     (match (interp-env e0 r)
-       [(? integer? i) (add1 i)]
-       [_ 'err])]
-    [`(sub1 ,e0)
-     (match (interp-env e0 r)
-       [(? integer? i) (sub1 i)]
-       [_ 'err])]
-    [`(zero? ,e0)
-     (match (interp-env e0 r)
-       [(? integer? i) (zero? i)]
-       [_ 'err])]
+    ['('()) '()]
+    [(? value? v) v]
+    [(list (? prim? p) es ...)
+     (let ((as (interp-env* es r)))
+       (interp-prim p as))]
     [`(if ,e0 ,e1 ,e2)
      (match (interp-env e0 r)
        ['err 'err]
        [v
         (if v
             (interp-env e1 r)
-            (interp-env e2 r))])]
+            (interp-env e2 r))])]    
     [(? symbol? x)
      (lookup r x)]
     [`(let ((,x ,e0)) ,e1)
      (match (interp-env e0 r)
        ['err 'err]
        [v
-        (let ((r0 (ext r x v)))
-          (interp-env e1 r0))])]
-    [`(+ ,e0 ,e1)
-     (match (interp-env e0 r)
-       [(? integer? i0)
-        (match (interp-env e1 r)
-          [(? integer? i1)
-           (+ i0 i1)]
-          [_ 'err])]
-       [_ 'err])]
-    [`(- ,e0 ,e1)
-     (match (interp-env e0 r)
-       [(? integer? i0)
-        (match (interp-env e1 r)
-          [(? integer? i1)
-           (- i0 i1)]
-          [_ 'err])]
-       [_ 'err])]))
+        (interp-env e1 (ext r x v))])]))
 
-;; Env Variable -> Integer
+;; [Listof Expr] REnv -> [Listof Answer]
+(define (interp-env* es r)
+  (match es
+    ['() '()]
+    [(cons e es)
+     (cons (interp-env e r)
+           (interp-env* es r))]))
+
+;; Any -> Boolean
+(define (prim? x)
+  (and (symbol? x)
+       (memq x '(add1 sub1 + - zero?))))
+
+;; Any -> Boolean
+(define (value? x)
+  (or (integer? x)
+      (boolean? x)))
+
+;; Prim [Listof Answer] -> Answer
+(define (interp-prim p as)
+  (match (cons p as)
+    [(list p (? value?) ... 'err _ ...) 'err]
+    [(list 'add1 (? integer? i0)) (+ i0 1)]
+    [(list 'sub1 (? integer? i0)) (- i0 1)]
+    [(list 'zero? (? integer? i0)) (zero? i0)]
+    [(list '+ (? integer? i0) (? integer? i1)) (+ i0 i1)]
+    [(list '- (? integer? i0) (? integer? i1)) (- i0 i1)]
+    [_ 'err]))
+
+;; Env Variable -> Answer
 (define (lookup env x)
   (match env
-    ['() (error "undefined variable:" x)]
+    ['() 'err]
     [(cons (list y i) env)
      (match (symbol=? x y)
        [#t i]
        [#f (lookup env x)])]))
 
-;; Env Variable Integer -> Integer
+;; Env Variable Value -> Value
 (define (ext r x i)
   (cons (list x i) r))

@@ -18,6 +18,15 @@
 
 @codeblock-include["grift/ast.rkt"]
 
+@centered[(render-language G)]
+
+@(judgment-form-cases #f)
+
+@centered[(render-judgment-form 𝑮-𝒆𝒏𝒗)]
+
+@centered[(render-metafunction 𝑮-𝒑𝒓𝒊𝒎 #:contract? #t)]
+
+
 @codeblock-include["grift/interp.rkt"]
 
 @codeblock-include["grift/compile.rkt"]
