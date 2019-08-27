@@ -1,7 +1,7 @@
 #lang racket
-(provide G 𝑮 𝑮-r 𝑮-prim 𝑮-type-error)
+(provide G 𝑮 𝑮-𝒆𝒏𝒗 𝑮-𝒑𝒓𝒊𝒎)
 (require redex/reduction-semantics
-         (only-in "../fraud/semantics.rkt" F 𝑭𝒓))
+         (only-in "../fraud/semantics.rkt" F))
 
 (define-extended-language G F
   (e ::= .... (p1 e) (p2 e e))
@@ -12,55 +12,81 @@
 (define-judgment-form G
   #:contract (𝑮 e a)
   #:mode (𝑮 I O)
-  [(𝑮-r e () a)
+  [(𝑮-𝒆𝒏𝒗 e () a)
    ----------
    (𝑮 e a)])
 
-(define-extended-judgment-form G 𝑭𝒓
-  #:contract (𝑮-r e r a)
-  #:mode (𝑮-r I I O)
-  
-  [(𝑮-r e_0 r a_0) ... (𝑮-prim (p a_0 ...) a_1)
-   ----------- prim
-   (𝑮-r (p e_0 ...) r a_1)])
-
 (define-judgment-form G
-  #:contract (𝑮-prim (p a ...) a)
-  #:mode (𝑮-prim I O)
+  #:contract (𝑮-𝒆𝒏𝒗 e r a)
+  #:mode (𝑮-𝒆𝒏𝒗 I I O)
 
-  [(where i_1 ,(add1 (term i_0)))
-   --------------- add1
-   (𝑮-prim (add1 i_0 ) i_1)]
+  ;; Value
+  [-----------
+   (𝑮-𝒆𝒏𝒗 v r v)]
 
-  [(where i_1 ,(sub1 (term i_0)))
-   --------------- sub1
-   (𝑮-prim (sub1 i_0 ) i_1)]
+  ;; If
+  [(𝑮-𝒆𝒏𝒗 e_0 r v_0) (side-condition (is-true v_0)) (𝑮-𝒆𝒏𝒗 e_1 r a)
+   --------
+   (𝑮-𝒆𝒏𝒗 (if e_0 e_1 e_2) r a)]
 
-  [(where i_2 ,(+ (term i_0) (term i_1)))
-   --------------- +
-   (𝑮-prim (+ i_0 i_1) i_2)]
+  [(𝑮-𝒆𝒏𝒗 e_0 r v_0) (side-condition (is-false v_0)) (𝑮-𝒆𝒏𝒗 e_2 r a)
+   --------
+   (𝑮-𝒆𝒏𝒗 (if e_0 e_1 e_2) r a)]
 
-  [(where i_2 ,(- (term i_0) (term i_1)))
-   --------------- minus
-   (𝑮-prim (- i_0 i_1) i_2)]
-  
-  [--------------- prop-error
-   (𝑮-prim (p v ... err _ ...) err)]  
+  [(𝑮-𝒆𝒏𝒗 e_0 r err)
+   --------
+   (𝑮-𝒆𝒏𝒗 (if e_0 e_1 e_2) r err)]
 
-  [(𝑮-type-error (p v ...))
-   --------------- type-error
-   (𝑮-prim (p v ...) err)])
+  ;; Let and variable
+  [(where a (lookup r x))
+   -----------
+   (𝑮-𝒆𝒏𝒗 x r a)]
 
-(define-judgment-form G
-  ;; Commented out to allow extension (since its buggy in redex)
-  ;; #:contract (𝑮-type-error (p v ...))
-  #:mode (𝑮-type-error I )
-  [(𝑮-type-error (+ b _))]
-  [(𝑮-type-error (+ _ b))]
-  [(𝑮-type-error (- b _))]
-  [(𝑮-type-error (- _ b))]
-  [(𝑮-type-error (add1 b))]
-  [(𝑮-type-error (sub1 b))])
+  [(𝑮-𝒆𝒏𝒗 e_0 r v_0) (𝑮-𝒆𝒏𝒗 e_1 (ext r x v_0) a)
+   -----
+   (𝑮-𝒆𝒏𝒗 (let ((x e_0)) e_1) r a)]
+
+  [(𝑮-𝒆𝒏𝒗 e_0 r err)
+   -----------
+   (𝑮-𝒆𝒏𝒗 (let ((x e_0)) e_1) r err)]
+
+  ;; Primitive application
+  [(𝑮-𝒆𝒏𝒗 e_0 r a_0) ...
+   -----------
+   (𝑮-𝒆𝒏𝒗 (p e_0 ...) r (𝑮-𝒑𝒓𝒊𝒎 (p a_0 ...)))])
+
+(define-metafunction G
+  𝑮-𝒑𝒓𝒊𝒎 : (p a ...) -> a
+  [(𝑮-𝒑𝒓𝒊𝒎 (p v ... err _ ...)) err]
+  [(𝑮-𝒑𝒓𝒊𝒎 (add1 i_0)) ,(+ (term i_0) 1)]
+  [(𝑮-𝒑𝒓𝒊𝒎 (sub1 i_0)) ,(- (term i_0) 1)]
+  [(𝑮-𝒑𝒓𝒊𝒎 (zero? 0)) #t]
+  [(𝑮-𝒑𝒓𝒊𝒎 (zero? i)) #f]
+  [(𝑮-𝒑𝒓𝒊𝒎 (+ i_0 i_1)) ,(+ (term i_0) (term i_1))]
+  [(𝑮-𝒑𝒓𝒊𝒎 (- i_0 i_1)) ,(- (term i_0) (term i_1))]
+  [(𝑮-𝒑𝒓𝒊𝒎 _) err])
+
+(define-metafunction G
+  ext : r x v -> r
+  [(ext ((x_0 v_0) ...) x v)
+   ((x v) (x_0 v_0) ...)])
+
+(define-metafunction G
+  lookup : r x -> a
+  [(lookup () x) err]
+  [(lookup ((x v) (x_1 v_1) ...) x) v]
+  [(lookup ((x_0 v_0) (x_1 v_1) ...) x)
+   (lookup ((x_1 v_1) ...) x)])
+
+(define-metafunction G
+  is-true : v -> boolean
+  [(is-true #f) #f]
+  [(is-true v)  #t])
+
+(define-metafunction G
+  is-false : v -> boolean
+  [(is-false #f) #t]
+  [(is-false v)  #f])
 
 (module+ test
   (test-judgment-holds (𝑮 7 7))
@@ -89,3 +115,10 @@
   (test-judgment-holds (𝑮 (+ 1 #f) err))
   (test-judgment-holds (𝑮 (- 1 #f) err))
   (test-judgment-holds (𝑮 (- (add1 #f) #f) err)))
+
+(module+ test
+  (require rackunit)
+  ;; Check that the semantics is total function
+  (redex-check G e
+               (check-true (redex-match? G (a_0) (judgment-holds (𝑮 e a) a)))
+               #:print? #f))
