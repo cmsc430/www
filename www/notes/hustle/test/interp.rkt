@@ -29,15 +29,12 @@
 (check-equal? (run '(zero? 1)) #f)
 
 ;; check totality of interpreter
-(check-not-exn
- (lambda ()
-   (redex-check H e (run (term e))
-                #:print? #f)))
+(redex-check H e
+             (check-not-exn (lambda () (run (term e))))
+             #:print? #f)
 
 ;; check equivalence of interpreter and semantics
-(check-not-exn
- (lambda ()
-   (redex-check H e
-                (equal? (list (run (term e)))
-                        (judgment-holds (𝑯 e a) (convert a)))
-                #:print? #f)))
+(redex-check H e
+             (check-equal? (list (run (term e)))
+                           (judgment-holds (𝑯 e a) (convert a)))
+             #:print? #f)
