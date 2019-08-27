@@ -6,7 +6,8 @@
 (define year "2019")
 (define courseno "CMSC 430")
 
-(define IRB (link "https://maps.google.com/maps?q=BRENDAN+IRIBE+CENTER%2c+College+Park%2c+MD&z=18" "IRB"))
+(define IRB "IRB") 
+(define AVW "AVW")
 
 
 (define m1-date "Oct 8")
