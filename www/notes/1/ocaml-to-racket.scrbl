@@ -194,6 +194,16 @@ Racket has a similar notation for writing functions:
 (λ (x) (λ (y) (+ x y))) ; like (fun x -> fun y -> x + y)
 ]
 
+You can also write this without the fancy @racket[λ] by
+spelling it @racket[lambda]:
+
+@ex[
+(lambda (x) (lambda (y) (+ x y))) ; like (fun x -> fun y -> x + y)
+]
+
+(In DrRacket, to insert a ``λ'' press Cmd+\.)
+
+
 To apply it, it must be written in parens, juxtaposed with arguments:
 
 @ex[
