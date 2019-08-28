@@ -488,3 +488,138 @@ Functions operating on such trees could be defined as:
 
 (sum `(Node 5 (Node 7 Leaf Leaf) Leaf))
 ]
+
+@section{Quote, quasiquote, and unquote}
+
+One of the distinguishing features of languages in the Lisp family
+(such as Scheme and Racket) is the @racket[quote] operator and its
+closely related cousins @racket[quasiquote], @racket[unquote], and
+@racket[unquote-splicing].
+
+Let's start with @racket[quote].
+
+The ``tick'' character @racket['d] is used as a shorthand for
+@racket[(code:quote d)].
+
+You've already seen it show up with symbols: @racket['x] is the symbol
+@tt{x}.  It also shows up in the notation for the empty list:
+@racket['()].
+
+But you can also write @racket[quote] around non-empty lists like
+@racket['(x y z)].  This makes a list of symbols.  It is equivalent to
+saying @racket[(list 'x 'y 'z)].
+
+In fact, you can nest lists within the quoted list: @racket['((x) y (q
+r))].  This is equivalent to @racket[(list (list 'x) 'y (list 'q 'r))].
+
+Here's another: @racket['(() (()) ((())))].  This is equivalent to
+@centered{
+@racket[(list '() (list '()) (list (list '())))]
+}
+
+So, anything you can write with quoted lists, you can write without
+quoted lists by pushing the quote inward until reaching a symbol or an
+empty set of parenthesis.
+
+You can also put strings, booleans, and numbers inside of a
+@racket[quote].  As you push the quote inward, it simply disappears
+when reaching a string, boolean or number.  So @racket['5] is just
+@racket[5].  Likewise @racket['#t] is @racket[#t] and @racket['"Fred"]
+is @racket["Fred"].
+
+You can also write pairs with @racket[quote], which uses the @tt{.}
+notation for separating the left and right part of the pair.  For
+example, @racket['(1 . 2)] is equivalent to @racket[(cons 1 2)].  If
+you write something like @racket['(1 2 3 . 4)], what you are in effect
+saying is @racket[(cons 1 (cons 2 (cons 3 4)))], an improper list that
+ends in @racket[4].
+
+
+In essence, @racket[quote] is a shorthand for conveniently
+constructing data and is a very concise notation for writing down
+ad-hoc data.  It serves much the same purpose as formats like JSON and
+XML, except there's even less noise.
+
+To summarize, with @racket[quote], you can construct
+
+@itemlist[
+@item{strings}
+@item{booleans}
+@item{numbers}
+@item{symbols}
+@item{and... pairs (or lists) of those things (including this one)}
+]
+
+
+The kind of things you can construct with the @racket[quote] form are
+often called @bold{s-expressions}, short for @bold{symbolic
+expressions}.  The reason for this name is because anything you can
+write down as an expression, you can write down inside a
+@racket[quote] to obtain @emph{a data representation} of that
+expression.  You can render an expression as a symbolic representation
+of itself.
+
+For example, @racket[(+ 1 2)] is an expression.  When run, it applies
+the @emph{function} bound to the variable @racket[+] to the arguments
+@racket[1] and @racket[2] and produces @racket[3].  On the other hand:
+@racket['(+ 1 2)] constructs a peice of data, namely, a list of three
+elements.  The first element is the @emph{symbol} @tt{+}, the second
+element is @racket[2], the third element is @racket[3].
+
+
+We will be using (subsets of) s-expressions extensively as our data
+representation of AST and IR expressions, so it's important to gain a
+level of fluency with them now.
+
+
+Once you understand @racket[quote], moving on to @racket[quasiquote],
+@racket[unquote], and @racket[unquote-splicing] are pretty
+straight-forward.
+
+Let's start with @racket[quasiquote]. The ``backtick''
+character @racket[`d] is used as a shorthand for @tt{
+ (quasiquote d)} and the ``comma'' character @racket[,e] is
+shorthand for @tt{(unquote e)}. The @tt{(quasiquote d)} form
+means the same thing as @tt{(quote d)}, with the exception
+that if @tt{(unquote e)} appears anywhere inside @tt{d},
+then the @emph{expression} @racket[e] is evaluated and it's
+value will be used in place of @tt{(unquote e)}.
+
+This gives us the ability to ``escape'' out of a quoted
+peice of data and go back to expression mode.
+
+If we think of @racket[quasiquote] like @racket[quote] in
+terms of ``pushing in'' then the rules are exactly the same
+except that when a @racket[quasiquote] is pushed up next to
+an @racket[unquote], the two ``cancel out.'' So @racket[`,e] is
+just @tt{e}.  
+
+For example, @racket[`(+ 1 ,(+ 1 1))] is equivalent to
+@racket[(list '+ 1 (list (+ 1 1)))], which is equivalent to
+@racket[(list + 1 2)].
+
+So if @racket[quote] signals us to stop interpreting things
+as expressions, but instead as data, @racket[quasiquote]
+signals us to stop interpreting things as expression, but
+instead as data.. @emph{unless we encounter a
+ @racket[unquote]}, in which case you go back to interpreting
+things as expressions.
+
+
+The last remaining peice is @racket[unquote-splicing], which
+is abbreviated with ``comma-at'': @racket[,@e] means @tt{
+ (unquote-splicing e)}. The @racket[unquote-splicing] form is
+like @racket[unquote] in that if it occurs withing a
+@racket[quasiquote], it means we switch back in to
+expression mode. The difference is the expression must
+produce a list (or pair) and the elements of that list (or
+pair) are spliced in to the outer data.
+
+So for example, @racket[`(+ 1 ,@(map add1 '(2 3)))] is
+equivalent to
+@racket[(cons '+ (cons 1 (map add1 (list 2 3))))], which is
+equivalent to @racket[(list '+ 1 3 4)], or
+@racket['(+ 1 3 4)].
+
+If the expression inside the @racket[unquote-splicing]
+produces something other than a pair, an error is signalled.
