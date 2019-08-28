@@ -270,6 +270,10 @@ In Racket, variables are defined with the @racket[define] form:
 (fact 5)
 ]
 
+(Note that the use of square brackets here is stylistic:
+from Racket's point of view as long as ``parentheses'' (e.g.
+@tt|{({[}|) match, any kind is acceptable.)
+
 In OCaml, function definitions can be written as:
 
 @ocaml-repl{
@@ -433,11 +437,193 @@ We can do the same in Racket:
 
 @section{Datatypes}
 
+OCaml has the ability to declare new datatypes.  For example,
+we can define type for binary trees of numbers:
 
-One of the built-in datatypes we will use often in Racket is that of a
-@emph{symbol}.  A symbol is just an atomic piece of data.  The closest
-cousin in OCaml is a @emph{polymorphic variant}.
+@ocaml-repl{
+# type bt = 
+   | Leaf
+   | Node of int * bt * bt;;
+type bt = Leaf | Node of int * bt * bt
+}
 
+This declares a new type, named @tt{bt}. There are two
+@emph{variants} of the @tt{bt} type, each with their own
+constructor: @tt{Leaf} and @tt{Node}. The @tt{Leaf}
+constructor takes no arguments, so just writing @tt{Leaf}
+creates a (empty) binary tree:
+
+@ocaml-repl{
+# Leaf;;
+- : bt = Leaf
+}
+
+The @tt{Node} constructor takes three arguments: an integer
+and two binary trees. Applying the constructor to a tuple of
+three things, makes a (non-empty) binary tree:
+
+@ocaml-repl{
+# Node (3, Leaf, Leaf);;
+- : bt = Node (3, Leaf, Leaf)
+}
+
+Binary trees are an example of a @emph{recursive} datatype,
+since one of the variants contains binary trees. This means
+we can build up arbitrarily large binary trees by nesting
+nodes within nodes:
+
+@ocaml-repl{
+# Node (3, Node (4, Leaf, Leaf), Node (7, Leaf, Leaf));;
+- : bt = Node (3, Node (4, Leaf, Leaf), Node (7, Leaf, Leaf))
+}
+
+Pattern matching is used to do case analysis and deconstruct
+values. So for example, a function that determines if a
+binary tree is empty can be written as:
+
+@ocaml-repl{
+# let bt_is_empty bt = 
+    match bt with
+    | Leaf -> true
+    | Node _ -> false;;
+val bt_is_empty : bt -> bool = <fun>
+# bt_is_empty Leaf;;
+- : bool = true
+# bt_is_empty (Node (3, Leaf, Leaf));;
+- : bool = false
+}
+
+The patterns use the constructor names to discriminate on
+which constructor was used for a given binary tree. The use
+of the wildcard here is just saying it doesn't matter what's
+inside a node; if you're a node, you're not empty.
+
+Recursive functions work similarly, but use variables inside
+patterns to bind names to the binary trees contained inside
+a node:
+
+@ocaml-repl{
+# let rec bt_height bt =
+    match bt with
+    | Leaf -> 0
+    | Node (_, left, right) -> 
+      1 + max (bt_height left) (bt_height right);;
+val bt_height : bt -> int = <fun>
+# bt_height Leaf;;
+- : int = 0
+# bt_height (Node (4, Node (2, Leaf, Leaf), Leaf));;
+- : int = 2
+}
+
+We do something very similar in Racket using @emph{
+ structures}. A structure type is like a (single) variant of
+a data type in OCaml: it's a way of combining several things
+into one new kind of value.
+
+@ex[
+(struct leaf ())
+(struct node (i left right))
+]
+
+This declares two new kinds of values: leaf structures and
+node structures. For each, we get a constructor, which is a
+function named after the structure type. The @racket[leaf]
+constructor takes no arguments. The @racket[node]
+constructor takes 3 arguments.
+
+@ex[
+(leaf)
+(node 5 (leaf) (leaf))
+(node 3 (node 2 (leaf) (leaf)) (leaf))
+]
+
+There is no type system in Racket, but we can conceptually still
+define what we mean in a comment.  Just like in OCaml, we can use
+pattern matching to discriminate and deconstruct:
+
+@ex[
+(code:comment "type Bt = (leaf) | (node Integer Bt Bt)")    
+(define (bt-empty? bt)
+  (match bt
+    [(leaf) #t]
+    [(node _ _ _) #f]))
+(bt-empty? (leaf))
+(bt-empty? (node 5 (leaf) (leaf)))
+(define (bt-height bt)
+  (match bt
+    [(leaf) 0]
+    [(node _ left right)
+     (+ 1 (max (bt-height left)
+               (bt-height right)))]))
+(bt-height (leaf))
+(bt-height (node 4 (node 2 (leaf) (leaf)) (leaf)))
+]
+ 
+@section{Symbols}
+
+One of the built-in datatypes we will use often in Racket is
+that of a @emph{symbol}. A symbol is just an atomic piece of
+data. A symbol is written using the @racket[quote] notation
+@racket[(code:quote symbol-name)], which is abbreviated
+@racket['symbol-name]. What's allowable as a symbol name
+follows the same rules as what's allowable as a Racket
+identifier.
+
+
+Symbols don't have a whole lot of operations. The main thing
+you do with symbols is tell them apart from eachother:
+
+@ex[
+(equal? 'fred 'fred)
+(equal? 'fred 'wilma)
+]
+
+It is possible to convert between symbols and strings:
+
+@ex[
+(symbol->string 'fred)
+(string->symbol "fred")
+]
+
+There's also a convient function that produces a symbol that is guaranteed
+to have not been used so far each time you call it:
+
+@ex[
+(gensym)
+(gensym)
+(gensym)
+]
+
+
+They can be used to define ``enum'' like datatypes:
+
+@ex[
+(code:comment "type Flintstone = 'fred | 'wilma | 'pebbles")
+]
+
+
+You can use pattern matching to match symbols:
+
+@ex[
+(define (flintstone? x)
+  (match x
+    ['fred #t]
+    ['wilma #t]
+    ['pebbles #t]
+    [_ #f]))
+
+(flintstone? 'fred)
+(flintstone? 'barney)
+]
+
+There's really not a precise analog to symbols in OCaml.
+(There's something called a polymorphic variant, which plays
+a similar role to symbols in OCaml, but it wasn't covered in
+CMSC 330.)
+
+
+
+@;{
 For example, suppose we want to build up binary trees using
 polymorphic variants.  (This is not the idiomatic OCaml programming,
 which would instead use a plain old variant and datatype, but it
@@ -498,6 +684,7 @@ Functions operating on such trees could be defined as:
 
 (sum `(Node 5 (Node 7 Leaf Leaf) Leaf))
 ]
+}
 
 @section{Quote, quasiquote, and unquote}
 
