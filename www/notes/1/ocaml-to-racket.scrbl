@@ -820,3 +820,99 @@ equivalent to @racket[(list '+ 1 3 4)], or
 
 If the expression inside the @racket[unquote-splicing]
 produces something other than a pair, an error is signalled.
+
+@section{The Poetry of S-Expressions}
+
+The use of structures lets us program in a style very
+similar to idiomatic OCaml programming. For each variant
+data type, we can define a structure type for each variant
+and use pattern matching to process such values.
+
+However, we are going to frequently employ a different idiom
+for programming with recursive variants which doesn't rely
+on structures, but rather uses symbols in place of
+constructors and lists in place of fields.
+
+Let's revisit the binary tree example, using this style.
+
+Notice that @racket[leaf] structureq is a kind of atomic
+data. It doesn't contain anything and its only real purpose
+is to be distinguishable from @racket[node] structures. On
+the other hand a @racket[node] structure needs to be
+distinguishable from @racket[leaf]s, but also contain 3
+pieces of data within it.
+
+We can formulate definition of binary trees using only
+symbols and lists as:
+
+@ex[
+(code:comment "type Bt = 'leaf | (list 'node Integer Bt Bt)")
+]
+
+So the following are binary trees:
+
+@ex[
+'leaf
+(list 'node 3 'leaf 'leaf)
+(list 'node 3
+      (list 'node 7 'leaf 'leaf)
+      (list 'node 9 'leaf 'leaf))
+]
+
+This formulation has the added benefit that we write binary trees
+as s-expressions:
+
+@ex[
+'leaf
+'(node 3 leaf leaf)
+'(node 3
+       (node 7 leaf leaf)
+       (node 9 leaf leaf))
+]
+
+We re-write our functions to match this new datatype definition:
+
+@ex[
+(define (bt-empty? bt)
+  (match bt
+    ['leaf #t]
+    [(cons 'node _) #f]))
+(bt-empty? 'leaf)
+(bt-empty? '(node 3
+                  (node 7 leaf leaf)
+                  (node 9 leaf leaf)))
+(define (bt-height bt)
+  (match bt
+    ['leaf 0]
+    [(list 'node _ left right)
+     (+ 1 (max (bt-height left)
+               (bt-height right)))]))
+(bt-height 'leaf)
+(bt-height '(node 3
+                  (node 7 leaf leaf)
+                  (node 9 leaf leaf)))]
+
+We even can use @racket[quasiquote] notation in patterns to write
+more concise definitions:
+
+@ex[
+(define (bt-empty? bt)
+  (match bt
+    [`leaf #t]
+    [`(node . ,_) #f]))
+(bt-empty? 'leaf)
+(bt-empty? '(node 3
+                  (node 7 leaf leaf)
+                  (node 9 leaf leaf)))
+(define (bt-height bt)
+  (match bt
+    [`leaf 0]
+    [`(node ,_ ,left ,right)
+     (+ 1 (max (bt-height left)
+               (bt-height right)))]))
+(bt-height 'leaf)
+(bt-height '(node 3
+                  (node 7 leaf leaf)
+                  (node 9 leaf leaf)))]
+
+
