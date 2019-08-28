@@ -915,4 +915,10 @@ more concise definitions:
                   (node 7 leaf leaf)
                   (node 9 leaf leaf)))]
 
+Moreover, we can embrace quasiquotation at the type-level and write:
+
+@ex[
+(code:comment "type Bt = `leaf | `(node ,Integer ,Bt ,Bt)")
+]
+
 
