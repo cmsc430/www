@@ -1,11 +1,13 @@
 #lang scribble/manual
-@(require "../../fancyverb.rkt")
+@(require "../../fancyverb.rkt" "../utils.rkt" "../../utils.rkt")
 @(require scribble/core racket/list)
-@(require (for-label racket))
+@(require (for-label racket rackunit))
 @(require redex/reduction-semantics
           redex/pict (only-in pict scale))
 
 @(require scribble/examples racket/sandbox)
+
+@(define codeblock-include (make-codeblock-include #'here))
 
 @(define core-racket
   (parameterize ([sandbox-output 'string]
@@ -23,12 +25,17 @@
   (filebox (emph "OCaml REPL")
     (apply fancyverbatim "ocaml" s)))
 
+@(define (shellbox . s)
+   (parameterize ([current-directory (build-path notes "intro")])
+     (filebox (emph "shell")
+              (fancyverbatim "fish" (apply shell s)))))
 
 
 @title[#:tag "OCaml to Racket"]{From OCaml to Racket}
 
 @emph{Racket = OCaml with uniform syntax and no types (for now)}
 
+@table-of-contents[]
 
 @section{Basic values}
 
@@ -821,7 +828,7 @@ equivalent to @racket[(list '+ 1 3 4)], or
 If the expression inside the @racket[unquote-splicing]
 produces something other than a pair, an error is signalled.
 
-@section{The Poetry of S-Expressions}
+@section{Poetry of s-expressions}
 
 The use of structures lets us program in a style very
 similar to idiomatic OCaml programming. For each variant
@@ -920,5 +927,147 @@ Moreover, we can embrace quasiquotation at the type-level and write:
 @ex[
 (code:comment "type Bt = `leaf | `(node ,Integer ,Bt ,Bt)")
 ]
+
+@section{Testing, modules, submodules}
+
+We will take testing seriously in this class.  Primarily this will
+take the form of unit tests, for which we will use the
+@racketmodname[rackunit] library.  To use the library, you must
+@racket[require] it.
+
+Here is a simple example:
+
+@ex[
+(require rackunit)
+(check-equal? (add1 4) 5)
+(check-equal? (* 2 3) 7)
+]
+
+The @racket[check-equal?] function takes two arguments (and an
+optional third for a message to display should the test fail) and
+checks that the first argument produces something that is
+@racket[equal?] to the expected outcome given as the second argument.
+
+There are many other forms of checks and utilities for building up
+larger test suites, but @racket[check-equal?] will get us a long way.
+
+As a matter of coding style, we will place tests nearby the function
+they are testing and locate them within their own @bold{module}.
+Let's talk about modules for a minute.
+
+In Racket, a module is the basic unit of code organization.  Every
+file is a module whose name is derived from the filename, but you can
+also write modules without saving them in a file.  For example:
+
+@ex[
+(module bt racket
+  (provide bt-height)
+  (define (bt-height bt)
+    (match bt
+      [`leaf 0]
+      [`(node ,_ ,left ,right)
+       (+ 1 (max (bt-height left)
+                 (bt-height right)))])))
+]
+
+This declares a module named @racket[bt].  It provides a single value
+named @racket[bt-height].
+
+We can require the module from the REPL to gain access to the modules
+provided values:
+
+@ex[
+(require 'bt)
+(bt-height 'leaf)
+]
+
+We could have also used the @tt{#lang racket} shorthand for
+@tt{(module bt racket ...)} and saved this in a file called
+@tt{bt.rkt}.  To import from a file in the current directory, you'd
+write @tt{(require "bt.rkt")}.  But this doesn't work well in REPL.
+
+For the most part we will organize our programs into single module
+files using the @tt{#lang racket} shorthand.  But we will place tests
+within a ``sub''-module, i.e. a module nested inside of the module
+that contains the code it tests.  We will use a special form called
+@racket[module+] which declares a submodule that has access to the
+enclosing module.  Moreover, repeated uses of @racket[module+] will
+add content to the submodule.  By convention, we will name the testing
+submodule @racket[test].
+
+So here's a second version of the @racket[bt] module with unit tests
+included (and more code).  Note the use of @racket[all-defined-out] to
+provide everything:
+
+@ex[
+(module bt2 racket
+  (code:comment "provides everything defined in module")
+  (provide (all-defined-out))
+
+  (module+ test
+    (require rackunit))
+
+  (define (bt-empty? bt)
+    (match bt
+      ['leaf #t]
+      [(cons 'node _) #f]))
+
+  (module+ test
+    (check-equal? (bt-empty? 'leaf) #t)
+    (check-equal? (bt-empty? '(node 3
+                                    (node 7 leaf leaf)
+                                    (node 9 leaf leaf)))
+                  #f))
+
+  (define (bt-height bt)
+    (match bt
+      [`leaf 0]
+      [`(node ,_ ,left ,right)
+       (+ 1 (max (bt-height left)
+                 (bt-height right)))]))
+
+  (module+ test
+    (check-equal? (bt-height 'leaf) 0)
+    (code:comment "intentionally wrong test:")
+    (check-equal? (bt-height '(node 3 leaf leaf)) 2)))
+]
+
+Requiring this module with make @racket[bt-height], but @emph{it will not run the tests}:
+
+@ex[
+(require 'bt2)
+]
+
+Running the tests only happens when the @racket[test] submodule is required:
+
+@ex[
+(require (submod 'bt2 test))
+]
+
+Putting it all together, we can write the following code and save it
+in a file called @tt{bt.rkt}.  (You can right-click the file name and
+save the code to try it out.)
+
+@codeblock-include["intro/bt.rkt"]
+
+This code follows a coding style that we will use in this course:
+@itemlist[
+@item{it's organized in a module,}
+@item{data type definitions occur at the top of the file,}
+@item{it uses a test submodule to group unit tests,}
+@item{tests occur immediate after the functions they test,}
+@item{functions are annotated with type signatures and short purpose statements, and}
+@item{indentation is follows standard conventions (which DrRacket can apply for you).}
+]
+
+From the command line, you can run a module's tests using the Racket
+command line testing tool @tt{raco test}:
+
+@shellbox["raco test bt.rkt"]
+
+Or simply give a directory name and test everything within that directory:
+
+@shellbox["raco test ."]
+
 
 
