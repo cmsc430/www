@@ -17,7 +17,7 @@ $(course):
 		$(course).scrbl
 	mkdir -p $(course)/code/
 	cd notes ; \
-		tar -c `git ls-files -X .gitignore abscond blackmail con dupe extort fraud hustle` | \
+		tar -c `git ls-files -X .gitignore intro abscond blackmail con dupe extort fraud hustle` | \
 		(cd ../main/code ; tar -x) ; cd ../..
 
 clean:
