@@ -1,4 +1,4 @@
-language: racket
+language: generic
 sudo: required
 dist: trusty
 env:
