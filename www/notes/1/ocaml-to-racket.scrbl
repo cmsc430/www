@@ -799,8 +799,8 @@ an @racket[unquote], the two ``cancel out.'' So @racket[`,e] is
 just @tt{e}.  
 
 For example, @racket[`(+ 1 ,(+ 1 1))] is equivalent to
-@racket[(list '+ 1 (list (+ 1 1)))], which is equivalent to
-@racket[(list + 1 2)].
+@racket[(list '+ 1 (+ 1 1))], which is equivalent to
+@racket[(list '+ 1 2)].
 
 So if @racket[quote] signals us to stop interpreting things
 as expressions, but instead as data, @racket[quasiquote]
