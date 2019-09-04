@@ -13,7 +13,7 @@
   (parameterize ([sandbox-output 'string]
                  [sandbox-error-output 'string]
                  [sandbox-memory-limit 50])
-    (make-evaluator 'racket/base)))
+    (make-evaluator 'racket)))
 
 @(core-racket '(require racket/match))
 
@@ -354,6 +354,74 @@ So in OCaml, you could make a pair @tt{("a", 3)}.  In Racket, you'd
 write @racket[(cons "a" 3)].  Note this is a pair and not a proper
 list.  In OCaml, tuples and lists are disjoint things.  In Racket,
 lists and tuples (pairs) are made out of the same stuff.
+
+This can be confusing the first time you encounter it, so
+let's go over it a bit more.
+
+In Racket (or any Lisp), @racket[cons] plays the role of
+both the pair constructor and the list constructor.
+Non-empty lists are a subset of pairs: they are pairs whose
+second component is a list (either the empty list or another
+pair whose second component is a list, etc.).
+
+You can make pairs out of any kind of element and you can
+make lists out of any kind of elements. We can precisely
+define these sets as:
+
+@#reader scribble/comment-reader
+(racketblock
+;; type ListofAny =
+;; | '()
+;; | (cons Any ListofAny)
+
+;; type PairofAny =
+;; | (cons Any Any)
+)
+
+Or, to give more useful parameterized definitions:
+
+@#reader scribble/comment-reader
+(racketblock
+;; type (Listof A) =
+;; | '()
+;; | (cons A (Listof A))
+
+;; type (Pairof A B) =
+;; | (cons A B)
+)
+
+The functions @racket[first] and @racket[rest] operate on
+non-empty @emph{lists}, producing the first element of the
+list and the tail of the list, respectively.
+
+@ex[
+(first (cons 3 (cons 4 '())))
+(rest (cons 3 (cons 4 '())))]
+
+These function will produce errors if given something that
+is a pair but not a list:
+
+@ex[
+(eval:error (first (cons 3 4)))
+(eval:error (rest (cons 3 4)))]
+
+On the other hand, the functions @racket[car] and
+@racket[cdr] access the left and right components of a pair
+(the names are admittedly awful and an artifact of Lisp
+history):
+
+@ex[
+(car (cons 3 4))
+(cdr (cons 3 4))]
+
+When given pairs that are also lists, they behave just like
+@racket[first] and @racket[rest]:
+
+@ex[
+(car (cons 3 (cons 4 '())))
+(cdr (cons 3 (cons 4 '())))]
+
+
 
 @section{Pattern matching}
 
@@ -757,11 +825,25 @@ To summarize, with @racket[quote], you can construct
 
 The kind of things you can construct with the @racket[quote] form are
 often called @bold{s-expressions}, short for @bold{symbolic
-expressions}.  The reason for this name is because anything you can
-write down as an expression, you can write down inside a
-@racket[quote] to obtain @emph{a data representation} of that
-expression.  You can render an expression as a symbolic representation
-of itself.
+expressions}.
+
+We can give a type definition for s-expressions:
+
+@#reader scribble/comment-reader
+(racketblock
+;; type S-Expr =
+;; | String
+;; | Boolean
+;; | Number
+;; | Symbol
+;; | (Listof S-Expr)
+)
+
+The reason for this name is because anything you can write
+down as an expression, you can write down inside a
+@racket[quote] to obtain @emph{a data representation} of
+that expression. You can render an expression as a symbolic
+representation of itself.
 
 For example, @racket[(+ 1 2)] is an expression.  When run, it applies
 the @emph{function} bound to the variable @racket[+] to the arguments
