@@ -1137,9 +1137,9 @@ This code follows a coding style that we will use in this course:
 @item{it's organized in a module,}
 @item{data type definitions occur at the top of the file,}
 @item{it uses a test submodule to group unit tests,}
-@item{tests occur immediate after the functions they test,}
+@item{tests occur immediately after the functions they test,}
 @item{functions are annotated with type signatures and short purpose statements, and}
-@item{indentation is follows standard conventions (which DrRacket can apply for you).}
+@item{indentation follows standard conventions (which DrRacket can apply for you).}
 ]
 
 From the command line, you can run a module's tests using the Racket
