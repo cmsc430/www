@@ -369,7 +369,7 @@ make lists out of any kind of elements. We can precisely
 define these sets as:
 
 @#reader scribble/comment-reader
-(racketblock
+(ex
 ;; type ListofAny =
 ;; | '()
 ;; | (cons Any ListofAny)
@@ -381,7 +381,7 @@ define these sets as:
 Or, to give more useful parameterized definitions:
 
 @#reader scribble/comment-reader
-(racketblock
+(ex
 ;; type (Listof A) =
 ;; | '()
 ;; | (cons A (Listof A))
@@ -830,7 +830,7 @@ expressions}.
 We can give a type definition for s-expressions:
 
 @#reader scribble/comment-reader
-(racketblock
+(ex
 ;; type S-Expr =
 ;; | String
 ;; | Boolean
