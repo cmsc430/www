@@ -637,7 +637,7 @@ pattern matching to discriminate and deconstruct:
 @section{Symbols}
 
 One of the built-in datatypes we will use often in Racket is
-that of a @emph{symbol}. A symbol is just an atomic piece of
+that of a @emph{symbol}. A symbol is just an atomic peice of
 data. A symbol is written using the @racket[quote] notation
 @racket[(code:quote symbol-name)], which is abbreviated
 @racket['symbol-name]. What's allowable as a symbol name
@@ -929,7 +929,7 @@ data. It doesn't contain anything and its only real purpose
 is to be distinguishable from @racket[node] structures. On
 the other hand a @racket[node] structure needs to be
 distinguishable from @racket[leaf]s, but also contain 3
-pieces of data within it.
+peices of data within it.
 
 We can formulate definition of binary trees using only
 symbols and lists as:
