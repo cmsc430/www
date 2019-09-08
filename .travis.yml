@@ -8,7 +8,7 @@ env:
   - PANDOC=~/.pandoc
   - PANDOC_DEB="https://github.com/jgm/pandoc/releases/download/2.7.3/pandoc-2.7.3-1-amd64.deb"
   matrix:
-  - RACKET_VERSION=7.3
+  - RACKET_VERSION=7.4
 cache:
   directories:
     - $PANDOC
@@ -46,4 +46,4 @@ deploy:
   script: rsync -rvzp $TRAVIS_BUILD_DIR/www/cmsc430 dvanhorn@junkfood.cs.umd.edu:$WWW_DIR/fall2019
   on:
     branch: master
-    condition: "$RACKET_VERSION='7.3'"
+
