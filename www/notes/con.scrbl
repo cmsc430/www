@@ -56,12 +56,17 @@ Let's consider some examples:
 
 @itemlist[
 
-@item{...}
+@item{@racket['(if (zero? 0) (add1 2) 4)] means @racket[3].}
+@item{@racket['(if (zero? 1) (add1 2) 4)] means @racket[4].}
+@item{@racket['(if (zero? (if (zero? (sub1 1)) 1 0)) (add1 2) 4)] means @racket[4].}
+@item{@racket['(if (zero? (add1 0)) (add1 2) (if (zero? (sub1 1)) 1 0))] means @racket[1].}
 
 ]
 
 
-The semantics...
+The semantics is inductively defined as before.  There are @emph{two}
+new rules added for handling if-expressions: one for when the test
+expression means @racket[0] and one for when it doesn't.
 
 @(define ((rewrite s) lws)
    (define lhs (list-ref lws 2))
@@ -135,7 +140,9 @@ according to @render-term[C 𝑪𝒓]:
 @(show-judgment 𝑪 0 1)
 }
 
-The interpreter ...
+The interpreter has an added case for if-expressions, which
+recursively evaluates the test expression and branches based on its
+value.
 
 @codeblock-include["con/interp.rkt"]
 
@@ -143,16 +150,15 @@ We can confirm the interpreter computes the right result for the
 examples given earlier:
 
 @ex[
-'...
+(interp '(if (zero? 0) (add1 2) 4))
+(interp '(if (zero? 1) (add1 2) 4))
+(interp '(if (zero? (if (zero? (sub1 1)) 1 0)) (add1 2) 4))
+(interp '(if (zero? (add1 0)) (add1 2) (if (zero? (sub1 1)) 1 0)))
 ]
 
-Correctness...
-@;{
-@bold{Interpreter Correctness}: @emph{For all Con expressions
-@racket[e] and integers @racket[i], if (@racket[e],@racket[i]) in
-@render-term[C 𝑪], then @racket[(interp e)] equals
-@racket[i].}
-}
+The argument for the correctness of the interpreter follows the same
+structure as for @seclink["Blackmail"]{Blackmail}, but with an added case for
+if-expressions.
 
 @section{An Example of Con compilation}
 
@@ -162,6 +168,12 @@ We already know how to compile the @racket['8], @racket['2], and
 @racket['3] part.
 
 What needs to happen? ...
+
+
+@ex[
+(asm-display (compile '(if (zero? 8) 2 3)))
+]
+
 
 @codeblock-include["con/asm/ast.rkt"]
 
