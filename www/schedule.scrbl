@@ -21,26 +21,26 @@
                (list @wk{9/3}
 	       	     @seclink["Assignment 1"]{A1}
                      @elem{@secref["OCaml to Racket"] (cont.)}
-                     @secref["Abscond"])
+                     @itemlist[@item{@secref["Abscond"]} @item{@secref["Blackmail"]}])
 
                (list @wk{9/10}
-	       	     "A2" @;seclink["Assignment 2"]{A2}
-                     @secref["Blackmail"]
-                     @secref["Con"])
+	       	     @seclink["Assignment 2"]{A2}
+                     @secref["Con"]
+		     @secref["Dupe"])
                
                (list @wk{9/17}
-	       	     "A3" @;seclink["Assignment 3"]{A3}
-                     @secref["Dupe"]
-                     @secref["Extort"])
+	       	     "A3" @;seclink["Assignment 3"]{A3}                     
+                     @secref["Extort"]
+                     @secref["Fraud"])
                
                (list @wk{9/24}
 	       	     "A4" @;seclink["Assignment 4"]{A4}
-                     @secref["Fraud"]
-                     @secref["Grift"])
+                     @secref["Grift"]
+		     @secref["Hustle"])
                
                (list @wk{10/1}
 	       	     "A5" @;seclink["Assignment 5"]{A5}                     
-                     @secref["Hustle"]
+                     @elem{TBD}
                      'cont)
                
                (list @wk{10/8}
