@@ -38,6 +38,10 @@
 
 @emph{Let's Make a Programming Language!}
 
+@table-of-contents[]
+
+@section{Overview}
+
 A compiler is just one (optional!) component of a @emph{programming
 language}.  So if you want to make a compiler, you must first settle
 on a programming language to compile.
