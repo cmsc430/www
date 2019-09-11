@@ -5,4 +5,5 @@
 
 @include-section{assignments/1.scrbl}
 @include-section{assignments/2.scrbl}
+@include-section{assignments/3.scrbl}
 
