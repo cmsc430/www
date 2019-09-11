@@ -35,6 +35,10 @@
 
 @emph{Let's Do It Again!}
 
+@table-of-contents[]
+
+@section{Refinement, take one}
+
 We've seen all the essential peices (a grammar, an AST data type
 definition, an operational semantics, an interpreter, a compiler,
 etc.) for implementing a programming language, albeit for an amazingly
