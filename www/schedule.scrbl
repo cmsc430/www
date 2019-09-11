@@ -29,7 +29,7 @@
 		     @secref["Dupe"])
                
                (list @wk{9/17}
-	       	     "A3" @;seclink["Assignment 3"]{A3}                     
+	       	     @seclink["Assignment 3"]{A3}
                      @secref["Extort"]
                      @secref["Fraud"])
                
