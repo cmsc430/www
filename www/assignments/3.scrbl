@@ -231,14 +231,14 @@ If you want to set things up as done in 330, you can do the following:
 ;; -> Token
 ;; Produce (but don't consume) the next token
 (define (look-ahead)
-  (match *input*
+  (match (unbox *input*)
     ['() (error "no look ahead available")]
     [(cons t _) t]))
 
 ;; Token -> Token
 ;; EFFECT: consumes one token of input
 (define (match-tok! t)
-  (match *input*
+  (match (unbox *input*)
     ['() (error "no token available")]
     [(cons next ts)
      (set-box! *input* ts)
