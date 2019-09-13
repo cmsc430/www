@@ -9,7 +9,9 @@ addons:
     packages:
     - pandoc
     - nasm
+    casks:
     - racket
+
 env:
   global:
   - RACKET_DIR=~/racket
@@ -18,9 +20,11 @@ env:
   - PANDOC_DEB="https://github.com/jgm/pandoc/releases/download/2.7.3/pandoc-2.7.3-1-amd64.deb"
   matrix:
   - RACKET_VERSION=7.4
+
 cache:
   directories:
     - $PANDOC
+
 before_install:
 - mkdir -p "$PANDOC"
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then if [[ ! -f "$PANDOC/pandoc.deb" ]]; then curl -L "$PANDOC_DEB" > "$PANDOC/pandoc.deb" && dpkg -x "$PANDOC/pandoc.deb" "$PANDOC"; fi ; fi
