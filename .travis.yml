@@ -57,4 +57,5 @@ deploy:
   script: rsync -rvzp $TRAVIS_BUILD_DIR/www/cmsc430 dvanhorn@junkfood.cs.umd.edu:$WWW_DIR/fall2019
   on:
     branch: master
+    condition: "$TRAVIS_OS_NAME = linux"
 
