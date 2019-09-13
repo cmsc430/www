@@ -17,12 +17,16 @@ cache:
     - $PANDOC
 before_install:
 - mkdir -p "$PANDOC"
-- if [[ ! -f "$PANDOC/pandoc.deb" ]]; then curl -L "$PANDOC_DEB" > "$PANDOC/pandoc.deb" && dpkg -x "$PANDOC/pandoc.deb" "$PANDOC"; fi
-- export PATH="$PANDOC/usr/bin:$PATH"
+
+- if [ "$TRAVIS_OS_NAME" = "linux" ]; then if [[ ! -f "$PANDOC/pandoc.deb" ]]; then curl -L "$PANDOC_DEB" > "$PANDOC/pandoc.deb" && dpkg -x "$PANDOC/pandoc.deb" "$PANDOC"; fi ; fi
+- if [ "$TRAVIS_OS_NAME" = "linux" ]; then export PATH="$PANDOC/usr/bin:$PATH"; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install pandoc; fi
 - git clone https://github.com/greghendershott/travis-racket.git
 - cat travis-racket/install-racket.sh | bash
 - export PATH="${RACKET_DIR}/bin:${PATH}"
-- sudo apt-get install -y nasm
+- if [ "$TRAVIS_OS_NAME" = "linux" ]; sudo apt-get install -y nasm; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; brew install nasm; fi
 install: 
 before_script:
 - export DISPLAY=:99.0
