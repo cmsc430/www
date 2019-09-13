@@ -43,7 +43,7 @@ before_script:
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sleep 3; fi
 
 script:
-- nasm
+- /Applications/Racket\ v7.4/bin/racket
 - raco make www/main.scrbl
 - raco test www
 - make -C www main
