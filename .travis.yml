@@ -19,8 +19,6 @@ addons:
     packages:
     - pandoc
     - nasm
-    casks:
-    - racket
 
 cache:
   directories:
@@ -34,6 +32,7 @@ before_install:
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then cat travis-racket/install-racket.sh | bash; fi
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then export PATH="${RACKET_DIR}/bin:${PATH}"; fi
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install -y nasm; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew cask install racket; fi
 
 install: 
 
@@ -43,7 +42,6 @@ before_script:
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sleep 3; fi
 
 script:
-- /Applications/Racket\ v7.4/bin/racket
 - raco make www/main.scrbl
 - raco test www
 - make -C www main
