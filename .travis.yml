@@ -4,13 +4,6 @@ dist: trusty
 os:
  - linux
  - osx
-addons:
-  homebrew:
-    packages:
-    - pandoc
-    - nasm
-    casks:
-    - racket
 
 env:
   global:
@@ -20,6 +13,14 @@ env:
   - PANDOC_DEB="https://github.com/jgm/pandoc/releases/download/2.7.3/pandoc-2.7.3-1-amd64.deb"
   matrix:
   - RACKET_VERSION=7.4
+
+addons:
+  homebrew:
+    packages:
+    - pandoc
+    - nasm
+    casks:
+    - racket
 
 cache:
   directories:
@@ -42,6 +43,7 @@ before_script:
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sleep 3; fi
 
 script:
+- nasm
 - raco make www/main.scrbl
 - raco test www
 - make -C www main
