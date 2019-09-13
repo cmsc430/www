@@ -9,6 +9,7 @@ addons:
     packages:
     - pandoc
     - nasm
+    - racket
 env:
   global:
   - RACKET_DIR=~/racket
@@ -22,12 +23,11 @@ cache:
     - $PANDOC
 before_install:
 - mkdir -p "$PANDOC"
-
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then if [[ ! -f "$PANDOC/pandoc.deb" ]]; then curl -L "$PANDOC_DEB" > "$PANDOC/pandoc.deb" && dpkg -x "$PANDOC/pandoc.deb" "$PANDOC"; fi ; fi
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then export PATH="$PANDOC/usr/bin:$PATH"; fi
-- git clone https://github.com/greghendershott/travis-racket.git
-- cat travis-racket/install-racket.sh | bash
-- export PATH="${RACKET_DIR}/bin:${PATH}"
+- if [ "$TRAVIS_OS_NAME" = "linux" ]; then git clone https://github.com/greghendershott/travis-racket.git; fi
+- if [ "$TRAVIS_OS_NAME" = "linux" ]; then cat travis-racket/install-racket.sh | bash; fi
+- if [ "$TRAVIS_OS_NAME" = "linux" ]; then export PATH="${RACKET_DIR}/bin:${PATH}"; fi
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install -y nasm; fi
 
 install: 
