@@ -1,6 +1,9 @@
 language: generic
 sudo: required
 dist: trusty
+os:
+ - linux
+ - osx
 env:
   global:
   - RACKET_DIR=~/racket
