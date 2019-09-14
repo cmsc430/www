@@ -21,6 +21,7 @@
 
 @title[#:tag "Dupe"]{Dupe: a duplicity of types}
 
+
 Up until now we have worked to maintain a single type of values:
 integers.  This led to some awkwardness in the design of conditionals.
 Let us lift this restriction by considering a multiplicity of types.
@@ -28,9 +29,15 @@ To start, we will consider two: integers and booleans.
 
 We'll call it @bold{Dupe}.
 
-We will use the following syntax...
+We will use the following syntax, which relaxes the syntax of Con to
+make @racket['(zero? _e)] its own expression form and conditionals can
+now have arbitrary expressions in test position: @racket['(if _e0 _e1
+_e2)] instead of just @racket['(if (zero? _e0) _e1 _e2)].  We also add
+syntax for boolean literals.
 
-Together this leads to the following grammar for Dupe:
+Together this leads to the following grammar for Dupe.  One thing to
+take note of is the new nonterminal @math{v} which ranges over
+@bold{values}, which are integers and booleans:
 
 @centered{@render-language[D]}
 
@@ -44,25 +51,41 @@ We also have a predicate for well-formed Dupe expressions:
 
 @section{Meaning of Dupe programs}
 
-The meaning of Dupe programs...
-
-@itemlist[
-
-@item{...}
-
-]
+To consider he meaning of Dupe programs, we must revisit the meaning
+of conditions.  Previously we branched on whether a subexpression
+evaluated to 0.  We will now consider whether the subexpression
+evaluates to @racket[#f].
 
 Let's consider some examples:
 
 @itemlist[
 
-@item{...}
+@item{@racket[(if #f 1 2)] means @racket[2] since the test expression means @racket[#f].}
+@item{@racket[(if #t 1 2)] means @racket[1] since the test expression means @racket[#t], which is not @racket[#f].}
 
 ]
 
+Just as in Racket (and Scheme, generally), we will treat any
+non-@racket[#f] value as ``true.'' So:
+
+@itemlist[
+
+@item{@racket[(if 0 1 2)] means @racket[1] since the test expression means @racket[0], which is not @racket[#f].}
+@item{@racket[(if 7 1 2)] means @racket[1] since the test expression means @racket[7], which is not @racket[#f].}
+
+]
+
+The new @racket[(zero? _e)] expression form evaluates to a boolean:
+@racket[#t] when @racket[_e] evaluates to @racket[0] and @racket[#f]
+to an integer other than @racket[0].
+
+The @racket[#t] and @racket[#f] literals mean themselves, just like
+integer literals.
+
+
 Once a multiplicity of types are introduced, we are forced to come to
 grips with @bold{type mismatches}.  For example, what should
-@racket['(add1 #f)] mean?  What about @racket['(if 7 #t -2)]?
+@racket[(add1 #f)] mean?  What about @racket[(if 7 #t -2)]?
 
 Languages adopt several approaches:
 
@@ -80,7 +103,10 @@ reconsider the design, but for now this is a simple (and dangerous!)
 approach.
 
 
-The semantics...
+The semantics is still a binary relation between expressions and their
+meaning, however the type of the relation is changed to reflect the
+values of Dupe, which may either be integers or booleans:
+
 
 @(define ((rewrite s) lws)
    (define lhs (list-ref lws 2))
@@ -117,10 +143,19 @@ that anything that is not @racket[#f] counts as @emph{true} in a
 conditional.
 
 Returning to the issue of type mismatches, what does the semantics say
-about @racket['(add1 #f)]?  What about @racket['(if 7 #t -2)]?
+about @racket[(add1 #f)]?  What about @racket[(if 7 #t -2)]?
+
+What it says is: nothing.  These programs are simply not in the
+semantic relation for this language. There's only one rule for giving
+meaning to an @racket[(add1 _e0)] expression and it's premise is that
+@racket[_e] means some @emph{integer} @racket[_i0].  But
+@math{(@racket[#f], i) ∉ 𝑫} for any @math{i}.  So there's no value
+@math{v} such that @math{(@racket[(add1 #f)], v) ∈ 𝑫}.  This
+expression is @bold{undefined} according to the semantics.
 
 
-The interpreter ...
+The interpreter follows the rules of the semantics closely and is
+straightforward:
 
 @codeblock-include["dupe/interp.rkt"]
 
@@ -128,36 +163,378 @@ We can confirm the interpreter computes the right result for the
 examples given earlier:
 
 @ex[
-'...
+(interp #t)
+(interp #f)
+(interp '(if #f 1 2))
+(interp '(if #t 1 2))
+(interp '(if 0 1 2))
+(interp '(if 7 1 2))
+(interp '(if (zero? 7) 1 2))
 ]
 
-Correctness...
-@;{
+Correctness follows the same pattern as before, although it is worth
+keeping in mind the ``hypothetical'' form of the statement: @emph{if}
+the expression has some meaning, then the interpreter must produce it.
+In cases where the semantics of the expression is undefined, the
+interpreter can do whatever it pleases; there is no specification.
+
+
 @bold{Interpreter Correctness}: @emph{For all Dupe expressions
-@racket[e] and integers @racket[i], if (@racket[e],@racket[i]) in
-@render-term[C 𝑪], then @racket[(interp e)] equals
-@racket[i].}
-}
+@racket[e] and values @racket[v], if (@racket[e],@racket[v]) in
+@render-term[D 𝑫], then @racket[(interp e)] equals
+@racket[v].}
+
+Consider what happens with @racket[interp] on undefined programs such
+as @racket[(add1 #f)]: the interpretation of this expression is just
+the application of the Racket @racket[add1] function to @racket[#f],
+which results in the @racket[interp] program crashing and Racket
+signalling an error:
+
+@ex[
+(eval:error (interp '(add1 #f)))
+]
+
+This isn't a concern for correctness, because the interpreter is free
+to crash (or do anything else) on undefined programs; it's not in
+disagreement with the semantics, because there is no semantics.
+
+From a pragmatic point of view, this is a concern because it
+complicates testing.  If the interpreter is correct and every
+expression has a meaning (as in all of our previous languages), it
+follows that the interpreter can't crash on any @tt{Expr} input.  That
+makes testing easy: think of an expression, run the interpeter to
+compute its meaning.  But now the interpreter may break if the
+expression is undefined.  We can only safely run the interpreter on
+expressions that have a meaning.
+
+We'll return to this point in the design of later langauges.
+
+@section{Ex uno plures: Out of One, Many}
+
+Before getting in to the compiler, let's first address the issue of
+representation of values in the setting of x86.
+
+So far we've had a single type of value: integers.  Luckily, x86 has a
+convenient datatype for representing integers: it has 64-bit signed
+integers.  (There is of course the problem that this representation is
+@bold{inadequate}; there are many (Con) integers we cannot represent
+as a 64-bit integer.  But we put off worrying about this until later.)
+
+The problem now is how to represent integers @emph{and} booleans,
+which should be @bold{disjoint} sets of values.  Representing these
+things in the interpreter as Racket values was easy: we used booleans
+and integers.  Representing this things in x86 will be more
+complicated.  x86 doesn't have a notion of ``boolean'' per se and it
+doesn't have a notion of ``disjoint'' datatypes.  There is only one
+data type and that is: bits.
+
+We chose 64-bit integers to represent Con integers, because that's the
+kind of value that can be stored in a register or used as an argument
+to a instruction.  It's the kind of thing that can be returned to the
+C run-time.  It's (more or less) the only kind of thing we have to
+work with.  So had we started with booleans instead of integers, we
+still would have represented values as a sequence of bits
+@emph{because that's all there is}.  Now that we have booleans
+@emph{and} integers, we will have to represent both as bits (64-bit
+integers).  The bits will have to encode both the value and the
+@emph{type} of value.
+
+@margin-note{This is a simpler choice of representation than we
+discussed in class when presenting these ideas.}
+
+Here is the idea of how this could be done: We have two kinds of data:
+integers and booleans, so we could use one bit to indicate whether a
+value is a boolean or an integer.  The remaining 63 bits can be used
+to represent the value itself, either true, false, or some integer.
+
+Let's use the least significant bit to indicate the type and let's use
+@code[#:lang "racket"]{#b0} for integer and @code[#:lang
+"racket"]{#b1} for boolean.  These are arbitrary choices (more or
+less).
+
+The number @racket[1] would be represented as @code[#:lang
+"racket"]{#b10}, which is the bits for the number (i.e. @code[#:lang
+"racket"]{#b1}), followed by the integer tag (@code[#:lang
+"racket"]{#b0}).  Note that the representation of a Dupe number is no
+longer the number itself: the Dupe value @racket[1] is represented by
+the number @racket[2] (@code[#:lang "racket"]{#b10}).  The Dupe value
+@racket[#t] is represented by the number @racket[3] (@code[#:lang
+"racket"]{#b11}); the Dupe value @racket[#f] is represented by the
+number @racket[1] (@code[#:lang "racket"]{#b01}).
+
+One nice thing about our choice of encoding: @racket[0] is represented
+as @racket[0] (@code[#:lang "racket"]{#b00}).
+
+If you wanted to determine if a 64-bit integer represented an integer
+or a boolean, you simply need to inquire about the value of the least
+significant bit.  At a high-level, this just corresponds to asking if
+the number is even or odd.  Odd numbers end in the bit (@code[#:lang
+"racket"]{#b1}), so they reprepresent booleans.  Even numbers
+represent integers.  Here are some functions to check our
+understanding of the encoding:
+
+@#reader scribble/comment-reader
+(ex 
+
+;; Bits -> Value
+(define (bits->value bs)
+  (match (even? bs)
+    [#t (/ bs 2)]
+    [_ (match bs
+         [#b01 #f]
+         [#b11 #t])]))
+
+(bits->value #b000)
+(bits->value #b001)
+(bits->value #b010)
+(bits->value #b011)
+(bits->value #b100)
+(eval:error (bits->value #b101))
+(bits->value #b110)
+(eval:error (bits->value #b111))
+
+)
+
+Notice that not all bits represent a value; name any odd number that's
+neither 1 (@racket[#f]) or 3 (@racket[#t]).
+
+We can also write the inverse:
+
+@#reader scribble/comment-reader
+(ex
+
+;; Value -> Bits
+(define (value->bits v)
+  (match v
+    [#f #b01]
+    [#t #b11]
+    [n (* n 2)]))
+
+(value->bits #t)
+(value->bits #f)
+(value->bits 0)
+(value->bits 1)
+(value->bits 2)
+(value->bits 3)
+
+
+(bits->value (value->bits #t))
+(bits->value (value->bits #f))
+(bits->value (value->bits 0))
+(bits->value (value->bits 1))
+(bits->value (value->bits 2))
+(bits->value (value->bits 3))
+
+)
+
+The interpreter operates at the level of Values.  The compiler will
+have to work at the level of Bits.  Of course, we could, as an
+intermediate step, define an interpreter that works on bits, which may
+help us think about how to implement the compiler.
+
+Let's design @racket[interp-bits] by derivation.  First, let's cheat:
+
+@#reader scribble/comment-reader
+(ex
+;; Expr -> Bits
+(define (interp-bits e)
+  (value->bits (interp e)))
+)
+
+Now let's ``push'' the @racket[value->bits] inward:
+
+@#reader scribble/comment-reader
+(ex
+;; Expr -> Bits
+(define (interp-bits e)
+  (match e
+    [(? integer? i) (value->bits i)]
+    [(? boolean? b) (value->bits b)]
+    [`(add1 ,e0)
+     (value->bits (add1 (bits->value (interp-bits e0))))]
+    [`(sub1 ,e0)
+     (value->bits (sub1 (bits->value (interp-bits e0))))]
+    [`(zero? ,e0)
+     (value->bits (zero? (bits->value (interp-bits e0))))]
+    [`(if ,e0 ,e1 ,e2)
+     (if (bits->value (interp-bits e0))
+         (interp-bits e1)
+	 (interp-bits e2))]))
+)
+
+Unfolding @racket[value->bits] in the first two cases:
+
+@#reader scribble/comment-reader
+(ex
+;; Expr -> Bits
+(define (interp-bits e)
+  (match e
+    [(? integer? i) (* 2 i)]
+    [(? boolean? b) (if b 3 1)]
+    [`(add1 ,e0)
+     (value->bits (add1 (bits->value (interp-bits e0))))]
+    [`(sub1 ,e0)
+     (value->bits (sub1 (bits->value (interp-bits e0))))]
+    [`(zero? ,e0)
+     (value->bits (zero? (bits->value (interp-bits e0))))]
+    [`(if ,e0 ,e1 ,e2)
+     (if (bits->value (interp-bits e0))
+         (interp-bits e1)
+	 (interp-bits e2))]))
+)
+
+We can simplify the conditional case as follows:
+
+@#reader scribble/comment-reader
+(ex
+;; Expr -> Bits
+(define (interp-bits e)
+  (match e
+    [(? integer? i) (* 2 i)]
+    [(? boolean? b) (if b 3 1)]
+    [`(add1 ,e0)
+     (value->bits (add1 (bits->value (interp-bits e0))))]
+    [`(sub1 ,e0)
+     (value->bits (sub1 (bits->value (interp-bits e0))))]
+    [`(zero? ,e0)
+     (value->bits (zero? (bits->value (interp-bits e0))))]
+    [`(if ,e0 ,e1 ,e2)
+     (match (interp-bits e0)
+       [1 (interp-bits e2)]
+       [_ (interp-bits e1)])]))
+)
+
+We can also push around the @racket[add1], @racket[sub1], and
+@racket[zero?] operations to avoid the conversions.  Note that
+whenever @racket[_bs] are bits representing an integer, then
+@racket[(value->bits (add1 (bits->value _bs)))] is equal to @racket[(+
+_bs 2)], i.e. adding @code[#:lang "racket"]{#b10}.  When @racket[_bs]
+represents a boolean, then @racket[(value->bits (add1 (bits->value
+_bs)))] would crash, while @racket[(+ _bs 2)] doesn't, but this is an
+undefined program, so changing the behavior is fine.
+
+We do something similar for @racket[sub1] and arrive at:
+
+@#reader scribble/comment-reader
+(ex
+;; Expr -> Bits
+(define (interp-bits e)
+  (match e
+    [(? integer? i) (* 2 i)]
+    [(? boolean? b) (if b 3 1)]
+    [`(add1 ,e0)
+     (+ (interp-bits e0) 2)]
+    [`(sub1 ,e0)
+     (- (interp-bits e0) 2)]
+    [`(zero? ,e0)
+     (match (interp-bits e0)
+       [0 #b11]
+       [_ #b01])]
+    [`(if ,e0 ,e1 ,e2)
+     (match (interp-bits e0)
+       [#b01 (interp-bits e2)]  ; if #f, interp e2
+       [_ (interp-bits e1)])]))
+)
+
+And we can recover the original interpreter by wrapping the bit
+interpreter in a final conversion:
+
+@#reader scribble/comment-reader
+(ex
+;; Expr -> Value
+(define (interp.v2 e)
+  (bits->value (interp-bits e)))
+
+(interp.v2 #t)
+(interp.v2 #f)
+(interp.v2 '(if #f 1 2))
+(interp.v2 '(if #t 1 2))
+(interp.v2 '(if 0 1 2))
+(interp.v2 '(if 7 1 2))
+(interp.v2 '(if (zero? 7) 1 2))
+(interp.v2 '(add1 #f))
+(eval:error (interp.v2 '(add1 #t)))
+)
+
+Notice the last two examples.  What's going on?
+
+The @racket[interp.v2] function is also a correct interpreter for
+Dupe, and importantly, it sheds like how to implement the compiler
+since it uses the same representation of values.
+
 
 @section{An Example of Dupe compilation}
 
-Suppose we want to compile ...
+The most significant change from Con to Dupe for the compiler is the
+change in representation, but having sorted those issues out at the
+level of @racket[interp-bits], it should be pretty easy to write the
+compiler.
 
-Run-time support...
+Let's consider some simple examples:
 
-@filebox-include[fancy-c "dupe/main.c"]
+@itemlist[
+
+@item{@racket[42]: this should compile just like integer literals
+before, but needs to use the new representation, i.e. the compiler
+should produce @racket['(mov rax 84)], which is @racket[(* 42 2)].}
+
+@item{@racket[#f]: this should produce @racket['(mov rax 1)].}
+
+@item{@racket[#t]: this should produce @racket['(mov rax 3)].}
+
+@item{@racket[(add1 _e)]: this should produce the instructions for
+@racket[_e] followed by an instruction to add @racket[2], which is
+just how @racket[interp-bits] interprets an @racket[add1].}
+
+@item{@racket[(sub1 _e)]: should work like @racket[(add1 _e)] but
+subtracting 2.}
+
+@item{@racket[(zero? _e)]: this should produce the instructions for
+@racket[_e] follows by instructions that compare @racket['rax] to 0
+and set @racket['rax] to @racket[#t] (i.e. 3) if true and @racket[#f]
+(i.e. 1) otherwise.}
+
+@item{@racket[(if _e0 _e1 _e2)]: this should work much like before,
+compiling each subexpression, generating some labels and the
+appropriate comparison and conditional jump.  The only difference is
+we now want to compare the result of executing @racket[_e0] with
+@racket[#f] (i.e. 1) and jumping to the code for @racket[_e2] when
+they are equal.}
+]
+
+@ex[
+(compile-e 42)
+(compile-e #t)
+(compile-e #f)
+(compile-e '(zero? 0))
+(compile-e '(if #t 1 2))
+(compile-e '(if #f 1 2))
+]
 
 
 @section{A Compiler for Dupe}
 
-What needs to happen? ...
-
-@codeblock-include["dupe/asm/ast.rkt"]
-
-We omit the printer code, which is mundane.  See
-@link["dupe/asm/printer.rkt"]{@tt{asm/printer.rkt}} for details.
+Based on the examples, we can write the compiler:
 
 @codeblock-include["dupe/compile.rkt"]
+
+The one last peice of the puzzle is updating the run-time system to
+incorporate the new representation.  The run-time system is
+essentially playing the role of @racket[bits->value]: it determines
+what is being represented and prints it appropriately.  However
+instead of using high-level mathematical operations like
+@racket[even?], @racket[/], etc., it uses low-level bit operations.
+
+It uses an idiom of ``masking'' in order to examine on particular bits
+of a value.  So for example if we want to know if the returned value
+is an integer, we do a bitwise-and of the result and @tt{1}.  This
+produces a single bit: 0 for integer and 1 for boolean.  In the case
+of an integer, to recover the number being represented, we need to
+divide by 2, which can be done efficiently with a right-shift of 1
+bit.  Likewise with a boolean, if we shift right by 1 bit there are
+two possible results: 0 for false and 1 for true:
+
+@filebox-include[fancy-c "dupe/main.c"]
 
 
 @ex[
@@ -208,8 +585,9 @@ This complicates testing the correctness of the compiler.  Consider
 our usual appraoch:
 @ex[
 (define (check-correctness e)
-  (check-eqv? (interp e)
-              (asm-interp (compile e))))
+  (check-equal? (asm-interp (compile e))
+                (interp e)
+		e))
 
 (check-correctness '(add1 7))
 (eval:error (check-correctness '(add1 #f)))
@@ -227,8 +605,9 @@ produces void, effectively ignoring the test:
 @ex[
 (define (check-correctness e)
   (with-handlers ([exn:fail? void])
-    (check-eqv? (interp e)
-                (asm-interp (compile e)))))
+    (check-equal? (asm-interp (compile e))
+                  (interp e)
+                  e)))
 
 (check-correctness '(add1 7))
 (check-correctness '(add1 #f))
@@ -236,5 +615,4 @@ produces void, effectively ignoring the test:
 
 Using this approach, we check the equivalence of the results only when
 the interpreter runs without causing an error.
-
 
