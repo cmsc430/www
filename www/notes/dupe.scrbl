@@ -268,9 +268,10 @@ as @racket[0] (@code[#:lang "racket"]{#b00}).
 If you wanted to determine if a 64-bit integer represented an integer
 or a boolean, you simply need to inquire about the value of the least
 significant bit.  At a high-level, this just corresponds to asking if
-the number is even or odd.  Odd numbers end in the bit , so they
-reprepresent booleans.  Even numbers represent integers.  Here are
-some functions to check our understanding of the encoding:
+the number is even or odd.  Odd numbers end in the bit (@code[#:lang
+"racket"]{#b1}), so they reprepresent booleans.  Even numbers
+represent integers.  Here are some functions to check our
+understanding of the encoding:
 
 @#reader scribble/comment-reader
 (ex 
