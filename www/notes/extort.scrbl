@@ -14,6 +14,7 @@
 
 @(define codeblock-include (make-codeblock-include #'h))
 
+@(ev '(require rackunit))
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "extort" f))))))
 	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
