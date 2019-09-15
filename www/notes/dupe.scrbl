@@ -21,6 +21,11 @@
 
 @title[#:tag "Dupe"]{Dupe: a duplicity of types}
 
+@emph{There are 10 types of values...}
+
+@table-of-contents[]
+
+@section{Integers and Booleans}
 
 Up until now we have worked to maintain a single type of values:
 integers.  This led to some awkwardness in the design of conditionals.

@@ -14,6 +14,7 @@
 
 @(define codeblock-include (make-codeblock-include #'h))
 
+@(ev '(require rackunit))
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "extort" f))))))
 	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
@@ -37,22 +38,6 @@ programs: values and errors.  We will say that evaluation produces an
 
 @section{Meaning of Extort programs}
 
-The meaning of Extort programs...
-
-@itemlist[
-
-@item{...}
-
-]
-
-Let's consider some examples:
-
-@itemlist[
-
-@item{...}
-
-]
-
 Languages adopt several approaches to type mismatches:
 
 @itemlist[
@@ -68,7 +53,18 @@ We've previously seen the last approach.  Now let's do what Racket
 does and signal an error.
 
 
+The meaning of Extort programs that have type errors will now be
+defined as @racket['err]:
 
+@itemlist[
+
+@item{@racket[(add1 #f)]: means @racket['err].}
+
+@item{@racket[(zero? #t)]: means @racket['err].}
+
+@item{@racket[(if (zero? #f) 1 2)]: means @racket['err].}
+
+]
 
 @(define ((rewrite s) lws)
    (define lhs (list-ref lws 2))
@@ -99,11 +95,14 @@ And there are four rules for propagating errors from subexpressions:
 
 
 
-Now what does the semantics say about @racket['(add1 #f)]?  What about
-@racket['(if 7 #t -2)]?
+Now what does the semantics say about @racket[(add1 #f)]?  What about
+@racket[(if 7 #t -2)]?
 
 
-The interpreter ...
+The signature of the interpreter is extended to produce answers.  Each
+use of a Racket primitive is guarded by checking the type of the
+arguments and an error is produced if the check fails.  Errors are
+also propagated when a subexpression produces an error:
 
 @codeblock-include["extort/interp.rkt"]
 
@@ -111,28 +110,27 @@ We can confirm the interpreter computes the right result for the
 examples given earlier:
 
 @ex[
-'...
+(interp '(add1 #f))
+(interp '(zero? #t))
+(interp '(if (zero? #f) 1 2))
 ]
 
-Correctness...
+The statement of correctness stays the same, but now observe that
+there is no way to crash the interpreter with any @tt{Expr} value.
+
 
 @section{An Example of Extort compilation}
 
-Suppose we want to compile ...
+Suppose we want to compile @racket[(add1 #f)], what needs to happen?
+Just as in the interpreter, we need to check the integerness of the
+argument's value before doing the addition operation.
 
-What needs to happen? ...
-
-@;codeblock-include["extort/asm/ast.rkt"]
-
-We omit the printer code, which is mundane.  See
-@link["extort/asm/printer.rkt"]{@tt{asm/printer.rkt}} for details.
-
-We must extend the run-time system with a C function called @tt{error}
+We extend the run-time system with a C function called @tt{error}
 that prints "err" and exits:
 
 @filebox-include[fancy-c "extort/main.c"]
 
-Compiler...
+The compiler now emits code to check the type of arguments:
 
 @codeblock-include["extort/compile.rkt"]
 
@@ -155,5 +153,20 @@ Here are some examples running the compiler:
 (asm-interp (compile '(sub1 (add1 #f))))
 (asm-interp (compile '(if (zero? #t) 1 2)))
 ]
+
+Since the interpreter and compiler have well defined specifications
+for what should happen when type errors occur, we can test in the
+usual way again:
+
+@ex[
+(define (check-correctness e)
+  (check-equal? (asm-interp (compile e))
+                (interp e)
+                e))
+
+(check-correctness '(add1 7))
+(check-correctness '(add1 #f))
+]
+
 
 
