@@ -32,25 +32,25 @@ We'll call it @bold{Fraud}.
 
 We will use the following syntax to bind local variables:
 
-@verbatim{
-(let ((@math{id_0} @math{e_0}))
-  @math{e})
-}
+@racketblock[
+(let ((_id0 _e0))
+  _e)
+]
 
-This form binds the identifier @math{i_0} to value of @math{e_0}
-within the scope of @math{e}.
+This form binds the identifier @racket[_i0] to value of @racket[_e0]
+within the scope of @racket[_e].
 
 This is a specialization of Racket's own local binding form, which
 allows for any number of bindings to be made with @racket[let]:
 
-@verbatim{
-(let ((@math{id_0} @math{e_0}) ...)
-  @math{e})
-}
+@racketblock[
+(let ((_id0 _e0) ...)
+  _e)
+]
 
-We adopt this specialization of Racket's let syntax so that you can
-always take a Fraud program and run it in Racket to confirm what it
-should produce.
+We adopt this specialization of Racket's @racket[let] syntax so that
+you can always take a Fraud program and run it in Racket to confirm
+what it should produce.
 
 Adding a notion of variable binding also means we need to add
 variables to the syntax of expressions.
@@ -68,10 +68,6 @@ let's return to this after considering the semantics and interpreter.
 
 @section{Meaning of Fraud programs}
 
-@;(declare-exporting ,`(file ,(path->string (build-path notes "fraud/interp.rkt"))))
-
-
-
 The meaning of Fraud programs depends on the form of the expression and
 in the case of integers, increments, and decrements, the meaning is
 the same as in the prior languages.
@@ -80,15 +76,16 @@ The two new forms are let-expressions and variables.
 
 @itemlist[
 
-@item{the meaning of a let expression @tt{(let ((@math{x} @math{e_0}))
-@math{e})} is the meaning of @math{e} (the @bold{body} of the let)
-when @math{x} means the value of @math{e_0} (the @bold{right hand
-side} of the let),}
+@item{the meaning of a let expression @racket[(let ((_x _e0))
+_e)] is the meaning of @racket[_e] (the @bold{body} of the @racket[let])
+when @racket[_x] means the value of @racket[_e0] (the @bold{right hand
+side} of the @racket[let]),}
 
-@item{the meaning of a variable @math{x} depends on the context in
+@item{the meaning of a variable @racket[_x] depends on the context in
 which it is bound.  It means the value of the right-hand side of the
-nearest enclosing let expression that binds @math{x}.  If there is no
-such enclosing let expression, the variable is meaningless.}
+nearest enclosing @racket[let] expression that binds @racket[_x].  If
+there is no such enclosing @racket[let] expression, the variable is
+meaningless.}
 
 ]
 
@@ -96,43 +93,46 @@ Let's consider some examples:
 
 @itemlist[
 
-@item{@tt{x}: this expression is meaningless on its own.}
+@item{@racket[x]: this expression is meaningless on its own.}
 
-@item{@tt{(let ((x 7)) x)}: this means 7, since the body
-expression, @tt{x}, means 7 because the nearest enclosing binding for
-@tt{x} is to @tt{7}, which means 7.}
+@item{@racket[(let ((x 7)) x)]: this means @racket[7], since the body
+expression, @racket[x], means @racket[7] because the nearest enclosing binding for
+@racket[x] is to @racket[7], which means @racket[7].}
 
-@item{@tt{(let ((x 7)) 2)}: this means @tt{2} since the body
-expression, @tt{2}, means 2.}
+@item{@racket[(let ((x 7)) 2)]: this means @racket[2] since the body
+expression, @racket[2], means @racket[2].}
 
-@item{@tt{(let ((x 7)) (add1 x))}: this means 8 since the body
-expression, @tt{(add1 x)}, means one more than @tt{x} and @tt{x} means
-7 because the nearest enclosing binding for @tt{x} is to @tt{7}.}
+@item{@racket[(let ((x 7)) (add1 x))]: this means @racket[8] since the
+body expression, @racket[(add1 x)], means one more than @racket[x] and @racket[x]
+means @racket[7] because the nearest enclosing binding for @racket[x] is to
+@racket[7].}
 
-@item{@tt{(let ((x (add1 7))) x)}: this means 8 since the body
-expression, @tt{x}, means 8 because the nearest enclosing binding for
-@tt{x} is to @tt{(add1 7)} which means 8.}
+@item{@racket[(let ((x (add1 7))) x)]: this means @racket[8] since the
+body expression, @racket[x], means @racket[8] because the nearest
+enclosing binding for @racket[x] is to @racket[(add1 7)] which means
+@racket[8].}
 
-@item{@tt{(let ((x 7)) (let ((y 2)) x))}: this means 7 since the body
-expression, @tt{(let ((y 2)) x)}, means 2 since the body expression,
-@tt{x}, means 7 since the nearest enclosing binding for @tt{x} is to
-@tt{7}.}
+@item{@racket[(let ((x 7)) (let ((y 2)) x))]: this means @racket[7] since the body
+expression, @racket[(let ((y 2)) x)], means @racket[2] since the body expression,
+@racket[x], means @racket[7] since the nearest enclosing binding for @racket[x] is to
+@racket[7].}
 
-@item{@tt{(let ((x 7)) (let ((x 2)) x))}: this means 2 since the body
-expression, @tt{(let ((x 2)) x)}, means 2 since the body expression,
-@tt{x}, means 7 since the nearest enclosing binding for @tt{x} is to
-@tt{2}.}
+@item{@racket[(let ((x 7)) (let ((x 2)) x))]: this means 2 since the
+body expression, @racket[(let ((x 2)) x)], means @racket[2] since the
+body expression, @racket[x], means @racket[7] since the nearest
+enclosing binding for @racket[x] is to @racket[2].}
 
-@item{@tt{(let ((x (add1 x))) x)}: this is meaningless, since the
-right-hand side expression, @tt{(add1 x)} is meaningless because
-@tt{x} has no enclosing let that binds it.}
+@item{@racket[(let ((x (add1 x))) x)]: this is meaningless, since the
+right-hand side expression, @racket[(add1 x)] is meaningless because
+@racket[x] has no enclosing @racket[let] that binds it.}
 
-@item{@tt{(let ((x 7)) (let ((x (add1 x))) x))}: this means 8 because
-the body expression @tt{(let ((x (add1 x))) x)} means 8 because the
-body expression, @tt{x}, is bound to @tt{(add1 x)} is in the nearest
-enclosing let expression that binds @tt{x} and @tt{(add1 x)} means 8
-because it is one more than @tt{x} where @tt{x} is bound to @tt{7} in
-the nearest enclosing let that binds it.}
+@item{@racket[(let ((x 7)) (let ((x (add1 x))) x))]: this means
+@racket[8] because the body expression @racket[(let ((x (add1 x))) x)]
+means @racket[8] because the body expression, @racket[x], is bound to
+@racket[(add1 x)] is in the nearest enclosing @racket[let] expression
+that binds @racket[x] and @racket[(add1 x)] means @racket[8] because
+it is one more than @racket[x] where @racket[x] is bound to @racket[7]
+in the nearest enclosing @racket[let] that binds it.}
 
 ]
 
@@ -248,6 +248,134 @@ examples given earlier:
 @racket[e] and values @racket[v], if (@racket[e],@racket[v]) in
 @render-term[F 𝑭], then @racket[(interp e)] equals
 @racket[v].}
+
+@section{Lexical Addressing}
+
+Just as we did with @seclink["Dupe"], the best way of understanding
+the forthcoming compiler is to write a ``low-level'' interpreter that
+explains some of the ideas used in the compiler without getting bogged
+down in code generation details.
+
+At first glance at @racket[interp], it would seem we will need to
+generate code for implementing the @tt{REnv} data structure and its
+associated operations: @racket[lookup] and @racket[ext].  @tt{REnv} is
+an inductively defined data type, represented in the interpreter as a
+list of lists.  Interpreting a variable involves recursively scanning
+the environment until the appropriate binding is found.  This would
+take some doing to accomplish in x86.
+
+However...
+
+It is worth noting some invariants about environments created during
+the running of @racket[interp].  Consider some subexpression
+@racket[_e] of the program.  What environment will be used whenever
+@racket[_e] is interpreted?  Well, it will be a mapping of every
+variable bound outside of @racket[_e].  It's not so easy to figure out
+@emph{what} these variables will be bound to, but the skeleton of the
+environment can be read off from the program structure.
+
+For example:
+
+@racketblock[
+(let ((x ...))
+  (let ((y ...))
+    (let ((z ...))
+      _e)))
+]
+
+The subexpression @racket[_e] will @emph{always} be evaluated in an
+environment that looks like:
+@racketblock[
+'((z ...) (y ...) (x ...))
+]
+
+Moreover, every free occurrence of @racket[x] in @racket[_e] will
+resolve to the value in the third element of the environment; every
+free occurrence of @racket[y] in @racket[_e] will resolve to the
+second element; etc.
+
+This suggests that variable locations can be resolved
+@emph{statically} using @bold{lexical addresses}.  The lexical address
+of a variable is the number of @racket[let]-bindings between the
+variable occurrence and the @racket[let] that binds it.
+
+So for example:
+
+@itemlist[
+
+@item{@racket[(let ((x ...)) x)]: the occurrence of @racket[x] has a
+lexical address of @racket[0]; there are no bindings between the
+@racket[let] that binds @racket[x] and its occurrence.}
+
+@item{@racket[(let ((x ...)) (let ((y ...)) x))]: the occurrence of
+@racket[x] has a lexical address of @racket[1] since the
+@racket[let]-binding of @racket[y] sits between the
+@racket[let]-binding of @racket[x] and its occurrence.}
+
+]
+
+We can view a variable @emph{name} as just a placeholder for the
+lexical address; it tells us which binder the variable comes from.
+
+Using this idea, let's build an alternative interpreter that operates
+over an intermediate form of expression that has no notion of
+variables, but just lexical addresses:
+
+@#reader scribble/comment-reader
+(racketblock
+;; type IExpr =
+;; | Integer
+;; | Boolean
+;; | `(address ,Natural)
+;; | `(add1 ,Expr)
+;; | `(sub1 ,Expr)
+;; | `(zero? ,Expr)
+;; | `(if ,Expr ,Expr ,Expr)
+;; | `(let ((_ ,Expr)) ,Expr)
+)
+
+Notice that variables have gone away, replaced by a @racket[`(address
+,Natural)] form.  The @racket[let] binding form no longer binds a
+variable name either.
+
+The idea is that we will translate expression (@tt{Expr}) like:
+
+@racketblock[
+(let ((x ...)) x)]
+
+into intermediate expressions (@tt{IExpr}) like:
+
+@racketblock[
+(let ((_ ...)) (address 0))
+]
+
+And:
+
+@racketblock[
+(let ((x ...)) (let ((y ...)) x))
+]
+
+into:
+
+@racketblock[
+(let ((_ ...)) (let ((_ ...)) (address 1)))
+]
+
+
+Similar to how @racket[interp] is defined in terms of a helper
+function that takes an environment mapping variables to their value,
+the @racket[translate] function will be defined in terms of a helper
+function that takes an environment mapping variables to their lexical
+address.
+
+The lexical environment will just be a list of variable names.  The
+address of a variable occurrence is count of variable names that occur
+before it in the list.  When a variable is bound (via-@racket[let])
+the list grows:
+
+@codeblock-include["fraud/interp-lexical.rkt"]
+
+
 
 @section{An Example of Fraud compilation}
 
