@@ -38,7 +38,7 @@ implement several related languages.
 	       (list @link["https://www.cs.umd.edu/~dvanhorn"]{David Van Horn} @elem{5250 @IRB} "dvanhorn@cs.umd.edu" "11AM-12PM F")
                (list @link["https://sankhs.com/"]{Sankha Narayan Guria} @elem{4172 @AVW} "sankha@cs.umd.edu" "10AM-12PM M")
                (list "Tasnim Kabir" @elem{4172 @AVW} "tkabir1@cs.umd.edu" "4PM-6PM Th")
-               (list "Ivan Quiles-Rodriguez" @elem{4172 @AVW} "iquiles@umd.edu" "3:30PM-5:30PM Tu")
+               (list @link["https://ivan98q.github.io/"]{Ivan Quiles-Rodriguez} @elem{4172 @AVW} "iquiles@umd.edu" "3:30PM-5:30PM Tu")
                (list "John Kastner" @elem{4172 @AVW} "kastner@umd.edu" "4PM-6PM F"))]
 
 
