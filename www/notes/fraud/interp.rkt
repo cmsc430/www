@@ -48,7 +48,7 @@
     [(list 'zero? (? integer? i0)) (zero? i0)]
     [_ 'err]))
 
-;; Env Variable -> Answer
+;; REnv Variable -> Answer
 (define (lookup env x)
   (match env
     ['() 'err]
@@ -57,6 +57,6 @@
        [#t v]
        [#f (lookup env x)])]))
 
-;; Env Variable Integer -> Integer
-(define (ext r x i)
-  (cons (list x i) r))
+;; REnv Variable Value -> Value
+(define (ext r x v)
+  (cons (list x v) r))
