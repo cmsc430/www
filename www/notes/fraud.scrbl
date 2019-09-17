@@ -20,6 +20,12 @@
 
 @title[#:tag "Fraud"]{Fraud: local binding and variables}
 
+@emph{To be is to be the value of a variable.}
+
+@table-of-contents[]
+
+@section{Variables}
+
 @;defmodule[(file "/Users/dvanhorn/git/cmsc430-www/www/notes/fraud/interp.rkt")]
 @;declare-exporting[(file "/Users/dvanhorn/git/cmsc430-www/www/notes/fraud/interp.rkt")]
 @;defidform/inline[interp]
@@ -373,22 +379,39 @@ address of a variable occurrence is count of variable names that occur
 before it in the list.  When a variable is bound (via-@racket[let])
 the list grows:
 
+@codeblock-include["fraud/translate.rkt"]
+
+Notice that @racket[translate] is a kind of mini-compiler that
+compiles @tt{Expr}s to @tt{IExpr}s.  It's only job is to eliminate
+variable names by replacing variable occurrences with their lexical
+addresses.  It does a minor amount of syntax checking while it's at it
+by raising a (compile-time) error in the case of unbound variables.
+
+The interpreter for @tt{IExpr}s will still have an environment data
+structure, however it will be simpler the association list we started
+with.  The run-time environment will consist only of a list of values;
+the lexical address of (what used to be a) variable indicates the
+position in this list.  When a value is bound by a @racket[let], the
+list grows:
+
 @codeblock-include["fraud/interp-lexical.rkt"]
 
+Try to convince yourself that the two version of @racket[interp]
+compute the same function.
 
 
 @section{An Example of Fraud compilation}
 
-Suppose we want to compile @racket['(let ((x 7)) (add1 x))].  There
-are two new forms we need to compile: the @racket['(let ((x ...))
-...)] part and the @racket['x] part in the body.
+Suppose we want to compile @racket[(let ((x 7)) (add1 x))].  There
+are two new forms we need to compile: the @racket[(let ((x ...))
+...)] part and the @racket[x] part in the body.
 
-We already know how to compile the @racket['(add1 ...)] part and the
+We already know how to compile the @racket[(add1 ...)] part and the
 @racket[7] part.
 
 What needs to happen?  Compiling the @racket[7] part will emit
 instructions that, when run, leave @racket[7] in the @racket['rax]
-register.  Compiling the @racket['(add1 ...)] part relies on the
+register.  Compiling the @racket[(add1 ...)] part relies on the
 result of evaluating it's subexpression to be in @racket['rax] when it
 increments it.  So, compile the variable binding needs to stash the
 @racket[7] somewhere and compiling the variable occurrence needs to
@@ -401,16 +424,16 @@ a let, after the right-hand side has been run, the result should be
 pushed.  When evaluating a variable occurrence, the bound value is on
 the stack.  After exiting the let, the stack can be popped.
 
-Suppose we want to compile @racket['(let ((x 7)) (let ((y 2)) (add1
+Suppose we want to compile @racket[(let ((x 7)) (let ((y 2)) (add1
 x)))].  Using the intuition developed so far, we should push 7, push
 8, and then run the body.  But notice that the value of @racket['x] is
-no longer on the top of the stack; @racket['y] is.  So to retrieve the
-value of @racket['x] we need jump past the @racket['y].  But
-calculating these offsets is pretty straightforward.  In this example
-there is one binding between the binding of @racket['x] and this
-occurrence.  Since we push every time we enter a let and pop every
-time we leave, the number of bindings between an occurrence and its
-binder is exactly the offset from the top of the stack we need use.
+no longer on the top of the stack; @racket[y] is.  So to retrieve the
+value of @racket[x] we need jump past the @racket[y].  But calculating
+these offsets is pretty straightforward.  In this example there is one
+binding between the binding of @racket[x] and this occurrence.  Since
+we push every time we enter a let and pop every time we leave, the
+number of bindings between an occurrence and its binder is exactly the
+offset from the top of the stack we need use.
 
 @filebox-include-fake[codeblock "fraud/asm/ast.rkt"]{
 #lang racket

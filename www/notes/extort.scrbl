@@ -21,6 +21,12 @@
 
 @title[#:tag "Extort"]{Extort: when errors exist}
 
+@emph{The greatest mistake is to imagine that we never err.}
+
+@table-of-contents[]
+
+@section{Errors}
+
 We have added multiple, disjoint types, but mostly swept issues of
 errors under the rug by considering type mismatches as meaningless.
 Now let's redesign the semantics to specify the error behavior of such
@@ -119,7 +125,7 @@ The statement of correctness stays the same, but now observe that
 there is no way to crash the interpreter with any @tt{Expr} value.
 
 
-@section{An Example of Extort compilation}
+@section{A Compiler for Extort}
 
 Suppose we want to compile @racket[(add1 #f)], what needs to happen?
 Just as in the interpreter, we need to check the integerness of the

@@ -1,32 +1,32 @@
 #lang racket
 (provide (all-defined-out))
-(require (only-in "interp.rkt" prim? value? interp-prim))
+(require (only-in "interp.rkt" prim? value? interp-prim)
+         "translate.rkt")
 
-;; Expr -> IExpr
-(define (translate e)
-  (translate-e e '()))
+;; type VEnv = (Listof Value)
 
-;; Expr LEnv -> IExpr
-(define (translate-e e r)
+;; Expr -> Answer
+(define (interp e)
+  (interp-env (translate e) '()))
+
+;; IExpr VEnv -> Answer
+(define (interp-env e r)
   (match e
     [(? value? v) v]
     [(list (? prim? p) e)
-     (list p (translate-e e r))]
+     (let ((a (interp-env e r)))
+       (interp-prim p a))]
     [`(if ,e0 ,e1 ,e2)
-     `(if ,(translate-e e0)
-          ,(translate-e e1)
-	  ,(translate-e e2))]
-    [(? symbol? x)
-     (lexical-address x r)]
-    [`(let ((,x ,e0)) ,e1)
-     `(let ((_ ,(translate e0 r)))
-       ,(translate e1 (cons x r)))]))
-
-;; Variable LEnv -> Natural
-(define (lexical-address x r)
-  (match r
-    ['() (error "unbound variable")]
-    [(cons y r)
-     (match (symbol=? x y)
-       [#t (length r)]
-       [#f (lexical-address x r)])]))
+     (match (interp-env e0 r)
+       ['err 'err]
+       [v
+        (if v
+            (interp-env e1 r)
+            (interp-env e2 r))])]
+    [`(address ,i)
+     (list-ref r i)]
+    [`(let ((_ ,e0)) ,e1)
+     (match (interp-env e0 r)
+       ['err 'err]
+       [v
+        (interp-env e1 (cons v r))])]))
