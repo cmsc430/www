@@ -22,7 +22,7 @@
     [`(if ,e0 ,e1 ,e2)
      `(if ,(translate-e e0)
           ,(translate-e e1)
-	  ,(translate-e e2))]
+          ,(translate-e e2))]
     [(? symbol? x)
      `(address ,(lexical-address x r))]
     [`(let ((,x ,e0)) ,e1)
@@ -42,7 +42,7 @@
        [v
         (if v
             (interp-env e1 r)
-            (interp-env e2 r))])]    
+            (interp-env e2 r))])]
     [`(address ,i)
      (list-ref r i)]
     [`(let ((_ ,e0)) ,e1)
@@ -72,7 +72,7 @@
                               (let ((y x))
                                 y)))
                 '(let ((_ 0)) (let ((_ (address 0))) (address 0))))
-  
+
   (check-equal? (interp 5) 5)
   (check-equal? (interp '(let ((x 0)) x)) 0)
   (check-equal? (interp '(let ((x 0)) (let ((y 1)) x))) 0)
