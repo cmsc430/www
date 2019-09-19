@@ -173,6 +173,7 @@ which are defined as:
 ;; | 'add1
 ;; | 'sub1
 ;; | 'zero?
+;; | 'if
 ;; | 'cond
 ;; | 'else
 ;; | 'abs
