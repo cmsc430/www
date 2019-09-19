@@ -34,7 +34,7 @@
                      @secref["Fraud"])
                
                (list @wk{9/24}
-	       	     "A4" @;seclink["Assignment 4"]{A4}
+	       	     @seclink["Assignment 4"]{A4}
                      @secref["Grift"]
 		     @secref["Hustle"])
                
