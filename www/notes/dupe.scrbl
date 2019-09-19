@@ -207,7 +207,7 @@ From a pragmatic point of view, this is a concern because it
 complicates testing.  If the interpreter is correct and every
 expression has a meaning (as in all of our previous languages), it
 follows that the interpreter can't crash on any @tt{Expr} input.  That
-makes testing easy: think of an expression, run the interpeter to
+makes testing easy: think of an expression, run the interpreter to
 compute its meaning.  But now the interpreter may break if the
 expression is undefined.  We can only safely run the interpreter on
 expressions that have a meaning.
@@ -332,12 +332,30 @@ We can also write the inverse:
 
 )
 
-The interpreter operates at the level of Values.  The compiler will
-have to work at the level of Bits.  Of course, we could, as an
-intermediate step, define an interpreter that works on bits, which may
-help us think about how to implement the compiler.
+The interpreter operates at the level of @tt{Value}s.  The compiler
+will have to work at the level of @tt{Bits}.  Of course, we could,
+as an intermediate step, define an interpreter that works on bits,
+which may help us think about how to implement the compiler.
 
-Let's design @racket[interp-bits] by derivation.  First, let's cheat:
+We want a function
+@#reader scribble/comment-reader
+(racketblock
+;; interp-bits : Expr -> Bits
+)
+such that
+@#reader scribble/comment-reader
+(racketblock
+;; ∀ e : Expr . (interp-bits e) = (value->bits (interp e))
+)
+
+Let's design @racket[interp-bits] by derivation.  This is a common
+functional programming technique whereby we start from a specification
+program and through a series of algebraic transformations, arrive an
+correct implementation.
+
+First, let's state the specification of @racket[interp-bits] as a
+function that ``cheats,'' it uses @racket[interp] to carry out
+evaluation and then finally converts to bits.
 
 @#reader scribble/comment-reader
 (ex
@@ -346,102 +364,290 @@ Let's design @racket[interp-bits] by derivation.  First, let's cheat:
   (value->bits (interp e)))
 )
 
-Now let's ``push'' the @racket[value->bits] inward:
+It's clearly correct with respect to the spec for @racket[interp-bits]
+that we started with because @emph{the code is just the specification
+itself}.
+
+We can even do some property-based random testing (which obviously
+succeeds):
+
+@ex[#:no-prompt
+(define (interp-bits-correct e)
+  (with-handlers ([exn:fail? (λ (x) 'ok)])
+    (interp e)
+    (check-equal? (interp-bits e)
+                  (value->bits (interp e)))))
+
+(define es
+  (for/list ([i 100])
+    (random-expr)))
+
+(for-each interp-bits-correct es)
+]
+
+The one wrinkle is we really only need the spec to hold when
+@racket[_e] is defined according to the semantics.  Since we know
+@racket[interp] crashes (by raising an exception) whenever @racket[_e]
+is undefined, we use an exception handler to avoid testing when
+@racket[_e] is undefined.
+
+Now let us inline the defintion of @racket[interp]:
 
 @#reader scribble/comment-reader
-(ex
+(ex #:no-prompt
+;; Expr -> Bits
+(define (interp-bits e)
+  (value->bits
+   (match e
+     [(? integer? i) i]
+     [(? boolean? b) b]
+     [`(add1 ,e0)
+      (add1 (interp e0))]
+     [`(sub1 ,e0)
+      (sub1 (interp e0))]
+     [`(zero? ,e0)
+      (zero? (interp e0))]
+     [`(if ,e0 ,e1 ,e2)
+      (if (interp e0)
+          (interp e1)
+          (interp e2))])))
+)
+
+It's still correct:
+@ex[
+(for-each interp-bits-correct es)]
+
+Now let's ``push'' the @racket[value->bits] inward by using the following equation:
+@racketblock[
+(_f (match _m [_p _e] ...)) = (match _m [_p (_f _e)] ...)
+]
+
+So we get:
+
+@#reader scribble/comment-reader
+(ex #:no-prompt
 ;; Expr -> Bits
 (define (interp-bits e)
   (match e
     [(? integer? i) (value->bits i)]
     [(? boolean? b) (value->bits b)]
     [`(add1 ,e0)
-     (value->bits (add1 (bits->value (interp-bits e0))))]
+     (value->bits (add1 (interp- e0)))]
     [`(sub1 ,e0)
-     (value->bits (sub1 (bits->value (interp-bits e0))))]
+     (value->bits (sub1 (interp e0)))]
     [`(zero? ,e0)
-     (value->bits (zero? (bits->value (interp-bits e0))))]
+     (value->bits (zero? (interp e0)))]
     [`(if ,e0 ,e1 ,e2)
-     (if (bits->value (interp-bits e0))
-         (interp-bits e1)
-	 (interp-bits e2))]))
+     (value->bits
+      (if (interp e0)
+          (interp e1)
+          (interp e2)))]))
 )
 
-Unfolding @racket[value->bits] in the first two cases:
+
+Still correct:
+@ex[
+(for-each interp-bits-correct es)]
+
+In the first two cases, we know that @racket[i] and @racket[b] are
+integers and booleans, respectively.  So we know @racket[(values->bits
+i) = (* 2 i)] and @racket[(values->bits b) = (if b #b01 #b11)].  We can
+rewrite the code as:
 
 @#reader scribble/comment-reader
-(ex
+(ex #:no-prompt
 ;; Expr -> Bits
-(define (interp-bits e)
-  (match e
-    [(? integer? i) (* 2 i)]
-    [(? boolean? b) (if b 3 1)]
-    [`(add1 ,e0)
-     (value->bits (add1 (bits->value (interp-bits e0))))]
-    [`(sub1 ,e0)
-     (value->bits (sub1 (bits->value (interp-bits e0))))]
-    [`(zero? ,e0)
-     (value->bits (zero? (bits->value (interp-bits e0))))]
-    [`(if ,e0 ,e1 ,e2)
-     (if (bits->value (interp-bits e0))
-         (interp-bits e1)
-	 (interp-bits e2))]))
+ (define (interp-bits e)
+   (match e
+     [(? integer? i) (* 2 i)]
+     [(? boolean? b) (if b 3 1)]
+     [`(add1 ,e0)
+      (value->bits (add1 (interp e0)))]
+     [`(sub1 ,e0)
+      (value->bits (sub1 (interp e0)))]
+     [`(zero? ,e0)
+      (value->bits (zero? (interp e0)))]
+     [`(if ,e0 ,e1 ,e2)
+      (value->bits
+       (if (interp e0)
+           (interp e1)
+           (interp e2)))]))
 )
 
-We can simplify the conditional case as follows:
+Still correct:
+@ex[
+(for-each interp-bits-correct es)]
+
+
+We can rewrite the last case by the following equation:
+@racketblock[
+(_f (if _e0 _e1 _e2)) = (if _e0 (_f _e1) (_f _e2))
+]
 
 @#reader scribble/comment-reader
-(ex
+(ex #:no-prompt
 ;; Expr -> Bits
-(define (interp-bits e)
-  (match e
-    [(? integer? i) (* 2 i)]
-    [(? boolean? b) (if b 3 1)]
-    [`(add1 ,e0)
-     (value->bits (add1 (bits->value (interp-bits e0))))]
-    [`(sub1 ,e0)
-     (value->bits (sub1 (bits->value (interp-bits e0))))]
-    [`(zero? ,e0)
-     (value->bits (zero? (bits->value (interp-bits e0))))]
-    [`(if ,e0 ,e1 ,e2)
-     (match (interp-bits e0)
-       [1 (interp-bits e2)]
-       [_ (interp-bits e1)])]))
+ (define (interp-bits e)
+   (match e
+     [(? integer? i) (* 2 i)]
+     [(? boolean? b) (if b 3 1)]
+     [`(add1 ,e0)
+      (value->bits (add1 (interp e0)))]
+     [`(sub1 ,e0)
+      (value->bits (sub1 (interp e0)))]
+     [`(zero? ,e0)
+      (value->bits (zero? (interp e0)))]
+     [`(if ,e0 ,e1 ,e2)      
+      (if (interp e0)
+          (value->bits (interp e1))
+          (value->bits (interp e2)))]))
 )
 
-We can also push around the @racket[add1], @racket[sub1], and
-@racket[zero?] operations to avoid the conversions.  Note that
-whenever @racket[_bs] are bits representing an integer, then
+Still correct:
+@ex[
+(for-each interp-bits-correct es)]
+
+
+Let's now re-write by the following equations:
+
+@racketblock[
+(add1 _e) = (+ _e 1)
+(sub1 _e) = (- _e 1)
+(f (+ _e0 _e1)) = (+ (f _e0) (f _e1))
+(f (- _e0 _e1)) = (- (f _e0) (f _e1))
+]
+
+to get:
+
+@#reader scribble/comment-reader
+(ex #:no-prompt
+;; Expr -> Bits
+ (define (interp-bits e)
+   (match e
+     [(? integer? i) (* 2 i)]
+     [(? boolean? b) (if b 3 1)]
+     [`(add1 ,e0)
+      (+ (value->bits (interp e0)) (value->bits 1))]
+     [`(sub1 ,e0)
+      (- (value->bits (interp e0)) (value->bits 1))]
+     [`(zero? ,e0)
+      (value->bits (zero? (interp e0)))]
+     [`(if ,e0 ,e1 ,e2)      
+      (if (interp e0)
+          (value->bits (interp e1))
+          (value->bits (interp e2)))]))
+)
+
+Still correct:
+@ex[
+(for-each interp-bits-correct es)]
+
+By computation, @racket[(value->bits 1) = 2].
+
+We can now rewrite by the equation of our specification:
+
+@racketblock[
+(value->bits (interp _e)) = (interp-bits _e)]
+
+
+@#reader scribble/comment-reader
+(ex #:no-prompt
+;; Expr -> Bits
+ (define (interp-bits e)
+   (match e
+     [(? integer? i) (* 2 i)]
+     [(? boolean? b) (if b 3 1)]
+     [`(add1 ,e0)
+      (+ (interp-bits e0) 2)]
+     [`(sub1 ,e0)
+      (- (interp-bits e0) 2)]
+     [`(zero? ,e0)
+      (value->bits (zero? (interp e0)))]
+     [`(if ,e0 ,e1 ,e2)
+      (if (interp e0)
+          (interp-bits e1)
+          (interp-bits e2))]))
+)
+
+Still correct:
+@ex[
+(for-each interp-bits-correct es)]
+
+We can rewrite by the equation
+@racketblock[(zero? (interp _e0)) = (zero? (interp-bits _e0))]
+and inline @racket[value->bits] specialized to a boolean argument:
+
+@#reader scribble/comment-reader
+(ex #:no-prompt
+;; Expr -> Bits
+ (define (interp-bits e)
+   (match e
+     [(? integer? i) (* 2 i)]
+     [(? boolean? b) (if b 3 1)]
+     [`(add1 ,e0)
+      (+ (interp-bits e0) 2)]
+     [`(sub1 ,e0)
+      (- (interp-bits e0) 2)]
+     [`(zero? ,e0)
+      (match (zero? (interp-bits e0))
+        [#t #b11]
+        [#f #b01])]
+     [`(if ,e0 ,e1 ,e2)
+      (if (interp e0)
+          (interp-bits e1)
+          (interp-bits e2))]))
+ )
+
+Still correct:
+@ex[
+(for-each interp-bits-correct es)]
+
+Finally, in the last case, all that matters in @racket[(if (interp e0)
+...)] is whether @racket[(interp e0)] returns @racket[#f] or something
+else.  So we can rewrite in terms of whether @racket[(interp-bits e0)]
+produces the representation of @racket[#f] (@code[#:lang
+"racket"]{#b01}):
+
+@#reader scribble/comment-reader
+(ex #:no-prompt
+;; Expr -> Bits
+ (define (interp-bits e)
+   (match e
+     [(? integer? i) (* 2 i)]
+     [(? boolean? b) (if b 3 1)]
+     [`(add1 ,e0)
+      (+ (interp-bits e0) 2)]
+     [`(sub1 ,e0)
+      (- (interp-bits e0) 2)]
+     [`(zero? ,e0)
+      (match (zero? (interp-bits e0))
+        [#t #b11]
+        [#f #b01])]
+     [`(if ,e0 ,e1 ,e2)
+      (match (interp-bits e0)
+        [#b01 (interp-bits e2)]
+        [_ (interp-bits e1)])]))
+ )
+
+
+Still correct:
+@ex[
+(for-each interp-bits-correct es)]
+
+
+Note that whenever @racket[_bs] are bits representing an integer, then
 @racket[(value->bits (add1 (bits->value _bs)))] is equal to @racket[(+
 _bs 2)], i.e. adding @code[#:lang "racket"]{#b10}.  When @racket[_bs]
 represents a boolean, then @racket[(value->bits (add1 (bits->value
 _bs)))] would crash, while @racket[(+ _bs 2)] doesn't, but this is an
 undefined program, so changing the behavior is fine.
 
-We do something similar for @racket[sub1] and arrive at:
+Looking back: starting from the spec, we've arrived at a definition of
+@racket[interp-bits] that is completely self-contained: it doesn't use
+@racket[interp] at all.  It also only uses the @tt{Bits}
+representation and does no conversions to or from @tt{Value}s.
 
-@#reader scribble/comment-reader
-(ex
-;; Expr -> Bits
-(define (interp-bits e)
-  (match e
-    [(? integer? i) (* 2 i)]
-    [(? boolean? b) (if b 3 1)]
-    [`(add1 ,e0)
-     (+ (interp-bits e0) 2)]
-    [`(sub1 ,e0)
-     (- (interp-bits e0) 2)]
-    [`(zero? ,e0)
-     (match (interp-bits e0)
-       [0 #b11]
-       [_ #b01])]
-    [`(if ,e0 ,e1 ,e2)
-     (match (interp-bits e0)
-       [#b01 (interp-bits e2)]  ; if #f, interp e2
-       [_ (interp-bits e1)])]))
-)
-
-And we can recover the original interpreter by wrapping the bit
+We can recover the original interpreter by wrapping the bit
 interpreter in a final conversion:
 
 @#reader scribble/comment-reader
