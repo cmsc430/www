@@ -142,6 +142,7 @@ language based on the following grammar:
 
 @verbatim{
 <expr> ::= integer
+        |  boolean
         |  ( <compound> )
 	|  [ <compound> ]
 
@@ -170,6 +171,7 @@ which are defined as:
 (racketblock
 ;; type Token =
 ;; | Integer
+;; | Boolean
 ;; | 'add1
 ;; | 'sub1
 ;; | 'zero?
