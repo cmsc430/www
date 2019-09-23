@@ -1,6 +1,5 @@
 #lang racket
 (provide (all-defined-out))
-(require "compile/help.rkt")
 
 ;; type CEnv = [Listof Variable]
 
@@ -42,9 +41,6 @@
          (jne ,l0)
          (mov rax #b11) ; #t
          ,l0))]
-    [(? symbol? x)
-     (let ((i (lookup x c)))
-       `((mov rax (offset rsp ,(- (add1 i))))))]
     [`(if ,e0 ,e1 ,e2)
      (let ((c0 (compile-e e0 c))
            (c1 (compile-e e1 c))
@@ -59,6 +55,9 @@
          ,l0
          ,@c2
          ,l1))]
+    [(? symbol? x)
+     (let ((i (lookup x c)))
+       `((mov rax (offset rsp ,(- (add1 i))))))]
     [`(let ((,x ,e0)) ,e1)
      (let ((c0 (compile-e e0 c))
            (c1 (compile-e e1 (cons x c))))
@@ -74,3 +73,9 @@
      (match (symbol=? x y)
        [#t (length cenv)]
        [#f (lookup x cenv)])]))
+
+(define assert-integer
+  `((mov rbx rax)
+    (and rbx 1)
+    (cmp rbx 0)
+    (jne err)))
