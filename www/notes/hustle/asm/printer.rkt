@@ -34,7 +34,7 @@
     [l (string-append (label->string l) ":\n")]))
 
 (define (opcode2? x)
-  (memq x '(mov add sub cmp imul movzx sal or xor and)))
+  (memq x '(mov add sub cmp imul movzx sal sar or xor and)))
 
 (define (opcode1? x)
   (memq x '(sete)))
