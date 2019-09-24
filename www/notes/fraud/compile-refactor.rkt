@@ -18,11 +18,11 @@
   (match e
     [(? integer? i)        (compile-integer i)]
     [(? boolean? b)        (compile-boolean b)]
+    [(? symbol? x)         (compile-variable x c)]    
     [`(add1 ,e0)           (compile-add1 e0 c)]
     [`(sub1 ,e0)           (compile-sub1 e0 c)]
     [`(zero? ,e0)          (compile-zero? e0 c)]
     [`(if ,e0 ,e1 ,e2)     (compile-if e0 e1 e2 c)]
-    [(? symbol? x)         (compile-variable x c)]
     [`(let ((,x ,e0)) ,e1) (compile-let x e0 e1 c)]))
 
 ;; Integer -> Asm
