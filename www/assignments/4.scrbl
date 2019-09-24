@@ -213,6 +213,7 @@ grammar:
 @verbatim{
 <expr> ::= integer
         |  character
+        |  boolean
 	|  variable
         |  ( <compound> )
 	|  [ <compound> ]
