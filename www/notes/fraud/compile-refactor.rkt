@@ -3,13 +3,11 @@
 
 ;; type CEnv = [Listof Variable]
 
-(define imm-shift        3)
+(define imm-shift        1)
 (define imm-type-mask    (sub1 (arithmetic-shift 1 imm-shift)))
-(define imm-type-int     #b000)
-(define imm-type-true    #b001)
-(define imm-type-false   #b010)
-(define imm-type-empty   #b011)
-(define imm-type-char    #b100)
+(define imm-type-int     #b0)
+(define imm-type-true    #b11)
+(define imm-type-false   #b01)
 
 ;; Expr -> Asm
 (define (compile e)
@@ -26,7 +24,7 @@
   (match e
     [(? integer? i)        (compile-integer i)]
     [(? boolean? b)        (compile-boolean b)]
-    [(? symbol? x)         (compile-variable x c)]    
+    [(? symbol? x)         (compile-variable x c)]
     [`(add1 ,e0)           (compile-add1 e0 c)]
     [`(sub1 ,e0)           (compile-sub1 e0 c)]
     [`(zero? ,e0)          (compile-zero? e0 c)]
@@ -102,7 +100,7 @@
   (match cenv
     ['() (error "undefined variable:" x)]
     [(cons y cenv)
-     (match (symbol=? x y)
+     (match (eq? x y)
        [#t (length cenv)]
        [#f (lookup x cenv)])]))
 
