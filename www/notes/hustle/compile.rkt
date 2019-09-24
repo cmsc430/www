@@ -27,9 +27,6 @@
 ;; Expr -> Asm
 (define (compile e)
   `(entry
-    (sar rdi 4)  ;; align on quad boundary
-    (sal rdi 4)
-    (add rdi 16)
     ,@(compile-e e '())
     ret
     err
@@ -194,21 +191,6 @@
       ,@c0
       ,@assert-integer
       (sub rax (offset rsp ,(- (add1 (length c))))))))
-
-;; code for "abc"
-'((mov (offset rdi 0)
-       (integer->bits 3))
-  (mov (offset rdi 1)
-       (compile-char #\a))
-  (mov (offset rdi 1)
-       (char->bits #\b))
-  (mov (offset-rdi 2)
-       (char->bits #\c))
-  (mov rdi rax)
-  (or rax ,str-tag))
-  
-       
-
 
 ;; Variable CEnv -> Natural
 (define (lookup x cenv)
