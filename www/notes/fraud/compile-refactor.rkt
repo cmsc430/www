@@ -3,6 +3,12 @@
 
 ;; type CEnv = [Listof Variable]
 
+(define imm-shift        1)
+(define imm-type-mask    (sub1 (arithmetic-shift 1 imm-shift)))
+(define imm-type-int     #b0)
+(define imm-type-true    #b11)
+(define imm-type-false   #b01)
+
 ;; Expr -> Asm
 (define (compile e)
   `(entry
@@ -18,7 +24,7 @@
   (match e
     [(? integer? i)        (compile-integer i)]
     [(? boolean? b)        (compile-boolean b)]
-    [(? symbol? x)         (compile-variable x c)]    
+    [(? symbol? x)         (compile-variable x c)]
     [`(add1 ,e0)           (compile-add1 e0 c)]
     [`(sub1 ,e0)           (compile-sub1 e0 c)]
     [`(zero? ,e0)          (compile-zero? e0 c)]
@@ -27,25 +33,25 @@
 
 ;; Integer -> Asm
 (define (compile-integer i)
-  `((mov rax ,(* i 2))))
+  `((mov rax ,(arithmetic-shift i imm-shift))))
 
 ;; Boolean -> Asm
 (define (compile-boolean b)
-  `((mov rax ,(if b #b11 #b01))))
+  `((mov rax ,(if b imm-type-true imm-type-false))))
 
 ;; Expr CEnv -> Asm
 (define (compile-add1 e0 c)
   (let ((c0 (compile-e e0 c)))
     `(,@c0
       ,@assert-integer
-      (add rax 2))))
+      (add rax ,(arithmetic-shift 1 imm-shift)))))
 
 ;; Expr CEnv -> Asm
 (define (compile-sub1 e0 c)
   (let ((c0 (compile-e e0 c)))
     `(,@c0
       ,@assert-integer
-      (sub rax 2))))
+      (sub rax ,(arithmetic-shift 1 imm-shift)))))
 
 ;; Expr CEnv -> Asm
 (define (compile-zero? e0 c)
@@ -55,9 +61,9 @@
     `(,@c0
       ,@assert-integer
       (cmp rax 0)
-      (mov rax #b01) ; #f
+      (mov rax ,imm-type-false)
       (jne ,l0)
-      (mov rax #b11) ; #t
+      (mov rax ,imm-type-true)
       ,l0)))
 
 ;; Expr Expr Expr CEnv -> Asm
@@ -68,7 +74,7 @@
         (l0 (gensym))
         (l1 (gensym)))
     `(,@c0
-      (cmp rax #b01) ; compare to #f
+      (cmp rax ,imm-type-false)
       (je ,l0)       ; jump to c2 if #f
       ,@c1
       (jmp ,l1)      ; jump past c2
@@ -94,12 +100,12 @@
   (match cenv
     ['() (error "undefined variable:" x)]
     [(cons y cenv)
-     (match (symbol=? x y)
+     (match (eq? x y)
        [#t (length cenv)]
        [#f (lookup x cenv)])]))
 
 (define assert-integer
   `((mov rbx rax)
-    (and rbx 1)
-    (cmp rbx 0)
+    (and rbx ,imm-type-mask)
+    (cmp rbx ,imm-type-int)
     (jne err)))
