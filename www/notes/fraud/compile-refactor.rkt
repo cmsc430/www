@@ -1,4 +1,7 @@
 #lang racket
+(provide (all-defined-out))
+
+;; type CEnv = [Listof Variable]
 
 ;; Expr -> Asm
 (define (compile e)
@@ -20,9 +23,7 @@
     [`(sub1 ,e0)           (compile-sub1 e0 c)]
     [`(zero? ,e0)          (compile-zero? e0 c)]
     [`(if ,e0 ,e1 ,e2)     (compile-if e0 e1 e2 c)]
-    [`(let ((,x ,e0)) ,e1) (compile-let x e0 e1 c)]
-    [`(+ ,e0 ,e1)          (compile-+ e0 e1 c)]
-    [`(- ,e0 ,e1)          (compile-- e0 e1 c)]))
+    [`(let ((,x ,e0)) ,e1) (compile-let x e0 e1 c)]))
 
 ;; Integer -> Asm
 (define (compile-integer i)
@@ -33,7 +34,7 @@
   `((mov rax ,(if b #b11 #b01))))
 
 ;; Expr CEnv -> Asm
-(define (compile-add1 e0 c)    
+(define (compile-add1 e0 c)
   (let ((c0 (compile-e e0 c)))
     `(,@c0
       ,@assert-integer
@@ -88,34 +89,12 @@
       (mov (offset rsp ,(- (add1 (length c)))) rax)
       ,@c1)))
 
-;; Expr Expr CEnv -> Asm
-(define (compile-+ e0 e1 c)
-  (let ((c1 (compile-e e1 c))
-        (c0 (compile-e e0 (cons #f c))))
-    `(,@c1
-      ,@assert-integer
-      (mov (offset rsp ,(- (add1 (length c)))) rax)
-      ,@c0
-      ,@assert-integer
-      (add rax (offset rsp ,(- (add1 (length c))))))))
-
-;; Expr Expr CEnv -> Asm
-(define (compile-- e0 e1 c)
-  (let ((c1 (compile-e e1 c))
-        (c0 (compile-e e0 (cons #f c))))
-    `(,@c1
-      ,@assert-integer
-      (mov (offset rsp ,(- (add1 (length c)))) rax)
-      ,@c0
-      ,@assert-integer
-      (sub rax (offset rsp ,(- (add1 (length c))))))))
-
 ;; Variable CEnv -> Natural
 (define (lookup x cenv)
   (match cenv
     ['() (error "undefined variable:" x)]
     [(cons y cenv)
-     (match (eq? x y)
+     (match (symbol=? x y)
        [#t (length cenv)]
        [#f (lookup x cenv)])]))
 

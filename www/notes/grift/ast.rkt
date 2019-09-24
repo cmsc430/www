@@ -3,12 +3,12 @@
 ;; | Integer
 ;; | Boolean
 ;; | Variable
-;; | `(add1 ,Expr)
-;; | `(sub1 ,Expr)
-;; | `(zero? ,Expr)
+;; | (list Prim1 Expr)
+;; | (list Prim2 Expr Expr)
 ;; | `(if ,Expr ,Expr ,Expr)
 ;; | `(let ((,Variable ,Expr)) ,Expr)
-;; | `(+ ,Expr ,Expr)
-;; | `(- ,Expr ,Expr)
 
-;; type Variable = Symbol (except 'add1 'sub1 'if 'let)
+;; type Prim1 = 'add1 | 'sub1 | 'zero?
+;; type Prim2 = '+ | '-
+
+;; type Variable = Symbol (except 'add1 'sub1 'if, etc.)
