@@ -52,7 +52,7 @@
 
   ;; Primitive application
   [(𝑮-𝒆𝒏𝒗 e_0 r a_0) ...
-   -----------
+   ----------- prim
    (𝑮-𝒆𝒏𝒗 (p e_0 ...) r (𝑮-𝒑𝒓𝒊𝒎 (p a_0 ...)))])
 
 (define-metafunction G
