@@ -109,7 +109,8 @@ Binary expressions are easy to deal with at the level of the semantics
 and interpreter.  However things are more complicated at the level of
 the compiler.
 
-To see the problem consider blindly following the pattern we used:
+To see the problem consider blindly following the pattern we used (and
+ignoring type errors for the moment):
 
 @#reader scribble/comment-reader
 (racketblock
@@ -143,8 +144,100 @@ the first subexpression:
 
 Can you think of how this could go wrong?
 
+To come up with a general solution to this problem, we need to save
+the result of @racket[_e0] and then retrieve it after computing
+@racket[_e1] and it's time to sum.
+
+Note that this issue only comes up when @racket[_e0] is a
+@bold{serious} expression, i.e. an expression that must do some
+computation.  If @racket[_e0] were a literal integer or a variable, we
+could emit working code.  For example:
 
 
+@#reader scribble/comment-reader
+(racketblock
+;; Integer Expr CEnv -> Asm
+;; A special case for compiling (+ i0 e1)
+(define (compile-+-int i0 e1 c)
+  (let ((c1 (compile-e e1 c)))
+    `(,@c1 ; result in rax
+      (add rax ,(arithmetic-shift i0 imm-shift)))))
+
+;; Variable Expr CEnv -> Asm
+;; A special case for compiling (+ x0 e1)
+(define (compile-+-var x0 e1)
+  (let ((c1 (compile-e e1 c))
+        (i (lookup x0 c)))
+    `(,@c1
+      (add rax (offset rsp ,(- (add1 i)))))))         
+)
+
+The latter suggests a general solution could be to transform binary
+primitive applications into a @racket[let] form that binds the first
+subexpression to a variable and then uses the @racket[compile-+-var]
+function above.  The idea is that every time the compiler encounters
+@racket[(+ _e0 _e1)], we transform it to @racket[(let ((_x _e0)) (+ _x
+_e1))].  For this to work out, @racket[_x] needs to be some variable
+that doesn't appear free in @racket[_e1].  This transfomration is
+what's called @bold{ANF} (adminitrative normal form) and is a widely
+used intermediate representation for compilers.
+
+
+But, we can also solve the problem more directly by considering the
+code that is generated for the ANF style expression above.
+
+Consider the lexical address of @racket[_x] in the transformed code
+above.  It is @emph{always} 0 becuase the transformation puts the
+@racket[let] immediately around the occurrence of @racket[_x].  So if
+we're compiling @racket[(+ _e0 _e1)] in environment @racket[_c] using
+this approach, we know the value of @racket[_e0] will live at
+@racket[`(offset rsp ,(- (add1 (length c))))].  There's no need for a
+@racket[let] binding or a fresh variable name.  And this observation
+enables us to write a general purpose compiler for binary primitives
+that doesn't require any program transformation: we simply push the
+value of @racket[e0] on the top of the stack and retrieve it later.
+
+Here is a first cut:
+
+@#reader scribble/comment-reader
+(racketblock
+;; Expr Expr CEnv -> Asm
+(define (compile-+ e0 e1 c)
+  (let ((x (gensym))) ; generate a fresh variable
+    (let ((c0 (compile-e e0 c))      
+          (c1 (compile-e e1 (cons x c))))
+      `(,@c0
+        (mov (offset rsp ,(add1 (- (length c)))) rax)
+        ,@c1
+        (add rax (offset rsp ,(- (add1 (lookup x (cons x c))))))))))
+)
+
+There are a couple things to notice.  First: the @racket[(lookup x
+(cons x c))] just produces @racket[(length c)].  Second, when
+compiling @racket[_e1] in environment @racket[(cons x c)], we know
+that no variable in @racket[_e1] resolves to @racket[x] because
+@racket[x] is a freshly @racket[gensym]'d symbol.  Putting (an
+unreferenced) @racket[x] in the environment serves only to ``bump up''
+by one the offset of any variable bound after @racket[x] so as to not
+override the spot where @racket[e0]'s values lives.  We can acomplish
+the same thing by sticking in something that no variable is equal to:
+@racket[#f]:
+
+@#reader scribble/comment-reader
+(racketblock
+;; Expr Expr CEnv -> Asm
+(define (compile-+ e0 e1 c)
+  (let ((c0 (compile-e e0 c))      
+        (c1 (compile-e e1 (cons x c))))
+    `(,@c0
+      (mov (offset rsp ,(add1 (- (length c)))) rax)
+      ,@c1
+      (add rax (offset rsp ,(- (add1 (length c))))))))
+)
+
+
+
+The commplete code for the compiler is:
 
 
 @codeblock-include["grift/compile.rkt"]
