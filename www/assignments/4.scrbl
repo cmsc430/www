@@ -150,7 +150,7 @@ features.  Note that you must use the same representation of
 characters as used in the run-time system and should not change
 @tt{main.c}.
 
-@section[#:tag-prefix "a4-" #:style 'unnumbererd]{Generalizing Let}
+@section[#:tag-prefix "a4-" #:style 'unnumbered]{Generalizing Let}
 
 The Fraud language has a let form that binds a single variable in the
 scope of some expression.  This is a restriction of the more general
