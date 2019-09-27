@@ -105,6 +105,21 @@ two booleans are equal.}
 
 @section[#:tag-prefix "a5-" #:style 'unnumbered]{Extending your Parser, yet again!}
 
+@margin-note{@bold{CHANGE:} This grammar was changed slightly on
+Friday 9/27 and 4:40PM.  The original grammar did not have binary
+subtraction primitive @tt{-}, only the unary negation @tt{-}
+primitive.  The grammar has been fixed and the code in @tt{lex.rkt}
+and @tt{parse.rkt} has been updated.  If you clone the repository
+after this time, you have the changes.  If you cloned before, you can
+download the udpated 
+@link["https://raw.githubusercontent.com/cmsc430/assign05/master/lex.rkt"]{@tt{lex.rkt}}
+and
+@link["https://raw.githubusercontent.com/cmsc430/assign05/master/parse.rkt"]{@tt{parse.rkt}} files.
+You can see a diff to the files
+@link["https://github.com/cmsc430/assign05/commit/22f7a64f1419bc69b19d5ff1c8845e583fbf9b1c"]{here}.}
+
+
+
 
 Extend your Fraud+ parser for the Hustle+ language based on the following
 grammar:
@@ -120,16 +135,20 @@ grammar:
 
 <compound> ::= <prim1> <expr>
             |  <prim2> <expr> <expr>
+            |  - <expr> <maybe-expr>
             |  if <expr> <expr> <expr>
             |  cond <clause>* <else>
 	    |  let <bindings> <expr>
 
-<prim1> ::= add1 | sub1 | abs | - | zero? | integer->char | char->integer
+<prim1> ::= add1 | sub1 | abs | zero? | integer->char | char->integer
          |  char? | integer? | boolean? | string? | box? | empty? | cons?
          |  box | unbox | car | cdr | string-length
 
 <prim2> ::= make-string | string-ref | = | < | <= 
          |  char=? | boolean=? | +
+
+<maybe-expr> ::= 
+              |  <expr>
 
 <clause> ::= ( <expr> <expr> )
           |  [ <expr> <expr> ]
@@ -153,16 +172,15 @@ which are defined as follows (only the new parts are shown):
 (racketblock
 ; type Token =
 ; ...
-; | `(prim1 ,Prim1)
-; | `(prim2 ,Prim2)
 ; | String
+
+; type Prim = Prim1 | Prim2 | '-
 
 ; type Prim1 =
 ; | 'add1
 ; | 'sub1
 ; | 'zero?
 ; | 'abs
-; | '-
 ; | 'integer->char
 ; | 'char->integer
 ; | 'char?
@@ -187,7 +205,6 @@ which are defined as follows (only the new parts are shown):
 ; | 'char=?
 ; | 'boolean=?
 ; | '+
-; | '-
 )
 
 The lexer will take care of reading the @tt{#lang racket} header and
@@ -207,7 +224,7 @@ the module:
 As an example, @racket[parse] should produce @racket['(add1 (sub1 7))]
 if given
 
-@racketblock['(lparen (prim1 add1) lparen (prim1 sub1) 7 rparen rparen eof)]
+@racketblock['(lparen (prim add1) lparen (prim sub1) 7 rparen rparen eof)]
 
 You should not need to make any changes to @tt{lex.rkt}.
 
