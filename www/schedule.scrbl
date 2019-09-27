@@ -39,7 +39,7 @@
 		     @secref["Hustle"])
                
                (list @wk{10/1}
-	       	     "A5" @;seclink["Assignment 5"]{A5}                     
+	       	     @seclink["Assignment 5"]{A5}                     
                      @elem{TBD}
                      'cont)
                
