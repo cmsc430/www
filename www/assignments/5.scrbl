@@ -105,7 +105,7 @@ two booleans are equal.}
 
 @section[#:tag-prefix "a5-" #:style 'unnumbered]{Extending your Parser, yet again!}
 
-@bold{CHANGE:} There have been a couple of ommissions in the grammar
+@bold{CHANGE:} There have been a couple of omissions in the grammar
 and the code given to you for the parser.  The grammar has been
 (hopefully) fixed and I have decided to release the code for the
 parser, so you shouldn't have to make changes to it.  If you have
