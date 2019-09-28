@@ -105,20 +105,19 @@ two booleans are equal.}
 
 @section[#:tag-prefix "a5-" #:style 'unnumbered]{Extending your Parser, yet again!}
 
-@margin-note{@bold{CHANGE:} This grammar was changed slightly on
-Friday 9/27 and 4:40PM.  The original grammar did not have binary
-subtraction primitive @tt{-}, only the unary negation @tt{-}
-primitive.  The grammar has been fixed and the code in @tt{lex.rkt}
-and @tt{parse.rkt} has been updated.  If you clone the repository
-after this time, you have the changes.  If you cloned before, you can
-download the udpated 
-@link["https://raw.githubusercontent.com/cmsc430/assign05/master/lex.rkt"]{@tt{lex.rkt}}
-and
-@link["https://raw.githubusercontent.com/cmsc430/assign05/master/parse.rkt"]{@tt{parse.rkt}} files.
-You can see a diff to the files
-@link["https://github.com/cmsc430/assign05/commit/22f7a64f1419bc69b19d5ff1c8845e583fbf9b1c"]{here}.}
+@bold{CHANGE:} There have been a couple of ommissions in the grammar
+and the code given to you for the parser.  The grammar has been
+(hopefully) fixed and I have decided to release the code for the
+parser, so you shouldn't have to make changes to it.  If you have
+already cloned the repository and starting working on it, just replace
+your @tt{parse.rkt} and @tt{lex.rkt} with these files:
 
+@link["https://raw.githubusercontent.com/cmsc430/assign05/master/parse.rkt"]{https://raw.githubusercontent.com/cmsc430/assign05/master/parse.rkt}
 
+@link["https://raw.githubusercontent.com/cmsc430/assign05/master/lex.rkt"]{https://raw.githubusercontent.com/cmsc430/assign05/master/lex.rkt}
+
+If you have not yet accepted the assignment, these changes should
+already be included in your code when you do.
 
 
 Extend your Fraud+ parser for the Hustle+ language based on the following
@@ -130,6 +129,7 @@ grammar:
         |  boolean
 	|  variable
         |  string
+        |  empty
         |  ( <compound> )
 	|  [ <compound> ]
 
@@ -145,7 +145,7 @@ grammar:
          |  box | unbox | car | cdr | string-length
 
 <prim2> ::= make-string | string-ref | = | < | <= 
-         |  char=? | boolean=? | +
+         |  char=? | boolean=? | + | cons
 
 <maybe-expr> ::= 
               |  <expr>
@@ -172,6 +172,7 @@ which are defined as follows (only the new parts are shown):
 (racketblock
 ; type Token =
 ; ...
+; | '()
 ; | String
 
 ; type Prim = Prim1 | Prim2 | '-
@@ -205,6 +206,7 @@ which are defined as follows (only the new parts are shown):
 ; | 'char=?
 ; | 'boolean=?
 ; | '+
+; | 'cons
 )
 
 The lexer will take care of reading the @tt{#lang racket} header and
