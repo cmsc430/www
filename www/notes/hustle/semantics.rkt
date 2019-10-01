@@ -158,7 +158,7 @@
 
   (test-judgment-holds (𝑯 (box 7) (box 7)))
   (test-judgment-holds (𝑯 (unbox (box 7)) 7))
-  (test-judgment-holds (𝑯 (unbox 7) 'err))
+  (test-judgment-holds (𝑯 (unbox 7) err))
 
   (test-equal (term (convert '())) '())
   (test-equal (term (convert (cons 1 2))) '(1 . 2)))
