@@ -7,7 +7,7 @@
 
 @(require "../notes/ev.rkt")
 
-@bold{Due: Thurs, Oct 3, 11:59PM}
+@bold{Due: Thurs, Oct 3, 11:59PM (EXTENDED: Sun, Oct 6, 11:59PM)}
 
 @(define repo "https://classroom.github.com/a/Qsw0mqpL")
 
