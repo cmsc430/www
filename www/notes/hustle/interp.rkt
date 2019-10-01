@@ -3,9 +3,9 @@
 
 ;; type Value =
 ;; ....
+;; | (box Value)
 ;; | '()
 ;; | (cons Value Value)
-
 
 ;; Expr -> Answer
 (define (interp e)
@@ -45,7 +45,9 @@
 ;; Any -> Boolean
 (define (prim? x)
   (and (symbol? x)
-       (memq x '(add1 sub1 + - zero? cons car cdr))))
+       (memq x '(add1 sub1 + - zero?
+                      ;; New for Hustle
+                      box unbox cons car cdr))))
 
 ;; Any -> Boolean
 (define (value? x)
@@ -65,6 +67,9 @@
     [(list 'zero? (? integer? i0)) (zero? i0)]
     [(list '+ (? integer? i0) (? integer? i1)) (+ i0 i1)]
     [(list '- (? integer? i0) (? integer? i1)) (- i0 i1)]
+    ;; New for Hustle
+    [(list 'box v0) (box v0)]
+    [(list 'unbox (? box? v0)) (unbox v0)]    
     [(list 'cons v0 v1) (cons v0 v1)]
     [(list 'car (cons v0 v1)) v0]
     [(list 'cdr (cons v0 v1)) v1]
