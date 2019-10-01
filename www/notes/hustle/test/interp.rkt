@@ -28,6 +28,13 @@
 (check-equal? (run '(zero? 0)) #t)
 (check-equal? (run '(zero? 1)) #f)
 
+
+;; Hustle tests
+(check-equal? (run '(box 8)) (box 8))
+(check-equal? (run '(unbox (box 8))) 8)
+(check-equal? (run '(unbox 8)) 'err)
+
+
 ;; check totality of interpreter
 (redex-check H e
              (check-not-exn (lambda () (run (term e))))

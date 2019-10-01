@@ -5,8 +5,8 @@
 
 (define-extended-language H G
   (p2 ::= .... cons)
-  (p1 ::= .... car cdr)
-  (v ::= .... (cons v v) '()))
+  (p1 ::= .... box unbox car cdr)
+  (v ::= .... (box v) (cons v v) '()))
 
 (module+ test
   (test-equal (redex-match? H e (term '())) #t)
@@ -72,9 +72,11 @@
   [(𝑯-𝒑𝒓𝒊𝒎 (zero? i)) #f]
   [(𝑯-𝒑𝒓𝒊𝒎 (+ i_0 i_1)) ,(+ (term i_0) (term i_1))]
   [(𝑯-𝒑𝒓𝒊𝒎 (- i_0 i_1)) ,(- (term i_0) (term i_1))]
+  [(𝑯-𝒑𝒓𝒊𝒎 (box v)) (box v)]
+  [(𝑯-𝒑𝒓𝒊𝒎 (unbox (box v))) v]
   [(𝑯-𝒑𝒓𝒊𝒎 (cons v_1 v_2)) (cons v_1 v_2)]
   [(𝑯-𝒑𝒓𝒊𝒎 (car (cons v_1 v_2))) v_1]
-  [(𝑯-𝒑𝒓𝒊𝒎 (cdr (cons v_1 v_2))) v_2]
+  [(𝑯-𝒑𝒓𝒊𝒎 (cdr (cons v_1 v_2))) v_2]  
   [(𝑯-𝒑𝒓𝒊𝒎 _) err])
 
 (define-metafunction H
@@ -100,10 +102,11 @@
   [(is-false v)  #f])
 
 
-;; Convert v to using Racket pairs and null
+;; Convert v to using Racket pairs, boxes, and null
 (define-metafunction H
   convert : a -> any
   [(convert '()) ()]
+  [(convert (box v_0)) ,(box (term (convert v_0)))]
   [(convert (cons v_0 v_1)) ,(cons (term (convert v_0)) (term (convert v_1)))]
   [(convert a) a])
 
@@ -152,6 +155,10 @@
   (test-judgment-holds (𝑯 (cdr (cons 1 2)) 2))
   (test-judgment-holds (𝑯 (cdr (cons 1 (cons 2 '()))) (cons 2 '())))
   (test-judgment-holds (𝑯 (car (cons (add1 7) '())) 8))
+
+  (test-judgment-holds (𝑯 (box 7) (box 7)))
+  (test-judgment-holds (𝑯 (unbox (box 7)) 7))
+  (test-judgment-holds (𝑯 (unbox 7) err))
 
   (test-equal (term (convert '())) '())
   (test-equal (term (convert (cons 1 2))) '(1 . 2)))
