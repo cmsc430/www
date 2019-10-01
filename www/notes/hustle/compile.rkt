@@ -1,7 +1,7 @@
 #lang racket
 (provide (all-defined-out))
 
-;; An immediate is anything ending in #b0000
+;; An immediate is anything ending in #b000
 ;; All other tags in mask #b111 are pointers
 
 (define result-shift     3)
@@ -179,7 +179,6 @@
       ,@c0
       ,@assert-integer
       (add rax (offset rsp ,(- (add1 (length c))))))))
-
 
 ;; Expr Expr CEnv -> Asm
 (define (compile-- e0 e1 c)

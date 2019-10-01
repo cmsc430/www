@@ -29,6 +29,7 @@ int main(int argc, char** argv) {
   int64_t result = entry(heap);  
   print_result(result);
   printf("\n");
+  free(heap);
   return 0;
 }
 
@@ -95,5 +96,3 @@ void print_pair(int64_t a) {
     print_result(cdr);
   }
 }
-
-    
