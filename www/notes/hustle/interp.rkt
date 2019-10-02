@@ -47,7 +47,7 @@
   (and (symbol? x)
        (memq x '(add1 sub1 + - zero?
                       ;; New for Hustle
-                      box unbox cons car cdr))))
+                      box unbox empty? cons car cdr))))
 
 ;; Any -> Boolean
 (define (value? x)
@@ -69,7 +69,8 @@
     [(list '- (? integer? i0) (? integer? i1)) (- i0 i1)]
     ;; New for Hustle
     [(list 'box v0) (box v0)]
-    [(list 'unbox (? box? v0)) (unbox v0)]    
+    [(list 'unbox (? box? v0)) (unbox v0)]
+    [(list 'empty? v0) (empty? v0)]    
     [(list 'cons v0 v1) (cons v0 v1)]
     [(list 'car (cons v0 v1)) v0]
     [(list 'cdr (cons v0 v1)) v1]
