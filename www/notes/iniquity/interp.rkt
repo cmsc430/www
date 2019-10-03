@@ -80,19 +80,19 @@
 
 ;; Prim (Listof Value) -> Answer
 (define (interp-prim p vs)
-  (match* (p vs)
-    [('add1 (? integer? i0))  (add1 i0)]
-    [('sub1 (? integer? i0))  (sub1 i0)]
-    [('zero? (? integer? i0)) (zero? i0)]
-    [('box v0)                (box v0)]
-    [('unbox (? box? v0))     (unbox v0)]
-    [('empty? v0)             (empty? v0)]
-    [('cons v0 v1)            (cons v0 v1)]
-    [('car (cons v0 v1))      v0]
-    [('cdr (cons v0 v1))      v1]
-    [('+ (? integer? i0) (? integer? i1))
+  (match (cons p vs)
+    [(list 'add1 (? integer? i0))  (add1 i0)]
+    [(list 'sub1 (? integer? i0))  (sub1 i0)]
+    [(list 'zero? (? integer? i0)) (zero? i0)]
+    [(list 'box v0)                (box v0)]
+    [(list 'unbox (? box? v0))     (unbox v0)]
+    [(list 'empty? v0)             (empty? v0)]
+    [(list 'cons v0 v1)            (cons v0 v1)]
+    [(list 'car (cons v0 v1))      v0]
+    [(list 'cdr (cons v0 v1))      v1]
+    [(list '+ (? integer? i0) (? integer? i1))
      (+ i0 i1)]
-    [('- (? integer? i0) (? integer? i1))
+    [(list '- (? integer? i0) (? integer? i1))
      (- i0 i1)]
     [_ 'err]))
 
