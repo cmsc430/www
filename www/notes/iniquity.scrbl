@@ -398,6 +398,9 @@ Using this function, we can touch up our code:
       ret)))
 )
 
+
+@section[#:tag-prefix "iniquity"]{A Compiler for Iniquity}
+
 The last piece of the puzzle is the function for emitting code for a
 complete program:
 
