@@ -14,6 +14,7 @@
 @include-section{notes/interlude1.scrbl}
 @include-section{notes/grift.scrbl}
 @include-section{notes/hustle.scrbl}
+@include-section{notes/iniquity.scrbl}
 @;{
 @include-section{notes/5.scrbl}
 @include-section{notes/6.scrbl}

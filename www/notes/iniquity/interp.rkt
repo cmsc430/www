@@ -37,10 +37,10 @@
        [v
         (interp-env e1 (ext r x v) ds)])]
     
-    [(list (? (defns-lookup ds) f) es ...)
+    [`(,f . ,es)
      (match (interp-env* es r ds)
        [(list vs ...)
-        (match ((defns-lookup ds) f)
+        (match (defns-lookup ds f)
           [`(define (,f ,xs ...) ,e)
            ; check arity matches
            (if (= (length xs) (length vs))
@@ -48,11 +48,10 @@
                'err)])]
        [_ 'err])]))
 
-;; (Listof Defn) -> (Symbol -> Defn)
-(define (defns-lookup ds)
-  (λ (f)
-    (findf (λ (d) (eq? (first (second d)) f))
-           ds)))
+;; (Listof Defn) Symbol -> Defn
+(define (defns-lookup ds f)
+  (findf (λ (d) (eq? (first (second d)) f))
+         ds))
 
 ;; [Listof Expr] REnv -> [Listof Answer]
 (define (interp-env* es r ds)
