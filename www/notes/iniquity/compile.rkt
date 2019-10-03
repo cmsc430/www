@@ -46,7 +46,7 @@
 ;; Compile e as the entry point
 (define (compile-entry e)
   `(entry
-    ,@(compile-entry e '())
+    ,@(compile-e e '())
     ret
 
     err
