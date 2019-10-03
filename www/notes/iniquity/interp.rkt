@@ -5,6 +5,8 @@
 ;; | `(begin ,@(Listof Defn) ,Expr)
 ;; | Expr
 
+;; type Defn = `(define (,Variable ,@(Listof Variable)) ,Expr)
+
 ;; Prog -> Answer
 (define (interp p)
   (match p
