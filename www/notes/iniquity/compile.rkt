@@ -37,13 +37,14 @@
   (match p
     [(list 'begin `(define (,fs . ,xss) ,es) ... e0)
      (let ((ds (compile-defines fs xss es))
-           (c0 (compile-l e0)))
+           (c0 (compile-entry e0)))
        `(,@c0
          ,@ds))]
-    [e (compile-l e)]))
+    [e (compile-entry e)]))
 
 ;; Expr -> Asm
-(define (compile-l e)
+;; Compile e as the entry point
+(define (compile-entry e)
   `(entry
     ,@(compile-e e '())
     ret
@@ -329,6 +330,4 @@
          (string->list (symbol->string s))))
     "_"
     (number->string (eq-hash-code s) 16))))
-
-
 
