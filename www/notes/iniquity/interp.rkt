@@ -14,14 +14,15 @@
      (interp-env e '() ds)]
     [e (interp-env e '() '())]))
 
-;; Expr REnv (Listof Defn) -> Integer
+;; Expr REnv (Listof Defn) -> Answer
 (define (interp-env e r ds)
   (match e
     [''() '()]
     [(? value? v) v]
     [(list (? prim? p) es ...)
-     (let ((as (interp-env* es r ds)))
-       (interp-prim p as))]
+     (match (interp-env* es r ds)
+       [(list vs ...) (interp-prim p vs)]
+       [_ 'err])]
     [`(if ,e0 ,e1 ,e2)
      (match (interp-env e0 r ds)
        ['err 'err]
@@ -50,16 +51,17 @@
 
 ;; (Listof Defn) Symbol -> Defn
 (define (defns-lookup ds f)
-  (findf (λ (d) (eq? (first (second d)) f))
+  (findf (match-lambda [`(define (,g . ,_) ,_) (eq? f g)])
          ds))
 
-;; [Listof Expr] REnv -> [Listof Answer]
+;; (Listof Expr) REnv -> (Listof Value) | 'err
 (define (interp-env* es r ds)
   (match es
     ['() '()]
     [(cons e es)
-     (cons (interp-env e r ds)
-           (interp-env* es r ds))]))
+     (match (interp-env e r ds)
+       ['err 'err]
+       [v (cons v (interp-env* es r ds))])]))
 
 ;; Any -> Boolean
 (define (prim? x)
@@ -76,21 +78,22 @@
            (value? (car x))
            (value? (cdr x)))))
 
-;; Prim [Listof Answer] -> Answer
-(define (interp-prim p as)
-  (match (cons p as)
-    [(list p (? value?) ... 'err _ ...) 'err]
-    [(list 'add1 (? integer? i0)) (+ i0 1)]
-    [(list 'sub1 (? integer? i0)) (- i0 1)]
+;; Prim (Listof Value) -> Answer
+(define (interp-prim p vs)
+  (match (cons p vs)
+    [(list 'add1 (? integer? i0))  (add1 i0)]
+    [(list 'sub1 (? integer? i0))  (sub1 i0)]
     [(list 'zero? (? integer? i0)) (zero? i0)]
-    [(list '+ (? integer? i0) (? integer? i1)) (+ i0 i1)]
-    [(list '- (? integer? i0) (? integer? i1)) (- i0 i1)]
-    [(list 'box v0) (box v0)]
-    [(list 'unbox (? box? v0)) (unbox v0)]
-    [(list 'empty? v0) (empty? v0)]
-    [(list 'cons v0 v1) (cons v0 v1)]
-    [(list 'car (cons v0 v1)) v0]
-    [(list 'cdr (cons v0 v1)) v1]
+    [(list 'box v0)                (box v0)]
+    [(list 'unbox (? box? v0))     (unbox v0)]
+    [(list 'empty? v0)             (empty? v0)]
+    [(list 'cons v0 v1)            (cons v0 v1)]
+    [(list 'car (cons v0 v1))      v0]
+    [(list 'cdr (cons v0 v1))      v1]
+    [(list '+ (? integer? i0) (? integer? i1))
+     (+ i0 i1)]
+    [(list '- (? integer? i0) (? integer? i1))
+     (- i0 i1)]
     [_ 'err]))
 
 ;; Env Variable -> Answer 
