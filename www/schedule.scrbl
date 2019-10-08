@@ -40,11 +40,11 @@
                
                (list @wk{10/1}
 	       	     @seclink["Assignment 5"]{A5}                     
-                     @elem{TBD}
+                     @secref["Iniquity"]
                      'cont)
                
                (list @wk{10/8}
-	       	     @bold{M1}
+	       	     @bold{@seclink["Midterm_1"]{M1}}
                      @elem{TBD}
                      'cont)
                

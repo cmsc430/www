@@ -131,7 +131,7 @@ subexpressions.  The subexpressions are evaluated from left to right
 until a subexpression evaluates to a @racket[#f] value, which is
 produced by @racket[and].  Otherwise, @racket[and] produces the value
 of the last subexpression.  If there are no subexpressions, then
-@racket[#f] is produced.
+@racket[#t] is produced.
 
 To make things interesting, you should not use Racket's @racket[and]
 and @racket[or] in @racket[interp].
