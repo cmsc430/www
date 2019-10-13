@@ -8,3 +8,4 @@
 @include-section{assignments/3.scrbl}
 @include-section{assignments/4.scrbl}
 @include-section{assignments/5.scrbl}
+@include-section{assignments/6.scrbl}
