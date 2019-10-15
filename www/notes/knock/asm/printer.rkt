@@ -31,7 +31,7 @@
     [`(neg ,a1)
      (string-append "\tneg " (arg->string a1) "\n")]
     [`(call ,l)
-     (string-append "\tcall " (label->string l) "\n")]
+     (string-append "\tcall " (arg->string l) "\n")]
     [`(push ,r)
      (string-append "\tpush " (reg->string r) "\n")]    
     [l (string-append (label->string l) ":\n")]))
