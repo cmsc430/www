@@ -18,11 +18,9 @@
 (define imm-type-bool    (arithmetic-shift #b01 result-shift))
 (define imm-type-char    (arithmetic-shift #b10 result-shift))
 (define imm-type-empty   (arithmetic-shift #b11 result-shift))
-
-
-
 (define imm-val-false    imm-type-bool)
-(define imm-val-true     (bitwise-ior (arithmetic-shift 1 (add1 imm-shift)) imm-type-bool))
+(define imm-val-true
+  (bitwise-ior (arithmetic-shift 1 (add1 imm-shift)) imm-type-bool))
 
 ;; Allocate in 64-bit (8-byte) increments, so pointers
 ;; end in #b000 and we tag with #b001 for boxes, etc.
@@ -51,12 +49,10 @@
   `(entry
     ,@(compile-tail-e e '())
     ret
-
     err
     (push rbp)
-    (call error)
-    ret))
-
+    (call error)))
+  
 ;; Expr CEnv -> Asm
 ;; Compile an expression in tail position
 (define (compile-tail-e e c)
