@@ -31,9 +31,11 @@
     [`(neg ,a1)
      (string-append "\tneg " (arg->string a1) "\n")]
     [`(call ,l)
-     (string-append "\tcall " (arg->string l) "\n")]
+     (string-append "\tcall " (label->string l) "\n")]
     [`(push ,r)
-     (string-append "\tpush " (reg->string r) "\n")]    
+     (string-append "\tpush " (reg->string r) "\n")]
+    [`(pop ,r)
+     (string-append "\tpop " (reg->string r) "\n")]        
     [l (string-append (label->string l) ":\n")]))
 
 (define (opcode2? x)
@@ -53,7 +55,7 @@
 ;; Any -> Boolean
 (define (reg? x)
   (and (symbol? x)
-       (memq x '(rax rbx rcx rsp rdi rip))))
+       (memq x '(rax rbx rcx rdx rsp rdi rip rbp rsi r8 r9 r10 r11 r12 r13 r14 r15))))
 
 ;; Reg -> String
 (define (reg->string r)
@@ -74,6 +76,7 @@
     (display 
      (string-append "\tglobal " (label->string g) "\n"
                     "\tdefault rel\n"
-                    "\textern " (label->string 'error) "\n"                    
+                    "\textern " (label->string 'error) "\n"
+                    "\textern " (label->string 'plus_two) "\n"                                        
                     "\tsection .text\n"
                     (asm->string a)))))
