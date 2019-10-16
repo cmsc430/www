@@ -10,7 +10,7 @@
 (define type-box         #b001)
 (define type-pair        #b010)
 (define type-string      #b011)
-(define type-proc        #b100) ;; <-- NEW: procedure value: points to function label in memory
+(define type-proc        #b100) ;; <-- NEW: procedure value
 
 (define imm-shift        (+ 2 result-shift))
 (define imm-type-mask    (sub1 (arithmetic-shift 1 imm-shift)))
