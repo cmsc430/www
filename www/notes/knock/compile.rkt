@@ -10,7 +10,7 @@
 (define type-box         #b001)
 (define type-pair        #b010)
 (define type-string      #b011)
-(define type-proc        #b100)
+(define type-proc        #b100) ;; <-- NEW: procedure value
 
 (define imm-shift        (+ 2 result-shift))
 (define imm-type-mask    (sub1 (arithmetic-shift 1 imm-shift)))
@@ -18,11 +18,9 @@
 (define imm-type-bool    (arithmetic-shift #b01 result-shift))
 (define imm-type-char    (arithmetic-shift #b10 result-shift))
 (define imm-type-empty   (arithmetic-shift #b11 result-shift))
-
-
-
 (define imm-val-false    imm-type-bool)
-(define imm-val-true     (bitwise-ior (arithmetic-shift 1 (add1 imm-shift)) imm-type-bool))
+(define imm-val-true
+  (bitwise-ior (arithmetic-shift 1 (add1 imm-shift)) imm-type-bool))
 
 ;; Allocate in 64-bit (8-byte) increments, so pointers
 ;; end in #b000 and we tag with #b001 for boxes, etc.
