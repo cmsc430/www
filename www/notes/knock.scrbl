@@ -56,10 +56,88 @@ a function value.
 We will end up eliminating them in future versions of the compiler;
 they are simply a crutch for now.
 
-
 @section[#:tag-prefix "knock"]{A Compiler with Function pointers}
 
+The main idea in making functions into values is we will need to have
+a representation of functions.  We will use a representation similar
+to boxes: functions will be heap allocated data structures.  What will
+be stored in the heap?  The address of the label of the function.
+
+A function reference, @racket[(fun _f)], will allocate a 64-bit
+segment of the heap, store the location of the function's label,
+i.e. a pointer to the instructions for the function, and tag the
+pointer as a ``procedure value,'' which is new, disjoint kind of
+value.
+
+@#reader scribble/comment-reader
+(racketblock
+;; Variable -> Asm
+(define (compile-fun f)
+  `(; rax <- address of label f
+    (lea rax (offset ,(symbol->label f) 0))
+    ; write in to heap
+    (mov (offset rdi 0) rax)
+    ; rax <- pointer into heap
+    (mov rax rdi)
+    ; tag as procedure pointer
+    (or rax ,type-proc)
+    ; alloc
+    (add rdi 8)))
+)
+
+A function call, @racket[(call _e0 _es ...)] will evaluate on the
+subexpressions.  The @racket[_e0] expression should produce a
+function, i.e. tagged pointer.  We can erase the tag to compute the
+address in the heap.  Dereferencing that location, gets us the label
+address, which can then jump to.
+
+@#reader scribble/comment-reader
+(racketblock
+;; Expr (Listof Expr) CEnv -> Asm
+(define (compile-fun-call e0 es c)
+  (let ((cs (compile-es es (cons #f c)))
+        (c0 (compile-e e0 c))
+        (i (- (add1 (length c))))
+        (stack-size (* 8 (length c))))
+    `(,@c0
+      ; save f in stack    
+      (mov (offset rsp ,i) rax)
+      ,@cs
+      ; restore f      
+      (mov rax (offset rsp ,i))      
+      ,@assert-proc
+      (sub rsp ,stack-size)
+      (xor rax ,type-proc)
+      ; call f
+      (call (offset rax 0))
+      (add rsp ,stack-size))))
+)
+
+A tail call version of the above can be defined as:
+
+@#reader scribble/comment-reader
+(racketblock
+;; Expr (Listof Expr) CEnv -> Asm
+(define (compile-fun-tail-call e0 es c)
+  (let ((cs (compile-es es (cons #f c)))
+        (c0 (compile-e e0 c))
+        (i (- (add1 (length c)))))
+    `(,@c0
+      (mov (offset rsp ,i) rax)
+      ,@cs
+      (mov rax (offset rsp ,i))
+      ,@(move-args (length es) i)
+      ,@assert-proc
+      (xor rax ,type-proc)
+      (jmp (offset rax 0)))))
+)
+
+The complete compiler:
+
 @codeblock-include["knock/compile.rkt"]
+
+We can verify that the compiler works for programs that use functions
+like before:
 
 @ex[
 (asm-interp
@@ -70,10 +148,19 @@ they are simply a crutch for now.
                     (call (fun f) 10))))
 ]
 
+But it also works when functions are put in lists:
+
+@ex[
+(asm-interp
+   (compile '(begin (define (f x) x)
+                    (call (car (cons (fun f) '())) 7))))
+]
+
+And functions that produce functions:
+
 @ex[
 (asm-interp
    (compile '(begin (define (f x) (fun h))
                     (define (h y) y)
                     (call (call (fun f) 5) 9))))
-
 ]
