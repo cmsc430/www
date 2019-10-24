@@ -46,12 +46,12 @@
                (list @wk{10/8}
 	       	     @bold{@seclink["Midterm_1"]{M1}}
                      @elem{No lecture (exam)}
-                     'cont)
+                     @secref["Jig"])
                
                (list @wk{10/15}
 	       	     @seclink["Assignment 6"]{A6}
-                     @elem{TBD}
-                     'cont)
+                     @secref["Knock"]
+                     @secref["Loot"])
                
                (list @wk{10/22}
 	       	     "A7"	       
