@@ -37,26 +37,26 @@
 
 ;; Expr -> Asm
 (define (compile e)
-  (let ((le (label-lambda e)))
+  (let ((le (label-λ e)))
     `(entry
       ,@(compile-tail-e le '())
       ret
-      ,@(compile-lambda-definitions (lambdas le))    
+      ,@(compile-λ-definitions (λs le))
       err
       (push rbp)
       (call error)
       ret)))
 
 ;; (Listof Lambda) -> Asm
-(define (compile-lambda-definitions ls)
-  (apply append (map compile-lambda-definition ls)))
+(define (compile-λ-definitions ls)
+  (apply append (map compile-λ-definition ls)))
 
 ;; Lambda -> Asm
-(define (compile-lambda-definition l)
+(define (compile-λ-definition l)
   (match l
     [`(λ ,xs ',f ,e0)
-     (let ((c0 (compile-tail-e e0 (append (reverse (fvs/unique l)) (reverse xs) ))))
-       `(,(symbol->label f)
+     (let ((c0 (compile-tail-e e0 (reverse (append xs (fvs l))))))
+       `(,f
          ,@c0
          ret))]))
 
@@ -78,7 +78,7 @@
     [`(if ,e0 ,e1 ,e2)     (compile-tail-if e0 e1 e2 c)]
     [`(+ ,e0 ,e1)          (compile-+ e0 e1 c)]
     [`(let ((,x ,e0)) ,e1) (compile-tail-let x e0 e1 c)]
-    [`(λ ,xs ',l ,e0)      (compile-lambda xs l e0 c)]
+    [`(λ ,xs ',l ,e0)      (compile-λ xs l e0 c)]
     [`(,e . ,es)           (compile-tail-call e es c)]))
 
 ;; LExpr CEnv -> Asm
@@ -99,26 +99,24 @@
     [`(if ,e0 ,e1 ,e2)     (compile-if e0 e1 e2 c)]
     [`(+ ,e0 ,e1)          (compile-+ e0 e1 c)]
     [`(let ((,x ,e0)) ,e1) (compile-let x e0 e1 c)]
-    [`(λ ,xs ',l ,e0)      (compile-lambda xs l e0 c)]
+    [`(λ ,xs ',l ,e0)      (compile-λ xs l e0 c)]
     [`(,e . ,es)           (compile-call e es c)]))
 
-(define (compile-lambda xs f e0 c)
-  (let ((fvs (fvs/unique `(λ ,xs ',f ,e0))))
-    `(; rax <- address of label f
-      (lea rax (offset ,(symbol->label f) 0))
-      ; write in to heap
+;; (Listof Variable) Label Expr CEnv -> Asm
+(define (compile-λ xs f e0 c)
+  (let ((fvs (fvs `(λ ,xs ',f ,e0))))
+    `(;; Save label address
+      (lea rax (offset ,f 0))
       (mov (offset rdi 0) rax)
       
       ;; Save the environment
       (mov rax ,(length fvs))
-      (mov (offset rdi 1) rax) ; save length
+      (mov (offset rdi 1) rax)
       ,@(copy-env-to-heap fvs c 2)
       
-      ; rax <- pointer into heap
+      ;; Return a pointer to the closure
       (mov rax rdi)
-      ; tag as procedure pointer
       (or rax ,type-proc)
-      ; alloc
       (add rdi ,(* 8 (+ 2 (length fvs)))))))
 
 ;; (Listof Variable) CEnv Natural -> Asm
