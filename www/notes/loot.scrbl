@@ -12,7 +12,7 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "loot" f))))))
-	   '("interp.rkt" "compile.rkt" #;"asm/interp.rkt" #;"asm/printer.rkt"))
+	   '("interp.rkt" "compile.rkt" "syntax.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
 @title[#:tag "Loot"]{Loot: lambda the ultimate}
 
@@ -478,3 +478,350 @@ And we get the same results:
 
 @section[#:tag-prefix "loot"]{Compiling Loot}
 
+Compiling a @racket[λ]-expression will involve generating two
+different chunks of instructions:
+
+@itemlist[
+
+@item{one to implement the function, i.e. the code to be executed when
+the function created by the @racket[λ]-expression is called, and}
+
+@item{one to create a closure, i.e. to capture the environment at the
+point the @racket[λ]-expression is evaluated.}
+
+]
+
+@section[#:tag-prefix "loot"]{Compiling Function Definitions}
+
+The first part closely follows the appoach of defining a function
+definition @racket[(define (_f _x ...) _e)] from our previous compilers.
+
+Ther are two important differences from the past though:
+
+@itemlist[
+
+@item{@racket[λ]-expressions don't have a name, and}
+
+@item{the body of the @racket[λ]-expression may reference variables
+bound outside of the @racket[λ]-expression.}
+
+]
+
+To deal with the first issue, we first make a pass over the program
+inserting computed names for each @racket[λ]-expression.
+
+To accomodate this, we will introduce the following data type for
+``labelled'' expressions:
+
+@#reader scribble/comment-reader
+(racketblock
+;; type LExpr =
+;; ....
+;; | `(λ ,Formals ',Symbol ,Expr)
+)
+
+An @tt{LExpr} is just like a @tt{Expr} except that
+@racket[λ]-expressions have the form like @racket[(λ (x) 'fred (+ x
+x))].  The symbol @racket['fred] here is used to give a name to the
+@racket[λ]-expression.  The use of @racket[quote] is so that
+@tt{LExprs} are still a valid subset of Racket expressions.
+
+The first step of the compiler will be to label every
+@racket[λ]-expression using the following function:
+
+@#reader scribble/comment-reader
+(racketblock
+;; Expr -> LExpr
+(define (label-λ e)
+  (match e
+    [(? symbol? x)         x]
+    [(? imm? i)            i]
+    [`(box ,e0)            `(box ,(label-λ e0))]
+    [`(unbox ,e0)          `(unbox ,(label-λ e0))]
+    [`(cons ,e0 ,e1)       `(cons ,(label-λ e0) ,(label-λ e1))]
+    [`(car ,e0)            `(car ,(label-λ e0))]
+    [`(cdr ,e0)            `(cdr ,(label-λ e0))]
+    [`(add1 ,e0)           `(add1 ,(label-λ e0))]
+    [`(sub1 ,e0)           `(sub1 ,(label-λ e0))]
+    [`(zero? ,e0)          `(zero? ,(label-λ e0))]
+    [`(empty? ,e0)         `(empty? ,(label-λ e0))]
+    [`(if ,e0 ,e1 ,e2)     `(if ,(label-λ e0) ,(label-λ e1) ,(label-λ e2))]
+    [`(+ ,e0 ,e1)          `(+ ,(label-λ e0) ,(label-λ e1))]
+    [`(let ((,x ,e0)) ,e1) `(let ((,x ,(label-λ e0))) ,(label-λ e1))]
+    [`(λ ,xs ,e0)          `(λ ,xs ',(gensym) ,(label-λ e0))]
+    [`(,e . ,es)           `(,(label-λ e) ,@(map label-λ es))]))
+)
+
+Here it is at work:
+
+@ex[
+(label-λ
+  '(λ (t)
+    ((λ (f) (t (λ (z) ((f f) z))))
+     (λ (f) (t (λ (z) ((f f) z)))))))
+]
+
+Now turning to the second issue--@racket[λ]-expression may reference
+variables bound outside of the expression---let's consider how to
+compile something like @racket[(λ (x) z)]?
+
+There are many possible solutions, but perhaps the simplest is to
+compile this as a function that takes @emph{two} arguments,
+i.e. compile it as if it were: @racket[(λ (x z) z)].  The idea is that
+a @racket[λ]-expression defines a function of both explicit arguments
+(the parameters) and implicit arguments (the free variables of the
+@racket[λ]-expression).
+
+This will have to work in concert with closure creation and function
+calls.  When the @racket[λ]-expression is evaluated, a closure will be
+created storing the value of @racket[z].  When the function is
+applied, the caller will need to retrieve that value and place it as
+the second argument on stack before calling the function's code.
+
+To implement this, we will need to compute the free variables, which
+we do with the following function:
+
+@#reader scribble/comment-reader
+(racketblock
+;; LExpr -> (Listof Variable)
+(define (fvs e)
+  (define (fvs e)
+    (match e
+      [(? symbol? x)         (list x)]
+      [(? imm? i)            '()]
+      [`(box ,e0)            (fvs e0)]
+      [`(unbox ,e0)          (fvs e0)]
+      [`(cons ,e0 ,e1)       (append (fvs e0) (fvs e1))]
+      [`(car ,e0)            (fvs e0)]
+      [`(cdr ,e0)            (fvs e0)]
+      [`(add1 ,e0)           (fvs e0)]
+      [`(sub1 ,e0)           (fvs e0)]
+      [`(zero? ,e0)          (fvs e0)]
+      [`(empty? ,e0)         (fvs e0)]
+      [`(if ,e0 ,e1 ,e2)     (append (fvs e0) (fvs e1) (fvs e2))]
+      [`(+ ,e0 ,e1)          (append (fvs e0) (fvs e1))]
+      [`(let ((,x ,e0)) ,e1) (append (fvs e0) (remq* (list x) (fvs e1)))]
+      [`(λ ,xs ,l ,e0)       (remq* xs (fvs e0))]
+      [`(,e . ,es)           (append (fvs e) (apply append (map fvs es)))]))          
+  (remove-duplicates (fvs e)))
+)
+
+We can now write the function that compiles a labelled
+@racket[λ]-expression into a function in assembly:
+
+@#reader scribble/comment-reader
+(racketblock
+;; Lambda -> Asm
+(define (compile-λ-definition l)
+  (match l
+    [`(λ ,xs ',f ,e0)
+     (let ((c0 (compile-tail-e e0 (reverse (append xs (fvs l))))))
+       `(,f
+         ,@c0
+         ret))]))
+)
+
+Here's what's emitted for a @racket[λ]-expression with a free variable:
+@ex[
+(compile-λ-definition '(λ (x) 'f z))
+]
+
+Notice that it's identical to a @racket[λ]-expression with an added
+parameter and no free variables:
+@ex[
+(compile-λ-definition '(λ (x z) 'f z))
+]
+
+The compiler will need to generate one such function for each
+@racket[λ]-expression in the program.  So we use a helper function for
+extracting all the @racket[λ]-expressions and another for compiling
+each of them:
+
+@#reader scribble/comment-reader
+(racketblock
+;; LExpr -> (Listof LExpr)
+;; Extract all the lambda expressions
+(define (λs e)
+  (match e
+    [(? symbol? x)         '()]
+    [(? imm? i)            '()]
+    [`(box ,e0)            (λs e0)]
+    [`(unbox ,e0)          (λs e0)]
+    [`(cons ,e0 ,e1)       (append (λs e0) (λs e1))]
+    [`(car ,e0)            (λs e0)]
+    [`(cdr ,e0)            (λs e0)]
+    [`(add1 ,e0)           (λs e0)]
+    [`(sub1 ,e0)           (λs e0)]
+    [`(zero? ,e0)          (λs e0)]
+    [`(empty? ,e0)         (λs e0)]
+    [`(if ,e0 ,e1 ,e2)     (append (λs e0) (λs e1) (λs e2))]
+    [`(+ ,e0 ,e1)          (append (λs e0) (λs e1))]
+    [`(let ((,x ,e0)) ,e1) (append (λs e0) (λs e1))]
+    [`(λ ,xs ,l ,e0)       (cons e (λs e0))]
+    [`(,e . ,es)           (append (λs e) (apply append (map λs es)))]))
+
+;; (Listof Lambda) -> Asm
+(define (compile-λ-definitions ls)
+  (apply append (map compile-λ-definition ls)))
+)
+
+
+The top-level @racket[compile] function now labels inserts labels and
+compiles all the @racket[λ]-expressions to functions:
+
+@#reader scribble/comment-reader
+(racketblock
+;; Expr -> Asm
+(define (compile e)
+  (let ((le (label-λ e)))
+    `(entry
+      ,@(compile-tail-e le '())
+      ret
+      ,@(compile-λ-definitions (λs le))
+      err
+      (push rbp)
+      (call error)
+      ret)))
+)
+
+What remains is the issue of compiling @racket[λ]-expressions to code
+to create a closure.
+
+@section[#:tag-prefix "loot"]{Save the Environment: Create a Closure!}
+
+We've already seen how to create a reference to a function pointer,
+enabling functions to be first-class values that can be passed around,
+returned from other functions, stored in data structures, etc.  The
+basic idea was to allocate a location in memory and save the address
+of a function label there.
+
+A closure is just this, plus the environment that needs to be restored
+with the function is called.  So representing a closure is fairly
+straightforward: we will allocate a location in memory and save the
+function label, plus each value that is needed from the environment.
+In order to keep track of how many values there are, we'll also store
+the length of the environment.
+
+Here's the function for emitting closure construction code:
+
+@#reader scribble/comment-reader
+(racketblock
+;; (Listof Variable) Label Expr CEnv -> Asm
+(define (compile-λ xs f e0 c)
+  (let ((fvs (fvs `(λ ,xs ',f ,e0))))
+    `(;; Save label address
+      (lea rax (offset ,f 0))
+      (mov (offset rdi 0) rax)
+      
+      ;; Save the environment
+      (mov rax ,(length fvs))
+      (mov (offset rdi 1) rax)
+      ,@(copy-env-to-heap fvs c 2)
+      
+      ;; Return a pointer to the closure
+      (mov rax rdi)
+      (or rax ,type-proc)
+      (add rdi ,(* 8 (+ 2 (length fvs)))))))
+)
+
+Compared the previous code we say for function pointer references, the
+only difference is the code to store the length and value of the free
+variables of the @racket[λ]-expression.  Also: the amount of memory
+allocated is no longer just a single cell, but depends on the number
+of free variables being closed over.
+
+The @racket[copy-env-to-heap] function generates instructions for
+dereferencing variables and copying them to the appropriate memory
+location where the closure is stored:
+
+@#reader scribble/comment-reader
+(racketblock
+;; (Listof Variable) CEnv Natural -> Asm
+(define (copy-env-to-heap fvs c i)
+  (match fvs
+    ['() '()]
+    [(cons x fvs)
+     `((mov rax (offset rsp ,(- (add1 (lookup x c)))))
+       (mov (offset rdi ,i) rax)
+       ,@(copy-env-to-heap fvs c (add1 i)))]))
+)
+
+That's all there is to closure construction!
+
+@section[#:tag-prefix "loot"]{Calling Functions}
+
+The last final peice of the puzzle is making function calls and
+closures work together.  Remember that a @racket[λ]-expression is
+compiled into a function that expects two sets of arguments on the
+stack: the first are the explicit arguments that given at the call
+site; the other arguments are the implicit arguments corresponding to
+free variables the @racket[λ]-expression being called.  The value of
+these arguments are given by the environment saved in the closure of
+the @racket[λ]-expressions.
+
+So the code generated for a function call needs to manage running each
+subexpression, the first of which should evaluate to a function (a
+pointer to a closure).  The arguments are saved on the stack, and then
+the values stored in the environment part of the closure need to be
+copied from the heap to the stack:
+
+@#reader scribble/comment-reader
+(racketblock
+;; LExpr (Listof LExpr) CEnv -> Asm
+(define (compile-call e0 es c)
+  (let ((cs (compile-es es (cons #f c)))
+        (c0 (compile-e e0 c))
+        (i (- (add1 (length c))))
+        (stack-size (* 8 (length c))))
+    `(,@c0
+      (mov (offset rsp ,i) rax)
+      ,@cs
+      (mov rax (offset rsp ,i))
+      ,@assert-proc
+      (xor rax ,type-proc)
+      (sub rsp ,stack-size)      
+      ,@(copy-closure-env-to-stack (add1 (length es)))
+      (call (offset rax 0))      
+      (add rsp ,stack-size))))
+)
+
+The only new bit is the use of @racket[copy-closure-env-to-stack].
+Unlike the closure construction code, in which we statically know what
+and how many variables to save in a closure, we must dynamically
+loop over the environment to move values to the stack:
+
+@#reader scribble/comment-reader
+(racketblock
+;; Natural -> Asm
+;; Copy closure's (in rax) env to stack skipping n spots
+(define (copy-closure-env-to-stack n)
+  (let ((copy-loop (gensym 'copy_closure))
+        (copy-done (gensym 'copy_done)))
+    `((mov r8 (offset rax 1)) ; length
+      (mov r9 rax)
+      (add r9 16)             ; start of env
+      (mov rcx rsp)           ; start of stack
+      (add rcx ,(- (* 8 (add1 n))))
+      ,copy-loop
+      (cmp r8 0)
+      (je ,copy-done)                  
+      (mov rbx (offset r9 0))       
+      (mov (offset rcx 0) rbx)
+      (sub r8 1)
+      (add r9 8)
+      (sub rcx 8)      
+      (jmp ,copy-loop)
+      ,copy-done)))
+)
+
+Let's try it out:
+
+@ex[
+(asm-interp (compile '((let ((x 8)) (λ (y) x)) 2)))
+(asm-interp (compile '(((λ (x) (λ (y) x)) 8) 2)))
+(asm-interp (compile '((λ (f) (f (f 0))) (λ (x) (add1 x)))))
+]
+
+And here's the complete compiler, including tail calls:
+
+@codeblock-include["loot/compile.rkt"]
