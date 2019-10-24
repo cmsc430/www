@@ -84,3 +84,16 @@
 (check-equal? (run '((λ (f) (f (f 0))) (λ (x) (add1 x)))) 2)
 (check-equal? (run '((let ((y 8)) (car (cons (λ (x) y) '()))) 2)) 8)
 (check-equal? (run '(let ((y 8)) ((car (cons (λ (x) y) '())) 2))) 8)
+(check-equal?
+ (run
+  '(((λ (t)
+       ((λ (f) (t (λ (z) ((f f) z))))
+        (λ (f) (t (λ (z) ((f f) z))))))
+     (λ (tri)
+       (λ (n)
+         (if (zero? n)
+             1
+             (+ n (tri (sub1 n)))))))
+    10))
+ 56)
+ 
