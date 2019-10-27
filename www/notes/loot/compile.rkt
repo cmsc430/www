@@ -37,7 +37,7 @@
 
 ;; Expr -> Asm
 (define (compile e)
-  (let ((le (label-λ e)))
+  (let ((le (label-λ (desugar e))))
     `(entry
       ,@(compile-tail-e le '())
       ret
@@ -78,7 +78,8 @@
     [`(if ,e0 ,e1 ,e2)     (compile-tail-if e0 e1 e2 c)]
     [`(+ ,e0 ,e1)          (compile-+ e0 e1 c)]
     [`(let ((,x ,e0)) ,e1) (compile-tail-let x e0 e1 c)]
-    [`(λ ,xs ',l ,e0)      (compile-λ xs l e0 c)]
+    [`(letrec ,bs ,e0)     (compile-tail-letrec (map first bs) (map second bs) e0 c)]    
+    [`(λ ,xs ',l ,e0)      (compile-λ xs l (fvs e0) c)]
     [`(,e . ,es)           (compile-tail-call e es c)]))
 
 ;; LExpr CEnv -> Asm
@@ -99,33 +100,36 @@
     [`(if ,e0 ,e1 ,e2)     (compile-if e0 e1 e2 c)]
     [`(+ ,e0 ,e1)          (compile-+ e0 e1 c)]
     [`(let ((,x ,e0)) ,e1) (compile-let x e0 e1 c)]
-    [`(λ ,xs ',l ,e0)      (compile-λ xs l e0 c)]
+    [`(λ ,xs ',l ,e0)      (compile-λ xs l (fvs e) c)]
+    [`(letrec ,bs ,e0)     (compile-letrec (map first bs) (map second bs) e0 c)]
     [`(,e . ,es)           (compile-call e es c)]))
 
-;; (Listof Variable) Label Expr CEnv -> Asm
-(define (compile-λ xs f e0 c)
-  (let ((fvs (fvs `(λ ,xs ',f ,e0))))
-    `(;; Save label address
-      (lea rax (offset ,f 0))
-      (mov (offset rdi 0) rax)
+;; (Listof Variable) Label (Listof Varialbe) CEnv -> Asm
+(define (compile-λ xs f ys c)
+  `(;; Save label address
+    (lea rax (offset ,f 0))
+    (mov (offset rdi 0) rax)
+    
+    ;; Save the environment
+    (mov r8 ,(length ys))
+    (mov (offset rdi 1) r8)
+    (mov r9 rdi)
+    (add r9 16)
+    ,@(copy-env-to-heap ys c 0)
       
-      ;; Save the environment
-      (mov rax ,(length fvs))
-      (mov (offset rdi 1) rax)
-      ,@(copy-env-to-heap fvs c 2)
-      
-      ;; Return a pointer to the closure
-      (mov rax rdi)
-      (or rax ,type-proc)
-      (add rdi ,(* 8 (+ 2 (length fvs)))))))
+    ;; Return a pointer to the closure
+    (mov rax rdi)
+    (or rax ,type-proc)
+    (add rdi ,(* 8 (+ 2 (length ys))))))
 
 ;; (Listof Variable) CEnv Natural -> Asm
+;; Pointer to beginning of environment in r9
 (define (copy-env-to-heap fvs c i)
   (match fvs
     ['() '()]
     [(cons x fvs)
-     `((mov rax (offset rsp ,(- (add1 (lookup x c)))))
-       (mov (offset rdi ,i) rax)
+     `((mov r8 (offset rsp ,(- (add1 (lookup x c)))))
+       (mov (offset r9 ,i) r8)
        ,@(copy-env-to-heap fvs c (add1 i)))]))
 
 ;; Natural Natural -> Asm
@@ -189,6 +193,55 @@
       (sub rcx 8)      
       (jmp ,copy-loop)
       ,copy-done)))
+
+;; (Listof Variable) (Listof Lambda) Expr CEnv -> Asm
+(define (compile-letrec fs ls e c)  
+  (let ((c0 (compile-letrec-λs ls c))
+        (c1 (compile-letrec-init fs ls (append fs c)))
+        (c2 (compile-e e (append fs c))))
+    `(,@c0
+      ,@c1
+      ,@c2)))
+
+;; (Listof Variable) (Listof Lambda) Expr CEnv -> Asm
+(define (compile-tail-letrec fs ls e c)
+  (let ((c0 (compile-letrec-λs ls c))
+        (c1 (compile-letrec-init fs ls (append (reverse fs) c)))
+        (c2 (compile-tail-e e (append (reverse fs) c))))
+    `(,@c0
+      ,@c1
+      ,@c2)))
+
+;; (Listof Lambda) CEnv -> Asm
+;; Create a bunch of uninitialized closures and push them on the stack
+(define (compile-letrec-λs ls c)
+  (match ls
+    ['() '()]
+    [(cons l ls)
+     (let ((cs (compile-letrec-λs ls (cons #f c)))
+           (ys (fvs l)))
+       `((lea rax (offset ,(second (third l)) 0))
+         (mov (offset rdi 0) rax)
+         (mov rax ,(length ys))
+         (mov (offset rdi 1) rax)
+         (mov rax rdi)
+         (or rax ,type-proc)
+         (add rdi ,(* 8 (+ 2 (length ys))))
+         (mov (offset rsp ,(- (add1 (length c)))) rax)
+         ,@cs))]))
+
+;; (Listof Variable) (Listof Lambda) CEnv -> Asm
+(define (compile-letrec-init fs ls c)
+  (match fs
+    ['() '()]
+    [(cons f fs)
+     (let ((ys (fvs (first ls)))
+           (cs (compile-letrec-init fs (rest ls) c)))
+       `((mov r9 (offset rsp ,(- (add1 (lookup f c)))))
+         (xor r9 ,type-proc)
+         (add r9 16) ; move past label and length
+         ,@(copy-env-to-heap ys c 0)
+         ,@cs))]))
 
 ;; (Listof LExpr) CEnv -> Asm
 (define (compile-es es c)
