@@ -79,7 +79,7 @@
     [`(+ ,e0 ,e1)          (compile-+ e0 e1 c)]
     [`(let ((,x ,e0)) ,e1) (compile-tail-let x e0 e1 c)]
     [`(letrec ,bs ,e0)     (compile-tail-letrec (map first bs) (map second bs) e0 c)]    
-    [`(λ ,xs ',l ,e0)      (compile-λ xs l (fvs e0) c)]
+    [`(λ ,xs ',l ,e0)      (compile-λ xs l (fvs e) c)]
     [`(,e . ,es)           (compile-tail-call e es c)]))
 
 ;; LExpr CEnv -> Asm
