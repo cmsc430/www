@@ -637,6 +637,7 @@ The compiler will need to generate one such function for each
 extracting all the @racket[λ]-expressions and another for compiling
 each of them:
 
+
 @#reader scribble/comment-reader
 (racketblock
 ;; LExpr -> (Listof LExpr)
@@ -708,20 +709,21 @@ Here's the function for emitting closure construction code:
 (racketblock
 ;; (Listof Variable) Label Expr CEnv -> Asm
 (define (compile-λ xs f e0 c)
-  (let ((fvs (fvs `(λ ,xs ',f ,e0))))
-    `(;; Save label address
-      (lea rax (offset ,f 0))
-      (mov (offset rdi 0) rax)
+  `(;; Save label address
+    (lea rax (offset ,f 0))
+    (mov (offset rdi 0) rax)
+    
+    ;; Save the environment
+    (mov r8 ,(length ys))
+    (mov (offset rdi 1) r8)
+    (mov r9 rdi)
+    (add r9 16)
+    ,@(copy-env-to-heap ys c 0)
       
-      ;; Save the environment
-      (mov rax ,(length fvs))
-      (mov (offset rdi 1) rax)
-      ,@(copy-env-to-heap fvs c 2)
-      
-      ;; Return a pointer to the closure
-      (mov rax rdi)
-      (or rax ,type-proc)
-      (add rdi ,(* 8 (+ 2 (length fvs)))))))
+    ;; Return a pointer to the closure
+    (mov rax rdi)
+    (or rax ,type-proc)
+    (add rdi ,(* 8 (+ 2 (length ys))))))
 )
 
 Compared the previous code we say for function pointer references, the
@@ -737,12 +739,13 @@ location where the closure is stored:
 @#reader scribble/comment-reader
 (racketblock
 ;; (Listof Variable) CEnv Natural -> Asm
+;; Pointer to beginning of environment in r9
 (define (copy-env-to-heap fvs c i)
   (match fvs
     ['() '()]
     [(cons x fvs)
-     `((mov rax (offset rsp ,(- (add1 (lookup x c)))))
-       (mov (offset rdi ,i) rax)
+     `((mov r8 (offset rsp ,(- (add1 (lookup x c)))))
+       (mov (offset r9 ,i) r8)
        ,@(copy-env-to-heap fvs c (add1 i)))]))
 )
 
@@ -822,6 +825,199 @@ Let's try it out:
 (asm-interp (compile '((λ (f) (f (f 0))) (λ (x) (add1 x)))))
 ]
 
-And here's the complete compiler, including tail calls:
+@section[#:tag-prefix "loot"]{Recursive Functions}
+
+Writing recursive programs with the Y-combinator is a bit
+inconvenient.  Let us now add a recursive function binding construct:
+@racket[letrec].
+
+A @racket[letrec]-expression has a shape like a
+@racket[let]-expression, but variables are bound in both the body
+@emph{and} the right-hand-side of the @racket[letrec].  To keep
+matters simple, we will assume the right-hand-sides of a
+@racket[letrec] are all @racket[λ]-expressions.  (Racket eases this
+restriction, but it significantly complicates compilation.)
+
+So for example, writing the @racket[even?] and @racket[odd?] functions
+using @racket[letrec] looks like:
+
+@ex[
+(letrec ((even?
+          (λ (x)
+            (if (zero? x)
+                #t
+                (odd? (sub1 x)))))
+         (odd?
+          (λ (x)
+            (if (zero? x)
+                #f
+                (even? (sub1 x))))))
+  (even? 10))
+]
+
+
+To compile a @racket[letrec]-expression, we can compile the
+@racket[λ]-expression as functions just as before.  Notice that the
+recursive (or mutually recursive) occurrence will be considered a free
+variable within the @racket[λ]-expression, so just like any other free
+variable, the closure creation should capture the value of this
+binding.
+
+We need to extend the syntax functions for computing free variables,
+extracting @racket[λ]-expressions, and so on.  All of this is
+straightforward.
+
+The key complication to compiling a @racket[letrec]-expression is that
+the name of a function should be bound---to itself---within the body
+of the function.  The key insight into achieving this is to first
+allocate closures, but to delay the actual population of the closures'
+environments.
+
+The way that compiling a @racket[letrec]-expression works is roughly:
+
+@itemlist[
+
+@item{allocate a closure for each of the right-hand-side
+@racket[λ]-expressions, but do not copy the (relevant parts of the)
+environment in to closures (yet),}
+
+@item{push each of these closures on to the stack (effectively binding
+the left-hand-sides to the unitialized closures),}
+
+@item{now that the names are bound, we can populate the closures, and
+references to any of the @racket[letrec]-bound variables will be
+captured correctly,}
+
+@item{then compile the body in an environment that includes all of the
+@racket[letrec]-bound variables.}
+
+]
+
+The @racket[compile-letrec] function takes a list of variables to
+bind, the right-hand-side @racket[λ]-expressions, body, and
+compile-time environment.  It relies on three helper functions to
+handle the tasks listed above:
+
+@#reader scribble/comment-reader
+(racketblock
+;; (Listof Variable) (Listof Lambda) Expr CEnv -> Asm
+(define (compile-letrec fs ls e c)  
+  (let ((c0 (compile-letrec-λs ls c))
+        (c1 (compile-letrec-init fs ls (append fs c)))
+        (c2 (compile-e e (append fs c))))
+    `(,@c0
+      ,@c1
+      ,@c2)))
+)
+
+The first two tasks are taken care of by @racket[compile-letrec-λs],
+which allocates unitialized closures and pushes each on the stack.
+
+@#reader scribble/comment-reader
+(racketblock
+;; (Listof Lambda) CEnv -> Asm
+;; Create a bunch of uninitialized closures and push them on the stack
+(define (compile-letrec-λs ls c)
+  (match ls
+    ['() '()]
+    [(cons l ls)
+     (let ((cs (compile-letrec-λs ls (cons #f c)))
+           (ys (fvs l)))
+       `((lea rax (offset ,(second (third l)) 0))
+         (mov (offset rdi 0) rax)
+         (mov rax ,(length ys))
+         (mov (offset rdi 1) rax)
+         (mov rax rdi)
+         (or rax ,type-proc)
+         (add rdi ,(* 8 (+ 2 (length ys))))
+         (mov (offset rsp ,(- (add1 (length c)))) rax)
+         ,@cs))]))
+)
+
+The @racket[compile-letrec-init] goes through each function and
+initializes its closure now that all of the function pointers are
+available.  Finally the body is compiled in an extended environment.
+
+@#reader scribble/comment-reader
+(racketblock
+;; (Listof Variable) (Listof Lambda) CEnv -> Asm
+;; Initialize closures bound to each variable in fs
+(define (compile-letrec-init fs ls c)
+  (match fs
+    ['() '()]
+    [(cons f fs)
+     (let ((ys (fvs (first ls)))
+           (cs (compile-letrec-init fs (rest ls) c)))
+       `((mov r9 (offset rsp ,(- (add1 (lookup f c)))))
+         (xor r9 ,type-proc)
+         (add r9 16) ; move past label and length
+         ,@(copy-env-to-heap ys c 0)
+         ,@cs))]))
+)
+
+We can give a spin:
+
+@ex[
+(asm-interp (compile '(letrec ((even?
+                                (λ (x)
+                                  (if (zero? x)
+                                      #t
+                                      (odd? (sub1 x)))))
+                               (odd?
+                                (λ (x)
+                                  (if (zero? x)
+                                      #f
+                                      (even? (sub1 x))))))
+                        (even? 10))))
+]
+
+
+@section[#:tag-prefix "loot"]{Syntactic sugar for function definitions}
+
+The @racket[letrec] form is a generlization of the
+@racket[(begin (define (_f _x ...) _e) ... _e0)] form we started with
+when we first started looking at adding functions to the language.  To
+fully subsume the language of @seclink["Iniquity"]{Iniquity}, we can
+add this form back in to the language as syntactic sugar for
+@racket[letrec], i.e. we can eliminate this form from programs by
+rewriting them.
+
+Let @tt{Expr+} refer to programs containing @racket[(begin (define (_f
+_x ...) _e) ... _e0)].  The @racket[desugar] function writes
+@tt{Expr+}s into @tt{Expr}s.
+
+@#reader scribble/comment-reader
+(racketblock
+;; Expr+ -> Expr
+(define (desugar e+)
+  (match e+
+    [`(begin ,@(list `(define (,fs . ,xss) ,es) ...) ,e)
+     `(letrec ,(map (λ (f xs e) `(,f (λ ,xs ,(desugar e)))) fs xss es)
+        ,(desugar e))]
+    [(? symbol? x)         x]
+    [(? imm? i)            i]
+    [`(box ,e0)            `(box ,(desugar e0))]
+    [`(unbox ,e0)          `(unbox ,(desugar e0))]
+    [`(cons ,e0 ,e1)       `(cons ,(desugar e0) ,(desugar e1))]
+    [`(car ,e0)            `(car ,(desugar e0))]
+    [`(cdr ,e0)            `(cdr ,(desugar e0))]
+    [`(add1 ,e0)           `(add1 ,(desugar e0))]
+    [`(sub1 ,e0)           `(sub1 ,(desugar e0))]
+    [`(zero? ,e0)          `(zero? ,(desugar e0))]
+    [`(empty? ,e0)         `(empty? ,(desugar e0))]
+    [`(if ,e0 ,e1 ,e2)     `(if ,(desugar e0) ,(desugar e1) ,(desugar e2))]
+    [`(+ ,e0 ,e1)          `(+ ,(desugar e0) ,(desugar e1))]
+    [`(let ((,x ,e0)) ,e1) `(let ((,x ,(desugar e0))) ,(desugar e1))]
+    [`(letrec ,bs ,e0)
+     `(letrec ,(map (λ (b) (list (first b) (desugar (second b)))) bs)
+        ,(desugar e0))]
+    [`(λ ,xs ,e0)          `(λ ,xs ,(desugar e0))]    
+    [`(,e . ,es)           `(,(desugar e) ,@(map desugar es))]))    
+)
+
+The compiler now just desugars before labeling and compiling expressions.
+
+And here's the complete compiler, including tail calls, @racket[letrec], etc.:
 
 @codeblock-include["loot/compile.rkt"]
+

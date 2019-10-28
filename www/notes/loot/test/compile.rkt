@@ -34,12 +34,10 @@
 (check-equal? (run '(unbox 8)) 'err)
 
 ;; Iniquity tests
-#|
 (check-equal? (run
                '(begin (define (f x) x)
                        (f 5)))
               5)
-
 (check-equal? (run
                '(begin (define (tri x)
                          (if (zero? x)
@@ -47,7 +45,6 @@
                              (+ x (tri (sub1 x)))))
                        (tri 9)))
               45)
-
 (check-equal? (run
                '(begin (define (even? x)
                          (if (zero? x)
@@ -59,7 +56,6 @@
                              (even? (sub1 x))))
                        (even? 101)))
               #f)
-
 (check-equal? (run
                '(begin (define (map-add1 xs)
                          (if (empty? xs)
@@ -68,15 +64,12 @@
                                    (map-add1 (cdr xs)))))
                        (map-add1 (cons 1 (cons 2 (cons 3 '()))))))
                '(2 3 4))
-
 (check-equal? (run '(begin (define (f x) x)
-                           (fun f)))
+                           f))
               'procedure)
-
 (check-equal? (run '(begin (define (f x) x)
-                           (call (fun f) 5)))
+                           (f 5)))
               5)
-|#
 
 (check-equal? (run '((λ (x) x) 7)) 7)
 (check-equal? (run '(((λ (x) (λ (y) x)) 7) 8)) 7)
@@ -97,3 +90,4 @@
     10))
  56)
  
+
