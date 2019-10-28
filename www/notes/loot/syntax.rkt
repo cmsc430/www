@@ -74,7 +74,7 @@
     [`(if ,e0 ,e1 ,e2)     (append (λs e0) (λs e1) (λs e2))]
     [`(+ ,e0 ,e1)          (append (λs e0) (λs e1))]
     [`(let ((,x ,e0)) ,e1) (append (λs e0) (λs e1))]
-    [`(letrec ,bs ,e0)     (append (map second bs) (λs e0))]
+    [`(letrec ,bs ,e0)     (append (apply append (map (compose λs second) bs)) (λs e0))]
     [`(λ ,xs ,l ,e0)       (cons e (λs e0))]
     [`(,e . ,es)           (append (λs e) (apply append (map λs es)))]))
 
