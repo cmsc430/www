@@ -89,5 +89,45 @@
              (+ n (tri (sub1 n)))))))
     10))
  56)
- 
+
+(check-equal?
+ (run
+  '(begin (define (map f ls)
+            (if (empty? ls)
+                '()
+                (cons (f (car ls)) (map f (cdr ls)))))
+
+          (map (λ (f) (f 0))
+               (cons (λ (x) (add1 x))
+                     (cons (λ (x) (sub1 x))
+                           '())))))
+ '(1 -1))
+
+(check-equal?
+ (run
+  '(begin (define (map f ls)
+            (letrec ((mapper (λ (ls)
+                               (if (empty? ls)
+                                   '()
+                                   (cons (f (car ls)) (mapper (cdr ls)))))))
+              (mapper ls)))
+          (map (λ (f) (f 0))
+               (cons (λ (x) (add1 x))
+                     (cons (λ (x) (sub1 x))
+                           '())))))
+ '(1 -1))
+
+(check-equal?
+ (run
+  '(begin (define (map f ls)
+            (begin (define (mapper ls)
+                     (if (empty? ls)
+                         '()
+                         (cons (f (car ls)) (mapper (cdr ls)))))
+                   (mapper ls)))
+          (map (λ (f) (f 0))
+               (cons (λ (x) (add1 x))
+                     (cons (λ (x) (sub1 x))
+                           '())))))
+ '(1 -1))
 
