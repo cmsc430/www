@@ -1,5 +1,6 @@
 #lang racket
 (provide (all-defined-out))
+(require "syntax.rkt")
 
 ;; type Expr =
 ;; ...
@@ -13,7 +14,7 @@
 ;; | (Values ... -> Answer)
 
 (define (interp e)
-  (interp-env e '()))
+  (interp-env (desugar e) '()))
 
 ;; Expr REnv -> Answer
 (define (interp-env e r)
@@ -37,7 +38,17 @@
      (match (interp-env e0 r)
        ['err 'err]
        [v
-        (interp-env e1 (ext r x v))])]
+        (interp-env e1 (ext r x v))])]    
+    [`(letrec ,bs ,e)
+     (letrec ((r* (λ ()
+                    (append
+                     (zip (map first bs)
+                          ;; η-expansion to delay evaluating r*
+                          ;; relies on RHSs being functions
+                          (map (λ (l) (λ vs (apply (interp-env l (r*)) vs)))
+                               (map second bs)))
+                     r))))
+       (interp-env e (r*)))]
     [`(λ (,xs ...) ,e)
      (λ vs
        (if (= (length vs) (length xs))
@@ -50,7 +61,6 @@
             (apply f vs)
             'err)]
        [_ 'err])]))
-
 
 ;; (Listof Expr) REnv -> (Listof Value) | 'err
 (define (interp-env* es r)

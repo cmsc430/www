@@ -71,6 +71,7 @@
                            (f 5)))
               5)
 
+;; Loot tests
 (check-equal? (run '((λ (x) x) 7)) 7)
 (check-equal? (run '(((λ (x) (λ (y) x)) 7) 8)) 7)
 (check-equal? (run '((λ (f) (f 0)) (λ (x) (add1 x)))) 1)
@@ -130,4 +131,3 @@
                      (cons (λ (x) (sub1 x))
                            '())))))
  '(1 -1))
-
