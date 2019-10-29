@@ -1,5 +1,6 @@
 #lang racket
 (provide (all-defined-out))
+(require "syntax.rkt")
 
 ;; type Expr =
 ;; ...
@@ -11,10 +12,11 @@
 
 ;; type Function =
 ;; | `(closure ,Formals ,Expr ,Env)
+;; | `(rec-closure ,Lambda ,(-> Env))
 
 ;; Expr -> Answer
 (define (interp e)
-  (interp-env e '()))
+  (interp-env (desugar e) '()))
 
 ;; Expr REnv -> Answer
 (define (interp-env e r)
@@ -39,6 +41,17 @@
        ['err 'err]
        [v
         (interp-env e1 (ext r x v))])]
+    [`(letrec ,bs ,e)
+     (letrec ((r* (λ ()
+                    (append
+                     (zip (map first bs)
+                          ;; η-expansion to delay evaluating r*
+                          ;; relies on RHSs being functions
+                          (map (λ (l) `(rec-closure ,l ,r*))
+                               (map second bs)))
+                     r))))
+       (interp-env e (r*)))]
+    
     [`(λ (,xs ...) ,e)
      `(closure ,xs ,e ,r)]
     [`(,e . ,es)
@@ -50,6 +63,7 @@
 (define (function? f)
   (match f
     [`(closure . ,_) #t]
+    [`(rec-closure . ,_) #t]
     [_ #f]))
 
 ;; Function Value ... -> Answer
@@ -58,7 +72,9 @@
     [`(closure ,xs ,e ,r)
      (if (= (length xs) (length vs))
          (interp-env e (append (zip xs vs) r))
-         'err)]))
+         'err)]
+    [`(rec-closure (λ (,xs ...) ,e) ,r*)
+     (apply apply-function `(closure ,xs ,e ,(r*)) vs)]))
 
 
 ;; (Listof Expr) REnv -> (Listof Value) | 'err
