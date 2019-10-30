@@ -200,28 +200,6 @@
       (sub rcx 8)
       (jmp ,copy-loop)
       ,copy-done)))
-#|
-;; Natural -> Asm
-;; Copy closure's (in rax) env to stack skipping n spots
-(define (copy-closure-env-to-stack n)
-  (let ((copy-loop (gensym 'copy_closure))
-        (copy-done (gensym 'copy_done)))
-    `((mov r8 (offset rax 1)) ; length
-      (mov r9 rax)
-      (add r9 16)             ; start of env
-      (mov rcx rsp)           ; start of stack
-      (add rcx ,(- (* 8 (add1 n))))
-      ,copy-loop
-      (cmp r8 0)
-      (je ,copy-done)
-      (mov rbx (offset r9 0))
-      (mov (offset rcx 0) rbx)
-      (sub r8 1)
-      (add r9 8)
-      (sub rcx 8)
-      (jmp ,copy-loop)
-      ,copy-done)))
-|#
 
 ;; (Listof Variable) (Listof Lambda) Expr CEnv -> Asm
 (define (compile-letrec fs ls e c)
