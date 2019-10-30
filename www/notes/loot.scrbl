@@ -707,19 +707,19 @@ Here's the function for emitting closure construction code:
 
 @#reader scribble/comment-reader
 (racketblock
-;; (Listof Variable) Label Expr CEnv -> Asm
-(define (compile-λ xs f e0 c)
+;; (Listof Variable) Label (Listof Varialbe) CEnv -> Asm
+(define (compile-λ xs f ys c)
   `(;; Save label address
     (lea rax (offset ,f 0))
     (mov (offset rdi 0) rax)
-    
+
     ;; Save the environment
     (mov r8 ,(length ys))
     (mov (offset rdi 1) r8)
     (mov r9 rdi)
     (add r9 16)
     ,@(copy-env-to-heap ys c 0)
-      
+
     ;; Return a pointer to the closure
     (mov rax rdi)
     (or rax ,type-proc)
@@ -903,8 +903,8 @@ handle the tasks listed above:
 ;; (Listof Variable) (Listof Lambda) Expr CEnv -> Asm
 (define (compile-letrec fs ls e c)  
   (let ((c0 (compile-letrec-λs ls c))
-        (c1 (compile-letrec-init fs ls (append fs c)))
-        (c2 (compile-e e (append fs c))))
+        (c1 (compile-letrec-init fs ls (append (reverse fs) c)))
+        (c2 (compile-e e (append (reverse fs) c))))
     `(,@c0
       ,@c1
       ,@c2)))
@@ -969,7 +969,22 @@ We can give a spin:
                                       #f
                                       (even? (sub1 x))))))
                         (even? 10))))
+
+(asm-interp 
+  (compile
+    '(letrec ((map (λ (f ls)
+                    (letrec ((mapper (λ (ls)
+                                       (if (empty? ls)
+                                         '()
+                                         (cons (f (car ls)) (mapper (cdr ls)))))))
+                      (mapper ls)))))
+      (map (λ (f) (f 0))
+           (cons (λ (x) (add1 x))
+                 (cons (λ (x) (sub1 x))
+                       '()))))))
 ]
+
+
 
 
 @section[#:tag-prefix "loot"]{Syntactic sugar for function definitions}
