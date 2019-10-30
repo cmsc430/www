@@ -197,8 +197,8 @@
 ;; (Listof Variable) (Listof Lambda) Expr CEnv -> Asm
 (define (compile-letrec fs ls e c)  
   (let ((c0 (compile-letrec-λs ls c))
-        (c1 (compile-letrec-init fs ls (append fs c)))
-        (c2 (compile-e e (append fs c))))
+        (c1 (compile-letrec-init fs ls (append (reverse fs) c)))
+        (c2 (compile-e e (append (reverse fs) c))))
     `(,@c0
       ,@c1
       ,@c2)))
