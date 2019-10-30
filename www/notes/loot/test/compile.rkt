@@ -131,3 +131,18 @@
                      (cons (λ (x) (sub1 x))
                            '())))))
  '(1 -1))
+
+(check-equal? (run
+               '(let ((id (λ (x) x)))
+                  (letrec ((even?
+                            (λ (x)
+                              (if (zero? x)
+                                  #t
+                                  (id (odd? (sub1 x))))))
+                           (odd?
+                            (λ (x)
+                              (if (zero? x)
+                                  #f
+                                  (id (even? (sub1 x)))))))
+                    (even? 101))))
+              #f)
