@@ -146,3 +146,18 @@
                                   (id (even? (sub1 x)))))))
                     (even? 101))))
               #f)
+
+(check-equal? (run
+               '(let ((id (λ (x) x)))
+                  (id (letrec ((even?
+                                (λ (x)
+                                  (if (zero? x)
+                                      #t
+                                      (odd? (sub1 x)))))
+                               (odd?
+                                (λ (x)
+                                  (if (zero? x)
+                                      #f
+                                      (even? (sub1 x))))))
+                        (even? 101)))))
+              #f)
