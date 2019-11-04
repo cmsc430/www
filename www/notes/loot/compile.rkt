@@ -78,7 +78,7 @@
     [`(if ,e0 ,e1 ,e2)     (compile-tail-if e0 e1 e2 c)]
     [`(+ ,e0 ,e1)          (compile-+ e0 e1 c)]
     [`(let ((,x ,e0)) ,e1) (compile-tail-let x e0 e1 c)]
-    [`(letrec ,bs ,e0)     (compile-tail-letrec (map first bs) (map second bs) e0 c)]    
+    [`(letrec ,bs ,e0)     (compile-tail-letrec (map first bs) (map second bs) e0 c)]
     [`(λ ,xs ',l ,e0)      (compile-λ xs l (fvs e) c)]
     [`(,e . ,es)           (compile-tail-call e es c)]))
 
@@ -109,14 +109,14 @@
   `(;; Save label address
     (lea rax (offset ,f 0))
     (mov (offset rdi 0) rax)
-    
+
     ;; Save the environment
     (mov r8 ,(length ys))
     (mov (offset rdi 1) r8)
     (mov r9 rdi)
     (add r9 16)
     ,@(copy-env-to-heap ys c 0)
-      
+
     ;; Return a pointer to the closure
     (mov rax rdi)
     (or rax ,type-proc)
@@ -153,9 +153,13 @@
       (mov rax (offset rsp ,i))
       ,@assert-proc
       (xor rax ,type-proc)
-      (sub rsp ,stack-size)      
-      ,@(copy-closure-env-to-stack (add1 (length es)))
-      (call (offset rax 0))      
+      (sub rsp ,stack-size)
+
+      (mov rcx rsp) ; start of stack in rcx
+      (add rcx ,(- (* 8 (+ 2 (length es)))))
+      ,@(copy-closure-env-to-stack)
+
+      (call (offset rax 0))
       (add rsp ,stack-size))))
 
 ;; LExpr (Listof LExpr) CEnv -> Asm
@@ -170,35 +174,38 @@
       ,@(move-args (length es) i)
       ,@assert-proc
       (xor rax ,type-proc)
-      ,@(copy-closure-env-to-stack (length es))
+
+      (mov rcx rsp) ; start of stack in rcx
+      (add rcx ,(- (* 8 (+ 1 (length es)))))
+      ,@(copy-closure-env-to-stack)
+
+      ;,@(copy-closure-env-to-stack (length es))
       (jmp (offset rax 0)))))
 
-;; Natural -> Asm
-;; Copy closure's (in rax) env to stack skipping n spots
-(define (copy-closure-env-to-stack n)
+;; -> Asm
+;; Copy closure's (in rax) env to stack in rcx
+(define (copy-closure-env-to-stack)
   (let ((copy-loop (gensym 'copy_closure))
         (copy-done (gensym 'copy_done)))
     `((mov r8 (offset rax 1)) ; length
       (mov r9 rax)
       (add r9 16)             ; start of env
-      (mov rcx rsp)           ; start of stack
-      (add rcx ,(- (* 8 (add1 n))))
       ,copy-loop
       (cmp r8 0)
-      (je ,copy-done)                  
-      (mov rbx (offset r9 0))       
+      (je ,copy-done)
+      (mov rbx (offset r9 0))
       (mov (offset rcx 0) rbx)
       (sub r8 1)
       (add r9 8)
-      (sub rcx 8)      
+      (sub rcx 8)
       (jmp ,copy-loop)
       ,copy-done)))
 
 ;; (Listof Variable) (Listof Lambda) Expr CEnv -> Asm
-(define (compile-letrec fs ls e c)  
+(define (compile-letrec fs ls e c)
   (let ((c0 (compile-letrec-λs ls c))
-        (c1 (compile-letrec-init fs ls (append fs c)))
-        (c2 (compile-e e (append fs c))))
+        (c1 (compile-letrec-init fs ls (append (reverse fs) c)))
+        (c2 (compile-e e (append (reverse fs) c))))
     `(,@c0
       ,@c1
       ,@c2)))
@@ -474,21 +481,3 @@
     (sar rbx ,(+ 11 imm-shift))
     (cmp rbx #b11011)
     (je err)))
-
-;; Symbol -> Label
-;; Produce a symbol that is a valid Nasm label
-(define (symbol->label s)
-  (string->symbol
-   (string-append
-    "label_"
-    (list->string
-     (map (λ (c)
-            (if (or (char<=? #\a c #\z)
-                    (char<=? #\A c #\Z)
-                    (char<=? #\0 c #\9)
-                    (memq c '(#\_ #\$ #\# #\@ #\~ #\. #\?)))
-                c
-                #\_))
-         (string->list (symbol->string s))))
-    "_"
-    (number->string (eq-hash-code s) 16))))

@@ -71,6 +71,7 @@
                            (f 5)))
               5)
 
+;; Loot tests
 (check-equal? (run '((λ (x) x) 7)) 7)
 (check-equal? (run '(((λ (x) (λ (y) x)) 7) 8)) 7)
 (check-equal? (run '((λ (f) (f 0)) (λ (x) (add1 x)))) 1)
@@ -131,3 +132,32 @@
                            '())))))
  '(1 -1))
 
+(check-equal? (run
+               '(let ((id (λ (x) x)))
+                  (letrec ((even?
+                            (λ (x)
+                              (if (zero? x)
+                                  #t
+                                  (id (odd? (sub1 x))))))
+                           (odd?
+                            (λ (x)
+                              (if (zero? x)
+                                  #f
+                                  (id (even? (sub1 x)))))))
+                    (even? 101))))
+              #f)
+
+(check-equal? (run
+               '(let ((id (λ (x) x)))
+                  (id (letrec ((even?
+                                (λ (x)
+                                  (if (zero? x)
+                                      #t
+                                      (odd? (sub1 x)))))
+                               (odd?
+                                (λ (x)
+                                  (if (zero? x)
+                                      #f
+                                      (even? (sub1 x))))))
+                        (even? 101)))))
+              #f)
