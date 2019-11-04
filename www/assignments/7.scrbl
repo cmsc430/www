@@ -9,7 +9,7 @@
 
 @bold{Due: Tues, Nov 12, 11:59PM}
 
-@(define repo "FIXME")
+@(define repo "https://classroom.github.com/a/5UM2CXXa")
 
 The goal of this assignment is to (1) implement symbols and the
 @racket[eq?] primitive operation, (2) to implement symbol interning by
