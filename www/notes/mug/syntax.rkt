@@ -3,7 +3,14 @@
 (require "pat.rkt")
 
 ;; type Expr+ =
-;; .... exprs with match, cond, begin/define, etc.
+;; .... exprs with match, cond, begin/define, quote etc.
+
+;; type S-Expr =
+;; | Boolean
+;; | Integer
+;; | String
+;; | '()
+;; | (Cons S-Expr S-Expr)
 
 ;; Expr+ -> Expr
 (define (desugar e+)
@@ -13,6 +20,9 @@
         ,(desugar e))]    
     [(? symbol? x)         x]
     [(? imm? i)            i]
+    [`',(? symbol? s)      `',s]
+    [`',d                  (desugar (quote->expr d))]       ;; quote & quasiquote as expansions
+    [(list 'quasiquote d)  (desugar (quasiquote->expr d))]
     [`(box ,e0)            `(box ,(desugar e0))]
     [`(unbox ,e0)          `(unbox ,(desugar e0))]
     [`(cons ,e0 ,e1)       `(cons ,(desugar e0) ,(desugar e1))]
@@ -31,14 +41,109 @@
     [`(λ ,xs ,e0)          `(λ ,xs ,(desugar e0))]
     [`(match . ,_)         (desugar (match->cond e+))]
     [`(cond . ,_)          (desugar (cond->if e+))]
+    [`(and . ,_)           (desugar (and->if e+))]
+    [`(or . ,_)            (desugar (or->if e+))]
     [`(,e . ,es)           `(,(desugar e) ,@(map desugar es))]))
+
+;; S-Expr -> Expr
+;; Produce an expression that evaluates to given s-expression, without
+;; use of quote (except for symbols)
+(define (quote->expr d)
+  (match d
+    [(? boolean?) d]
+    [(? integer?) d]
+    [(? string?) d]
+    [(? char?) d]
+    [(? symbol?) (list 'quote d)]
+    ;[(cons x y) (list 'cons (quote->expr x) (quote->expr y))]
+    [(cons x y) (list 'cons (list 'quote x) (list 'quote y))]
+    ['() ''()]))
+
+(define (quasiquote->expr d) 
+  (match d
+    [(? boolean?) d]
+    [(? integer?) d]
+    [(? string?) d]
+    [(? char?) d]
+    [(? symbol?) (list 'quote d)]
+    [(cons 'quasiquote d)
+     (quasiquote->expr (quasiquote->expr d))]
+    [(cons 'unquote d) d]
+    [(cons 'unquote-splicing d) 'ERROR]   
+    [(cons x y)
+     `(append ,(quasiquote->list-expr x)
+              ,(quasiquote->expr y))]
+    ['() ''()]))
+
+(define (quasiquote->list-expr d) 
+  (match d    
+    [(? symbol?) (list 'quote d)]
+    ['() ''()]
+    [(cons 'quasiquote d)
+     (quasiquote->expr (quasiquote->expr d))]
+    [(cons 'unquote d) `(list ,d)]
+    [(cons 'unquote-splicing d) d]  
+    [(cons x y)
+     `(list (append ,(quasiquote->list-expr x)
+                    ,(quasiquote->expr y)))]
+    [_ `'(,d)]))
 
 (define (cond->if c)
   (match c
     [`(cond (else ,e)) e]
     [`(cond (,c ,e) . ,r)
      `(if ,c ,e (cond ,@r))]))
-     
+
+(define (and->if c)
+  (match c
+    [`(and) #t]
+    [`(and ,e) e]
+    [`(and ,e . ,r)
+     `(if ,e (and ,@r) #f)]))
+
+(define (or->if c)
+  (match c
+    [`(or) #f]
+    [`(or ,e) e]
+    [`(or ,e . ,r)
+     (let ((x (gensym)))
+       `(let ((,x ,e))
+          (if ,x ,x (or ,@r))))]))
+
+
+(define (qq-expand x depth)
+  (match x
+    [(cons 'quasiquote r)
+     `(cons 'quasiquote ,(qq-expand r (add1 depth)))]
+    [(cons 'unquote r)
+     (cond [(> depth 0)
+            `(cons ','unquote ,(qq-expand r (sub1 depth)))]
+           [(and (not (empty? r))
+                 (empty? (cdr r)))
+            (car r)]
+           [else
+            (error "Illegal")])]
+    [(cons 'unqupte-splicing r)
+     (error "Illegal")]
+    [(cons a b)
+     `(append ,(qq-expand-list a depth)
+              ,(qq-expand b depth))]
+    [_ `',x]))
+
+(define (qq-expand-list x depth)
+  (match x
+    [(cons 'quasiquote r)
+     `(list (cons 'quasiquote ,(qq-expand r (add1 depth))))]
+    [(cons 'unquote r)
+     (cond [(> depth 0) `(list (cons ','unquote ,(qq-expand r (sub1 depth))))]
+           [else `(list . ,r)])]
+    [(cons 'unquote-splicing r)
+     (cond [(> depth 0) `(list (cons ','unquote-splicing ,(qq-expand r (sub1 depth))))]
+           [else `(append . ,r)])]
+    [_
+     `'(,x)]))
+      
+
 
 ;; Any -> Boolean
 (define (imm? x)
