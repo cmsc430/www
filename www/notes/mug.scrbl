@@ -142,17 +142,8 @@ which will transform extended programs into ``core'' expressions:
     [(? symbol? x)         x]
     [(? imm? i)            i]
     [`',(? symbol? s)      `',s]
-    [`(box ,e0)            `(box ,(desugar e0))]
-    [`(unbox ,e0)          `(unbox ,(desugar e0))]
-    [`(cons ,e0 ,e1)       `(cons ,(desugar e0) ,(desugar e1))]
-    [`(car ,e0)            `(car ,(desugar e0))]
-    [`(cdr ,e0)            `(cdr ,(desugar e0))]
-    [`(add1 ,e0)           `(add1 ,(desugar e0))]
-    [`(sub1 ,e0)           `(sub1 ,(desugar e0))]
-    [`(zero? ,e0)          `(zero? ,(desugar e0))]
-    [`(empty? ,e0)         `(empty? ,(desugar e0))]
+    [`(,(? prim? p) . ,es) `(,p ,@(map desugar es))]    
     [`(if ,e0 ,e1 ,e2)     `(if ,(desugar e0) ,(desugar e1) ,(desugar e2))]
-    [`(+ ,e0 ,e1)          `(+ ,(desugar e0) ,(desugar e1))]
     [`(let ((,x ,e0)) ,e1) `(let ((,x ,(desugar e0))) ,(desugar e1))]
     [`(letrec ,bs ,e0)
      `(letrec ,(map (λ (b) (list (first b) (desugar (second b)))) bs)
@@ -181,6 +172,12 @@ derived forms, including itself!
 (desugar '(or 8 9))
 ]
 
+
+Derived forms that can be elaborated away by rewriting into more
+primitive forms are sometimes called @bold{syntactic sugar} since they
+are not fundamental but ``sweeten'' the experience of writing programs
+with useful shorthands.  We call the elaboration function @racket[desugar]
+to indicate that it is eliminating the syntactic sugar.
 
 @section[#:tag-prefix "mug"]{Exceptional behavior}
 
@@ -666,6 +663,138 @@ Now let's give it a spin:
 (run '(if (raise 0) 1 2))
 (run '(if (zero? 0) (raise 1) 2))
 ]
+
+@section[#:tag-prefix "mug"]{Quotation}
+
+We have seen how to interpret limited uses of @racket[quote], such as
+in @racket[(quote ())] and @racket[(quote x)], i.e. the empty list and symbols.
+
+But we've also been using @emph{using} @racket[quote] more generally
+where we can write down an arbitrary constant s-expression within a
+@racket[quote]:
+
+@ex[
+'#t
+'5
+'(1 2 3)
+'(add1 x)
+'(car '(1 2 3))
+'(((1) 2) 3)
+'(1 . 2)
+'("asdf" fred ((one)))
+]
+
+We can understand the more general @racket[quote] form as a shorthand
+for expressions that construct an equivalent list to the one denoted
+by the s-expression.
+
+For example,
+@itemlist[
+
+@item{@racket['1] is shorthand for @racket[1],}
+
+@item{@racket['(1 . 2)] is shorthand for @racket[(cons '1 '2)], which
+is shorthand for @racket[(cons 1 2)],}
+
+@item{@racket['(1 2 3)] is shorthand for @racket[(cons '1 '(2 3))],
+which is shorthand for @racket[(cons 1 (cons '2 '(3)))], which is
+shorthand for @racket[(cons 1 (cons 2 (cons '3 '())))], which is
+shorthand for @racket[(cons 1 (cons 2 (cons 3 '())))],}
+
+@item{@racket['()] is as simple as possible (the empty list),}
+
+@item{@racket['x] is as simple as possible (a symbol), and}
+
+@item{@racket[5] is as simple as possible.}
+]
+
+Guided by these examples, we can write a function that transforms the
+s-expression inside of a @racket[quote] into an equivalent expression
+that only uses @racket[quote] for constructing symbols and the empty
+list:
+
+
+@#reader scribble/comment-reader
+(ex
+;; S-Expr -> Expr
+;; Produce an expression that evaluates to given s-expression, without
+;; use of quote (except for symbols and empty list)
+(define (quote->expr d)
+  (match d
+    [(? boolean?) d]
+    [(? integer?) d]
+    [(? string?) d]
+    [(? char?) d]
+    [(? symbol?) (list 'quote d)]
+    [(cons x y) (list 'cons (quote->expr x) (quote->expr y))]
+    ['() ''()]))
+
+
+(quote->expr 'x)
+(quote->expr 5)
+(quote->expr "Fred")
+(quote->expr '(1 . 2))
+(quote->expr '(1 2 3))
+(quote->expr '(car '(1 2 3)))
+(quote->expr '(((1) 2) 3))
+(quote->expr '(1 . 2))
+(quote->expr '("asdf" fred ((one))))
+)
+
+We can now incorporate this into @racket[desugar] to eliminate uses of
+compound-data @racket[quote]:
+
+@#reader scribble/comment-reader
+(ex
+;; Expr+ -> Expr
+(define (desugar e+)
+  (match e+
+    [`(begin ,@(list `(define (,fs . ,xss) ,es) ...) ,e)
+     `(letrec ,(map (λ (f xs e) `(,f (λ ,xs ,(desugar e)))) fs xss es)
+        ,(desugar e))]    
+    [(? symbol? x)         x]
+    [(? imm? i)            i]
+    [`',(? symbol? s)      `',s]
+    [`',d                  (quote->expr d)]
+    [`(,(? prim? p) . ,es) `(,p ,@(map desugar es))]
+    [`(if ,e0 ,e1 ,e2)     `(if ,(desugar e0) ,(desugar e1) ,(desugar e2))]
+    [`(let ((,x ,e0)) ,e1) `(let ((,x ,(desugar e0))) ,(desugar e1))]
+    [`(letrec ,bs ,e0)
+     `(letrec ,(map (λ (b) (list (first b) (desugar (second b)))) bs)
+        ,(desugar e0))]
+    [`(λ ,xs ,e0)          `(λ ,xs ,(desugar e0))]
+    [`(cond . ,_)          (desugar (cond->if e+))]
+    [`(and . ,_)           (desugar (and->if e+))]
+    [`(or . ,_)            (desugar (or->if e+))]
+    [`(,e . ,es)           `(,(desugar e) ,@(map desugar es))]))
+)
+
+And now we can @racket[desugar] programs such as these:
+
+@ex[
+(desugar '(map f '(1 2 3)))
+(desugar '(map f '(and 1 2)))
+(desugar '(if x '(1 . 2) 3))
+]
+
+And our prior interpterter will work just fine on these programs:
+
+@ex[
+(interp-env (desugar '(map f '(1 2 3))) `((map ,map) (f ,add1)))
+(interp-env (desugar '(map f '(and 1 2))) `((map ,map) (f ,identity)))
+(interp-env (desugar '(if x '(1 . 2) 3)) `((x #t)))
+]
+
+And:
+
+@ex[
+(interp-env (desugar ''(((1) 2) 3)) '())
+(interp-env (desugar ''(1 . 2)) '())
+(interp-env (desugar ''("asdf" fred ((one)))) '())
+]
+
+@section[#:tag-prefix "mug"]{Pattern matching}
+
 
 
 
