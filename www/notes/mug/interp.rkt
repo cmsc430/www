@@ -1,124 +1,75 @@
 #lang racket
 (provide (all-defined-out))
-(require "syntax.rkt")
+(require "syntax.rkt"
+         "interp-env.rkt")
 
-;; type Expr =
-;; ...
-;; | `(λ ,(Listof Variable) ,Expr)
-
-;; type Value =
-;; ...
-;; | Function
-
-;; type Function =
-;; | (Values ... -> Answer)
-
-;; TODO: add symbols
 
 (define (interp e)
-  (interp-env (desugar e) '()))
+  (interp-env (desugar e) stdlib))
 
-;; Expr REnv -> Answer
-(define (interp-env e r)
-  (match e
-    [''() '()]
-    [(? syntactic-value? v) v]
-    [(list (? prim? p) es ...)
-     (match (interp-env* es r)
-       [(list vs ...) (interp-prim p vs)]
-       [_ 'err])]
-    [`(if ,e0 ,e1 ,e2)
-     (match (interp-env e0 r)
+(define stdlib
+  `((append ,append)
+    (list? ,list?)
+    (first ,first)
+    (second ,second)
+    (rest ,rest)
+    (reverse ,reverse)
+    (not ,not)
+    (compose ,compose)
+    (symbol=? ,symbol=?)
+    (memq ,memq)
+    (length ,length)
+    (remq* ,remq*)
+    (remove-duplicates ,remove-duplicates)
+    (remove ,remove)
+    (member ,member)
+    (equal? ,equal?)))
+
+
+;; Expr REnv Natural -> Answer
+(define (interp-qq d r n)
+  ;(println `(interp-qq ,d ,n))
+  (match d
+    [`(,'unquote ,e)
+     (if (zero? n)
+         (interp-env (desugar e) r) ;!
+         (cons 'unquote (interp-qq-list e r (sub1 n))))]
+    [`(,'unquote-splicing ,e) 'err]
+    [`(,'quasiquote ,d)
+     (cons 'quasiquote (interp-qq-list d r (add1 n)))]
+    [`(,x . ,y)
+     (match (interp-qq-list x r n)
        ['err 'err]
-       [v
-        (if v
-            (interp-env e1 r)
-            (interp-env e2 r))])]
-    [(? symbol? x)
-     (lookup r x)]
-    [`(let ((,x ,e0)) ,e1)
-     (match (interp-env e0 r)
+       [xv (match (interp-qq y r n)
+             ['err 'err]
+             ['() xv]
+             [yv (if (list? xv)
+                     (append xv yv)
+                     'err)])])]
+    [d d]))
+
+;; Expr REnv Natural -> Answer
+(define (interp-qq-list d r n)
+  ;(println `(interp-qq-list ,d ,n))
+  (match d
+    [`(,'unquote ,e)
+     (if (zero? n)
+         (match (interp-env (desugar e) r) ;!
+           ['err 'err]
+           [v (list v)])
+         (list (cons 'unquote (interp-qq-list e r (sub1 n)))))]
+    [`(,'unquote-splicing ,e)
+     (if (zero? n)
+         (interp-env e r)
+         (list (cons 'unquote-splicing (interp-qq-list e r (sub1 n)))))]
+    [`(,'quasiquote ,d)
+     (list (cons 'quasiquote (interp-qq-list d r (add1 n))))]
+    [`(,x . ,y)
+     (match (interp-qq-list x r n)
        ['err 'err]
-       [v
-        (interp-env e1 (ext r x v))])]    
-    [`(letrec ,bs ,e)
-     (letrec ((r* (λ ()
-                    (append
-                     (zip (map first bs)
-                          ;; η-expansion to delay evaluating r*
-                          ;; relies on RHSs being functions
-                          (map (λ (l) (λ vs (apply (interp-env l (r*)) vs)))
-                               (map second bs)))
-                     r))))
-       (interp-env e (r*)))]
-    [`(λ (,xs ...) ,e)
-     (λ vs
-       (if (= (length vs) (length xs))
-           (interp-env e (append (zip xs vs) r))
-           'err))]
-    [`(,e . ,es)
-     (match (interp-env* (cons e es) r)
-       [(list f vs ...)
-        (if (procedure? f)
-            (apply f vs)
-            'err)]
-       [_ 'err])]))
+       [xv (match (interp-qq y r n)
+             ['err 'err]
+             [yv (list (append xv yv))])])]
+    [d (list d)]))
 
-;; (Listof Expr) REnv -> (Listof Value) | 'err
-(define (interp-env* es r)
-  (match es
-    ['() '()]
-    [(cons e es)
-     (match (interp-env e r)
-       ['err 'err]
-       [v (cons v (interp-env* es r))])]))
-
-;; Any -> Boolean
-(define (prim? x)
-  (and (symbol? x)
-       (memq x '(add1 sub1 + - zero?
-                      box unbox empty? cons car cdr))))
-
-;; Any -> Boolean
-(define (syntactic-value? x)
-  (or (integer? x)
-      (boolean? x)
-      (null? x)))
-
-;; Prim (Listof Value) -> Answer
-(define (interp-prim p vs)
-  (match (cons p vs)
-    [(list 'add1 (? integer? i0))  (add1 i0)]
-    [(list 'sub1 (? integer? i0))  (sub1 i0)]
-    [(list 'zero? (? integer? i0)) (zero? i0)]
-    [(list 'box v0)                (box v0)]
-    [(list 'unbox (? box? v0))     (unbox v0)]
-    [(list 'empty? v0)             (empty? v0)]
-    [(list 'cons v0 v1)            (cons v0 v1)]
-    [(list 'car (cons v0 v1))      v0]
-    [(list 'cdr (cons v0 v1))      v1]
-    [(list '+ (? integer? i0) (? integer? i1))
-     (+ i0 i1)]
-    [(list '- (? integer? i0) (? integer? i1))
-     (- i0 i1)]
-    [_ 'err]))
-
-;; Env Variable -> Answer 
-(define (lookup env x)
-  (match env
-    ['() 'err]
-    [(cons (list y i) env)
-     (match (symbol=? x y)
-       [#t i]
-       [#f (lookup env x)])]))
-
-;; Env Variable Value -> Value
-(define (ext r x i)
-  (cons (list x i) r))
-
-(define (zip xs ys)
-  (match* (xs ys)
-    [('() '()) '()]
-    [((cons x xs) (cons y ys))
-     (cons (list x y)
-           (zip xs ys))]))
+    

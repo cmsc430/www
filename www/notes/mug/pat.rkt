@@ -1,5 +1,5 @@
 #lang racket
-(provide match->cond)
+(provide (all-defined-out))
 
 ;; type Expr+ =
 ;; ....
@@ -12,8 +12,9 @@
 ;; | #f
 ;; | Integer
 ;; | String
-;; | '()
 ;; | Variable
+;; | `_
+;; | `'()
 ;; | `(quote ,Symbol)
 ;; | `(cons ,Pat ,Pat)
 ;; | `(list ,Pat ...)
@@ -23,7 +24,7 @@
 ;; Rewrite match expression into an equivalent cond expression
 (define (match->cond m)
   (match m
-    [`(match ,e . ,mcs)
+    [(cons 'match (cons e mcs))
      (let ((x (gensym)))
        `(let ((,x ,e))
           (cond ,@(map (λ (mc)
@@ -103,10 +104,10 @@
     [(? string? s)
      `(and (string? ,v)
            (string=? ,s ,v))]
-    [''() `(eq? '() ,v)]
+    [(list 'quote '()) `(eq? '() ,v)]    
     [(? symbol?) #t]
-    [`',(? symbol? s) `(eq? ,v ',s)]
-    [`(cons ,p1 ,p2)
+    [(list 'quote (? symbol? s)) `(eq? ,v ',s)]
+    [(list 'cons p1 p2)
      (let ((v1 (gensym))
            (v2 (gensym)))
        `(and (cons? ,v)
@@ -114,11 +115,11 @@
                    (,v2 (cdr ,v)))             
                (and ,(pat-match p1 v1)
                     ,(pat-match p2 v2)))))]
-    [`(list . ,ps)
+    [(cons 'list ps)
      `(and (list? ,v)
            (= (length ,v) ,(length ps))
            ,(pat-match-list ps v))]
-    [`(? ,e . ,ps)
+    [(cons '? (cons e ps))
      `(and (,e ,v)
            ,(pats-match ps v))]))
 
@@ -158,19 +159,20 @@
     [#f e]
     [(? integer?) e]
     [(? string?) e]
-    [''() e]
+    [(list 'quote '()) e]
+    ['_ e]
     [(? symbol? x) `(let ((,x ,v)) ,e)]
-    [`',(? symbol?) e]
-    [`(cons ,p1 ,p2)
+    [(list 'quote (? symbol?)) e]
+    [(list 'cons p1 p2)
      (let ((v1 (gensym))
            (v2 (gensym)))
        `(let ((,v1 (car ,v))
               (,v2 (cdr ,v)))
           ,(pat-bind p1 v1
                      (pat-bind p2 v2 e))))]
-    [`(list . ,ps)
+    [(cons 'list ps)
      (pat-bind-list ps v e)]
-    [`(? ,_ . ,ps)
+    [(cons '? (cons _ ps))
      (pats-bind ps v e)]))
 
 ;; (Listof Pat) Variable Expr -> Expr
