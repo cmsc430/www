@@ -1,5 +1,6 @@
 #lang racket
 (provide (all-defined-out))
+(require (only-in "syntax.rkt" prim?))
 
 ;; type Expr =
 ;; | Integer
@@ -102,14 +103,6 @@
      (match (interp-env e r)
        ['err 'err]
        [v (cons v (interp-env* es r))])]))
-
-;; Any -> Boolean
-(define (prim? x)
-  (and (symbol? x)
-       (memq x '(add1 sub1 zero? abs - char? boolean? integer? integer->char char->integer
-                      string? box? empty? cons cons? box unbox car cdr string-length
-                      make-string string-ref = < <= char=? boolean=? + eq? gensym symbol?
-                      procedure?))))
 
 ;; Any -> Boolean
 (define (value? x)
