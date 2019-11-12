@@ -54,17 +54,17 @@
                      @secref["Loot"])
                
                (list @wk{10/22}
-	       	     "A7"	       
-                     @elem{TBD}
-		     'cont)
+	       	     ""	       
+                     @elem{Loot (cont.)}
+		     @elem{Types})
                
                (list @wk{10/29}
-	       	     "A8"	       
-                     @elem{TBD}
-		     'cont)
+	       	     ""	       
+                     @elem{Letrec}
+		     @elem{Exceptions via CPS})
                
                (list @wk{11/5}
-	       	     "A9"	       
+	       	     @seclink["Assignment 7"]{A7}
                      @elem{TBD}
 		     'cont)
                
