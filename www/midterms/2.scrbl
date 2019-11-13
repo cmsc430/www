@@ -61,7 +61,7 @@ justify your answer.
 (begin (define (flip x)
          (flop (add1 x)))
        (define (flop y)
-         (flip (sub1 x)))
+         (flip (sub1 y)))
        (flip 5)) 
 )
 
@@ -72,7 +72,7 @@ How about this one?  Again, justify your answer.
 (begin (define (flip x)
          (flip (flop (add1 x))))
        (define (flop y)
-         (flop (flip (sub1 x))))
+         (flop (flip (sub1 y))))
        (flip 5)) 
 )
 
