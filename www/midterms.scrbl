@@ -12,3 +12,4 @@ date of the midterm.
 ]
 
 @include-section["midterms/1.scrbl"]
+@include-section["midterms/2.scrbl"]

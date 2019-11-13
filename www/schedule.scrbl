@@ -65,13 +65,13 @@
                
                (list @wk{11/5}
 	       	     @seclink["Assignment 7"]{A7}
-                     @elem{TBD}
-		     'cont)
+                     @elem{Pattern matching}
+		     @elem{Quotation})
                
                (list @wk{11/12}
-	       	     @bold{M2}	       
-                     @elem{TBD}
-		     'cont)
+	       	     @bold{@seclink["Midterm_2"]{M2}}
+                     @elem{Review}
+		     @elem{No lecture (exam)})
                
                (list @wk{11/19}
 	       	     ""	       
