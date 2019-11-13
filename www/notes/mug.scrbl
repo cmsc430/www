@@ -7,12 +7,13 @@
 	  "utils.rkt"
 	  "ev.rkt"
           "mug/syntax.rkt"
+          "mug/pat.rkt"
 	  "../utils.rkt")
 
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "mug" f))))))
-	   '("interp.rkt" "interp-env.rkt" #;"compile.rkt" "syntax.rkt" #;"asm/interp.rkt" #;"asm/printer.rkt"))
+	   '("interp.rkt" "interp-env.rkt" #;"compile.rkt" "syntax.rkt" "pat.rkt" #;"asm/interp.rkt" #;"asm/printer.rkt"))
 
 @title[#:tag "Mug"]{Mug: matching, throwing, quoting}
 
@@ -795,6 +796,403 @@ And:
 
 @section[#:tag-prefix "mug"]{Pattern matching}
 
+One of the most ubiquitous language features we've used, but not
+implemented, is pattern matching with the @racket[match] form.
+
+Pattern matching too can be seen as syntactic sugar since it's easy to
+imagine how you could rewrite uses of @racket[match] into equivalent
+expressions that didn't involve @racket[match].
+
+For example, consider the program:
+
+@#reader scribble/comment-reader
+(racketblock
+;; BT -> Number
+;; Multiply all the numbers in given binary tree
+(define (prod bt)
+  (match bt
+    ['leaf 1]
+    [`(node ,v ,l ,r) (* v (* (prod l) (prod r)))]))
+)
+
+An alternative, equivalent, formulation that doesn't use
+@racket[match] is the following:
+
+@#reader scribble/comment-reader
+(racketblock
+;; BT -> Number
+;; Multiply all the numbers in given binary tree
+(define (prod bt)
+  (cond
+    [(eq? 'leaf bt) 1]
+    [(and (list? bt)
+          (= 4 (length bt))
+          (eq? 'node (first bt)))
+     (let ((v (second bt))
+           (l (third bt))
+           (r (fourth bt)))
+       (* v (* (prod l) (prod r))))]
+    ; corresponds to a match failure
+    [else (add1 #f)]))
+)
+
+This code is less nice to read and write, but essentially does the
+same thing the pattern-matching code does.
+
+In this example, each @racket[match]-clause becomes a
+@racket[cond]-clause.  The question-part of each @racket[cond]-clause
+is an expression that determines whether the corresponding
+pattern-part of the @racket[match-clause] matches.  The answer-part of
+each @racket[cond]-clause corresponds to the expression-part of the
+@racket[match]-clause, with an add @racket[let]-form that destructures
+the scrutinee and binds the pattern variables of the pattern-part.
 
 
+Let's consider the following extension to the grammar of @tt{Expr+} to
+include a simplified version of the pattern matchin form we've been
+using:
 
+@#reader scribble/comment-reader
+(racketblock
+;; type Expr+ =
+;; ....
+;; | Match
+
+;; type Match = (match ,Expr+ ,(list Pat Expr+) ...)
+
+;; type Pat =
+;; | #t
+;; | #f
+;; | Integer
+;; | String
+;; | Variable
+;; | `_
+;; | `'()
+;; | `(quote ,Symbol)
+;; | `(cons ,Pat ,Pat)
+;; | `(list ,Pat ...)
+;; | `(? ,Expr ,Pat ...)
+ )
+
+A @racket[match] form consists of an expression to match against,
+sometimes callsed the @bold{scrutinee}, followed by some number of
+pattern-matching clauses; each one consists of a pattern and
+expression to evaluate should the pattern match the scrutinee's value.
+
+Here a pattern can either be a literal boolean, integer, string, empty
+list, or symbol, or a pattern variable, which matches anything and
+binds the value to the variable, a ``wildcard'' which matches anything
+and binds nothing, a @racket[cons] pattern which matches pairs of
+things that match the subpatterns, @racket[list] pattern which matches
+lists of a fixed-size where elements matches the subpatterns, or a
+@racket[?] pattern which matches if the results of evaluated the first
+subexpression applied to scrutinee produces true and all of the
+subpatterns match.
+
+This doesn't include the @racket[quasiquote]-patterns we used above,
+but still this is a useful subset of pattern matching and allows us to
+write programs such as:
+
+@#reader scribble/comment-reader
+(racketblock
+;; BT -> Number
+;; Multiply all the numbers in given binary tree
+(define (prod bt)
+  (match bt
+    ['leaf 1]
+    [(list 'node v l r) (* v (* (prod l) (prod r)))]))
+)
+
+As alluded to above, each pattern plays two roles: it used to
+determine whether the scrutinee matches the pattern, and it used to
+bind variable names (in the scope of the RHS expression) to sub-parts
+of the scrutinee when it does match.
+
+We can write two helper functions to accomplish each of these tasks:
+@itemlist[
+
+@item{rewrite patterns into Boolean valued expressions that answer
+whether the pattern matches the scrutinee,}
+
+@item{rewrite pattern and RHS in to expressions in which the pattern
+variables of pattern are bound to the appropriately deconstructed
+parts of the scrutinee.}
+
+]
+
+
+Assume: the scrutinee is a variable. (It's easy to establish this assumption in general.)
+
+We need two functions:
+
+@#reader scribble/comment-reader
+(racketblock
+;; Pat Variable -> Expr
+;; Produces an expression determining if p matches v
+(define (pat-match p v) ...)
+
+;; Pat Variable Expr -> Expr
+;; Produce an expression that deconstructs v and binds pattern variables
+;; of p in scope of e.
+;; ASSUME: v matches p
+(define (pat-bind p v e) ...)
+)
+
+Let's turn to @racket[pat-match] first.
+
+Suppose the pattern is a literal @racket[#t].  When does @racket[v]
+match it?  When @racket[v] is @racket[eq?] to @racket[#t].
+
+So an expression that produces true when this pattern matches is @racket[(eq? #t v)].
+
+Handling @racket[#f], integers, characters, symbols, and the empty list is similar.
+
+What about variables?  Suppose the pattern is @racket[x].  When does
+@racket[v] match it?  Always.  So @racket[#t] is an expression that
+produces true with this pattern matches.
+
+Wildcards are the same.
+
+What about when the pattern is a @racket[cons]-pattern?  Suppose the
+pattern is @racket[(cons _p1 _p2)] for some patterns @racket[_p1] and
+@racket[_p2].  When does @racket[v] match @racket[(cons _p1 _p2)]?
+When @racket[v] is a pair and @racket[(car v)] matches @racket[_p1]
+and @racket[(cdr v)] matches @racket[_p2].
+
+A @racket[list] pattern is similar, except that the scrunity must be a
+list with as many elements as there are patterns, and the elements
+must match the corresponding subpattern.
+
+What about a @racket[?] pattern?  When does @racket[v] match it?
+Suppose the pattern is @racket[(? even?)].  When does @racket[v] match
+it?  When @racket[(even? v)] is true.  If the pattern had a non-empty
+list of sub-patterns they would all need to match @racket[v], too.
+
+
+We can now formulate a defintion of @racket[pat-match]:
+
+@#reader scribble/comment-reader
+(racketblock
+;; Pat Variable -> Expr
+;; Produces an expression determining if p matches v
+(define (pat-match p v)
+  (match p
+    [#t `(eq? #t ,v)]
+    [#f `(eq? #f ,v)]
+    [(? integer? i) `(eq? ,i ,v)]
+    [(? string? s)
+     `(and (string? ,v)
+           (string=? ,s ,v))]
+    [(list 'quote '()) `(eq? '() ,v)]    
+    [(? symbol?) #t]
+    [(list 'quote (? symbol? s)) `(eq? ,v ',s)]
+    [(list 'cons p1 p2)
+     (let ((v1 (gensym))
+           (v2 (gensym)))
+       `(and (cons? ,v)
+             (let ((,v1 (car ,v))
+                   (,v2 (cdr ,v)))             
+               (and ,(pat-match p1 v1)
+                    ,(pat-match p2 v2)))))]
+    [(cons 'list ps)
+     `(and (list? ,v)
+           (= (length ,v) ,(length ps))
+           ,(pat-match-list ps v))]
+    [(cons '? (cons e ps))
+     `(and (,e ,v)
+           ,(pats-match ps v))]))
+)
+
+The @racket[list]-pattern case relies on a helper function
+@racket[pat-match-list] and the @racket[?]-pattern case relies on
+@racket[pats-match], both defined below:
+
+
+@#reader scribble/comment-reader
+(racketblock
+;; (Listof Pat) Variable -> Expr
+;; Produces an expression determining if every ps matches x
+(define (pats-match ps v)
+  (match ps
+    ['() #t]
+    [(cons p ps)
+     `(and ,(pat-match p v)
+           ,(pats-match ps v))]))
+
+;; (Listof Pat) Variable -> Expr
+;; Produces an expression determining if each ps matches each element of list v
+(define (pat-match-list ps v)
+  (match ps
+    ['() #t]
+    [(cons p ps)
+     (let ((v1 (gensym))
+           (v2 (gensym)))
+       `(let ((,v1 (car ,v))
+              (,v2 (cdr ,v)))
+          (and ,(pat-match p v1)
+               ,(pat-match-list ps v2))))]))
+)
+
+Here are some examples:
+
+@ex[
+
+(pat-match 'leaf 'bt)
+(pat-match '(list 'node v l r) 'bt)
+(pat-match '(list 'node (? even? v) l r) 'bt)
+
+]
+
+These aren't very readable programs that emerge, however, we check
+that they're doing the right thing.  Note that the elaboration
+requires a few functions to be available, such as @racket[list?],
+and @racket[length].  We make these available in an initial
+environment:
+
+@ex[
+(define env0
+  `((length ,length)
+    (list? ,list?)))
+(interp-env (desugar `(let ((bt 'leaf)) ,(pat-match 'leaf 'bt))) env0)
+(interp-env (desugar `(let ((bt 'leaf)) ,(pat-match 8 'bt))) env0)
+(interp-env (desugar
+             `(let ((bt '(node 1 leaf leaf)))
+               ,(pat-match '(list 'node v l r) 'bt)))
+            env0)
+(interp-env (desugar
+             `(let ((bt '(node 1 leaf leaf)))
+               ,(pat-match '(list 'node (? zero?) l r) 'bt)))
+            env0)
+(interp-env (desugar
+             `(let ((bt '(node 0 leaf leaf)))
+               ,(pat-match '(list 'node (? zero?) l r) 'bt)))
+            env0)
+]
+
+Now moving on to @racket[pat-bind], it follows a similar structure,
+but we always assume the given pattern matches the scrutinee.  The
+addition @tt{Expr} argument represents the right-hand-side expression
+of the @racket[match]-clause.  The idea is that the pattern variables
+of @racket[p] are bound to sub-parts of @racket[v] in @racket[e].
+
+@#reader scribble/comment-reader
+(racketblock
+;; Pat Variable Expr -> Expr
+;; Produce an expression that deconstructs v and binds pattern variables
+;; of p in scope of e.
+;; ASSUME: v matches p
+(define (pat-bind p v e)
+  (match p
+    [#t e]
+    [#f e]
+    [(? integer?) e]
+    [(? string?) e]
+    [(list 'quote '()) e]
+    ['_ e]
+    [(? symbol? x) `(let ((,x ,v)) ,e)]
+    [(list 'quote (? symbol?)) e]
+    [(list 'cons p1 p2)
+     (let ((v1 (gensym))
+           (v2 (gensym)))
+       `(let ((,v1 (car ,v))
+              (,v2 (cdr ,v)))
+          ,(pat-bind p1 v1
+                     (pat-bind p2 v2 e))))]
+    [(cons 'list ps)
+     (pat-bind-list ps v e)]
+    [(cons '? (cons _ ps))
+     (pats-bind ps v e)]))
+)
+
+Here are some examples:
+
+@ex[
+
+(pat-bind 'leaf 'bt 'bt)
+(pat-bind '(list 'node v l r) 'bt 'v)
+(pat-bind '(list 'node (? even? v) l r) 'bt 'v)
+
+]
+
+These are tough to read, but we can confirm what they compute:
+
+@ex[
+(interp-env (desugar
+             `(let ((bt '(node 0 leaf leaf)))
+                ,(pat-bind '(list 'node (? zero? z) l r) 'bt 'z)))
+            '())
+]
+
+Putting the pieces together, we can now write a @racket[match->cond] function
+that rewrites a @racket[match]-expression into a @racket[cond]-expression:
+
+@#reader scribble/comment-reader
+(racketblock
+;; Match -> Expr
+;; Rewrite match expression into an equivalent cond expression
+(define (match->cond m)
+  (match m
+    [(cons 'match (cons e mcs))
+     (let ((x (gensym)))
+       `(let ((,x ,e))
+          (cond ,@(map (λ (mc)
+                         (match mc
+                           [(list p e)
+                            (list (pat-match p x) (pat-bind p x e))]))
+                       mcs)
+                ;; fall through to error
+                [else (add1 #f)])))]))
+)
+
+@ex[
+(match->cond '(match '(node 2 leaf leaf)
+                ['leaf 0]
+                [(list 'node v l r) v]))
+]
+
+Finally, we can incorporate @racket[match->cond] into @racket[desugar]:
+
+@#reader scribble/comment-reader
+(ex #:no-prompt
+;; Expr+ -> Expr
+(define (desugar e+)
+  (match e+
+    [`(begin ,@(list `(define (,fs . ,xss) ,es) ...) ,e)
+     `(letrec ,(map (λ (f xs e) `(,f (λ ,xs ,(desugar e)))) fs xss es)
+        ,(desugar e))]
+    [(? symbol? x)         x]
+    [(? imm? i)            i]
+    [`',(? symbol? s)      `',s]
+    [`',d                  (quote->expr d)]
+    [`(,(? prim? p) . ,es) `(,p ,@(map desugar es))]
+    [`(if ,e0 ,e1 ,e2)     `(if ,(desugar e0) ,(desugar e1) ,(desugar e2))]
+    [`(let ((,x ,e0)) ,e1) `(let ((,x ,(desugar e0))) ,(desugar e1))]
+    [`(letrec ,bs ,e0)
+     `(letrec ,(map (λ (b) (list (first b) (desugar (second b)))) bs)
+        ,(desugar e0))]
+    [`(λ ,xs ,e0)          `(λ ,xs ,(desugar e0))]
+    [`(cond . ,_)          (desugar (cond->if e+))]
+    [`(and . ,_)           (desugar (and->if e+))]
+    [`(or . ,_)            (desugar (or->if e+))]
+    [`(match . ,_)         (desugar (match->cond e+))]  ; new
+    [`(,e . ,es)           `(,(desugar e) ,@(map desugar es))]))
+)
+
+Now we can interpret programs such as this:
+
+@ex[
+
+(interp-env
+ (desugar
+  '(begin (define (prod bt)
+            (match bt
+              ['leaf 1]
+              [(list 'node v l r)
+               (* v (* (prod l) (prod r)))]))
+          
+          (prod '(node 3 (node 4 leaf leaf) leaf))))
+ `((* ,*) (list? ,list?) (length ,length)))
+
+]
+         
+                          
