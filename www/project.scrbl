@@ -1,6 +1,6 @@
 #lang scribble/manual
 @(require "defns.rkt")
-@title[#:style '(toc unnumbered)]{Project}
+@title[#:style '(unnumbered)]{Project}
 
 There will be a final course project to be completed over the last
 several weeks of the course.  The project will involve extending the
@@ -18,6 +18,8 @@ learned over the semester to complete a full-featured compiler.
 
 Project repository:
 @centered{@link[repo repo]}
+
+@link["code/project.pdf"]{Slides} from lecture on the project.
 
 You are given a working compiler for an extension of the language we
 have been developing all semester.
@@ -62,6 +64,38 @@ in the compiler.
 There will be a garbage collector provided by the second round of
 benchmarks which you will need to incorporate in to your compiler.
 
+@section[#:tag-prefix "fp-" #:style 'unnumbered]{Measuring run-times}
+
+Let's look at an example of how to measure the run-time performance of
+the code your compiler generates.
+
+First, let's start with fairly computationally intensive program.
+Here is a @link["code/fp/sieve.rkt"]{program} that computes the
+@emph{n}th prime number using the ancient
+@link["https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes"]{Sieve of
+Eratosthenes} method.
+
+Save it to the directory where your compiler lives and run @tt{make
+sieve.run}.  This will run the compiler to generate the @tt{sieve.run}
+executable.  This program expects to read a number from the standard
+input port.
+
+Run:
+
+@centered{@tt{echo -n 100 | ./sieve.run}}
+
+to compute the 100th prime number.
+
+To measure the time it takes, add the time command:
+
+@centered{@tt{echo -n 100 | time ./sieve.run}}
+
+This will run the program and show the result @emph{and} timing
+information.  We will be concerned with improving the real time it
+takes to run the program.
+
+
+@section[#:tag-prefix "fp-" #:style 'unnumbered]{Testing}
 
 @bold{There is separate a repository for tests.} When you push your
 code, Travis will automatically run your code against the tests.  If
