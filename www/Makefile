@@ -15,9 +15,9 @@ $(course):
 		++xref-in setup/xref load-collections-xref \
 		--redirect-main http://docs.racket-lang.org/ \
 		$(course).scrbl
-	mkdir -p $(course)/code/
+	mkdir -p $(course)/code/	
 	cd notes ; \
-		tar -c `git ls-files -X .gitignore intro abscond blackmail con dupe extort fraud hustle iniquity jig knock loot mug` | \
+		tar -c `git ls-files -X .gitignore intro abscond blackmail con dupe extort fraud hustle iniquity jig knock loot mug fp project.pdf` | \
 		(cd ../main/code ; tar -x) ; cd ../..
 
 clean:
