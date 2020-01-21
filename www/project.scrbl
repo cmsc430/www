@@ -7,6 +7,10 @@ several weeks of the course.  The project will involve extending the
 design and implementation of the programming language and its compiler
 that we will develop throughout the semester.
 
+Details will be announced later in the semester.
+
+@;{
+
 @itemlist[
   @item{Final Project Assessment: @bold{@final-date}}
 ]
@@ -113,3 +117,4 @@ a significant update it will be announced on Piazza.
 Pushing your local repository to github ``submits'' your work.  We
 will grade the latest submission that occurs before the deadline.
 
+}
