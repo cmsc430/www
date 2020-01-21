@@ -53,7 +53,7 @@ before_deploy:
 deploy:
 - provider: script
   skip_cleanup: true
-  script: rsync -rvzp $TRAVIS_BUILD_DIR/www/cmsc430 dvanhorn@junkfood.cs.umd.edu:$WWW_DIR/fall2019
+  script: rsync -rvzp $TRAVIS_BUILD_DIR/www/cmsc430 dvanhorn@junkfood.cs.umd.edu:$WWW_DIR/spring2020
   on:
     branch: master
     condition: "$TRAVIS_OS_NAME = linux"
