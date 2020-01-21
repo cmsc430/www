@@ -13,77 +13,85 @@
          #:sep @hspace[1] 
          #:row-properties '(bottom-border)
          (list (list @bold{Week} @bold{Due} @bold{Tuesday} @bold{Thursday})
-               (list @wk{8/27}
+               (list @wk{1/28}
 	       	     ""
                      @secref["Intro"]
                      @secref["OCaml to Racket"])
                
-               (list @wk{9/3}
+               (list @wk{2/4}
 	       	     @seclink["Assignment 1"]{A1}
                      @elem{@secref["OCaml to Racket"] (cont.)}
                      @itemlist[@item{@secref["Abscond"]} @item{@secref["Blackmail"]}])
 
-               (list @wk{9/10}
+               (list @wk{2/11}
 	       	     @seclink["Assignment 2"]{A2}
                      @secref["Con"]
 		     @secref["Dupe"])
                
-               (list @wk{9/17}
+               (list @wk{2/18}
 	       	     @seclink["Assignment 3"]{A3}
                      @secref["Extort"]
                      @secref["Fraud"])
                
-               (list @wk{9/24}
+               (list @wk{2/25}
 	       	     @seclink["Assignment 4"]{A4}
                      @secref["Grift"]
 		     @secref["Hustle"])
                
-               (list @wk{10/1}
+               (list @wk{3/3}
 	       	     @seclink["Assignment 5"]{A5}                     
                      @secref["Iniquity"]
                      @elem{@secref["Iniquity"] (cont.)})
                
-               (list @wk{10/8}
+               (list @wk{3/10}
 	       	     @bold{@seclink["Midterm_1"]{M1}}
                      @elem{No lecture (exam)}
                      @secref["Jig"])
                
-               (list @wk{10/15}
+               (list @wk{3/17}
+                     ""
+                     @elem{Spring Break}
+                     'cont)
+               
+               (list @wk{3/24}
 	       	     @seclink["Assignment 6"]{A6}
                      @secref["Knock"]
-                     @secref["Loot"])
+                     @secref["Loot"])                    
                
-               (list @wk{10/22}
-	       	     ""	       
+               (list @wk{3/31}
+	       	     ""
                      @elem{Loot (cont.)}
 		     @elem{Types})
-               
-               (list @wk{10/29}
-	       	     ""	       
-                     @elem{Letrec}
-		     @elem{Exceptions via CPS})
-               
-               (list @wk{11/5}
+                                    
+               (list @wk{4/7}
 	       	     @seclink["Assignment 7"]{A7}
+                     @elem{Letrec}
+		     @elem{Exceptions via CPS})                    
+               
+               (list @wk{4/14}
+                     ""
                      @elem{Pattern matching}
 		     @elem{Quotation})
                
-               (list @wk{11/12}
+               (list @wk{4/21}
 	       	     @bold{@seclink["Midterm_2"]{M2}}
                      @elem{Review}
 		     @elem{No lecture (exam)})
                
-               (list @wk{11/19}
-	       	     ""	       
-                     @elem{TBD}
-		     'cont)
+               (list @wk{4/28} 
+                     "" 
+                     @elem{TBD} 
+                     'cont)
                
-               (list @wk{11/26} "" @elem{TBD} @elem{@bold{Thanksgiving}})
-               
-               (list @wk{12/3}
+               (list @wk{4/5}
                      ""     
                      @elem{TBD} 
                      'cont)
+
+               (list @wk{4/12}
+                     ""     
+                     @elem{TBD} 
+                     @elem{No class})
 
                )]
 
