@@ -1,6 +1,6 @@
-	global _entry
+	global entry
 	section .text
-_entry:
+entry:
 	mov rax, 40
 	add rax, 1
 	add rax, 1
