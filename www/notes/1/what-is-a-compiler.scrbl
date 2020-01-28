@@ -1,4 +1,9 @@
 #lang scribble/manual
+
+@require[scriblib/footnote]
+
+@define-footnote[footnote make-footnote]
+
 @title[#:tag "Intro"]{What @emph{is} a Compiler?}
 
 A function that maps an @emph{input} string to an @emph{output}
@@ -17,17 +22,17 @@ compiler : SourceProgram -> TargetProgram
 For example, here are some well known compilers:
 
 @verbatim{
-gcc, clang :: C          -> Binary          -- a.out, .exe
-ghc        :: Haskell    -> Binary                 
-javac      :: Java       -> JvmByteCode     -- .class
-scalac     :: Scala      -> JvmByteCode      
-ocamlc     :: Ocaml      -> OcamlByteCode   -- .cmo
-ocamlopt   :: Ocaml      -> Binary               
-gwt        :: Java       -> JavaScript      -- .js
-v8         :: JavaScript -> Binary
-nasm       :: X86        -> Binary    
-pdftex     :: LaTeX      -> PDF
-pandoc     :: Markdown   -> PDF | Html | Doc
+gcc, clang : C          -> Binary          (* a.out, .exe *)
+ghc        : Haskell    -> Binary
+javac      : Java       -> JvmByteCode     (* .class *)
+scalac     : Scala      -> JvmByteCode
+ocamlc     : Ocaml      -> OcamlByteCode   (* .cmo *)
+ocamlopt   : Ocaml      -> Binary
+gwt        : Java       -> JavaScript      (* .js *)
+v8         : JavaScript -> Binary
+nasm       : X86        -> Binary
+pdftex     : LaTeX      -> PDF
+pandoc     : Markdown   -> PDF | Html | Doc
 }
 
 Key Requirements on output program:
@@ -207,11 +212,15 @@ Also @bold{depends on} CMSC 216
 @section{A few words on the medium of instruction}
 
 We will use @link["https://racket-lang.org/"]{Racket} which, for our
-purposes is like Ocaml but with nicer syntax.
+purposes is like Ocaml but with nicer syntax.@footnote{To start a good
+flamewar just post this anywhere online where Haskell and OCaml folks
+can see it.}
 
 Racket has many advanced features beyond what you saw in 330, but we
 won't be using them; in the few cases we do, I’ll explain them as we
 go.
+
+@make-footnote[]
 
 @;section{Our metalanguage: Racket}
 

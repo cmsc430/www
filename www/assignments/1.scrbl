@@ -1,7 +1,7 @@
 #lang scribble/manual
 @title[#:tag "Assignment 1" #:style 'unnumbered]{Assignment 1: Learning about Programming Languages}
 
-@bold{Due: Tues, Sept 3, 11:59PM}
+@bold{Due: Tues, Feb 4, 11:59PM}
 
 Find two programming languages that are new to you, and answer the following questions:
 

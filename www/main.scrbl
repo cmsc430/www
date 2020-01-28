@@ -3,10 +3,10 @@
 	  scriblib/footnote
           scribble/decode
           scribble/html-properties
-	  "defns.rkt"
+      	  "defns.rkt"
           "utils.rkt")
 
-@(define jose @link["http://jmct.cc/"]{José Calderón})
+@(define jose @link["http://jmct.cc/"]{José Manuel Calderón Trilla})
 
 @(define (blockquote . strs)
    (make-nested-flow (make-style "blockquote" '(command))
@@ -37,12 +37,12 @@ implement several related languages.
          #:row-properties '(bottom-border ())
 	 (list (list @bold{Staff} 'cont 'cont 'cont)
 	       (list @bold{Name} @bold{Office} @elem{@bold{E-mail}} @elem{@bold{Hours}})
-	       (list @jose @elem{TBD} "FIXME@cs.umd.edu" "TBD")
-               (list @link["https://sankhs.com/"]{Sankha Narayan Guria} @elem{4172 @AVW} "sankha@cs.umd.edu" "TBD")
-               (list "Tasnim Kabir" @elem{4172 @AVW} "tkabir1@cs.umd.edu" "TBD")
-               (list "Ivan Quiles-Rodriguez" @elem{4172 @AVW} "iquiles@umd.edu" "TBD")
-               (list "John Kastner" @elem{4172 @AVW} "kastner@umd.edu" "TBD")
-               (list "Yiyun Liu" @elem{4172 @AVW} "liuyiyun@terpmail.umd.edu" "TBD"))]
+	       (list @jose @elem{TBD} "FIXME@cs.umd.edu" "11AM-1PM Thu")
+               (list @link["https://sankhs.com/"]{Sankha Narayan Guria} @elem{4172 @AVW} "sankha@cs.umd.edu" "3PM-5PM M")
+               (list "Tasnim Kabir" @elem{4172 @AVW} "tkabir1@cs.umd.edu" "12:30PM-2:30PM F")
+               (list "Ivan Quiles-Rodriguez" @elem{4172 @AVW} "iquiles@umd.edu" "3PM-5PM W")
+               (list "John Kastner" @elem{4172 @AVW} "kastner@umd.edu" "3PM-5PM W")
+               (list "Yiyun Liu" @elem{4172 @AVW} "liuyiyun@terpmail.umd.edu" "3:30-5PM TuTh"))]
 
 @bold{Communications:} @link["https://piazza.com/umd/spring2020/cmsc430"]{https://piazza.com/umd/spring2020/cmsc430}
 

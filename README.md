@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.com/cmsc430/www.png?branch=master)](https://travis-ci.com/cmsc430/www)
 
-# CMSC 430: Design and Implementation of Programming Langauges
+# CMSC 430: Design and Implementation of Programming Languages
 
 This repository contains the course material for CMSC 430: Design and
 Implementation of Programming Languages (aka Compilers), taught at the
@@ -11,6 +11,7 @@ The current instance of this course is:
 * http://www.cs.umd.edu/class/fall2019/cmsc430/
 
 Copyright © 2019 David Van Horn
+Copyright © 2020 David Van Horn and José Manuel Calderón Trilla
 
 Licensed under the Academic Free License version 3.0
 
