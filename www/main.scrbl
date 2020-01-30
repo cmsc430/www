@@ -37,7 +37,7 @@ implement several related languages.
          #:row-properties '(bottom-border ())
 	 (list (list @bold{Staff} 'cont 'cont 'cont)
 	       (list @bold{Name} @bold{Office} @elem{@bold{E-mail}} @elem{@bold{Hours}})
-	       (list @jose @elem{TBD} "FIXME@cs.umd.edu" "11AM-1PM Thu")
+	       (list @jose @elem{TBD} "jmct@jmct.cc" "11AM-1PM Thu")
                (list @link["https://sankhs.com/"]{Sankha Narayan Guria} @elem{4172 @AVW} "sankha@cs.umd.edu" "3PM-5PM M")
                (list "Tasnim Kabir" @elem{4172 @AVW} "tkabir1@cs.umd.edu" "12:30PM-2:30PM F")
                (list "Ivan Quiles-Rodriguez" @elem{4172 @AVW} "iquiles@umd.edu" "3PM-5PM W")
