@@ -3,7 +3,7 @@
 
 @bold{Due: Tues, Feb 4, 11:59PM}
 
-Find two programming languages that are new to you, and answer the following questions:
+Find a single programming language that is new to you, and answer the following questions:
 
 @itemlist[#:style 'ordered
 
@@ -31,7 +31,11 @@ Racket, Ruby, Scheme, SML, Visual Basic.
 
 @section[#:style 'unnumbered]{What to turn in}
 
-We will be using GitHub Classroom.  This means you will work with git
+For this assignment we will not use Github classroom, instead just email me at
+@tt{jmct@jmct.cc} with the following subject: @tt{[Assignment 1]}
+
+
+@;{We will be using GitHub Classroom.  This means you will work with git
 repositories and turning in your work consists of pushing the
 repository to GitHub.
 
@@ -54,5 +58,4 @@ example solution in @tt{racket.md}.  You only need to edit
 files.}
 
 At any point, you may save your work and push the repository.  We will
-grade the last push before the deadline.
-
+grade the last push before the deadline.}
