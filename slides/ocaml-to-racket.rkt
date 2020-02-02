@@ -363,17 +363,41 @@
     #:prompt "430> "
     #:height (* client-h 1/3)
     #:width (* client-w 9/10)
-    "(cons \"jazz\" 1959)"))
+    "(cons \"jazz\" 1959)
+    (cons \"hip hop\" 2015)"))
+
+; This is where we got at the end of the first ocaml-racket lecture
+(slide
+  #:title "Assignment #1"
+  'next
+  (item "Learning about a Programming Language")
+  'next
+  (item "Email me the solution, ensuring that the subject starts with" (tt "[Assignment 1]"))
+  'next
+  (item "Details are posted on the website (including which languages you can't discuss)")
+  'next
+  (item "The first few slides of this lecture (about Racket) is basically the level of detail I'm looking for")
+  'next
+  (item "Go, you're free."))
 
 (slide
-  #:title "Destructors"
-  (item "We can also get stuff out of a list using" (tt "car") "and" (tt "cdr"))
+  #:title "Lists (cons) of pairs (cons)"
+  (item "Structured data is nice, let's make a dictionary.")
   'next
   (repl-area
     #:prompt "430> "
-    #:height (* client-h 1/3)
+    #:height (* client-h 2/3)
     #:width (* client-w 9/10)
-    "(define xs (list 1 2 3))"))
+    "(require \"genre-years.rkt\")"))
+
+(slide
+  #:title "Destructors"
+  (repl-area
+    #:prompt "430> "
+    #:height (* client-h 2/3)
+    #:width (* client-w 9/10)
+    "(car (cons \"hip hop\" 2015))"
+    "(cdr (cons \"soul\" 1970))"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pattern Matching
@@ -454,16 +478,13 @@
               [(leaf)       #t]
               [(node _ _ _) #f])))))
 
-; Last slide
 (slide
-  #:title "Assignment #1"
+  #:title "Defining accessors"
   'next
-  (item "Learning about a Programming Language")
-  'next
-  (item "Email me the solution, ensuring that the subject starts with" (tt "[Assignment 1]"))
-  'next
-  (item "Details are posted on the website (including which languages you can't discuss)")
-  'next
-  (item "The first few slides of this lecture (about Racket) is basically the level of detail I'm looking for")
-  'next
-  (item "Go, you're free."))
+  (para
+    #:align 'left
+    (code (define (get-elem bt)
+            (match bt
+              [(leaf)       '()]
+              [(node i _ _) (cons i '())])))))
+
