@@ -38,11 +38,11 @@ implement several related languages.
 	 (list (list @bold{Staff} 'cont 'cont 'cont)
 	       (list @bold{Name} @bold{Office} @elem{@bold{E-mail}} @elem{@bold{Hours}})
 	       (list @jose @elem{TBD} "jmct@jmct.cc" "11AM-1PM Thu")
-               (list @link["https://sankhs.com/"]{Sankha Narayan Guria} @elem{4172 @AVW} "sankha@cs.umd.edu" "3PM-5PM M")
-               (list "Tasnim Kabir" @elem{4172 @AVW} "tkabir1@cs.umd.edu" "12:30PM-2:30PM F")
-               (list "Ivan Quiles-Rodriguez" @elem{4172 @AVW} "iquiles@umd.edu" "3PM-5PM W")
-               (list "John Kastner" @elem{4172 @AVW} "kastner@umd.edu" "3PM-5PM W")
-               (list "Yiyun Liu" @elem{4172 @AVW} "liuyiyun@terpmail.umd.edu" "3:30-5PM TuTh"))]
+               (list @link["https://sankhs.com/"]{Sankha Narayan Guria} @elem{Iribe 5th Floor East Wing Study (5232)} "sankha@cs.umd.edu" "3PM-5PM M")
+               (list "Tasnim Kabir" @elem{Iribe 5th Floor East Wing Study (5232)} "tkabir1@cs.umd.edu" "12:30PM-2:30PM F")
+               (list "Ivan Quiles-Rodriguez" @elem{Iribe 5th Floor East Wing Study (5232)} "iquiles@umd.edu" "3PM-5PM W")
+               (list "John Kastner" @elem{Iribe 5th Floor East Wing Study (5232)} "kastner@umd.edu" "3PM-5PM W")
+               (list "Yiyun Liu" @elem{Iribe 5th Floor East Wing Study (5232)} "liuyiyun@terpmail.umd.edu" "3:30-5PM TuTh"))]
 
 @bold{Communications:} @link["https://piazza.com/umd/spring2020/cmsc430"]{https://piazza.com/umd/spring2020/cmsc430}
 
