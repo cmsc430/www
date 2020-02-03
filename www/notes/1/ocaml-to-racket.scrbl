@@ -895,7 +895,7 @@ things as expressions.
 The last remaining peice is @racket[unquote-splicing], which
 is abbreviated with ``comma-at'': @racket[,@e] means @tt{
  (unquote-splicing e)}. The @racket[unquote-splicing] form is
-like @racket[unquote] in that if it occurs withing a
+like @racket[unquote] in that if it occurs within a
 @racket[quasiquote], it means we switch back in to
 expression mode. The difference is the expression must
 produce a list (or pair) and the elements of that list (or
