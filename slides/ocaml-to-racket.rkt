@@ -364,7 +364,7 @@
     #:height (* client-h 1/3)
     #:width (* client-w 9/10)
     "(cons \"jazz\" 1959)
-    (cons \"hip hop\" 2015)"))
+       (cons \"hip hop\" 2015)"))
 
 ; This is where we got at the end of the first ocaml-racket lecture
 (slide
@@ -380,8 +380,14 @@
   'next
   (item "Go, you're free."))
 
+;; Title for part 2
+(slide
+  #:title "CMSC 430, Feb 4th 2020"
+  (with-size 64 (tt "OCaml to Racket, Part 2")))
+
 (slide
   #:title "Lists (cons) of pairs (cons)"
+  'next
   (item "Structured data is nice, let's make a dictionary.")
   'next
   (repl-area
@@ -396,8 +402,23 @@
     #:prompt "430> "
     #:height (* client-h 2/3)
     #:width (* client-w 9/10)
-    "(car (cons \"hip hop\" 2015))"
-    "(cdr (cons \"soul\" 1970))"))
+    "(require \"genre-years.rkt\")"))
+
+(slide
+  #:title "Destructors 2"
+  'next
+  (item "What would" (tt "car") "and" (tt "cdr") "do on lists?")
+  'next
+  (subitem (tt "(car '(1 2 3)) ==> ????"))
+  (subitem (tt "(cdr '(1 2 3)) ==> ????")))
+
+(slide
+  #:title "Destructors 3"
+  'next
+  (item "Do yourself a favor")
+  'next
+  (code (define fst car)
+        (define snd cdr)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pattern Matching
@@ -464,7 +485,7 @@
     #:height (* client-h 1/3)
     #:width (* client-w 9/10)
     "(struct leaf ())
-    (struct node (i left right))"))
+     (struct node (i left right))"))
 
 (slide
   #:title "Pattern matching on structs"
@@ -488,3 +509,187 @@
               [(leaf)       '()]
               [(node i _ _) (cons i '())])))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Symbols
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(slide
+  #:title "It may tick of you off, but symbols matter"
+  'next
+  (item "We've actually seen some symbols already:")
+  'next
+  (subitem (code '()))
+  'next
+  (item "Symbols are preceded by the" (tt "'"))
+  'next
+  (item "You don't have to define them beforehand, you can just use them:")
+  'next
+  (subitem (code 'All 'of 'these 'are 'symbols))
+  'next
+  (item "Equality on symbols is what you might expect:")
+  'next
+  (repl-area
+    #:prompt "430> "
+    #:height (* client-h 3/10)
+    #:width (* client-w 9/10)
+    "(equal? 'Λ 'Λ)
+     (equal? 'José 'Jose)"))
+
+(slide
+  #:title "A Symbol unlike any other"
+  'next
+  (item "In compilers we often need symbols that can't clash with any existing symbols")
+  'next
+  (subitem "Anything that gives you such a symbol is considered a source of 'fresh names'")
+  'next
+  (item "In Racket:")
+  (repl-area
+    #:prompt "430> "
+    #:height (* client-h 1/2)
+    #:width (* client-w 9/10)
+    "(gensym)
+     (gensym)
+     (gensym)"))
+
+(slide
+  #:title "For the enumerated type in your life"
+  'next
+  (item "If OCaml we could write the following type:")
+  'next
+  (para
+    #:align 'left
+    (tt "type Beatles = JohnL   | PaulM"))
+  (para
+    #:align 'left
+    (tt "             | GeorgeH | RingoS"))
+  (para
+    #:align 'left
+    (tt "             | BillyP  | GeorgeM"))
+  'next
+  (item "In Racket:")
+  (code (define beatles (list 'JohnL 'PaulM
+                              'GeorgeH 'RingoS
+                              'BillyP 'GeorgeM))
+        (define (beatle? p)
+          (member p beatles))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Quote and quasi-quote
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(slide
+  #:title "Code = Data"
+  'next
+  (item "We've already seen one of Racket's most powerful features: Quote/Unquote")
+  'next
+  (subitem "Now we're going to look at it a little closer")
+  'next
+  (tt "'(x y z) == (list 'x 'y 'z)")
+  'next
+  (item "In Racket" (tt "'") "is known as" (tt "quote")))
+
+(slide
+  #:title "Code = Data"
+  'next
+  (item "A quoted thing can always be represented as an unquoted thing by pushing the" (tt "'") "`inwards'")
+  'next
+  (item (tt "'") "`stop' at symbols (i.e." (tt "'PaulM") ") or empty brackets" (tt "'()"))
+  'next
+  (item (tt "'") "goes away at booleans, strings, and numbers. So:")
+  'next
+  (subitem (tt "'3          == 3"))
+  (subitem (tt "'\"String\"   == \"String\""))
+  (subitem (tt "'#t         == #t")))
+
+(slide
+  #:title "Oh, pairs."
+  'next
+  (item "If" (tt "'(1 2)") "means" (tt "(list '1 '2)"))
+  'next
+  (subitem "How would we write something that means" (tt "(cons '1 '2)") "?")
+  'next
+  (subitem "... We have to add syntax :(")
+  'next
+  (item (tt "'(1 . 2)")))
+
+(slide
+  #:title "When you what to quote, but only kinda."
+  'next
+  (item "If you use" (tt "`") "it works a lot like" (tt "'"))
+  'next
+  (subitem (tt "`(a b c) == (list `a `b `c)"))
+  'next
+  (item "In fact, there is only one difference")
+  'next
+  (subitem (tt "`") "works exactly like quote, unless it encounters a" (tt ","))
+  'next
+  (subitem (tt "`,e == e"))
+  'next
+  (item "These are known as " (tt "quasiquote") "and" (tt "unquote") ", respectively."))
+
+(slide
+  (item "What result should this give us?")
+  (repl-area
+    #:prompt "430> "
+    #:height (* client-h 4/5)
+    #:width (* client-w 9/10)
+    "`(+ 1 ,(+ 1 1))"))
+
+(slide
+  (item "What about this?")
+  (repl-area
+    #:prompt "430> "
+    #:height (* client-h 4/5)
+    #:width (* client-w 9/10)
+    "`(+ 1 ,(+ 1 1) 1)"))
+
+(slide
+  #:title "Flipping the bit on binary trees"
+  'next
+  (item "We showed how to do binary trees with structs")
+  'next
+  (item "While valid, a more common pattern in Racket is to encode ADTs as s-expressions"
+        "(all the things you can quote/unquote)")
+  'next
+  (repl-area
+    #:prompt "430> "
+    #:height (* client-h 2/5)
+    #:width (* client-w 9/10)
+    "'leaf"
+    "'(node 3 leaf leaf)")
+  'next
+  (item "Note that" (tt "leaf") "and" (tt "node") "are just symbols!"))
+
+(slide
+  #:title "Let's study this code together"
+  'next
+  (code (define (bt-height bt)
+          (match bt
+            [`leaf 0]
+            [`(node ,_ ,left ,right)
+             (+ 1 (max (bt-height left)
+                 (bt-height right)))]))))
+
+(slide
+  #:title "To catch them is my real test."
+  (repl-area
+    #:prompt "430> "
+    #:height (* client-h 4/5)
+    #:width (* client-w 9/10)
+    "(require rackunit)"
+    "(check-equal? (* 2 3) 7)"))
+
+(slide
+  #:title "Some final thoughts"
+  'next
+  (item "Read the lecture notes!")
+  'next
+  (subitem "There is material on testing racket code, and how to define and import modules"))
+
+;  (para
+;    #:align 'left
+;    (code (define (get-elem bt)
+;            (match bt
+;              [(leaf)       '()]
+;              [(node i _ _) (cons i '())])))))
+;
