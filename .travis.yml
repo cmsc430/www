@@ -28,7 +28,6 @@ before_install:
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew cask install racket; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install nasm; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install pandoc; fi
-- raco pkg install slideshow-lib
 - raco pkg install slideshow-repl
 
 install: 
