@@ -1,13 +1,13 @@
 texpdfs = lecture-01.pdf
-racketpdfs = ocaml-to-racket.ps
+racketpdfs = ocaml-to-racket.pdf
 pdfs = $(texpdfs) $(racketpdfs)
 all: $(pdfs)
 
 $(texpdfs): %.pdf: %.tex
 	pdflatex $<
 
-$(racketpdfs): %.ps: %.rkt
-	slideshow -p -o $@ $<
+$(racketpdfs): %.pdf: %.rkt
+	slideshow -D -o $@ $<
 
 clean:
 	rm -f *.aux *.log *.nav *.out *.pdf *.snm *.toc *.vrb
