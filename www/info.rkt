@@ -1,3 +1,4 @@
 #lang info
 (define test-omit-paths '("notes/fp/sieve.rkt"
-                          "slides/genre-years.rkt"))
+                          "slides/genre-years.rkt"
+                          "slides/ocaml-to-racket.rkt"))

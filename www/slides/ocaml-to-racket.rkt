@@ -516,10 +516,6 @@
 (slide
   #:title "It may tick of you off, but symbols matter"
   'next
-  (item "We've actually seen some symbols already:")
-  'next
-  (subitem (code '()))
-  'next
   (item "Symbols are preceded by the" (tt "'"))
   'next
   (item "You don't have to define them beforehand, you can just use them:")
@@ -648,7 +644,7 @@
   'next
   (item "We showed how to do binary trees with structs")
   'next
-  (item "While valid, a more common pattern in Racket is to encode ADTs as s-expressions"
+  (item "Another pattern in Racket is to encode ADTs as s-expressions"
         "(all the things you can quote/unquote)")
   'next
   (repl-area
@@ -667,6 +663,16 @@
           (match bt
             [`leaf 0]
             [`(node ,_ ,left ,right)
+             (+ 1 (max (bt-height left)
+                 (bt-height right)))]))))
+
+(slide
+  #:title "Let's study this code together, but with less eye-bleeding"
+  'next
+  (code (define (bt-height bt)
+          (match bt
+            [`leaf 0]
+            [(list `node _ left right)
              (+ 1 (max (bt-height left)
                  (bt-height right)))]))))
 
