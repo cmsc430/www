@@ -74,6 +74,23 @@
   (subitem "This does not mean we have booleans!"))
 
 (slide
+  #:title "Part-n Parse-L"
+  'next
+  (item "Extending our parser/validator is not too difficult")
+  'next
+  (code
+    (define (expr? x)
+      (match x
+        [(? integer? i) #t]
+        [`(add1 ,x) (expr? x)]
+        [`(sub1 ,x) (expr? x)]
+        [`(if (zero? ,x) ,y ,z)
+         (and (expr? x)
+              (expr? y)
+              (expr? z))]
+        [_ #f]))))
+
+(slide
   #:title "What does it mean?"
   'next
   (item "This is a job for semantics"))
