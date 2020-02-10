@@ -83,12 +83,12 @@
                      @elem{TBD} 
                      'cont)
                
-               (list @wk{4/5}
+               (list @wk{5/5}
                      ""     
                      @elem{TBD} 
                      'cont)
 
-               (list @wk{4/12}
+               (list @wk{5/12}
                      ""     
                      @elem{TBD} 
                      @elem{No class})
