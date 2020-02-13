@@ -25,8 +25,9 @@
 
                (list @wk{2/11}
 	       	     @seclink["Assignment 2"]{A2}
-                     @secref["Con"]
-		     @secref["Dupe"])
+                     @elem{@secref["Con"] (@link["code/con.pdf"]{slides})}
+                     @elem{@secref["Dupe"] (@link["code/dupe.pdf"]{slides})})
+            		     
                
                (list @wk{2/18}
 	       	     @seclink["Assignment 3"]{A3}

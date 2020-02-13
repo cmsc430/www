@@ -10,7 +10,7 @@
 (define AVW "AVW")
 
 
-(define m1-date "TBD")
-(define m2-date "TBD")
+(define m1-date "March 10th")
+(define m2-date "April 21st")
 (define final-date "TBD")
 (define elms-url "TBD")
