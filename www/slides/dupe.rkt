@@ -13,7 +13,37 @@
 (slide
   #:title "First things first"
   'next
-  (item ""))
+  (item "Consider the following Racket code")
+  ;(item "Scope isn't just an alternative to Listerine"))
+  'next
+  'alts
+  (list (list
+          (code
+            x)
+          'next
+          (item "Is" (tt "x") "`free'?"))
+        (list
+          (code
+            (cons x y))
+          'next
+          (item "Is" (tt "x") "`free'?")
+          'next
+          (item "Is" (tt "y") "`free'?"))
+        (list
+          (code
+            (lambda (x) (cons x y)))
+          'next
+          (item "Is" (tt "x") "`free'?")
+          'next
+          (item "Is" (tt "y") "`free'?"))
+        (list
+          (code
+            (let ((y 5))
+                 (lambda (x) (cons x y))))
+          'next
+          (item "Is" (tt "x") "`free'?")
+          'next
+          (item "Is" (tt "y") "`free'?"))))
 
 
 (slide
@@ -66,7 +96,7 @@
   'next
   (subitem "Thing to think about:")
   'next
-  (subitem "Why do we still need" (tt "zero?")))
+  (subitem "Why do we still need" (tt "zero?") "(if at all)"))
 
 (slide
   #:title "Valley Date"
@@ -132,75 +162,82 @@
           (bitmap "dupe/itf.png")
           (bitmap "dupe/iti.png"))))
 
-;(slide
-;  #:title "Semantics -> Interpreter"
-;  'alts
-;  (list (list (item "The interpreter can still fit on a single slide")
-;              'next
-;              (code 
-;               (define (interp e)
-;                 (match e
-;                   [(? integer? i) i]
-;                   [`(add1 ,e0)
-;                    (+ (interp e0) 1)]
-;                   [`(sub1 ,e0)
-;                    (- (interp e0) 1)]
-;                   [`(if (zero? ,e0) ,e1 ,e2)
-;                    (if (zero? (interp e0))
-;                        (interp e1)
-;                        (interp e2))]))))
-;        (list (item "But let's just focus on the new bit:")
-;              (code 
-;               (define (interp e)
-;                 (match e
-;                   (...)
-;                   [`(if (zero? ,e0) ,e1 ,e2)
-;                    (if (zero? (interp e0))
-;                        (interp e1)
-;                        (interp e2))])))
-;              'next
-;              (item "the" (tt "zero?") "functions are not the same!")
-;              'next
-;              (subitem (tt "con") "has no notion of booleans (yet!)"))))
-;
-;(slide
-;  #:title "Let's think through two examples"
-;  'alts
-;  (list (list (item "Example 1")
-;              'next
-;              (code (if (zero? 8) 2 3)))
-;        (list (item "Example 2")
-;              'next
-;              (code (if (zero? (add1 -1)) (sub1 2) 3)))))
-;
-;(slide
-;  #:title "Follow these instructions"
-;  (item "Here is a quick overview of some useful instructions:")
-;  'alts
-;  (list (list (item (tt "CMP"))
-;              'next
-;              (tt "CMP RAX, imm32")
-;              'next
-;              (item "imm32 sign-extended to 64-bits with RAX.")
-;              (subitem "limit of 32 bit immediate not an issue for us (always 0)"))
-;        (list (item (tt "JMP"))
-;              'next
-;              (tt "JMP <label>")
-;              'next
-;              (item "Jump to an absolute address")
-;              (subitem "we are going to let the assembler deal with whether it's direct of indirect"))
-;        (list (item (tt "JNE"))
-;              'next
-;              (tt "JNE <label>")
-;              'next
-;              (item "IFF" (tt "ZF!=0") "jump to absolute address")
-;              (subitem "we are going to let the assembler deal with whether it's direct of indirect"))
-;        (list (item (tt "JE"))
-;              'next
-;              (tt "JE <label>")
-;              'next
-;              (item "IFF" (tt "ZF==0") "jump to absolute address")
-;              (subitem "we are going to let the assembler deal with whether it's direct of indirect"))))
-;        
-;(slide
-;  #:title "Let's write it!")
+(slide
+  #:title "Things to consider"
+  'next
+  (item "All of the following are" (it "syntactically valid") "programs")
+  'next
+  (item "What do you expect them to do (i.e. what do the semantics say about them)?")
+  'next
+  (code
+    (if 0 1 2))
+  'next
+  (code
+    (if (zero? 1) 1 2))
+  (code
+    (if #t 1 2))
+  'next
+  (code
+    (if #t (add1 #f) 2)))
+
+(slide
+  #:title "Let's look at the interpreter"
+  (text "We'll do that in the terminal, as it's starting to get a bit too cumbersome"))
+
+(slide
+  #:title "Let's experiment"
+  (repl-area
+    #:prompt "dupe> "
+    #:height (* client-h 8/10)
+    #:width (* client-w 9/10)
+    "(require \"dupe_interp.rkt\")"))
+
+(slide
+  #:title "Things are bit tricky"
+  'next
+  (item "Now let's think about generating x86 code")
+  'next
+  (item "Clearly," (tt "#f") "is not the same as" (tt "0"))
+  'next
+  (subitem "How do we make sure that the values from the different types don't get mixed up?"))
+
+(slide
+  #:title "** several people are typing..."
+  'next
+  (item "This is the crux of a" (it "type system"))
+  'next
+  (item "Different type systems have different tradeoffs")
+  'next
+  (item "We are going to implement a" (it "dynamic") "type system")
+  'next
+  (subitem "What does this imply about how our implementation doesn't get values from different types mixed up?"))
+
+(slide
+  #:title "Tag your int"
+  'next
+  (bitmap "dupe/bitmap-lol.png"))
+
+(slide
+  #:title "Tag your int"
+  'next
+  (item "We have to choose: which type gets" (tt "1") "?")
+  'next
+  (item "Either can work, but we'll argue that" (tt "booleans") "should get the" (tt "1")))
+
+(slide
+  #:title "Tag your int"
+  'next
+  (item "What does this imply about our")
+  'next
+  (subitem "Runtime system?")
+  'next
+  (subitem "Compiler?"))
+
+(slide
+  #:title "Let's take a look at the RTS and compiler")
+
+(slide
+  #:title "Assignment 3"
+  (item "Will go live tomorrow")
+  (subitem "Please tell your fellow students to check the webpage periodically")
+  (subitem "If there are any issues that might make you unable to do the assignment on time," (it "talk to me")))
