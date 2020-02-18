@@ -31,7 +31,7 @@
                
                (list @wk{2/18}
 	       	     @seclink["Assignment 3"]{A3}
-                     @secref["Extort"]
+                     @elem{@secref["Extort"] (@link["code/extort.pdf"]{slides})}
                      @secref["Fraud"])
                
                (list @wk{2/25}
