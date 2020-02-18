@@ -5,9 +5,9 @@
 @(require "../notes/con-plus/semantics.rkt")
 @(require redex/pict)
 
-@bold{Due: Tues, Sept 17, 11:59PM}
+@bold{Due: Tues, Feb 24, 11:59PM}
 
-@(define repo "https://classroom.github.com/a/pxQO5YFd")
+@(define repo "https://classroom.github.com/a/ZEKlJiVS")
 
 The goal of this assignment is to extend a compiler with some simple
 unary numeric operations and conditional expressions, and to write a
