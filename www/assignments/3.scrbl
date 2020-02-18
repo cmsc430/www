@@ -5,7 +5,7 @@
 @(require "../notes/con-plus/semantics.rkt")
 @(require redex/pict)
 
-@bold{Due: Tues, Feb 24, 11:59PM}
+@bold{Due: Tues, Feb 25, 11:59PM}
 
 @(define repo "https://classroom.github.com/a/ZEKlJiVS")
 
