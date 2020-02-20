@@ -20,7 +20,7 @@ $(course):
 		tar -c `git ls-files -X .gitignore intro abscond blackmail con dupe extort fraud hustle iniquity jig knock loot mug fp project.pdf` | \
 		(cd ../main/code ; tar -x) ; cd ../..
 	cd slides ; \
-		tar -c `git ls-files -X .gitignore ocaml-to-racket.pdf abscond.pdf con.pdf dupe.pdf` | \
+		tar -c `git ls-files -X .gitignore ocaml-to-racket.pdf abscond.pdf con.pdf dupe.pdf extort.pdf` | \
 		(cd ../main/code ; tar -x) ; cd ../..
 
 clean:

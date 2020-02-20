@@ -1,5 +1,5 @@
 texpdfs = lecture-01.pdf
-racketpdfs = ocaml-to-racket.pdf
+racketpdfs = ocaml-to-racket.pdf abscond.pdf con.pdf dupe.pdf extort.pdf
 pdfs = $(texpdfs) $(racketpdfs)
 all: $(pdfs)
 
