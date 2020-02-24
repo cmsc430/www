@@ -23,7 +23,7 @@ expressions in our language always depend upon the result of a single
 subexpression.  For example, @racket[(add1 _e)] depends upon the
 result of @racket[_e], @racket[(zero? _e)] depends upon @racket[_e],
 and so on.  Even expressions that involve multiple subexpressions such
-as @racket[(if _e0 _e1 _e2)] really only depende on @racket[_e0] to
+as @racket[(if _e0 _e1 _e2)] really only depends on @racket[_e0] to
 determine which of @racket[_e1] or @racket[_e2] to evaluate.
 
 Let's now consider what happens when we have @bold{multiple
@@ -51,7 +51,7 @@ We can model it as a datatype as usual:
 
 @section{Meaning of Grift programs}
 
-The meaning of Grift programs is pretty straightfoward.  For
+The meaning of Grift programs is pretty straightforward.  For
 @racket[(+ _e0 _e1)], the meaning is the sum of the meanings of
 @racket[_e0] and @racket[_e1], when they mean integers, otherwise the
 meaning is an error.
@@ -178,8 +178,8 @@ subexpression to a variable and then uses the @racket[compile-+-var]
 function above.  The idea is that every time the compiler encounters
 @racket[(+ _e0 _e1)], we transform it to @racket[(let ((_x _e0)) (+ _x
 _e1))].  For this to work out, @racket[_x] needs to be some variable
-that doesn't appear free in @racket[_e1].  This transfomration is
-what's called @bold{ANF} (adminitrative normal form) and is a widely
+that doesn't appear free in @racket[_e1].  This transformation is
+what's called @bold{ANF} (administrative normal form) and is a widely
 used intermediate representation for compilers.
 
 
@@ -187,7 +187,7 @@ But, we can also solve the problem more directly by considering the
 code that is generated for the ANF style expression above.
 
 Consider the lexical address of @racket[_x] in the transformed code
-above.  It is @emph{always} 0 becuase the transformation puts the
+above.  It is @emph{always} 0 because the transformation puts the
 @racket[let] immediately around the occurrence of @racket[_x].  So if
 we're compiling @racket[(+ _e0 _e1)] in environment @racket[_c] using
 this approach, we know the value of @racket[_e0] will live at
@@ -219,7 +219,7 @@ that no variable in @racket[_e1] resolves to @racket[x] because
 @racket[x] is a freshly @racket[gensym]'d symbol.  Putting (an
 unreferenced) @racket[x] in the environment serves only to ``bump up''
 by one the offset of any variable bound after @racket[x] so as to not
-override the spot where @racket[e0]'s values lives.  We can acomplish
+override the spot where @racket[e0]'s values lives.  We can accomplish
 the same thing by sticking in something that no variable is equal to:
 @racket[#f]:
 
@@ -237,7 +237,7 @@ the same thing by sticking in something that no variable is equal to:
 
 
 
-The commplete code for the compiler is:
+The complete code for the compiler is:
 
 
 @codeblock-include["grift/compile.rkt"]
