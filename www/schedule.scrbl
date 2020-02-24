@@ -36,11 +36,11 @@
                
                (list @wk{2/25}
 	       	     @seclink["Assignment 4"]{A4}
-                     @secref["Grift"]
+                     @secref["Refactor + Grift"]
 		     @secref["Hustle"])
                
                (list @wk{3/3}
-	       	     @seclink["Assignment 5"]{A5}                     
+                     ""
                      @secref["Iniquity"]
                      @elem{@secref["Iniquity"] (cont.)})
                
@@ -55,12 +55,12 @@
                      'cont)
                
                (list @wk{3/24}
-	       	     @seclink["Assignment 6"]{A6}
+	       	     @seclink["Assignment 5"]{A5}                     
                      @secref["Knock"]
                      @secref["Loot"])                    
                
                (list @wk{3/31}
-	       	     ""
+	       	     @seclink["Assignment 6"]{A6}
                      @elem{Loot (cont.)}
 		     @elem{Types})
                                     
