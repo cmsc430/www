@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
+#include <assert.h>
 
 #define typeof_mask  1
 #define val_shift    1
-#define type_fixnum  0
+#define type_int     0
 #define type_bool    1
 
 int64_t entry();
@@ -12,7 +13,7 @@ int64_t entry();
 int main(int argc, char** argv) {
   int64_t result = entry();
   switch (typeof_mask & result) {
-  case type_fixnum:
+  case type_int:
     printf("%" PRId64 "\n", result >> val_shift);
     break;
   case type_bool:
