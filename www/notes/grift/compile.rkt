@@ -1,12 +1,11 @@
 #lang racket
+(provide (all-defined-out))
 
-(define imm-shift        3)
+(define imm-shift        1)
 (define imm-type-mask    (sub1 (arithmetic-shift 1 imm-shift)))
-(define imm-type-int     #b000)
-(define imm-type-true    #b001)
-(define imm-type-false   #b010)
-(define imm-type-empty   #b011)
-(define imm-type-char    #b100)
+(define imm-type-int     #b0)
+(define imm-val-true     #b11)
+(define imm-val-false    #b01)
 
 ;; Expr -> Asm
 (define (compile e)
@@ -38,7 +37,7 @@
 
 ;; Boolean -> Asm
 (define (compile-boolean b)
-  `((mov rax ,(if b imm-type-true imm-type-false))))
+  `((mov rax ,(if b imm-val-true imm-val-false))))
 
 ;; Expr CEnv -> Asm
 (define (compile-add1 e0 c)
@@ -62,9 +61,9 @@
     `(,@c0
       ,@assert-integer
       (cmp rax 0)
-      (mov rax ,imm-type-false)
+      (mov rax ,imm-val-false)
       (jne ,l0)
-      (mov rax ,imm-type-true)
+      (mov rax ,imm-val-true)
       ,l0)))
 
 ;; Expr Expr Expr CEnv -> Asm
@@ -75,7 +74,7 @@
         (l0 (gensym))
         (l1 (gensym)))
     `(,@c0
-      (cmp rax ,imm-type-false)
+      (cmp rax ,imm-val-false)
       (je ,l0)       ; jump to c2 if #f
       ,@c1
       (jmp ,l1)      ; jump past c2
