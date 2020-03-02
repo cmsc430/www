@@ -9,14 +9,14 @@
 
 @bold{Due: TBD}
 
-@(define repo "https://classroom.github.com/a/HuBPd1o9")
+@(define repo "NOT A URL")
 
 The goal of this assignment is to extend a compiler with binding forms
 and a character data type.
 
 Assignment repository:
 @centered{Will be released soon}
-;@centered{@link[repo repo]}
+@;centered{@link[repo repo]}
 
 You are given a repository with a starter compiler similar to the
 @seclink["Fraud"]{Fraud} language we studied in class.  You are tasked
