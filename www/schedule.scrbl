@@ -37,7 +37,7 @@
                (list @wk{2/25}
                      ""
                      @elem{@secref["Grift"] (@link["code/grift.pdf"]{slides})}
-		     @secref["Grift"] (cont.))
+		                 @elem{@secref["Grift"] (cont.)})
                
                (list @wk{3/3}
                      ""
@@ -47,7 +47,7 @@
                (list @wk{3/10}
 	       	     @bold{@seclink["Midterm_1"]{M1}}
                      @elem{No lecture (exam)}
-                     @secref["Iniquity"] (cont.))
+                     @elem{@secref["Iniquity"] (cont.)})
                
                (list @wk{3/17}
 	       	     @seclink["Assignment 4"]{A4}
@@ -62,7 +62,7 @@
                (list @wk{3/31}
 	       	     @seclink["Assignment 6"]{A6}
                      @secref["Loot"]
-                     @secref["Loot"] (cont.))
+                     @elem{@secref["Loot"] (cont.)})
                                     
                (list @wk{4/7}
 	       	     @seclink["Assignment 7"]{A7}
