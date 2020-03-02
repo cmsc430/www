@@ -11,10 +11,9 @@
 #define imm_shift      (3 + result_shift)
 #define imm_type_mask  ((1 << imm_shift) - 1)
 #define imm_type_int   (0 << result_shift)
-#define imm_type_true  (1 << result_shift)
-#define imm_type_false (2 << result_shift)
-#define imm_type_empty (3 << result_shift)
-#define imm_type_char  (4 << result_shift)
+#define imm_val_true   (1 << result_shift)
+#define imm_val_false  (2 << result_shift)
+#define imm_val_empty (3 << result_shift)
 
 // in bytes
 #define heap_size 1000000
@@ -39,7 +38,7 @@ void error() {
 }
 
 void internal_error() {
-  printf("internal-error");
+  printf("rts-error");
   exit(1);
 }
 
@@ -67,13 +66,13 @@ void print_immediate(int64_t a) {
   case imm_type_int:
     printf("%" PRId64, a >> imm_shift);
     break;
-  case imm_type_true:
+  case imm_val_true:
     printf("#t");
     break;
-  case imm_type_false:
+  case imm_val_false:
     printf("#f");
     break;
-  case imm_type_empty:
+  case imm_val_empty:
     printf("()");
     break;
   default:
