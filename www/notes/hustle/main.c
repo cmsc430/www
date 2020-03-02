@@ -85,7 +85,7 @@ void print_pair(int64_t a) {
   int64_t car = *((int64_t *)((a + 8) ^ type_pair));
   int64_t cdr = *((int64_t *)((a + 0) ^ type_pair));
   print_result(car);
-  if ((imm_type_mask & cdr) == imm_type_empty) {
+  if ((imm_type_mask & cdr) == imm_val_empty) {
     // nothing
   } else if ((result_type_mask & cdr) == type_pair) {
     printf(" ");
