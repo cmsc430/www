@@ -16,7 +16,6 @@
 (define imm-type-true    (arithmetic-shift #b001 result-shift))
 (define imm-type-false   (arithmetic-shift #b010 result-shift))
 (define imm-type-empty   (arithmetic-shift #b011 result-shift))
-(define imm-type-char    (arithmetic-shift #b100 result-shift))
 
 ;; Allocate in 64-bit (8-byte) increments, so pointers
 ;; end in #b000 and we tag with #b001 for boxes, etc.
