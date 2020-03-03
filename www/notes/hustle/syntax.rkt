@@ -18,6 +18,7 @@
     [(? symbol?) (not (memq x '(if let)))]
     [(? integer?) #t]
     [(? boolean?) #t]
+    [''() #t]
     [`(,(? unop? p) ,x) (expr? x)]
     [`(,(? binop? p) ,x ,y) 
       (and
