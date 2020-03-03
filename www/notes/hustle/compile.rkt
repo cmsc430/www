@@ -13,9 +13,9 @@
 (define imm-shift        (+ 3 result-shift))
 (define imm-type-mask    (sub1 (arithmetic-shift 1 imm-shift)))
 (define imm-type-int     (arithmetic-shift #b000 result-shift))
-(define imm-type-true    (arithmetic-shift #b001 result-shift))
-(define imm-type-false   (arithmetic-shift #b010 result-shift))
-(define imm-type-empty   (arithmetic-shift #b011 result-shift))
+(define imm-val-true    (arithmetic-shift #b001 result-shift))
+(define imm-val-false   (arithmetic-shift #b010 result-shift))
+(define imm-val-empty   (arithmetic-shift #b011 result-shift))
 
 ;; Allocate in 64-bit (8-byte) increments, so pointers
 ;; end in #b000 and we tag with #b001 for boxes, etc.
@@ -62,8 +62,8 @@
   `((mov rax
          ,(match i
             [(? integer? i) (arithmetic-shift i imm-shift)]
-            [(? boolean? b) (if b imm-type-true imm-type-false)]
-            [''()           imm-type-empty]))))
+            [(? boolean? b) (if b imm-val-true imm-val-false)]
+            [''()           imm-val-empty]))))
 
 ;; Variable CEnv -> Asm
 (define (compile-var x c)
@@ -139,9 +139,9 @@
     `(,@c0
       ,@assert-integer
       (cmp rax 0)
-      (mov rax ,imm-type-false)
+      (mov rax ,imm-val-false)
       (jne ,l0)
-      (mov rax ,imm-type-true)
+      (mov rax ,imm-val-true)
       ,l0)))
 
 ;; Expr Expr Expr CEnv -> Asm
@@ -152,7 +152,7 @@
         (l0 (gensym))
         (l1 (gensym)))
     `(,@c0
-      (cmp rax ,imm-type-false)
+      (cmp rax ,imm-val-false)
       (je ,l0)
       ,@c1
       (jmp ,l1)
