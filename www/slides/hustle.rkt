@@ -230,9 +230,9 @@
     (define imm-shift        (+ 3 result-shift))
     (define imm-type-mask    (sub1 (shift 1 imm-shift)))
     (define imm-type-int     (shift #b000 result-shift))
-    (define imm-type-true    (shift #b001 result-shift))
-    (define imm-type-false   (shift #b010 result-shift))
-    (define imm-type-empty   (shift #b011 result-shift))))
+    (define imm-val-true    (shift #b001 result-shift))
+    (define imm-val-false   (shift #b010 result-shift))
+    (define imm-val-empty   (shift #b011 result-shift))))
 
 (slide
   #:title "Follow these instructions"
