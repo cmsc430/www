@@ -174,6 +174,23 @@
   (subitem "Then make distinctions between the flat (immediate) and boxed values"))
 
 (slide
+  #:title "Wait a bit... what about the heap?"
+  'next
+  (item "Early I had mentioned that we'll get a heap, then I never addressed it")
+  'next
+  (item "I didn't forget, we just had to lay the groundwork")
+  'next
+  (item "For now, it's easy:")
+  'next
+  (subitem "Just have the RTS allocate a big block of memory. That's it. That's the heap.")
+  'next
+  (item "We gotta keep track of it too...")
+  'next
+  (subitem "Uhh... let's use" (tt "rdi"))
+  'next
+  (item "Moving on."))
+
+(slide
   #:title "From grifters to hustlers"
   'next
   'alts
@@ -221,18 +238,18 @@
   #:title "Follow these instructions"
   (item "Here is a quick overview of some useful facts")
   'alts
-  (list (list (item (tt "RSP"))
+  (list (list (item (tt "rdi"))
               'next
-              (tt "MOV RAX, [RSP]")
+              (tt "MOV RAX, [RDI]")
               'next
-              (tt "MOV RAX, [RSP - 8]")
+              (tt "MOV RAX, [RDI + 8]")
               'next
-              (tt "MOV [RSP - 8], RAX")
+              (tt "MOV [RDI + 8], RAX")
               'next
-              (tt "MOV RAX, [RSP - 16]")
+              (item "we call this" (tt "offset")))
+        (list (item "someone asked about how many 'lets' we can have:")
               'next
-              (item "we will call this" (tt "offset")))
-        (list (item "run the following at your terminal")
+              (item "run the following at your terminal")
               (subitem (tt "ulimit -a"))
               'next
               (item "If I did my math right (always questionable), we should be able to store ~1 million let-bound variables."))))
