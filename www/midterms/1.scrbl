@@ -13,11 +13,11 @@ Midterm repository:
 
 The repository contains a single plaintext file @tt{m1.txt}, which you
 can edit to submit your answers to the following questions.  Your
-submision must be pushed by midnight on Tuesday.
+submission must be pushed by midnight on Tuesday.
 
-During the 48 hours of the exam period, you may only ask private
+During the 72 hours of the exam period, you may only ask private
 questions on Piazza if you need assistance for the course staff.  You
-may not comminicate or collaborate with any one else about the content
+may not communicate or collaborate with any one else about the content
 of this exam.
 
 @section{Short answer}
@@ -26,7 +26,8 @@ of this exam.
 
 [10 points]
 
-Briefly describe the difference, if any, between these two Asm instructions:
+Assuming that the value in @tt{rax} is 5 and the value in @tt{rbx} is 10,
+briefly describe the difference, if any, between these two Asm instructions:
 
 @verbatim{
 (mov rax rbx)
@@ -40,14 +41,15 @@ Briefly describe the difference, if any, between these two Asm instructions:
 
 [10 points]
 
-Briefly describe the difference, if any, between these two Asm instructions:
+Briefly describe the difference, if any, between these two Asm instructions
+(hint: offsets were first introduced in @tt{Fraud}) :
 
 @verbatim{
-(mov rax (offset rbx 0))
+(mov rax (offset rbx 1))
 }
 
 @verbatim{
-(mov (offset rbx 0) rax)
+(mov (offset rbx 1) rax)
 }
 
 @section{Representation}
@@ -62,16 +64,17 @@ being represented was an integer (tagged with @code[#:lang
 "racket"]{#b0}) or a boolean (tagged with @code[#:lang
 "racket"]{#b1}).
 
-Cosider the following alternative design: @racket[#t] is represented
-by the number 0, @racket[#f] is represented by the number 1. All other
+Consider the following alternative design: @racket[#t] is represented
+by the number 1, @racket[#f] is represented by the number 0. All other
 numbers beside 0 and 1 are used to represent integers.
 
 @itemlist[
 
 @item{Describe one way in which this design is worse that the tagging
-approach.}
+approach we have used in class.}
 
-@item{Describe on way in which this design is better.}
+@item{Describe on way in which this design is better than the tagging approach
+used in class.}
 
 @item{Describe, at a high-level in English, how you could implement
 @racket[add1] using this design.}
@@ -122,7 +125,7 @@ connectives similar to those found in Racket.
 
 The @racket[or] form takes any number of subexpressions.  The
 subexpressions are evaluated from left to right until a subexpression
-evaluates to a non-@racket[#f] value, which is produces by the
+evaluates to a non-@racket[#f] value, which is produced by the
 @racket[or].  If no such subexpression exists, then @racket[#f] is
 produced.
 
@@ -173,20 +176,20 @@ compiling @racket[cons]:
       (add rdi 16))))
 )
 
-Now suppose a @racket[map-add1] operation is added to the language
-which takes a single argument, which must be a list of numbers.  The
-operation adds one to each element of the list and produces a list of
-the results.  In other words, @racket[(map-add1 _xs)] should produce
-what @racket[(map add1 _xs)] produces in Racket.
+Now suppose a @racket[map-zero?] operation is added to the language which takes
+a single argument, which must be a list of numbers. The operation determines,
+for each element of the list, whether the element is 0 or not and produces a
+list of the results. In other words, @racket[(map-zero? _xs)] should produce
+what @racket[(map zero? _xs)] produces in Racket.
 
-Write a @racket[compile-map-add1] function that compiles an expression
-of the form @racket[(map-add1 _e0)]:
+Write a @racket[compile-map-zero?] function that compiles an expression
+of the form @racket[(map-zero? _e0)]:
 
 @#reader scribble/comment-reader
 (racketblock
 
 ;; Expr CEnv -> Asm
-(define (compile-map-add1 e0 c)
+(define (compile-map-zero? e0 c)
   ...)
 )
 
