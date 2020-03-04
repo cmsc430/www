@@ -40,34 +40,34 @@
 		                 @elem{@secref["Grift"] (cont.)})
                
                (list @wk{3/3}
-                     ""
+	       	           @seclink["Assignment 4"]{A4}
                      @secref["Hustle"]
-                     @elem{@secref["Iniquity"]})
+                     @elem{@secref["Hustle"] (cont.)})
                
                (list @wk{3/10}
 	       	     @bold{@seclink["Midterm_1"]{M1}}
                      @elem{No lecture (exam)}
-                     @elem{@secref["Iniquity"] (cont.)})
+                     @elem{@secref["Iniquity"]})
                
                (list @wk{3/17}
-	       	     @seclink["Assignment 4"]{A4}
+                     ""
                      @elem{Spring Break}
                      'cont)
                
                (list @wk{3/24}
 	       	     @seclink["Assignment 5"]{A5}                     
-                     @secref["Jig"]
-                     @secref["Knock"])                    
+                     @elem{@secref["Iniquity"] (cont.)}
+                     @secref["Jig"])                    
                
                (list @wk{3/31}
 	       	     @seclink["Assignment 6"]{A6}
-                     @secref["Loot"]
-                     @elem{@secref["Loot"] (cont.)})
+                     @secref["Knock"]
+                     @elem{@secref["Loot"]})
                                     
                (list @wk{4/7}
 	       	     @seclink["Assignment 7"]{A7}
-                     @elem{Letrec}
-		     @elem{Exceptions via CPS})                    
+                     @elem{@secref["Loot"] (cont.)}
+		                 @elem{Letrec})                    
                
                (list @wk{4/14}
                      ""
