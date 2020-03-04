@@ -7,15 +7,15 @@
 
 @(require "../notes/ev.rkt")
 
-@bold{Due: TBD}
+@bold{Due: Tuesday, March 23rd at 11:59PM EST}
 
-@(define repo "NOT A URL")
+@(define repo "https://classroom.github.com/a/xFrLoZGL")
 
 The goal of this assignment is to extend a compiler with binding forms
 and a character data type.
 
 Assignment repository:
-@centered{@link[https://classroom.github.com/a/xFrLoZGL]}
+@centered{@link[repo repo]}
 
 You are given a repository with a starter compiler similar to the
 @seclink["Fraud"]{Fraud} language we studied in class.  You are tasked
