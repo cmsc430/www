@@ -176,6 +176,25 @@ in the right-hand-sides of any of the @racket[let].
 For example, @racketblock[(let ((x 1) (y x)) 0)] is a syntax error
 because the occurrence of @racket[x] is not bound.
 
+There is also @racket[let*] that also binds any number of expressions. The
+difference is that previous bindings are available to subsequent bindings. For
+example,
+
+@racketblock[
+(let* ((x 1) (y 2) (z (add1 y)))
+  _e)
+]
+
+binds @racket[x] to 1, @racket[y] to 2, and @racket[z] to 3 in
+the scope of @racket[_e].
+
+The syntax of a @racket[let*] expression allows any number of binders
+to occur, so @racket[(let* () _e)] is valid syntax and is equivalent to
+@racket[_e].
+
+Unlike @racket[let], @racketblock[(let ((x 1) (y x)) 0)] is @emph{not} a syntax
+error.
+
 The following files have already been updated for you:
 
 @itemlist[
@@ -202,7 +221,7 @@ occurrence is bound.}
 ]
 
 Update @tt{compile.rkt} to correctly compile the generalized form of
-@racket[let].  The compiler may assume the input is a closed
+@racket[let] and @racket[let*].  The compiler may assume the input is a closed
 expression.
 
 @section[#:tag-prefix "a4-" #:style 'unnumbered]{Extending your Parser}
@@ -215,14 +234,15 @@ grammar:
 <expr> ::= integer
         |  character
         |  boolean
-	|  variable
+        |  variable
         |  ( <compound> )
-	|  [ <compound> ]
+        |  [ <compound> ]
 
 <compound> ::= <prim> <expr>
             |  if <expr> <expr> <expr>
             |  cond <clause>* <else>
-	    |  let <bindings> <expr>
+            |  let <bindings> <expr>
+            |  let* <bindings> <expr>
 
 <prim> ::= add1 | sub1 | abs | - | zero? | integer->char | char->integer
         |  char? | integer? | boolean?
@@ -264,10 +284,11 @@ which are defined as follows:
 ;; | 'rsquare   ;; ]
 ;; | 'eof       ;; end of file
 
-;; type Variable = Symbol (other than 'let, 'cond, etc.)
+;; type Variable = Symbol (other than 'let, 'let*, 'cond, etc.)
 
 ;; type Keyword =
 ;; | 'let
+;; | 'let*
 ;; | 'cond
 ;; | 'else
 ;; | 'if
