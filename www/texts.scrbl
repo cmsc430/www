@@ -46,14 +46,14 @@ course.}
 
 @item{
 
-@link["https://cs.brown.edu/courses/cs033/docs/guides/x64_cheatsheet.pdf"]{x64 Cheat Sheet,
+@link["https://cs.brown.edu/courses/cs033/docs/guides/x64_cheatsheet.pdf"]{x64 Cheat Sheet}
 Introduction to Computer Systems, Brown University, Tom Doeppner.
 
 These lecture notes provide a quick overview of the x64 assembly language.
 Sections 1-3 will be the most relevant to our class. Section 4 has more to do
 with C-style data structures and the C calling convention.  It is important to
 note that whenever this document refers to a function or function call, it is
-referring to a @emph{C-style} function or function call.}
+referring to a @emph{C-style} function or function call.
 
 }
 
@@ -75,7 +75,6 @@ concepts, this is the paper for you.
 
 ]
 
-]
 
 @section{References}
 
