@@ -4,7 +4,7 @@
 
 @title{Midterm 1}
 
-@bold{Due: Tues, Oct 8, 11:59PM}
+@bold{Due: Tues, March 10th, 11:59PM}
 
 @(define repo "https://classroom.github.com/a/eTxvTYHF")
 
