@@ -37,11 +37,11 @@
                (list @wk{2/25}
                      ""
                      @elem{@secref["Grift"] (@link["code/grift.pdf"]{slides})}
-		                 @elem{@secref["Grift"] (cont.)})
+		                 @elem{@secref["Grift"] (cont.)(@link["code/grift2.pdf"]{slides})})
                
                (list @wk{3/3}
 	       	           @seclink["Assignment 4"]{A4}
-                     @secref["Hustle"]
+                     @elem{@secref["Hustle"] (@link["code/hustle.pdf"]{slides})}
                      @elem{@secref["Hustle"] (cont.)})
                
                (list @wk{3/10}
