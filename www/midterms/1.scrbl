@@ -6,7 +6,7 @@
 
 @bold{Due: Tues, Oct 8, 11:59PM}
 
-@(define repo "https://classroom.github.com/a/-N-q7mJ7")
+@(define repo "https://classroom.github.com/a/eTxvTYHF")
 
 Midterm repository:
 @centered{@link[repo repo]}
