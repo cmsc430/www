@@ -9,7 +9,7 @@
 ;; Any -> Boolean
 (define (unop? x)
   (and (symbol? x)
-       (memq x '(add1 sub1 zero? box unbox car cdr))))
+       (memq x '(add1 sub1 zero? box unbox car cdr map-zero?))))
 
 ;; Any -> Boolean
 ;; Is x a well-formed expression?
