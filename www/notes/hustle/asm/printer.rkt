@@ -50,7 +50,7 @@
 ;; Any -> Boolean
 (define (reg? x)
   (and (symbol? x)
-       (memq x '(rax rbx rsp al eax rdi))))
+       (memq x '(rax rbx rsp al eax rdi rcx rdx))))
 
 ;; Reg -> String
 (define (reg->string r)
