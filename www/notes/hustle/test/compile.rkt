@@ -50,3 +50,7 @@
 (check-equal? (run '(unbox (let ((x (box 3))) x))) 3)
 (check-equal? (run '(unbox (if (zero? 0) (box 3) (box 4)))) 3)
 (check-equal? (run '(cons 1 (cons 2 (cons 3 '())))) (list 1 2 3))
+
+(check-equal? (run '(map-zero? '())) '())
+(check-equal? (run '(map-zero? (cons 0 (cons 1 (cons 2 (cons 3 '())))))) (list #t #f #f #f))
+(check-equal? (run '(map-zero? (cons 0 (cons 1 (cons 0 (cons 1 '())))))) (list #t #f #t #f))
