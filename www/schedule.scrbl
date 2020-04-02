@@ -47,7 +47,7 @@
                (list @wk{3/10}
 	       	     @bold{@seclink["Midterm_1"]{M1}}
                      @elem{No lecture (exam)}
-                     @elem{@secref["Iniquity"]})
+                     @elem{Overview of Exam Question 5})
                
                (list @wk{3/17}
                      ""
@@ -56,42 +56,42 @@
                
                (list @wk{3/24}
 	       	     @seclink["Assignment 5"]{A5}                     
-                     @elem{@secref["Iniquity"] (cont.)}
-                     @secref["Jig"])                    
+                     @elem{Global Pandemic}
+                     'cont)
                
                (list @wk{3/31}
-	       	     @seclink["Assignment 6"]{A6}
-                     @secref["Knock"]
-                     @elem{@secref["Loot"]})
+                     ""
+                     @elem{Discussion of new Roadmap}
+                     @elem{@secref["Iniquity"]})
                                     
                (list @wk{4/7}
-	       	     @seclink["Assignment 7"]{A7}
-                     @elem{@secref["Loot"] (cont.)}
-		                 @elem{Letrec})                    
-               
+                     ""
+                     @elem{@secref["Iniquity"] (cont.)}
+		                 @elem{@secref["Jig"]})
+
                (list @wk{4/14}
                      ""
-                     @elem{Pattern matching}
-		     @elem{Quotation})
-               
+                     @elem{@secref["Knock"]}
+                     @elem{@secref["Loot"]})
+
                (list @wk{4/21}
+                     @elem{@secref["Loot"] (cont.)}
+                     @elem{TBD (Either Dynamic Values of FFI)})
+
+               (list @wk{4/28}
 	       	     @bold{@seclink["Midterm_2"]{M2}}
+                     ""
                      @elem{Review}
-		     @elem{No lecture (exam)})
-               
-               (list @wk{4/28} 
-                     "" 
-                     @elem{TBD} 
-                     'cont)
+		                 @elem{No lecture (exam)})
                
                (list @wk{5/5}
-                     ""     
-                     @elem{TBD} 
-                     'cont)
+                     ""
+                     @elem{Either FFI or Dyanmic Values}
+                     @elem{Either FFI or Dyanmic Values})
 
                (list @wk{5/12}
-                     ""     
-                     @elem{TBD} 
+                     ""
+                     @elem{Garbage Collection, briefly}
                      @elem{No class})
 
                )]
