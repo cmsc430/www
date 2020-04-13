@@ -81,7 +81,6 @@
 
                (list @wk{4/28}
 	       	     @bold{@seclink["Midterm_2"]{M2}}
-                     ""
                      @elem{Review}
 		                 @elem{No lecture (exam)})
                
