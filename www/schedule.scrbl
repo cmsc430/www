@@ -72,11 +72,12 @@
                (list @wk{4/14}
                      ""
                      @elem{@secref["Knock"]}
-                     @elem{@secref["Loot"]})
+                     @elem{@secref["Quiz"]})
 
                (list @wk{4/21}
-                     @elem{@secref["Loot"] (cont.)}
-                     @elem{TBD (Either Dynamic Values of FFI)})
+	       	           @seclink["Assignment 6"]{A6}                     
+                     @elem{@secref["Loot"]}
+                     @elem{@secref["Loot"] (cont.)})
 
                (list @wk{4/28}
 	       	     @bold{@seclink["Midterm_2"]{M2}}
