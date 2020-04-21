@@ -22,9 +22,7 @@
 
 We've been building up the pieces of functions, first with
 second-class functions, then with tail-calls, then with first-class
-function pointers.  You've seen variable arity functions and the
-@racket[apply] operator in @seclink["Assignment 6"]{Assignment
-6}.
+function pointers.
 
 Now we're ready to deal with functions in their most general form:
 @racket[λ]-expressions.
@@ -50,7 +48,7 @@ For the moment, @tt{Formals} can be defined as a list of variables:
 }|
 
 But it's possible to extend the @racket[λ]-notation to include the
-ability to define variable-arity functions, along the lines of
+ability to define variable-arity functions, as you will see in
 @secref["Assignment 6"].
 
 @section[#:tag-prefix "loot"]{Long Live Lambda!}
