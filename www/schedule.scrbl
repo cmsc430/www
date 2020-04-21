@@ -72,7 +72,7 @@
                (list @wk{4/14}
                      ""
                      @elem{@secref["Knock"]}
-                     @elem{@secref["Quiz"]})
+                     @elem{Quiz})
 
                (list @wk{4/21}
 	       	           @seclink["Assignment 6"]{A6}                     
