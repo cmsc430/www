@@ -70,7 +70,7 @@ update the run-time system to properly print strings.  Otherwise, no
 changes to the run-time system should be necessary.
 
 If you want to understand the details of how strings are implemented in
-the run-time system. See the function @code[#:lang "c"]{print_string()}
+the run-time system. See the function @tt{print_string()}
 in @tt{main.c}.
 
 @section[#:tag-prefix "a5-" #:style 'unnumbered]{More operations}
