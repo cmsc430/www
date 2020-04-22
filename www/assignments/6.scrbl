@@ -7,9 +7,9 @@
 
 @(require "../notes/ev.rkt")
 
-@bold{Due: Tues, Oct 22, 11:59PM}
+@bold{Due: Tues, April 28, 11:59PM EST}
 
-@(define repo "https://classroom.github.com/a/dLXAGLLp")
+@(define repo "https://classroom.github.com/a/CxdcWxG7")
 
 The goal of this assignment is to (1) implement arity checking in a
 language with functions, (2) to implement the @racket[apply]
@@ -376,4 +376,3 @@ a significant update it will be announced on Piazza.
 
 Pushing your local repository to github ``submits'' your work.  We
 will grade the latest submission that occurs before the deadline.
-
