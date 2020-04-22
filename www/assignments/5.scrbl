@@ -7,7 +7,7 @@
 
 @(require "../notes/ev.rkt")
 
-@bold{Due: Thurs, Oct 3, 11:59PM (EXTENDED: Sun, Oct 6, 11:59PM)}
+@bold{Due: Thurs, April 28, 11:59PM EST}
 
 @(define repo "https://classroom.github.com/a/Qsw0mqpL")
 
@@ -29,8 +29,6 @@ with:
 @item{extending the language to include a string data type,}
 
 @item{implementing a number of primitives,}
-
-@item{updating the parser to work for Hustle+.}
 
 ]
 
@@ -71,6 +69,10 @@ free to change the representation if you'd like, but you will have to
 update the run-time system to properly print strings.  Otherwise, no
 changes to the run-time system should be necessary.
 
+If you want to understand the details of how strings are implemented in
+the run-time system. See the function @code[#:lang "c"]{print_string()}
+in @tt{main.c}.
+
 @section[#:tag-prefix "a5-" #:style 'unnumbered]{More operations}
 
 Add the following operations to the Hustle+ language:
@@ -103,25 +105,10 @@ two booleans are equal.}
 
 ]
 
-@section[#:tag-prefix "a5-" #:style 'unnumbered]{Extending your Parser, yet again!}
+@section[#:tag-prefix "a5-" #:style 'unnumbered]{Extending the Parser}
 
-@bold{CHANGE:} There have been a couple of omissions in the grammar
-and the code given to you for the parser.  The grammar has been
-(hopefully) fixed and I have decided to release the code for the
-parser, so you shouldn't have to make changes to it.  If you have
-already cloned the repository and starting working on it, just replace
-your @tt{parse.rkt} and @tt{lex.rkt} with these files:
-
-@link["https://raw.githubusercontent.com/cmsc430/assign05/master/parse.rkt"]{https://raw.githubusercontent.com/cmsc430/assign05/master/parse.rkt}
-
-@link["https://raw.githubusercontent.com/cmsc430/assign05/master/lex.rkt"]{https://raw.githubusercontent.com/cmsc430/assign05/master/lex.rkt}
-
-If you have not yet accepted the assignment, these changes should
-already be included in your code when you do.
-
-
-Extend your Fraud+ parser for the Hustle+ language based on the following
-grammar:
+The parser has been extended from the Fraud+ parser for the Hustle+ language
+based on the following grammar:
 
 @verbatim{
 <expr> ::= integer
@@ -212,23 +199,18 @@ which are defined as follows (only the new parts are shown):
 The lexer will take care of reading the @tt{#lang racket} header and
 remove any whitespace.
 
-You must complete the code in @tt{parse.rkt} to implement the parser
-which constructs an s-expression representing a valid Hustle+
-expression, if possible, from a list of tokens.  The @racket[parse]
-function should have the following signature and must be provided by
-the module:
-
-@#reader scribble/comment-reader
-(racketblock
-;; parse : [Listof Token] -> Expr
-)
+The code in @tt{parse.rkt} implements the parser which constructs an
+s-expression representing a valid Hustle+ expression, if possible, from a list
+of tokens. 
 
 As an example, @racket[parse] should produce @racket['(add1 (sub1 7))]
 if given
 
 @racketblock['(lparen (prim add1) lparen (prim sub1) 7 rparen rparen eof)]
 
-You should not need to make any changes to @tt{lex.rkt}.
+You should not need to make any changes to @tt{lex.rkt} or to @tt{parse.rkt},
+but you do need to understand the structure of the resulting AST, which is why
+the information above was provided.
 
 @section[#:tag-prefix "a5-" #:style 'unnumbered]{Testing}
 
