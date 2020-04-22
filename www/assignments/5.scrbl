@@ -7,9 +7,9 @@
 
 @(require "../notes/ev.rkt")
 
-@bold{Due: Thurs, April 28, 11:59PM EST}
+@bold{Due: Tues, April 28, 11:59PM EST}
 
-@(define repo "https://classroom.github.com/a/Qsw0mqpL")
+@(define repo "https://classroom.github.com/a/Q8hyY0yo")
 
 The goal of this assignment is to extend a compiler with data types
 that require memory allocation and dereferencing.
