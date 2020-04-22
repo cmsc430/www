@@ -55,7 +55,7 @@
                      'cont)
                
                (list @wk{3/24}
-	       	     @seclink["Assignment 5"]{A5}                     
+                     ""
                      @elem{Global Pandemic}
                      'cont)
                
@@ -75,7 +75,7 @@
                      @elem{Quiz})
 
                (list @wk{4/21}
-	       	           @seclink["Assignment 6"]{A6}                     
+	       	           @seclink["Assignment 5"]{A6}                     
                      @elem{@secref["Loot"]}
                      @elem{@secref["Loot"] (cont.)})
 
