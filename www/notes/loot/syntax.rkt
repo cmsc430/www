@@ -24,7 +24,8 @@
     [`(letrec ,bs ,e0)
      `(letrec ,(map (λ (b) (list (first b) (desugar (second b)))) bs)
         ,(desugar e0))]
-    [`(λ ,xs ,e0)          `(λ ,xs ,(desugar e0))]    
+    [`(λ ,xs ,e0)          `(λ ,xs ,(desugar e0))]
+    [`(lambda ,xs ,e0)     `(λ ,xs ,(desugar e0))]
     [`(,e . ,es)           `(,(desugar e) ,@(map desugar es))]))    
 
 ;; Any -> Boolean
