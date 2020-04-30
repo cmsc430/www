@@ -5,20 +5,20 @@
 
 @title{Midterm 2}
 
-@bold{Due: Thurs, Oct 14, 11:59PM}
+@bold{Due: Sat, May 2, 21:00PM}
 
-@(define repo "https://classroom.github.com/a/bJm4_Ug6")
+@(define repo "https://classroom.github.com/a/z6YwuQrz")
 
 Midterm repository:
 @centered{@link[repo repo]}
 
-The repository contains a single markdown file @tt{m2.md}, which you
-can edit to submit your answers to the following questions.  Your
-submision must be pushed by midnight on Thursday.
+The repository contains a single markdown file @tt{m2.md}, which you can edit
+to submit your answers to the following questions.  Your submission must be
+pushed by 9pm on Saturday (unless you have already arranged otherwise).
 
-During the 48 hours of the exam period, you may only ask private
+During the 60 hours of the exam period, you may only ask private
 questions on Piazza if you need assistance for the course staff.  You
-may not comminicate or collaborate with any one else about the content
+may not communicate or collaborate with any one else about the content
 of this exam.
 
 @section[#:tag-prefix "m2"]{Short answer}
@@ -33,17 +33,17 @@ equivalent to each of the following:
 
 @itemlist[
 
-@item{@verbatim{'((1) x 2)}}
+@item{@verbatim{'((10) y y z 2)}}
 
-@item{@verbatim{'((1) x . 2)}}
+@item{@verbatim{'((2) . 2)}}
 
-@item{@verbatim{'(1 . (2 . (3)))}}
+@item{@verbatim{'(a . (b . (c)))}}
 
-@item{@verbatim{'(quote (x 2))}}
+@item{@verbatim{(quote '(x 2))}}
 
-@item{@verbatim{`(1 ,(add1 2))}}
+@item{@verbatim{`(1 . ,(add1 2))}}
 
-@item{@verbatim|{`(1 ,@'(2 3) x)}|}
+@item{@verbatim|{`(1 ,@'(2 3) ,@'(x))}|}
 ]
 
 For example, @racket['(1 2 3)] is equivalent to @racket[(cons 1 (cons 2 (cons 3 '())))].
@@ -96,10 +96,6 @@ Which of the following subexpressions are in tail position?
 ]
 
 
-
-
-
-
 @section[#:tag-prefix "m2"]{Code generation}
 
 @bold{Question 4}
@@ -134,148 +130,71 @@ given to you.)
 (define (compile-set-box! e0 e1 c) ...)
 )
 
-@section[#:tag-prefix "m2"]{Defunctionalizing}
+@section[#:tag-prefix "m2"]{Closure Conversion}
 
 @bold{Question 5}
 
 [20 points]
 
-Here is a program we wrote for computing the product of a binary tree
-of numbers.
 
-It is clever in that it never multiplies if there is a zero in the tree;
-it immediately returns @racket[0].  It does this without using
-exception handlers, but instead by being written in a
-continuation-passing style.
+In our @secref["Loot"] compiler we used Closure Conversion to
+help us implement higher-order functions on a target language
+that does not support higher-order functions natively (x86_64).
+
+This was done by introducing an appropriate data structure
+for storing the environment and accessing the stored environment
+when necessary.
+
+Now imagine that our target was not x86_64, but a dialect of Racket
+that did not have higher-order functions. We could still perform
+closure conversion!
+
+For example, the following application of a constant function:
 
 @#reader scribble/comment-reader
 (racketblock
-;; BT -> Number
-(define (prod bt)
-  (prod/k bt (λ (x) x)))
-
-;; BT (Number -> Number) -> Number
-(define (prod/k bt k)
-  (match bt
-    ['leaf (k 1)]
-    [`(node ,v ,l ,r)
-     (if (zero? v)
-         0
-         (prod/k l (λ (pl)
-                    (prod/k r (λ (pr)
-                                (k (* v (* pl pr))))))))]))
+(let ((x 5)) ((lambda (y) x) 10))
 )
 
-Use defunctionalization to derive an equivalent definition of
-@racket[prod] that does not use @racket[λ]-expressions or higher-order
-values (i.e. no functions consume or produce other others).
-
-The resulting program should consist of three mutually-recursive,
-first-order functions where every call to one of these functions is a
-tail-call.
-
-For full credit, be sure to include a type definition for the type of
-defunctionalized @racket[λ]-expressions in this program and type
-signatures for all three functions.
-
-
-
-@section[#:tag-prefix "m2"]{Pattern matching}
-
-@bold{Question 6}
-
-[30 points]
-
-When we studied how to transform away pattern-matching expressions,
-we considered the following grammar of patterns:
+Using the same definitions for @tt{lookup} and @tt{ext} first introduced in
+@secref["Fraud"], could be transformed to the following:
 
 @#reader scribble/comment-reader
 (racketblock
-;; type Pat =
-;; | #t
-;; | #f
-;; | Integer
-;; | String
-;; | Variable
-;; | `_
-;; | `'()
-;; | `(quote ,Symbol)
-;; | `(cons ,Pat ,Pat)
-;; | `(list ,Pat ...)
-;; | `(? ,Expr ,Pat ...)
- )
 
-Let's make a modest extension:
-@#reader scribble/comment-reader
-(racketblock
-;; type Pat =
-;; ...
-;; | (list 'list Pat '...)
- )
+(define (lam1 env y)
+  (lookup env 'x))
 
-The pattern @racket[(list _p ...)] is a pattern that matches a list of
-any length, so long as every element of the list matches the
-subpattern @racket[_p].  Note that the elipsis here is literally part
-of the syntax!
-
-If the pattern matches, it matches any pattern variables within
-@racket[_p] to the @emph{list} of things that match in the elements of
-the list.
-
-Some examples:
-
-@ex[
-(match (list 1 2 3)
-  [(list xs ...) (reverse xs)])
-
-(match (list 'x 'y 'z)
-  [(list (? symbol? xs) ...) xs])
-
-(match (list)
-  [(list (? symbol? xs) ...) xs])
-
-(match (list 'x 3 'z)
-  [(list (? symbol? xs) ...) xs]
-  [_ '()])
-
-(match '((x 1) (y 2) (z 3))
-  [(list (list xs ys) ...) (list xs ys)])
-]
-
-
-Extend the definitions of @racket[pat-match] and @racket[pat-bind]
-which wrote when implementing pattern matching to include this new
-kind of pattern.
-
-@#reader scribble/comment-reader
-(racketblock
-;; Pat Variable -> Expr
-;; Produces an expression determining if p matches v
-(define (pat-match p v)
-  (match p
-    [(list 'list p1 '...)
-     ;; your solution here
-     'todo]
-    ;; omitted code that was previously given
-    ))
-
-;; Pat Variable Expr -> Expr
-;; Produce an expression that deconstructs v and binds pattern variables
-;; of p in scope of e.
-;; ASSUME: v matches p
-(define (pat-bind p v e)
-  (match p
-    [(list 'list p1 '...)
-     ;; your solution here
-     'todo]
-    ;; omitted code that was previously given
-    ))
+(let ((x 5)) (lam1 (ext '() 'x x) 10))
 )
 
-You do not have to transcribe the complete function, just give the
-code that goes in two occurrences of @racket['todo] to complete the
-definition.
+Perform closure conversion on the following higher-order program:
 
-If you need to rely on any helper functions, you must give their
-complete definition and type signatures.
+@#reader scribble/comment-reader
+(racketblock
+(define (map f xs)
+  (match xs
+    ['() '()]
+    [(cons y ys) (cons (f y) (map f ys))]))
 
+(define (main)
+  (let ((x 10)
+        (y 20)
+        (z 30))
+   (map (lambda (z) (+ x ((lambda (x) (+ x y)) y) z)) '(1 2 3))))
+)
+
+You may assume @tt{lookup} and @tt{ext} exist.
+
+In order to receive full marks, show the steps of your transformation.
+
+You can receive full marks without transforming @tt{map}, i.e. you can still
+use function pointers (though there is no need to bother with the syntax we
+used in knock).
+
+@bold{Question 5 Extra Credit}
+
+[10 points]
+
+Apply the full defunctionalization transformation introduced in @secref["Loot"]
+to the same code from above.
