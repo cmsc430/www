@@ -1,6 +1,5 @@
 #lang racket
 (require "../interp.rkt"
-         (prefix-in defun: "../interp-defun.rkt")
          ;(only-in "../semantics.rkt" H 𝑯 convert)
          rackunit
          redex/reduction-semantics)
@@ -153,10 +152,4 @@
  (λ (e)
    (match (interp e)
      [(? procedure?) 'procedure]
-     [v v])))
-
-(test-suite
-  (λ (e)
-   (match (defun:interp e)
-     [(? defun:function?) 'procedure]
      [v v])))
