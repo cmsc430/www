@@ -75,7 +75,7 @@
                      @elem{Quiz})
 
                (list @wk{4/21}
-	       	           @seclink["Assignment 5"]{A6}                     
+                     @seclink["Assignment 5"]{A5}
                      @elem{@secref["Loot"]}
                      @elem{@secref["Loot"] (cont.)})
 

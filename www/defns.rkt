@@ -11,6 +11,6 @@
 
 
 (define m1-date "March 10th")
-(define m2-date "April 21st")
+(define m2-date "April 30th")
 (define final-date "TBD")
 (define elms-url "TBD")
