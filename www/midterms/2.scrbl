@@ -39,7 +39,7 @@ equivalent to each of the following:
 
 @item{@verbatim{'(a . (b . (c)))}}
 
-@item{@verbatim{(quote '(x 2))}}
+@item{@verbatim{'(quote (x 2))}}
 
 @item{@verbatim{`(1 . ,(add1 2))}}
 
