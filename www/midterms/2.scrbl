@@ -81,7 +81,8 @@ How about this one?  Again, justify your answer.
 
 [8 points]
 
-Which of the following subexpressions are in tail position?
+For each of the following expressions, which subexpressions are in tail
+position?
 
 @itemlist[
 
@@ -172,6 +173,30 @@ Perform closure conversion on the following higher-order program:
 
 @#reader scribble/comment-reader
 (racketblock
+(let ((x 10)
+      (y 20)
+      (z 30))
+ ((lambda (z) (+ x ((lambda (x) (+ x y)) y) z)) 1))
+)
+
+You may assume @tt{lookup} and @tt{ext} exist.
+
+In order to receive full marks, show the steps of your transformation.
+
+Clarification: I've completely removed @tt{map} as it was only essential to the
+extra credit below. To get full marks you must closure convert both of the
+lambdas that are present in the program above.
+
+
+@bold{Question 5 Extra Credit}
+
+[10 points]
+
+Apply the full defunctionalization transformation introduced in @secref["Loot"]
+to the following code:
+
+@#reader scribble/comment-reader
+(racketblock
 (define (map f xs)
   (match xs
     ['() '()]
@@ -184,17 +209,4 @@ Perform closure conversion on the following higher-order program:
    (map (lambda (z) (+ x ((lambda (x) (+ x y)) y) z)) '(1 2 3))))
 )
 
-You may assume @tt{lookup} and @tt{ext} exist.
-
-In order to receive full marks, show the steps of your transformation.
-
-You can receive full marks without transforming @tt{map}, i.e. you can still
-use function pointers (though there is no need to bother with the syntax we
-used in knock).
-
-@bold{Question 5 Extra Credit}
-
-[10 points]
-
-Apply the full defunctionalization transformation introduced in @secref["Loot"]
-to the same code from above.
+You can reuse whatever you feel is appropriate, if anything, from Question 5.
