@@ -1,2 +1,2 @@
 #lang racket
-(let ((y 10)) ((lambda (x) y) 11))
+(let ((y (ccall c_fun))) ((lambda (x) y) 11))

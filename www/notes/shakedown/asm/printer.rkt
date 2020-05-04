@@ -75,5 +75,6 @@
      (string-append "\tglobal " (label->string g) "\n"
                     "\tdefault rel\n"
                     "\textern " (label->string 'error) "\n"                    
+                    "\textern " (label->string 'c_fun) "\n"                    
                     "\tsection .text\n"
                     (asm->string a)))))

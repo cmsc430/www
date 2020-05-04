@@ -80,6 +80,7 @@
     [`(let ((,x ,e0)) ,e1) (compile-tail-let x e0 e1 c)]
     [`(letrec ,bs ,e0)     (compile-tail-letrec (map first bs) (map second bs) e0 c)]
     [`(λ ,xs ',l ,e0)      (compile-λ xs l (fvs e) c)]
+    [`(ccall ,f . ,es)     (compile-ccall f es c)]
     [`(,e . ,es)           (compile-tail-call e es c)]))
 
 ;; LExpr CEnv -> Asm
@@ -102,7 +103,30 @@
     [`(let ((,x ,e0)) ,e1) (compile-let x e0 e1 c)]
     [`(λ ,xs ',l ,e0)      (compile-λ xs l (fvs e) c)]
     [`(letrec ,bs ,e0)     (compile-letrec (map first bs) (map second bs) e0 c)]
+    [`(ccall ,f . ,es)     (compile-ccall f es c)]
     [`(,e . ,es)           (compile-call e es c)]))
+
+;; Label (listof Expr) -> Asm
+(define (compile-ccall f es c)
+  (let ((stack-size (* 8 (length c))))
+  (match es
+    [`()
+      `(
+
+       (mov r15 rsp)
+
+       ; change rsp to reflect the top of the stack
+       (sub rsp ,stack-size)
+
+       ; align rsp to safest 16-byte aligned spot
+       (and rsp -16)
+
+       (call ,f)
+
+       (mov rsp r15)
+
+       )]
+    [_   `()])))
 
 ;; (Listof Variable) Label (Listof Varialbe) CEnv -> Asm
 (define (compile-λ xs f ys c)
