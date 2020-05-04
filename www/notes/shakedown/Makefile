@@ -9,14 +9,17 @@ else
   format=win64
 endif
 
-%.run: %.o main.o char.o
-	gcc main.o char.o $< -o $@
+%.run: %.o main.o char.o clib.o
+	gcc main.o char.o clib.o $< -o $@
 
 main.o: main.c types.h
 	gcc -c main.c -o main.o
 
 char.o: char.c types.h
 	gcc -c char.c -o char.o
+
+clib.o: clib.c types.h
+	gcc -c clib.c -o clib.o
 
 %.o: %.s
 	nasm -f $(format) -o $@ $<

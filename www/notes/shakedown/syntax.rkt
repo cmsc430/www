@@ -24,9 +24,10 @@
     [`(letrec ,bs ,e0)
      `(letrec ,(map (λ (b) (list (first b) (desugar (second b)))) bs)
         ,(desugar e0))]
-    [`(λ ,xs ,e0)          `(λ ,xs ,(desugar e0))]    
-    [`(lambda ,xs ,e0)     `(λ ,xs ,(desugar e0))]    
-    [`(,e . ,es)           `(,(desugar e) ,@(map desugar es))]))    
+    [`(λ ,xs ,e0)          `(λ ,xs ,(desugar e0))]
+    [`(lambda ,xs ,e0)     `(λ ,xs ,(desugar e0))]
+    [`(ccall ,f . ,es)     `(ccall ,f ,@(map desugar es))]
+    [`(,e . ,es)           `(,(desugar e) ,@(map desugar es))]))
 
 ;; Any -> Boolean
 (define (imm? x)
@@ -55,6 +56,7 @@
     [`(letrec ,bs ,e0)     `(letrec ,(map (λ (b) (list (first b) (label-λ (second b)))) bs)
                               ,(label-λ e0))]
     [`(λ ,xs ,e0)          `(λ ,xs ',(gensym) ,(label-λ e0))]    
+    [`(ccall ,f . ,es)     `(ccall ,f ,@(map label-λ es))]
     [`(,e . ,es)           `(,(label-λ e) ,@(map label-λ es))]))
 
 ;; LExpr -> (Listof LExpr)
@@ -77,6 +79,7 @@
     [`(let ((,x ,e0)) ,e1) (append (λs e0) (λs e1))]
     [`(letrec ,bs ,e0)     (append (apply append (map (compose λs second) bs)) (λs e0))]
     [`(λ ,xs ,l ,e0)       (cons e (λs e0))]
+    [`(ccall ,f . ,es)     (apply append (map λs es))]
     [`(,e . ,es)           (append (λs e) (apply append (map λs es)))]))
 
 ;; LExpr -> (Listof Variable)
@@ -100,5 +103,6 @@
       [`(letrec ,bs ,e0)     (remq* (map first bs)
                                     (apply append (fvs e0) (map fvs (map second bs))))]      
       [`(λ ,xs ,l ,e0)       (remq* xs (fvs e0))]
+      [`(ccall ,f . ,es)     (apply append (map fvs es))]
       [`(,e . ,es)           (append (fvs e) (apply append (map fvs es)))]))          
   (remove-duplicates (fvs e)))
