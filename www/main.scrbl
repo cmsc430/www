@@ -21,9 +21,9 @@
 
 @image[#:scale 1/2 #:style float-right]{img/wizard.png}
 
-@emph{Spring, @year}
+@emph{Fall, @year}
 
-@emph{Lectures: Tuesday & Thursday, 9:30-10:45pm, CSIC 2117}
+@emph{Lectures: Tuesday & Thursday, 2:00pm Eastern - 3:15pm Eastern, Online}
 
 @emph{Professor: @jose}
 
@@ -37,22 +37,22 @@ implement several related languages.
          #:row-properties '(bottom-border ())
 	 (list (list @bold{Staff} 'cont 'cont 'cont)
 	       (list @bold{Name} @bold{Office} @elem{@bold{E-mail}} @elem{@bold{Hours}})
-	       (list @jose @elem{Iribi 5242} "jmct@umd.edu" "11AM-1PM Thu")
-               (list @link["https://sankhs.com/"]{Sankha Narayan Guria} @elem{Iribe 5th Floor East Wing Study (5232)} "sankha@cs.umd.edu" "3PM-5PM M")
-               (list "Tasnim Kabir" @elem{Iribe 5th Floor East Wing Study (5232)} "tkabir1@cs.umd.edu" "12:00PM-2:00PM F")
-               (list "Ivan Quiles-Rodriguez" @elem{Iribe 5th Floor East Wing Study (5232)} "iquiles@umd.edu" "3PM-5PM W")
-               (list "John Kastner" @elem{Iribe 5th Floor East Wing Study (5232)} "kastner@umd.edu" "3PM-5PM W")
-               (list "Yiyun Liu" @elem{Iribe 5th Floor East Wing Study (5232)} "liuyiyun@terpmail.umd.edu" "3:30-5PM WF"))]
+	       (list @jose @elem{Iribi 5242} "jmct@umd.edu" "TBD")
+               (list "Tasnim Kabir" @elem{online} "tkabir1@cs.umd.edu" "TBD")
+               (list "Alex Taber" @elem{online} "ataber@terpmail.umd.edu" "TBD")
+               (list "Vyas Gupta" @elem{online} "vgupta13@terpmail.umd.edu" "TBD"))]
 
-@bold{Communications:} @link["https://piazza.com/umd/spring2020/cmsc430"]{https://piazza.com/umd/spring2020/cmsc430}
+@bold{Communications:} "Email"
 
-@bold{Assumptions:} This course assumes you know the material in CMSC
-330 and CMSC 216.  In particular, you need to know how to program in a
-functional programming language like OCaml and some
-familiarity with programming in C and Assembly.
+@bold{Assumptions:} This course assumes you know the material in CMSC 330 and
+CMSC 216. In particular, you need to know how to program in a functional
+programming language like OCaml and some familiarity with programming in C and
+Assembly. See the @seclink["Texts"]{Texts} page for references to brush up on
+this material.
 
-@bold{Disclaimer:} All information on this web page is tentative and
-subject to change until the start of the semester.
+@bold{Disclaimer:} All information on this web page is tentative and subject to
+change. Any substantive change will be accompanied with an announcement to the
+class via ELMS.
 
 @include-section{syllabus.scrbl}
 @include-section{texts.scrbl}
