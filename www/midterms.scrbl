@@ -11,5 +11,5 @@ date of the midterm.
   @item{Midterm 2: @bold{@m2-date}}
 ]
 
-@include-section["midterms/1.scrbl"]
-@include-section["midterms/2.scrbl"]
+@;include-section["midterms/1.scrbl"]
+@;include-section["midterms/2.scrbl"]
