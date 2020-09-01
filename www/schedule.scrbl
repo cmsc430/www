@@ -48,7 +48,7 @@
 	       	     @bold{@seclink["Midterm_1"]{M1}}
                      @elem{No lecture (exam)}
                      @elem{@secref["Iniquity"]})
-               
+
                (list @wk{10/19}
                      ""
                      @elem{@secref["Iniquity"] (cont.)}
