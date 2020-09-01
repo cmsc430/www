@@ -4,7 +4,7 @@
 
 @title[#:style 'unnumbered]{Schedule}
 
-@;(TuTh 2-3:15 CSI 2117)
+@;(TuTh 2-3:15, Online)
 
 @(define (wk d) (nonbreaking (bold d)))
 
@@ -13,86 +13,86 @@
          #:sep @hspace[1] 
          #:row-properties '(bottom-border)
          (list (list @bold{Week} @bold{Due} @bold{Tuesday} @bold{Thursday})
-               (list @wk{1/28}
+               (list @wk{08/31}
 	       	     ""
                      @secref["Intro"]
                      @elem{@secref["OCaml to Racket"] (@link["code/ocaml-to-racket.pdf"]{slides})})
-               
-               (list @wk{2/4}
+
+               (list @wk{09/07}
 	       	     @seclink["Assignment 1"]{A1}
                      @elem{@secref["OCaml to Racket"] (cont.)}
-                     @itemlist[@item{@secref["Abscond"](@link["code/abscond.pdf"]{slides})} @item{@secref["Blackmail"](@link["code/abscond.pdf"]{slides})}])
+                     @itemlist[@item{@secref["Abscond"]}
+                               @item{@secref["Blackmail"]}])
 
-               (list @wk{2/11}
+               (list @wk{09/14}
 	       	     @seclink["Assignment 2"]{A2}
-                     @elem{@secref["Con"] (@link["code/con.pdf"]{slides})}
-                     @elem{@secref["Dupe"] (@link["code/dupe.pdf"]{slides})})
-            		     
-               
-               (list @wk{2/18}
+                     @elem{@secref["Con"]}
+                     @elem{@secref["Dupe"]})
+
+               (list @wk{09/21}
 	       	     @seclink["Assignment 3"]{A3}
-                     @elem{@secref["Extort"] (@link["code/extort.pdf"]{slides})}
+                     @elem{@secref["Extort"]}
                      @secref["Fraud"])
                
-               (list @wk{2/25}
+               (list @wk{09/28}
                      ""
-                     @elem{@secref["Grift"] (@link["code/grift.pdf"]{slides})}
-		                 @elem{@secref["Grift"] (cont.)(@link["code/grift2.pdf"]{slides})})
+                     @elem{@secref["Grift"]}
+		                 @elem{@secref["Grift"] (cont.)})
                
-               (list @wk{3/3}
+               (list @wk{10/05}
 	       	           @seclink["Assignment 4"]{A4}
-                     @elem{@secref["Hustle"] (@link["code/hustle.pdf"]{slides})}
+                     @elem{@secref["Hustle"]}
                      @elem{@secref["Hustle"] (cont.)})
                
-               (list @wk{3/10}
+               (list @wk{10/12}
 	       	     @bold{@seclink["Midterm_1"]{M1}}
                      @elem{No lecture (exam)}
-                     @elem{Overview of Exam Question 5})
-               
-               (list @wk{3/17}
-                     ""
-                     @elem{Spring Break}
-                     'cont)
-               
-               (list @wk{3/24}
-                     ""
-                     @elem{Global Pandemic}
-                     'cont)
-               
-               (list @wk{3/31}
-                     ""
-                     @elem{Discussion of new Roadmap}
                      @elem{@secref["Iniquity"]})
-                                    
-               (list @wk{4/7}
+               
+               (list @wk{10/19}
                      ""
                      @elem{@secref["Iniquity"] (cont.)}
-		                 @elem{@secref["Jig"]})
-
-               (list @wk{4/14}
-                     ""
-                     @elem{@secref["Knock"]}
-                     @elem{Quiz})
-
-               (list @wk{4/21}
+                     @elem{@secref["Jig"]})
+               
+               (list @wk{10/26}
                      @seclink["Assignment 5"]{A5}
+                     @elem{@secref["Knock"]}
+                     @elem{Digression: Taking a look at ASTs})
+               
+               (list @wk{11/02}
+                     ""
                      @elem{@secref["Loot"]}
                      @elem{@secref["Loot"] (cont.)})
-
-               (list @wk{4/28}
-	       	     @bold{@seclink["Midterm_2"]{M2}}
+                                    
+               (list @wk{11/09}
+                     @bold{@seclink["Midterm_2"]{M2}}
                      @elem{Review}
 		                 @elem{No lecture (exam)})
-               
-               (list @wk{5/5}
-                     ""
-                     @elem{Either FFI or Dyanmic Values}
-                     @elem{Either FFI or Dyanmic Values})
 
-               (list @wk{5/12}
+               (list @wk{11/16}
                      ""
-                     @elem{Garbage Collection, briefly}
-                     @elem{No class})
+                     @elem{@secref["Shakedown"]}
+                     @elem{@secref["Shakedown"] (cont.)})
+
+               (list @wk{11/23}
+                     @seclink["Assignment 6"]{A6}
+                     @elem{@secref["Trick"]}
+                     @elem{No lecture (Thanksgiving)})
+
+               (list @wk{11/30}
+	       	           ""
+                     @elem{Class-voted topic 1}
+                     @elem{Class-voted topic 1 (cont.)})
+               
+               (list @wk{12/7}
+                     @seclink["Assignment 7"]{A7}
+                     @elem{Class-voted topic 2}
+                     @elem{Class-voted topic 2 (cont.)})
+
+               (list @wk{12/14}
+               @bold{@seclink["Final Project"]{Final Project}}
+                     @elem{No lectures}
+                     'cont)
 
                )]
 

@@ -25,6 +25,14 @@ The course assumes familiarity with a functional programming such as
 OCaml from CMSC 330, and, to a lesser extent, imperative programming
 in C and Assembly as covered in CMSC 216.
 
+@section{Course Workflow}
+
+The course will be a combination of video lectures, live Q+A sessions, and
+online course notes. The lectures will be in video format, to view at your own
+pace. The scheduled lecture time will be a live Q+A, focusing on the topic of
+the most recent video lectures.
+
+
 @section{Topics}
 
 The following list of lecture topics will vary according to the pace
@@ -72,16 +80,16 @@ percentages:
 @make-grade-component-table[
   (list "Assignments" "45%")
   (list @elem{Quizzes & surveys}    "15%")
-  (list "Midterms (2)" "20%")
-  (list "Final project" "20%")]
+  (list "Midterms (2)" "25%")
+  (list "Final project" "15%")]
 
 
 @section[#:tag "syllabus-videos"]{Lecture Videos}
 
-Screen and audio-capture of every lecture will made available via
-Panopto on @link[elms-url]{ELMS}.  Videos should be released within 2
-hours of each lecture.  If a video does not appear, please let the
-instructor know.
+Videos will be a core part of this course. These videos will be made available
+as the course progresses. If there is ever any issue with accessing these
+videos, let the instructor know as soon as possible.
+
 
 @section[#:tag "syllabus-assignments"]{Assignments}
 
@@ -97,18 +105,9 @@ reading.
 
 @section[#:tag "syllabus-quiz"]{Quizzes & surveys}
 
-There will be @bold{many} quizzes and surveys.  Some will be done
-online, some will be on paper.  Some will be done with clickers.
-Quizzes are graded on a binary scale (either full or no credit).
-Completed surveys receive full credit.  Instructors reserve the right
-to reject survey responses that are not considered thoughtful.
-
-Clicker quizzes will be given in-class during lectures. You have to
-bring your clicker to all lectures. You can register your clicker on
-@link[elms-url]{ELMS}.
-
-We will drop the 20% lowest clicker quizzes to compensate for your
-absence or other clicker related problems.
+There will be @bold{many} quizzes and surveys. These will be administered
+through ELMS.  Completed surveys receive full credit.  Instructors reserve the
+right to reject survey responses that are not considered thoughtful.
 
 @section[#:tag "syllabus-midterms"]{Midterms}
 
@@ -133,12 +132,6 @@ the final exam period for the course:
 The project description will be distributed approximately 3 weeks
 before the due date.
 
-@;{
-@section{Laptops in class}
-
-Laptops will not be permitted in class during lecture.
-}
-
 @section{Computing Resources}
 
 Programming projects can be developed on the
@@ -158,30 +151,29 @@ problems.
 
 @section{Outside-of-class communication with course staff}
 
-Course staff will interact with students outside of class in primarily
-three ways: in-person during office hours, electronically via the
-@link["https://piazza.com/umd/fall2019/cmsc430/"]{Piazza} web forum and
-course web page, and electronically via e-mail. The large majority of
-communication should employ the first two methods, reserving e-mail
-for personal (presumably rare) circumstances.
+Course staff will interact with students outside of class in primarily two
+ways: office hours, and electronically via e-mail.  The use of Piazza and/or
+other classroom forums is allowed, and discussion amongst the students is
+encouraged, as long as the discuss is @italic{about the concepts} and not
+@italic{the solutions}. The majority of communication should be via office
+hours.
 
 Personalized assistance, e.g., with assignments or exam preparation,
 will be provided during office hours.  Office hours for the
 instructional staff will be posted on the course web page.
 
-Additional assistance will provided via the ELMS class discussion
-forum. You may use this forum to ask general questions of interest to
-the class as a whole, e.g., administrative issues or problem set
-clarification questions. The course staff will monitor ELMS on a daily
-basis, but do not expect immediate answers to questions. Please do not
-post publicly any information that would violate the university
-academic integrity policy (e.g., problem set code).
+Additional assistance will provided via the ELMS class discussion forum. You
+may use this forum to ask general questions of interest to the class as a
+whole, e.g., administrative issues or problem set clarification questions. The
+course staff will monitor ELMS on a daily basis, but do not expect immediate
+answers to questions. Please do not post publicly any information that would
+violate the university academic integrity policy (e.g., problem set code).
 
 ELMS allows students to send private questions that are only visible
 to instructors. Please use this feature if you wish to ask specific
 questions concerning your assignment solutions.
 
-Personal e-mail to instructors or TAs should be reserved for issues
+Personal e-mail to TAs should be reserved for issues
 that cannot be handled by the above methods.
 
 Important announcements will be made in class or on the class web
