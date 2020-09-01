@@ -24,7 +24,7 @@ RUN apt-get install -yy \
   wget \
   zlib1g-dev
 
-ENV RACKET_VERSION=7.8
+ENV RACKET_VERSION=7.7
 ENV RACKET_DIR=/root/racket
 ENV PANDOC=/root/.pandoc
 ENV PANDOC_DEV="https://github.com/jgm/pandoc/releases/download/2.10.1/pandoc-2.10.1-1-amd64.deb"
