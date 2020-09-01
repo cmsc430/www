@@ -7,7 +7,7 @@
 
 @bold{Due: TBD}
 
-@(define repo "")
+@(define repo "TBD")
 
 Midterm repository:
 @centered{@link[repo repo]}
