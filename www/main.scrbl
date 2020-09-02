@@ -40,7 +40,7 @@ implement several related languages.
 	       (list @jose @elem{Iribi 5242} "jmct@umd.edu" "TBD")
                (list "Tasnim Kabir" @elem{online} "tkabir1@cs.umd.edu" "Friday 9am-11am (EST)")
                (list "Alex Taber" @elem{online} "ataber@terpmail.umd.edu" "TBD")
-               (list "Vyas Gupta" @elem{online} "vgupta13@terpmail.umd.edu" "TBD"))]
+               (list "Vyas Gupta" @elem{online} "vgupta13@terpmail.umd.edu" "M/W 2-3:30pm EST"))]
 
 @bold{Communications:} "Email"
 
