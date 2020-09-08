@@ -32,6 +32,34 @@ online course notes. The lectures will be in video format, to view at your own
 pace. The scheduled lecture time will be a live Q+A, focusing on the topic of
 the most recent video lectures.
 
+@section{Office Hours}
+
+Office hours will be held on @link[https://discord.gg/uZwZDr]{this discord
+server}. Make sure that your 'nickname' is set to something appropriate for
+class.
+
+Please make sure that you fill sign up
+@link[https://docs.google.com/spreadsheets/d/1sDCpekBHIGjVSuGDsabPb74wZ5nHA_sTLvIPOzTUQ4k/edit?usp=sharing]{on
+this sheet} so that we can make sure that everyone is being heard. If office
+hours end and your issue wasn't addressed, we will reach out to you to make
+sure you get time with staff.
+
+Additionally, the benefit of registering on the sheet is that when topics come
+up repeatedly, the staff can make an announcement that addresses the concern
+for the entire class. Lastly, it helps the course staff keep an eye on what
+topics might need more attention.
+
+The discord server is there for you to organize as a class, ask questions of
+each other, and to get help from staff. Its main purpose is as a vehicle for
+office hours. That said, feel free to use the discord for discussion. I (Jose)
+will check periodically, but if you would like to ask a question directly to
+the course staff, office hours and email remain the prioritized forms of
+communication.
+
+There is a channel '#course-discussion' that is meant for
+discussion/questions/help regarding the material of the course, make sure that
+you keep that channel free from noise so that other students and course staff
+can easily see what issues are being brought up.
 
 @section{Topics}
 
