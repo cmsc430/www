@@ -34,12 +34,12 @@ the most recent video lectures.
 
 @section{Office Hours}
 
-Office hours will be held on @link[https://discord.gg/uZwZDr]{this discord
+Office hours will be held on @link["https://discord.gg/uZwZDr"]{this discord
 server}. Make sure that your 'nickname' is set to something appropriate for
 class.
 
 Please make sure that you fill sign up
-@link[https://docs.google.com/spreadsheets/d/1sDCpekBHIGjVSuGDsabPb74wZ5nHA_sTLvIPOzTUQ4k/edit?usp=sharing]{on
+@link["https://docs.google.com/spreadsheets/d/1sDCpekBHIGjVSuGDsabPb74wZ5nHA_sTLvIPOzTUQ4k/edit?usp=sharing"]{on
 this sheet} so that we can make sure that everyone is being heard. If office
 hours end and your issue wasn't addressed, we will reach out to you to make
 sure you get time with staff.
