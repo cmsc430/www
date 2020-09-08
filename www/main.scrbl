@@ -37,12 +37,12 @@ implement several related languages.
          #:row-properties '(bottom-border ())
 	 (list (list @bold{Staff} 'cont 'cont 'cont)
 	       (list @bold{Name} @bold{Office} @elem{@bold{E-mail}} @elem{@bold{Hours}})
-	       (list @jose @elem{Iribi 5242} "jmct@umd.edu" "Tue/Thur 12pm-1:30pm EST")
+	       (list @jose @elem{online} "jmct@umd.edu" "Tue/Thur 12pm-1:30pm EST")
                (list "Tasnim Kabir" @elem{online} "tkabir1@cs.umd.edu" "Friday 9am-11am (EST)")
                (list "Alex Taber" @elem{online} "ataber@terpmail.umd.edu" "Tue/Thur 3:30-5:00 PM EST")
                (list "Vyas Gupta" @elem{online} "vgupta13@terpmail.umd.edu" "M/W 2-3:30pm EST"))]
 
-@bold{Communications:} "Email"
+@bold{Communications:} Email
 
 @bold{Assumptions:} This course assumes you know the material in CMSC 330 and
 CMSC 216. In particular, you need to know how to program in a functional
