@@ -97,6 +97,48 @@ If you'd like to use Emacs, there's a good
 using DrRacket for a while before switching to Emacs.  Using any other
 editor is fine, too.
 
+@section{Racket for Windows 10 Users}
+
+For Windows 10 users, using WSL for testing is highly recommended. Beyond 
+the first few assignments, the projects will require generating and 
+executing assembly code using the nasm package. Students in the past 
+have had trouble trying to configure this in the Windows environment, 
+so an easier workaround is simply to enable WSL and run your tests through 
+some Linux Distribution. Here is a breakdown of the steps:
+
+@itemlist[#:style 'ordered
+ @item{Following the instructions at @link["https://docs.microsoft.com/en-us/windows/wsl/install-win10"]{this link}, install 
+a Linux Distro of your choice (e.g., Ubuntu). The instructions include 
+a suggestion to upgrade to WSL2; this is not necessary but will improve
+efficiency in general.}
+
+@item{Open your installed Linux distribution of choice and make any initial 
+configurations necessary (user, pass, etc.). Run 'sudo apt update' and 
+follow with 'sudo apt upgrade'. These two may take some time. }
+
+@item{Run 'sudo apt install racket' and 'sudo apt install nasm'. These two 
+should cover the necessary installations for this course.}
+
+@item{Here is where to determine which IDE you would like to use.
+
+@itemlist[
+  @item{Using vim (or Emacs as mentioned in the previous section) is simple. Git clone project repos into WSL. Modify files.}
+  @item{Previous students preferred installing VSCode (outside of WSL) from @link["https://code.visualstudio.com/download"]{this link}. 
+  For each assignment, git clone somewhere on your Linux distro. For some .rkt file, call 'code some-rkt-file.rkt' and 
+  after some automatic set up, VSCode should load up the file. Install Racket extensions from the VSCode 
+  Marketplace (a suggestion will also pop up once you open a .rkt file) to have colorized syntax, bracket matching, 
+  inteliSense, etc. }
+  @item{If you are intent on using DrRacket, you would also need to install Racket on your local machine 
+  (outside WSL). For each assignment, git clone into your normal file system and use DrRacket to edit files 
+  accordingly. To access from your Linux subsystem, create a soft symbolic link in your Linux distro to the
+  project directory (or the parent directory so you do not need to make links with each new project).}
+]}
+
+]
+
+Regardless of the IDE used, you can now run your tests from your Linux 
+subsystem by entering the project directory and using the raco command.
+
 @section{Grammar}
 
 A program is a sequence of definitions or expressions.
