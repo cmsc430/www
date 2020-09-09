@@ -34,7 +34,7 @@ the most recent video lectures.
 
 @section{Office Hours}
 
-Office hours will be held on @link["https://discord.gg/uZwZDr"]{this discord
+Office hours will be held on @link["https://discord.gg/cnaPTPR"]{this discord
 server}. Make sure that your 'nickname' is set to something appropriate for
 class.
 
