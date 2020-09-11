@@ -1,9 +1,9 @@
 #lang scribble/manual
 @title[#:tag "Assignment 2" #:style 'unnumbered]{Assignment 2: Racket Primer}
 
-@bold{Due: Thursday, Feb 13, 11:59PM}
+@bold{Due: Thursday, Sept 17, 11:59PM}
 
-@(define repo "https://classroom.github.com/a/KLvflHsY")
+@(define repo "https://classroom.github.com/a/JAOG8LvH")
 
 The goal of this assignment is to gain practice programming in Racket.
 
