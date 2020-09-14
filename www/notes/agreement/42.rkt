@@ -1,2 +1,2 @@
 #lang racket
-get-int
+42
