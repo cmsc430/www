@@ -14,6 +14,10 @@
      (string-append "\tadd " (arg->string a1) ", " (arg->string a2) "\n")]
     [`(sub ,a1 ,a2)
      (string-append "\tsub " (arg->string a1) ", " (arg->string a2) "\n")]
+    [`(call ,ad)
+     (string-append "\tcall " (label->string ad) "\n")]
+    [`(and ,a1 ,a2)
+     (string-append "\tand " (arg->string a1) ", " (arg->string a2) "\n")]
     [`ret "\tret\n"]
     [l (string-append (label->string l) ":\n")]))
 
@@ -21,6 +25,8 @@
 (define (arg->string a)
   (match a
     [`rax "rax"]
+    [`rsp "rsp"]
+    [`r15 "r15"]
     [n (number->string n)]))
 
 ;; Label -> String
@@ -37,5 +43,6 @@
   (let ((g (findf symbol? a)))
     (display 
       (string-append "\tglobal " (label->string g) "\n"
+      		     "\textern get_int\n"
       		     "\tsection .text\n"
                      (asm->string a)))))
