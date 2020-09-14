@@ -1,4 +1,5 @@
 	global entry
+	extern get_int
 	section .text
 entry:
 	mov rax, 40
