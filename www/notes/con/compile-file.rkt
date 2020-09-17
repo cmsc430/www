@@ -11,4 +11,4 @@
       (let ((_ (read-line))
             (p (read)))
         (unless (expr? p) (error "syntax error" p))
-        (asm-display (compile p))))))
+        (asm-display (compile (sexpr->ast p)))))))
