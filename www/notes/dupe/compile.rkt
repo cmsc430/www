@@ -1,6 +1,8 @@
 #lang racket
 (provide (all-defined-out))
 
+(require "ast.rkt")
+
 ;; Expr -> Asm
 (define (compile e)
   `(entry
@@ -10,18 +12,29 @@
 ;; Expr -> Asm
 (define (compile-e e)
   (match e
-    [(? integer? i)
+    [(int-e i)
      `((mov rax ,(* i 2)))]
-    [(? boolean? b)
+    [(bool-e b)
      `((mov rax ,(if b #b11 #b01)))]
-    [`(add1 ,e0)
-     (let ((c0 (compile-e e0)))
-       `(,@c0
-         (add rax 2)))]
-    [`(sub1 ,e0)
-     (let ((c0 (compile-e e0)))
-       `(,@c0
-         (sub rax 2)))]
+    [(add1-e e1) (let ((c1 (compile-e e1)))
+                `(,@c1
+                  (add rax 2)))]
+    [(sub1-e e1) (let ((c1 (compile-e e1)))
+                `(,@c1
+                  (sub rax 2)))]
+    [(if-e i t f) (let ((c1 (compile-e i))
+                        (c2 (compile-e t))
+                        (c3 (compile-e f))
+                        (l1 (gensym "if"))
+                        (l2 (gensym "if")))
+                    `(,@c1
+                      (cmp rax #b01) ; Compare to false now
+                      (je ,l1)
+                      ,@c2
+                      (jmp ,l2)
+                      ,l1
+                      ,@c3
+                      ,l2))]
     [`(zero? ,e0)
      (let ((c0 (compile-e e0))
            (l0 (gensym))
@@ -31,18 +44,4 @@
          (mov rax #b01) ; #f         
          (jne ,l0)
          (mov rax #b11) ; #t
-         ,l0))]
-    [`(if ,e0 ,e1 ,e2)
-     (let ((c0 (compile-e e0))
-           (c1 (compile-e e1))
-           (c2 (compile-e e2))
-           (l0 (gensym))
-           (l1 (gensym)))
-       `(,@c0
-         (cmp rax #b01) ; compare to #f
-         (je ,l0)       ; jump to c2 if #f
-         ,@c1
-         (jmp ,l1)      ; jump past c2
-         ,l0
-         ,@c2
-         ,l1))]))
+         ,l0))]))
