@@ -1,6 +1,5 @@
 #lang racket
 (provide (all-defined-out))
-
 (require "ast.rkt")
 
 ;; Expr -> Asm
@@ -22,26 +21,24 @@
     [(sub1-e e1) (let ((c1 (compile-e e1)))
                 `(,@c1
                   (sub rax 2)))]
-    [(if-e i t f) (let ((c1 (compile-e i))
+    [(zero?-e e1) (let ((c1 (compile-e e1))
+                        (l1 (gensym "nzero")))
+                 `(,@c1
+                  (cmp rax 0)
+                  (mov rax #b01)
+                  (jne ,l1)
+                  (mov rax #b11)
+                  ,l1))]
+    [(if-e p t f) (let ((c1 (compile-e p))
                         (c2 (compile-e t))
                         (c3 (compile-e f))
                         (l1 (gensym "if"))
                         (l2 (gensym "if")))
                     `(,@c1
-                      (cmp rax #b01) ; Compare to false now
-                      (je ,l1)
-                      ,@c2
+                      (cmp rax #b01) ; compare to false
+                      (jne ,l1)
+                      ,@c3
                       (jmp ,l2)
                       ,l1
-                      ,@c3
-                      ,l2))]
-    [`(zero? ,e0)
-     (let ((c0 (compile-e e0))
-           (l0 (gensym))
-           (l1 (gensym)))
-       `(,@c0
-         (cmp rax 0)
-         (mov rax #b01) ; #f         
-         (jne ,l0)
-         (mov rax #b11) ; #t
-         ,l0))]))
+                      ,@c2
+                      ,l2))]))

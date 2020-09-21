@@ -1,2 +1,2 @@
 #lang racket
-(if #t (add1 (add1 (sub1 1024))) 2)
+(if (zero? 3) (add1 42) (sub1 2048))

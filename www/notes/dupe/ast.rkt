@@ -14,7 +14,7 @@
 (struct add1-e (e))
 (struct sub1-e (e))
 (struct zero?-e (e))
-(struct if-e (i t f))
+(struct if-e (p t f))
 
 (define (ast->sexpr a)
   (match a
@@ -23,6 +23,6 @@
     [(add1-e e)   `(add1-e ,(ast->sexpr e))]
     [(sub1-e e)   `(sub1-e ,(ast->sexpr e))]
     [(zero?-e e)  `(zero?-e ,(ast->sexpr e))]
-    [(if-e p t f) `(if-e ,(ast->sexpr p)
+    [(if-e i t f) `(if-e ,(ast->sexpr i)
                          ,(ast->sexpr t)
                          ,(ast->sexpr f))]))
