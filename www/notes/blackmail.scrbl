@@ -13,7 +13,7 @@
 
 @(ev '(require rackunit))
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "blackmail" f))))))
-	   '("interp.rkt" "compile.rkt" "random.rkt" "asm/interp.rkt" "asm/printer.rkt" "ast.rkt" "parse.rkt"))
+	   '("interp.rkt" "compile.rkt" "random.rkt" "asm/interp.rkt" "asm/printer.rkt" "ast.rkt" "syntax.rkt"))
 
 @(define (shellbox . s)
    (parameterize ([current-directory (build-path notes "blackmail")])
@@ -144,11 +144,11 @@ interpreter, one for each form of expression:
 @codeblock-include["blackmail/interp.rkt"]
 
 @examples[#:eval ev
-(interp (parse 42))
-(interp (parse -7))
-(interp (parse '(add1 42)))
-(interp (parse '(sub1 8)))
-(interp (parse '(add1 (add1 (add1 8)))))
+(interp (sexpr->ast 42))
+(interp (sexpr->ast -7))
+(interp (sexpr->ast '(add1 42)))
+(interp (sexpr->ast '(sub1 8)))
+(interp (sexpr->ast '(add1 (add1 (add1 8)))))
 ]
 
 Here's how to connect the dots between the semantics and interpreter:
@@ -250,9 +250,9 @@ recursion, much like the interpreter.
 We can now try out a few examples:
 
 @ex[
-(compile (parse '(add1 (add1 40))))
-(compile (parse '(sub1 8)))
-(compile (parse '(add1 (add1 (sub1 (add1 -8))))))
+(compile (sexpr->ast '(add1 (add1 40))))
+(compile (sexpr->ast '(sub1 8)))
+(compile (sexpr->ast '(add1 (add1 (sub1 (add1 -8))))))
 ]
 
 And give a command line wrapper for parsing, checking, and compiling
@@ -276,9 +276,9 @@ Likewise, to test the compiler from within Racket, we use the same
 encapsulate running assembly code:
 
 @ex[
-(asm-interp (compile (parse '(add1 (add1 40)))))
-(asm-interp (compile (parse '(sub1 8))))
-(asm-interp (compile (parse '(add1 (add1 (sub1 (add1 -8)))))))
+(asm-interp (compile (sexpr->ast '(add1 (add1 40)))))
+(asm-interp (compile (sexpr->ast '(sub1 8))))
+(asm-interp (compile (sexpr->ast '(add1 (add1 (sub1 (add1 -8)))))))
 ]
 
 @section{Correctness and random testing}
@@ -297,8 +297,8 @@ which hopefully holds:
 
 @ex[
 (define (check-compiler e)
-  (check-eqv? (interp (parse e))
-              (asm-interp (compile (parse e)))))]
+  (check-eqv? (interp (sexpr->ast e))
+              (asm-interp (compile (sexpr->ast e)))))]
 
 The problem, however, is that generating random Blackmail programs is
 less obvious compared to generating random Abscond programs
@@ -316,7 +316,7 @@ implemented.
 (random-expr)
 (random-expr)
 (random-expr)
-(asm-display (compile (parse (random-expr))))
+(asm-display (compile (sexpr->ast (random-expr))))
 (for ([i (in-range 10)])
   (check-compiler (random-expr)))
 ]
@@ -334,7 +334,9 @@ compilers we've written:
 @itemlist[
 @item{@bold{Parsed} into a data structure called an @bold{Abstract Syntax Tree}
 
-@itemlist[@item{we use @tt{read} to parse text into a s-expression}]}
+@itemlist[@item{we use @tt{read} to parse text into a s-expression}]
+
+@itemlist[@item{we use @tt{sexpr->ast} to convert an s-expression into our AST}]}
 
 @item{@bold{Checked} to make sure code is well-formed (and well-typed)
 

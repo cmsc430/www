@@ -1,6 +1,6 @@
 #lang racket
 (provide (all-defined-out))
-(require "compile.rkt" "syntax.rkt" "asm/printer.rkt" "parse.rkt")
+(require "compile.rkt" "syntax.rkt" "asm/printer.rkt")
 
 ;; String -> Void
 ;; Compile contents of given file name,
@@ -10,4 +10,4 @@
     (λ ()
       (let ((c (read-line))) ; ignore #lang racket
         (let ((p (read)))
-          (asm-display (compile (parse p))))))))
+          (asm-display (compile (sexpr->ast p))))))))
