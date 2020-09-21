@@ -25,9 +25,9 @@
                         (l2 (gensym "if")))
                     `(,@c1
                       (cmp rax 0) ; zero? <result of executing code for i>
-                      (jne ,l1)
-                      ,@c2
+                      (je ,l1)
+                      ,@c3
                       (jmp ,l2)
                       ,l1
-                      ,@c3
+                      ,@c2
                       ,l2))]))
