@@ -11,7 +11,7 @@
     [`(add1 ,x) (expr? x)]
     [`(sub1 ,x) (expr? x)]
     [`(zero? ,x) (expr? x)]
-    [`(if ,x ,y ,z)
+    [`(if (zero? ,x) ,y ,z)
      (and (expr? x)
           (expr? y)
           (expr? z))]

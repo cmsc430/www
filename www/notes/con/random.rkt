@@ -1,6 +1,8 @@
 #lang racket
 (provide (all-defined-out))
 
+(require "ast.rkt")
+
 ;; Randomly generate an expression
 (define (random-expr)
   (contract-random-generate

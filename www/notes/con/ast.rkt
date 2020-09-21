@@ -8,7 +8,6 @@
 ;; | `(if (zero? ,Expr) ,Expr ,Expr)
 
 (struct int-e (i))
-(struct get-i ())
 (struct add1-e (e))
 (struct sub1-e (e))
 (struct if-e (i t f))

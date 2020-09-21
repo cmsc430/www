@@ -18,7 +18,7 @@
 
 @(ev '(require rackunit))
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "con" f))))))
-	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt" "random.rkt"))
+	   '("interp.rkt" "compile.rkt" "ast.rkt" "syntax.rkt" "asm/interp.rkt" "asm/printer.rkt" "random.rkt"))
 
 
 @title[#:tag "Con"]{Con: branching with conditionals}
@@ -40,12 +40,16 @@ Together this leads to the following grammar for Con:
 
 @centered{@render-language[C]}
 
-Which can be modeled with the following data type definition:
+Which can be modeled with the following definitions:
 
 @codeblock-include["con/ast.rkt"]
 
 We will also need a predicate for well-formed Con expressions, but
 let's return to this after considering the semantics and interpreter.
+
+Because it is tedious to write out the AST directly all the time,
+we define a helper function @racket[sexpr->ast] that can automate
+the process (but only if it's given a well-formed Con expression).
 
 @section{Meaning of Con programs}
 
@@ -158,10 +162,10 @@ We can confirm the interpreter computes the right result for the
 examples given earlier:
 
 @ex[
-(interp '(if (zero? 0) (add1 2) 4))
-(interp '(if (zero? 1) (add1 2) 4))
-(interp '(if (zero? (if (zero? (sub1 1)) 1 0)) (add1 2) 4))
-(interp '(if (zero? (add1 0)) (add1 2) (if (zero? (sub1 1)) 1 0)))
+(interp (sexpr->ast '(if (zero? 0) (add1 2) 4)))
+(interp (sexpr->ast '(if (zero? 1) (add1 2) 4)))
+(interp (sexpr->ast '(if (zero? (if (zero? (sub1 1)) 1 0)) (add1 2) 4)))
+(interp (sexpr->ast '(if (zero? (add1 0)) (add1 2) (if (zero? (sub1 1)) 1 0))))
 ]
 
 The argument for the correctness of the interpreter follows the same
@@ -252,18 +256,18 @@ The complete compiler code is:
 
 Let's take a look at a few examples:
 @ex[
-(asm-display (compile '(if (zero? 8) 2 3)))
-(asm-display (compile '(if (zero? 0) 1 2)))
-(asm-display (compile '(if (zero? 0) (if (zero? 0) 8 9) 2)))
-(asm-display (compile '(if (zero? (if (zero? 2) 1 0)) 4 5)))
+(asm-display (compile (sexpr->ast '(if (zero? 8) 2 3))))
+(asm-display (compile (sexpr->ast '(if (zero? 0) 1 2))))
+(asm-display (compile (sexpr->ast '(if (zero? 0) (if (zero? 0) 8 9) 2))))
+(asm-display (compile (sexpr->ast '(if (zero? (if (zero? 2) 1 0)) 4 5))))
 ]
 
 And confirm they are running as expected:
 @ex[
-(asm-interp (compile '(if (zero? 8) 2 3)))
-(asm-interp (compile '(if (zero? 0) 1 2)))
-(asm-interp (compile '(if (zero? 0) (if (zero? 0) 8 9) 2)))
-(asm-interp (compile '(if (zero? (if (zero? 2) 1 0)) 4 5)))
+(asm-interp (compile (sexpr->ast '(if (zero? 8) 2 3))))
+(asm-interp (compile (sexpr->ast '(if (zero? 0) 1 2))))
+(asm-interp (compile (sexpr->ast '(if (zero? 0) (if (zero? 0) 8 9) 2))))
+(asm-interp (compile (sexpr->ast '(if (zero? (if (zero? 2) 1 0)) 4 5))))
 ]
 
 
@@ -278,10 +282,11 @@ then @racket[(asm-interp (compile e))] equals @racket[i].}
 Again, we formulate correctness as a property that can be tested:
 
 @ex[
-(define (check-compiler e)
-  (check-equal? (asm-interp (compile e))
-                (interp e)
-                e))]
+(define (check-compiler s)
+  (let ((e (sexpr->ast s)))
+    (check-equal? (asm-interp (compile e))
+                  (interp e)
+                  e)))]
 
 Generating random Con programs is essentially the same as Blackmail
 programs, and are provided in a @link["con/random.rkt"]{random.rkt}
@@ -296,6 +301,4 @@ module.
 (for ([i (in-range 10)])
   (check-compiler (random-expr)))
 ]
-
-
 
