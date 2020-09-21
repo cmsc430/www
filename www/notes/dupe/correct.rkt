@@ -3,9 +3,11 @@
 (require rackunit
          "interp.rkt"
          "compile.rkt"
+         "syntax.rkt"
          "asm/interp.rkt")
 
 (define (check-correctness e)
   (with-handlers ([exn:fail? void])
-    (check-eqv? (interp e)
-                (asm-interp (compile e)))))
+    (let ((e (sexpr->ast e)))
+      (check-eqv? (interp e)
+                  (asm-interp (compile e))))))

@@ -16,7 +16,7 @@
 
 @(ev '(require rackunit))
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "dupe" f))))))
-	   '("interp.rkt" "compile.rkt" "random.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+	   '("interp.rkt" "compile.rkt" "ast.rkt" "syntax.rkt" "random.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
 
 @title[#:tag "Dupe"]{Dupe: a duplicity of types}
@@ -46,11 +46,13 @@ take note of is the new nonterminal @math{v} which ranges over
 
 @centered{@render-language[D]}
 
-Which can be modeled with the following data type definition:
+Which can be modeled with the following definitions:
 
 @codeblock-include["dupe/ast.rkt"]
 
-We also have a predicate for well-formed Dupe expressions:
+We also have a predicate for well-formed Dupe expressions, as well as our
+helper function @racket[sexpr->ast] for automating the creation of an AST from
+a well-formed s-expression that conforms to our language:
 
 @codeblock-include["dupe/syntax.rkt"]
 
@@ -168,13 +170,13 @@ We can confirm the interpreter computes the right result for the
 examples given earlier:
 
 @ex[
-(interp #t)
-(interp #f)
-(interp '(if #f 1 2))
-(interp '(if #t 1 2))
-(interp '(if 0 1 2))
-(interp '(if 7 1 2))
-(interp '(if (zero? 7) 1 2))
+(interp (bool-e #t))
+(interp (bool-e #f))
+(interp (sexpr->ast '(if #f 1 2)))
+(interp (sexpr->ast '(if #t 1 2)))
+(interp (sexpr->ast '(if 0 1 2)))
+(interp (sexpr->ast '(if 7 1 2)))
+(interp (sexpr->ast '(if (zero? 7) 1 2)))
 ]
 
 Correctness follows the same pattern as before, although it is worth
@@ -196,7 +198,7 @@ which results in the @racket[interp] program crashing and Racket
 signalling an error:
 
 @ex[
-(eval:error (interp '(add1 #f)))
+(eval:error (interp (add1-e (bool-e #f))))
 ]
 
 This isn't a concern for correctness, because the interpreter is free
@@ -244,8 +246,8 @@ still would have represented values as a sequence of bits
 integers).  The bits will have to encode both the value and the
 @emph{type} of value.
 
-@margin-note{This is a simpler choice of representation than we
-discussed in class when presenting these ideas.}
+@margin-note{As discussed in the lecture video, there are many possible ways of
+representing multiple types, this is just how we've decided to do it.}
 
 Here is the idea of how this could be done: We have two kinds of data:
 integers and booleans, so we could use one bit to indicate whether a
@@ -380,7 +382,7 @@ succeeds):
 
 (define es
   (for/list ([i 100])
-    (random-expr)))
+    (sexpr->ast (random-expr))))
 
 (for-each interp-bits-correct es)
 ]
@@ -399,15 +401,15 @@ Now let us inline the defintion of @racket[interp]:
 (define (interp-bits e)
   (value->bits
    (match e
-     [(? integer? i) i]
-     [(? boolean? b) b]
-     [`(add1 ,e0)
+     [(int-e i) i]
+     [(bool-e b) b]
+     [(add1-e e0)
       (add1 (interp e0))]
-     [`(sub1 ,e0)
+     [(sub1-e e0)
       (sub1 (interp e0))]
-     [`(zero? ,e0)
+     [(zero?-e e0)
       (zero? (interp e0))]
-     [`(if ,e0 ,e1 ,e2)
+     [(if-e e0 e1 e2)
       (if (interp e0)
           (interp e1)
           (interp e2))])))
@@ -429,16 +431,15 @@ So we get:
 ;; Expr -> Bits
 (define (interp-bits e)
   (match e
-    [(? integer? i) (value->bits i)]
-    [(? boolean? b) (value->bits b)]
-    [`(add1 ,e0)
+    [(int-e i) (value->bits i)]
+    [(bool-e b) (value->bits b)]
+    [(add1-e e0)
      (value->bits (add1 (interp- e0)))]
-    [`(sub1 ,e0)
+    [(sub1-e e0)
      (value->bits (sub1 (interp e0)))]
-    [`(zero? ,e0)
+    [(zero?-e e0)
      (value->bits (zero? (interp e0)))]
-    [`(if ,e0 ,e1 ,e2)
-     (value->bits
+    [(if-e e0 e1 e2) (value->bits
       (if (interp e0)
           (interp e1)
           (interp e2)))]))
@@ -459,15 +460,15 @@ rewrite the code as:
 ;; Expr -> Bits
  (define (interp-bits e)
    (match e
-     [(? integer? i) (* 2 i)]
-     [(? boolean? b) (if b 3 1)]
-     [`(add1 ,e0)
+     [(int-e i) (* 2 i)]
+     [(bool-e b) (if b 3 1)]
+     [(add1-e e0)
       (value->bits (add1 (interp e0)))]
-     [`(sub1 ,e0)
+     [(sub1-e e0)
       (value->bits (sub1 (interp e0)))]
-     [`(zero? ,e0)
+     [(zero?-e e0)
       (value->bits (zero? (interp e0)))]
-     [`(if ,e0 ,e1 ,e2)
+     [(if-e e0 e1 e2)
       (value->bits
        (if (interp e0)
            (interp e1)
@@ -489,15 +490,15 @@ We can rewrite the last case by the following equation:
 ;; Expr -> Bits
  (define (interp-bits e)
    (match e
-     [(? integer? i) (* 2 i)]
-     [(? boolean? b) (if b 3 1)]
-     [`(add1 ,e0)
+     [(int-e i) (* 2 i)]
+     [(bool-e b) (if b 3 1)]
+     [(add1-e e0)
       (value->bits (add1 (interp e0)))]
-     [`(sub1 ,e0)
+     [(sub1-e e0)
       (value->bits (sub1 (interp e0)))]
-     [`(zero? ,e0)
+     [(zero?-e e0)
       (value->bits (zero? (interp e0)))]
-     [`(if ,e0 ,e1 ,e2)      
+     [(if-e e0 e1 e2)      
       (if (interp e0)
           (value->bits (interp e1))
           (value->bits (interp e2)))]))
@@ -524,15 +525,15 @@ to get:
 ;; Expr -> Bits
  (define (interp-bits e)
    (match e
-     [(? integer? i) (* 2 i)]
-     [(? boolean? b) (if b 3 1)]
-     [`(add1 ,e0)
+     [(int-e i) (* 2 i)]
+     [(bool-e b) (if b 3 1)]
+     [(add1-e e0)
       (+ (value->bits (interp e0)) (value->bits 1))]
-     [`(sub1 ,e0)
+     [(sub1-e e0)
       (- (value->bits (interp e0)) (value->bits 1))]
-     [`(zero? ,e0)
+     [(zero?-e e0)
       (value->bits (zero? (interp e0)))]
-     [`(if ,e0 ,e1 ,e2)      
+     [(if-e e0 e1 e2)      
       (if (interp e0)
           (value->bits (interp e1))
           (value->bits (interp e2)))]))
@@ -555,15 +556,15 @@ We can now rewrite by the equation of our specification:
 ;; Expr -> Bits
  (define (interp-bits e)
    (match e
-     [(? integer? i) (* 2 i)]
-     [(? boolean? b) (if b 3 1)]
-     [`(add1 ,e0)
+     [(int-e i) (* 2 i)]
+     [(bool-e b) (if b 3 1)]
+     [(add1-e e0)
       (+ (interp-bits e0) 2)]
-     [`(sub1 ,e0)
+     [(sub1-e e0)
       (- (interp-bits e0) 2)]
-     [`(zero? ,e0)
+     [(zero?-e e0)
       (value->bits (zero? (interp e0)))]
-     [`(if ,e0 ,e1 ,e2)
+     [(if-e e0 e1 e2)      
       (if (interp e0)
           (interp-bits e1)
           (interp-bits e2))]))
@@ -582,17 +583,17 @@ and inline @racket[value->bits] specialized to a boolean argument:
 ;; Expr -> Bits
  (define (interp-bits e)
    (match e
-     [(? integer? i) (* 2 i)]
-     [(? boolean? b) (if b 3 1)]
-     [`(add1 ,e0)
+     [(int-e i) (* 2 i)]
+     [(bool-e b) (if b 3 1)]
+     [(add1-e e0)
       (+ (interp-bits e0) 2)]
-     [`(sub1 ,e0)
+     [(sub1-e e0)
       (- (interp-bits e0) 2)]
-     [`(zero? ,e0)
+     [(zero?-e e0)
       (match (zero? (interp-bits e0))
         [#t #b11]
         [#f #b01])]
-     [`(if ,e0 ,e1 ,e2)
+     [(if-e e0 e1 e2)
       (if (interp e0)
           (interp-bits e1)
           (interp-bits e2))]))
@@ -613,17 +614,17 @@ produces the representation of @racket[#f] (@code[#:lang
 ;; Expr -> Bits
  (define (interp-bits e)
    (match e
-     [(? integer? i) (* 2 i)]
-     [(? boolean? b) (if b 3 1)]
-     [`(add1 ,e0)
+     [(int-e i) (* 2 i)]
+     [(bool-e b) (if b 3 1)]
+     [(add1-e e0)
       (+ (interp-bits e0) 2)]
-     [`(sub1 ,e0)
+     [(sub1-e e0)
       (- (interp-bits e0) 2)]
-     [`(zero? ,e0)
+     [(zero?-e e0)
       (match (zero? (interp-bits e0))
         [#t #b11]
         [#f #b01])]
-     [`(if ,e0 ,e1 ,e2)
+     [(if-e e0 e1 e2)
       (match (interp-bits e0)
         [#b01 (interp-bits e2)]
         [_ (interp-bits e1)])]))
@@ -656,15 +657,15 @@ interpreter in a final conversion:
 (define (interp.v2 e)
   (bits->value (interp-bits e)))
 
-(interp.v2 #t)
-(interp.v2 #f)
-(interp.v2 '(if #f 1 2))
-(interp.v2 '(if #t 1 2))
-(interp.v2 '(if 0 1 2))
-(interp.v2 '(if 7 1 2))
-(interp.v2 '(if (zero? 7) 1 2))
-(interp.v2 '(add1 #f))
-(eval:error (interp.v2 '(add1 #t)))
+(interp.v2 (bool-e #t))
+(interp.v2 (bool-e #f))
+(interp.v2 (sexpr->ast '(if #f 1 2)))
+(interp.v2 (sexpr->ast '(if #t 1 2)))
+(interp.v2 (sexpr->ast '(if 0 1 2)))
+(interp.v2 (sexpr->ast '(if 7 1 2)))
+(interp.v2 (sexpr->ast '(if (zero? 7) 1 2)))
+(interp.v2 (sexpr->ast '(add1 #f)))
+(eval:error (interp.v2 (sexpr->ast '(add1 #t))))
 )
 
 Notice the last two examples.  What's going on?
@@ -714,12 +715,12 @@ they are equal.}
 ]
 
 @ex[
-(compile-e 42)
-(compile-e #t)
-(compile-e #f)
-(compile-e '(zero? 0))
-(compile-e '(if #t 1 2))
-(compile-e '(if #f 1 2))
+(compile-e (int-e 42))
+(compile-e (bool-e #t))
+(compile-e (bool-e #f))
+(compile-e (sexpr->ast '(zero? 0)))
+(compile-e (sexpr->ast '(if #t 1 2)))
+(compile-e (sexpr->ast '(if #f 1 2)))
 ]
 
 
@@ -749,14 +750,14 @@ two possible results: 0 for false and 1 for true:
 
 
 @ex[
-(asm-interp (compile #t))
-(asm-interp (compile #f))
-(asm-interp (compile '(zero? 0)))
-(asm-interp (compile '(zero? -7)))
-(asm-interp (compile '(if #t 1 2)))
-(asm-interp (compile '(if #f 1 2)))
-(asm-interp (compile '(if (zero? 0) (if (zero? 0) 8 9) 2)))
-(asm-interp (compile '(if (zero? (if (zero? 2) 1 0)) 4 5)))
+(asm-interp (compile (bool-e #t)))
+(asm-interp (compile (bool-e #f)))
+(asm-interp (compile (sexpr->ast '(zero? 0))))
+(asm-interp (compile (sexpr->ast '(zero? -7))))
+(asm-interp (compile (sexpr->ast '(if #t 1 2))))
+(asm-interp (compile (sexpr->ast '(if #f 1 2))))
+(asm-interp (compile (sexpr->ast '(if (zero? 0) (if (zero? 0) 8 9) 2))))
+(asm-interp (compile (sexpr->ast '(if (zero? (if (zero? 2) 1 0)) 4 5))))
 ]
 
 
@@ -779,15 +780,15 @@ When interpreting programs with type errors, we get @emph{Racket}
 errors, i.e. the Racket functions used in the implementation of the
 interpreter will signal an error:
 @ex[
-(eval:error (interp '(add1 #f)))
-(eval:error (interp '(if (zero? #t) 7 8)))
+(eval:error (interp (sexpr->ast '(add1 #f))))
+(eval:error (interp (sexpr->ast '(if (zero? #t) 7 8))))
 ]
 
 On the hand, the compiler will simply do something by misinterpreting the meaning
 of the bits:
 @ex[
-(asm-interp (compile '(add1 #f)))
-(asm-interp (compile '(if (zero? #t) 7 8)))
+(asm-interp (compile (sexpr->ast '(add1 #f))))
+(asm-interp (compile (sexpr->ast '(if (zero? #t) 7 8))))
 ]
 
 @;codeblock-include["dupe/correct.rkt"]
@@ -795,10 +796,11 @@ of the bits:
 This complicates testing the correctness of the compiler.  Consider
 our usual appraoch:
 @ex[
-(define (check-correctness e)
-  (check-equal? (asm-interp (compile e))
-                (interp e)
-		e))
+(define (check-correctness s)
+  (let ((e (sexpr->ast s)))
+    (check-equal? (asm-interp (compile e))
+                  (interp e)
+  		e)))
 
 (check-correctness '(add1 7))
 (eval:error (check-correctness '(add1 #f)))
@@ -814,11 +816,12 @@ to interpret a meaningless expression, we can write an alternate
 produces void, effectively ignoring the test:
 
 @ex[
-(define (check-correctness e)
-  (with-handlers ([exn:fail? void])
-    (check-equal? (asm-interp (compile e))
-                  (interp e)
-                  e)))
+(define (check-correctness s)
+  (let ((e (sexpr->ast s)))
+    (with-handlers ([exn:fail? void])
+      (check-equal? (asm-interp (compile e))
+                    (interp e)
+                    e))))
 
 (check-correctness '(add1 7))
 (check-correctness '(add1 #f))
