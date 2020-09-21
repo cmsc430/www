@@ -124,9 +124,9 @@ programs saved in files:
 
 
 For example:
-@shellbox["echo '#lang racket\\nget-int' > example.rkt"
-          "echo 1024 | racket -t interp-file.rkt -m example.rkt"
-          "echo 2048 | racket -t interp-file.rkt -m example.rkt"]
+@shellbox["echo '#lang racket\\nget-int' > example.agr"
+          "echo 1024 | racket -t interp-file.rkt -m example.agr"
+          "echo 2048 | racket -t interp-file.rkt -m example.agr"]
 
 A few observations
 
