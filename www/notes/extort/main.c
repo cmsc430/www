@@ -23,6 +23,6 @@ int main(int argc, char** argv) {
 }
 
 void error() {
-  printf("err");
+  printf("err\n");
   exit(1);
 }

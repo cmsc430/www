@@ -1,27 +1,34 @@
 #lang racket
 (provide (all-defined-out))
 
+(require "ast.rkt")
+
 ;; type Answer = Value | 'err
+
+;; type Value =
+;; | Integer
+;; | Boolean
+
 
 ;; Expr -> Answer
 (define (interp e)
   (match e
-    [(? integer? i) i]
-    [(? boolean? b) b]
-    [`(add1 ,e0)
+    [(int-e i) i]
+    [(bool-e b) b]
+    [(add1-e e0)
      (match (interp e0)
        [(? integer? i) (add1 i)]
        [_ 'err])]
-    [`(sub1 ,e0)
+    [(sub1-e e0)
      (match (interp e0)
        [(? integer? i) (sub1 i)]
        [_ 'err])]
-    [`(zero? ,e0)
+    [(zero?-e e0)
      (match (interp e0)
        [(? integer? i) (zero? i)]
        [_ 'err])]
-    [`(if ,e0 ,e1 ,e2)
-     (match (interp e0)
+    [(if-e p e1 e2)
+     (match (interp p)
        ['err 'err]
        [v
         (if v
