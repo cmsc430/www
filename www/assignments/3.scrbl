@@ -5,9 +5,9 @@
 @(require "../notes/con-plus/semantics.rkt")
 @(require redex/pict)
 
-@bold{Due: Tues, Feb 25, 11:59PM}
+@bold{Due: Tues, Sept 29, 11:59PM}
 
-@(define repo "https://classroom.github.com/a/ZEKlJiVS")
+@(define repo "https://classroom.github.com/a/YH2mwniz")
 
 The goal of this assignment is to extend a compiler with some simple
 unary numeric operations and conditional expressions, and to write a
@@ -43,8 +43,9 @@ cmovl rax, rbx
 
 To do this, you should:
 @itemlist[
-@item{Update @tt{ast.rkt} to include these new forms of expression.}
-@item{Update @tt{syntax.rkt} to recognize s-expressions that represent valid programs.}
+@item{Study @tt{ast.rkt} and the new forms of expression (i.e. new AST nodes)
+      then update the comment at the top describing what the grammmar should look like.}
+@item{Study @tt{syntax.rkt} and make sure you understand `expr?` and `sexpr->ast`.}
 @item{Update @tt{interp.rkt} to correctly interpret these expressions.}
 @item{Update @tt{compile.rkt} to correctly compile these expressions.}
 ]
@@ -121,8 +122,9 @@ Your task is to extend Con with this (restricted) form of @racket[cond].
 To do this, you should:
 
 @itemlist[
-@item{Update @tt{ast.rkt} to include @racket[cond] expressions.}
-@item{Update @tt{syntax.rkt} to recognize s-expressions that represent valid programs.}
+@item{Study @tt{ast.rkt} to understand the @racket[cond-e] and @racket[clause] AST nodes.}
+@item{Study @tt{syntax.rkt} and make sure you understand the `cond-e` and `clause` aspects
+      of `expr?` and `sexpr->ast`.}
 @item{Update @tt{interp.rkt} to correctly interpret @racket[cond] expressions.}
 @item{Update @tt{compile.rkt} to correctly compile @racket[cond] expressions.}
 ]
@@ -133,9 +135,10 @@ require anything more than what was used for Con without
 
 @section[#:tag-prefix "a3-" #:style 'unnumbered]{Reading is Overrated}
 
-We have so far side-stepped the issue of parsing by (1) relying on
-s-expression notation for the concrete syntax of programs and (2)
-using the built-in @racket[read] function for parsing s-expressions.
+We have so far side-stepped the issue of parsing by (1) relying on s-expression
+notation for the concrete syntax of programs and (2) using the built-in
+@racket[read] to get an s-expression and (3) then using the @racket[sexpr->ast]
+function that we've written to get our AST.
 
 Your task is to design and implement a parser for the extended Con
 language based on the following grammar:
@@ -201,7 +204,7 @@ the module:
 ;; parse : [Listof Token] -> Expr
 )
 
-As an example, @racket[parse] should produce @racket['(add1 (sub1 7))]
+As an example, @racket[parse] should produce @racket[(add1-e (sub1-e (int-e 7)))]
 if given @racket['(lparen add1 lparen sub1 7 rparen rparen eof)].
 
 You should not need to make any changes to @tt{lex.rkt}.
