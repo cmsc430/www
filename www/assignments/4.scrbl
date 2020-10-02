@@ -9,7 +9,7 @@
 
 @bold{Due: Friday, April 3rd at 11:59PM EST}
 
-@(define repo "https://classroom.github.com/a/xFrLoZGL")
+@(define repo "https://classroom.github.com/a/2L7XURfn")
 
 The goal of this assignment is to extend a compiler with binding forms
 and a character data type.
@@ -175,34 +175,6 @@ in the right-hand-sides of any of the @racket[let].
 For example, @racketblock[(let ((x 1) (y x)) 0)] is a syntax error
 because the occurrence of @racket[x] is not bound.
 
-There is also @racket[let*] that also binds any number of expressions. The
-difference is that previous bindings are available to subsequent bindings. For
-example,
-
-@racketblock[
-(let* ((x 1) (y 2) (z (add1 y)))
-  _e)
-]
-
-binds @racket[x] to 1, @racket[y] to 2, and @racket[z] to 3 in
-the scope of @racket[_e].
-
-The syntax of a @racket[let*] expression allows any number of binders
-to occur, so @racket[(let* () _e)] is valid syntax and is equivalent to
-@racket[_e].
-
-Unlike @racket[let], @racketblock[(let ((x 1) (y x)) 0)] is @emph{not} a syntax
-error.
-
-The following files have already been updated for you:
-
-@itemlist[
-
-@item{@tt{ast.rkt}}
-
-@item{@tt{interp.rkt}}
-
-]
 
 Update @tt{syntax.rkt} to define two functions:
 
@@ -220,7 +192,7 @@ occurrence is bound.}
 ]
 
 Update @tt{compile.rkt} to correctly compile the generalized form of
-@racket[let] and @racket[let*].  The compiler may assume the input is a closed
+@racket[let].  The compiler may assume the input is a closed
 expression.
 
 @section[#:tag-prefix "a4-" #:style 'unnumbered]{Extending your Parser}
@@ -241,7 +213,6 @@ grammar:
             |  if <expr> <expr> <expr>
             |  cond <clause>* <else>
             |  let <bindings> <expr>
-            |  let* <bindings> <expr>
 
 <prim> ::= add1 | sub1 | abs | - | zero? | integer->char | char->integer
         |  char? | integer? | boolean?
@@ -283,7 +254,7 @@ which are defined as follows:
 ;; | 'rsquare   ;; ]
 ;; | 'eof       ;; end of file
 
-;; type Variable = Symbol (other than 'let, 'let*, 'cond, etc.)
+;; type Variable = Symbol (other than 'let, 'cond, etc.)
 
 ;; type Keyword =
 ;; | 'let
@@ -373,4 +344,36 @@ generation is slow.
 
 Pushing your local repository to github ``submits'' your work.  We
 will grade the latest submission that occurs before the deadline.
+
+@section[#:tag-prefix "a4-" #:style 'unnumbered]{Extra Credit}
+
+Similar to @racket[let] there is also @racket[let*] that also binds any number
+of expressions. The difference is that previous bindings are available to
+subsequent bindings. For example,
+
+@racketblock[
+(let* ((x 1) (y 2) (z (add1 y)))
+  _e)
+]
+
+binds @racket[x] to 1, @racket[y] to 2, and @racket[z] to 3 in
+the scope of @racket[_e].
+
+The syntax of a @racket[let*] expression allows any number of binders
+to occur, so @racket[(let* () _e)] is valid syntax and is equivalent to
+@racket[_e].
+
+Unlike @racket[let], @racketblock[(let* ((x 1) (y x)) 0)] is @emph{not} a syntax
+error.
+
+No files have already been updated for you. You're on your own for this one.
+You'll need to make new AST nodes, change the lexer and parser, extend every
+function that traverses the AST, @racket[expr?], @racket[closed?], etc., the
+interpreter and the compiler. Do you need to alter @racket[main.c]? You tell
+me.
+
+If you choose to do this extra credit it will be worth 15 points. There will
+be no autograder, so if you want to points you have to schedule time with
+the instructor to look over your solution. You need to @emph[schedule] the
+time before the deadline, but the meeting can happen after the deadline.
 
