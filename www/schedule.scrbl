@@ -37,12 +37,12 @@
                (list @wk{09/28}
 	       	     @seclink["Assignment 3"]{A3}
                      @elem{@secref["Fraud"]}
-		                 @elem{@secref["Grift"]})
+		                 @elem{Refactor the AST (video in ELMS)})
                
                (list @wk{10/05}
 	       	           @seclink["Assignment 4"]{A4}
-                     @elem{@secref["Hustle"]}
-                     @elem{@secref["Hustle"] (cont.)})
+                     @elem{@secref["Grift"]}
+                     @elem{@secref["Hustle"]})
                
                (list @wk{10/12}
 	       	     @bold{@seclink["Midterm_1"]{M1}}
