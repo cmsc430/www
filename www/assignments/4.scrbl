@@ -374,6 +374,6 @@ me.
 
 If you choose to do this extra credit it will be worth 15 points. There will
 be no autograder, so if you want to points you have to schedule time with
-the instructor to look over your solution. You need to @emph[schedule] the
+the instructor to look over your solution. You need to @emph{schedule} the
 time before the deadline, but the meeting can happen after the deadline.
 
