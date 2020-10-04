@@ -1,62 +1,67 @@
 #lang racket
 (provide (all-defined-out))
 
+(require "ast.rkt")
+
+;; type Answer = Value | 'err
+
+;; type Value =
+;; | Integer
+;; | Boolean
+
 ;; type REnv = (Listof (List Variable Value))
 
 ;; Expr -> Answer
 (define (interp e)
   (interp-env e '()))
 
-;; Expr REnv -> Answer
+
 (define (interp-env e r)
   (match e
-    [(? value? v) v]
-    [(list (? prim? p) e)
-     (let ((a (interp-env e r)))
-       (interp-prim p a))]
-    [`(if ,e0 ,e1 ,e2)
-     (match (interp-env e0 r)
+    [(var-e v) (lookup r v)]
+    [(int-e i) i]
+    [(bool-e b) b]
+    [(prim-e p e)
+      (if (memq p prims)
+          (interp-prim p e r)
+          'err)]
+    [(if-e p e1 e2)
+     (match (interp-env p r)
        ['err 'err]
        [v
         (if v
             (interp-env e1 r)
-            (interp-env e2 r))])]    
-    [(? symbol? x)
-     (lookup r x)]
-    [`(let ((,x ,e0)) ,e1)
-     (match (interp-env e0 r)
-       ['err 'err]
-       [v
-        (interp-env e1 (ext r x v))])]))
+            (interp-env e2 r))])]
+    [(let-e bnd body)
+       (match bnd
+         [(binding v def)
+            (let ((val (interp-env def r)))
+              (interp-env body (ext r v val)))])]))
 
-;; Any -> Boolean
-(define (prim? x)
-  (and (symbol? x)
-       (memq x '(add1 sub1 zero?))))
+(define (interp-prim p e r)
+  (match p
+    ['add1
+     (match (interp-env e r)
+       [(? integer? i) (add1 i)]
+       [_ 'err])]
+    ['sub1
+     (match (interp-env e r)
+       [(? integer? i) (sub1 i)]
+       [_ 'err])]
+    ['zero?
+     (match (interp-env e r)
+       [(? integer? i) (zero? i)]
+       [_ 'err])]))
 
-;; Any -> Boolean
-(define (value? x)
-  (or (integer? x)
-      (boolean? x)))
+(define (lookup r v)
+  (lookup-prime r r v))
 
-;; Prim Answer -> Answer
-(define (interp-prim p a)
-  (match (list p a)
-    [(list p 'err) 'err]
-    [(list 'add1 (? integer? i0)) (+ i0 1)]
-    [(list 'sub1 (? integer? i0)) (- i0 1)]
-    [(list 'zero? (? integer? i0)) (zero? i0)]
-    [_ 'err]))
+(define (lookup-prime init r v)
+  (match r
+    ['() (error (format "~a is not found in the environment. Current env: ~a" v init))]
+    [(cons (list (var-e var) val) rest) (if (symbol=? v var)
+                                            val
+                                            (lookup-prime init rest v))]))
 
-;; REnv Variable -> Answer
-(define (lookup env x)
-  (match env
-    ['() 'err]
-    [(cons (list y v) env)
-     (match (symbol=? x y)
-       [#t v]
-       [#f (lookup env x)])]))
-
-;; REnv Variable Value -> Value
-(define (ext r x v)
-  (cons (list x v) r))
+(define (ext r v val)
+  (cons (list v val) r))
