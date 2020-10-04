@@ -1,5 +1,6 @@
 #lang racket
 (provide (all-defined-out))
+(require "ast.rkt")
 
 ;; Any -> Boolean
 ;; Is x a well-formed expression?
@@ -20,3 +21,19 @@
           (expr? y)
           (expr? z))]
     [_ #f]))
+
+
+; SExpr -> AST
+; Parse the s-expr into our AST
+; This should be a one-to-one mapping for now.
+(define (sexpr->ast s)
+  (match s
+    [(? symbol? v)  (var-e v)]
+    [(? integer? s) (int-e s)]
+    [(? boolean? b) (bool-e b)]
+    [`(,p ,e)       (if (memq p prims)
+                        (prim-e p (sexpr->ast e))
+                        (error (format "~a is not a primitive" p)))]
+    [`(if ,p ,t ,f) (if-e (sexpr->ast p) (sexpr->ast t) (sexpr->ast f))]
+    [`(let ((,bnd ,def)) ,body) (let-e (binding (sexpr->ast bnd) (sexpr->ast def)) (sexpr->ast body))]
+    [_              (error "operation not supported")]))
