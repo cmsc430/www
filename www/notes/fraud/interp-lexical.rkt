@@ -1,6 +1,7 @@
 #lang racket
 (provide (all-defined-out))
-(require (only-in "interp.rkt" prim? value? interp-prim)
+(require "ast.rkt"
+         (only-in "interp.rkt" interp-prim)
          "translate.rkt")
 
 ;; type VEnv = (Listof Value)
@@ -12,20 +13,21 @@
 ;; IExpr VEnv -> Answer
 (define (interp-env e r)
   (match e
-    [(? value? v) v]
-    [(list (? prim? p) e)
+    [(int-e i) i]
+    [(bool-e b) b]
+    [(prim-e (? prim? p) e)
      (let ((a (interp-env e r)))
        (interp-prim p a))]
-    [`(if ,e0 ,e1 ,e2)
+    [(if-e e0 e1 e2)
      (match (interp-env e0 r)
        ['err 'err]
        [v
         (if v
             (interp-env e1 r)
             (interp-env e2 r))])]
-    [`(address ,i)
+    [(address-e i)
      (list-ref r i)]
-    [`(let ((_ ,e0)) ,e1)
+    [(let-e (list (binding _ e0)) e1)
      (match (interp-env e0 r)
        ['err 'err]
        [v

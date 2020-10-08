@@ -280,7 +280,7 @@ The lexer will take care of reading the @tt{#lang racket} header and
 remove any whitespace.
 
 You must complete the code in @tt{parse.rkt} to implement the parser
-which constructs an s-expression representing a valid Fraud+
+which constructs an AST representing a valid Fraud+
 expression, if possible, from a list of tokens.  The @racket[parse]
 function should have the following signature and must be provided by
 the module:
@@ -290,7 +290,7 @@ the module:
 ;; parse : [Listof Token] -> Expr
 )
 
-As an example, @racket[parse] should produce @racket['(add1 (sub1 7))]
+As an example, @racket[parse] should produce @racket[(prim-e 'add1 (prim-e 'sub1 (int-e 7)))]
 if given
 
 @racketblock['(lparen (prim add1) lparen (prim sub1) 7 rparen rparen eof)]

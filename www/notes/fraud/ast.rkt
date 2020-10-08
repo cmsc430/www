@@ -5,27 +5,41 @@
 ;; | Integer
 ;; | Boolean
 ;; | Variable
-;; | `(add1 ,Expr)
-;; | `(sub1 ,Expr)
-;; | `(zero? ,Expr)
-;; | `(if ,Expr ,Expr ,Expr)
-;; | `(let ((,Variable ,Expr)) ,Expr)
+;; | Prim1 Expr
+;; | Prim2 Expr Expr
+;; | If Expr Expr Expr
+;; | Let [Binding] Expr
 
 ;; type Variable = Symbol (except 'add1 'sub1 'if 'let 'zero?)
 
-(struct var-e (v))
-(struct int-e (i))
-(struct bool-e (b))
+;; type Binding = Variable Expr
+
+(struct var-e (v) #:transparent)
+(struct int-e (i) #:transparent)
+(struct bool-e (b) #:transparent)
 
 ; the first argument to `prim-e` is a symbol the represents the
 ; primitive in question
-(struct prim-e (prim e))
-(struct if-e (p t f))
-(struct let-e (bnd b))
+(struct prim-e (prim e) #:transparent)
+(struct if-e (p t f) #:transparent)
+(struct let-e (bnd b) #:transparent)
 
-(struct binding (var e))
+(struct binding (var e) #:transparent)
+
+;; A new AST node that denotes 'where' a variable is in our environment. This
+;; is not important except for translate.rkt which is only for demonstration
+(struct address-e (n) #:transparent)
 
 (define prims '(add1 sub1 zero?))
+
+(define (prim? p)
+  ; We have to do thise to 'get rid' of the list value that `memq` returns
+  (if (memq p prims) #t #f))
+
+(define (value? v)
+  (or (var-e? v)
+      (int-e? v)
+      (bool-e? v)))
 
 (define (ast->sexpr a)
   (match a
@@ -36,6 +50,7 @@
     [(if-e p t f) `(if-e ,(ast->sexpr p)
                          ,(ast->sexpr t)
                          ,(ast->sexpr f))]
+    [(address-e i) `(address-e ,i)]
     [(let-e bd b) `(let-e ,(bindings->sexpr bd) ,(ast->sexpr b))]))
 
 (define (bindings->sexpr bnd)
@@ -45,4 +60,4 @@
 
 (define (binding->sexpr bnd)
   (match bnd
-    [(binding v e) `((,(ast->sexpr v) ,(ast->sexpr e)))]))
+    [(binding v e) `((,v ,(ast->sexpr e)))]))

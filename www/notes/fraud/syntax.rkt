@@ -31,9 +31,10 @@
     [(? symbol? v)  (var-e v)]
     [(? integer? s) (int-e s)]
     [(? boolean? b) (bool-e b)]
+    [`(address ,e)  (address-e e)]
     [`(,p ,e)       (if (memq p prims)
                         (prim-e p (sexpr->ast e))
                         (error (format "~a is not a primitive" p)))]
     [`(if ,p ,t ,f) (if-e (sexpr->ast p) (sexpr->ast t) (sexpr->ast f))]
-    [`(let ((,bnd ,def)) ,body) (let-e (binding (sexpr->ast bnd) (sexpr->ast def)) (sexpr->ast body))]
+    [`(let ((,bnd ,def)) ,body) (let-e (list (binding bnd (sexpr->ast def))) (sexpr->ast body))]
     [_              (error "operation not supported")]))

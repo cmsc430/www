@@ -1,6 +1,8 @@
 #lang racket
 (provide (all-defined-out))
 
+(require "ast.rkt")
+
 ;; type CEnv = [Listof Variable]
 
 ;; Expr -> Asm
@@ -16,35 +18,18 @@
 ;; Expr CEnv -> Asm
 (define (compile-e e c)
   (match e
-    [(? integer? i)
+    [(int-e i)
      `((mov rax ,(* i 2)))]
-    [(? boolean? b)
+    [(bool-e b)
      `((mov rax ,(if b #b11 #b01)))]
-    [`(add1 ,e0)
-     (let ((c0 (compile-e e0 c)))
+    [(prim-e p e)
+     (let ((c0 (compile-e e c)))
        `(,@c0
-         ,@assert-integer
-         (add rax 2)))]
-    [`(sub1 ,e0)
-     (let ((c0 (compile-e e0 c)))
-       `(,@c0
-         ,@assert-integer
-         (sub rax 2)))]
-    [`(zero? ,e0)
-     (let ((c0 (compile-e e0 c))
-           (l0 (gensym))
-           (l1 (gensym)))
-       `(,@c0
-         ,@assert-integer
-         (cmp rax 0)
-         (mov rax #b01) ; #f
-         (jne ,l0)
-         (mov rax #b11) ; #t
-         ,l0))]
-    [`(if ,e0 ,e1 ,e2)
-     (let ((c0 (compile-e e0 c))
-           (c1 (compile-e e1 c))
-           (c2 (compile-e e2 c))
+         ,@(compile-prim p c)))]
+    [(if-e p t f)
+     (let ((c0 (compile-e p c))
+           (c1 (compile-e t c))
+           (c2 (compile-e f c))
            (l0 (gensym))
            (l1 (gensym)))
        `(,@c0
@@ -55,24 +40,42 @@
          ,l0
          ,@c2
          ,l1))]
-    [(? symbol? x)
-     (let ((i (lookup x c)))
-       `((mov rax (offset rsp ,(- (add1 i))))))]
-    [`(let ((,x ,e0)) ,e1)
-     (let ((c0 (compile-e e0 c))
-           (c1 (compile-e e1 (cons x c))))
-       `(,@c0
-         (mov (offset rsp ,(- (add1 (length c)))) rax)
-         ,@c1))]))
+    [(var-e v) 
+      (let ((pos (lookup v c)))
+        `((mov rax (offset rsp ,(- (add1 pos))))))]
+    [(let-e (list (binding v def)) body)
+      (let ((c-def  (compile-e def c))
+            (c-body (compile-e body (cons v c))))
+           `(,@c-def
+            (mov (offset rsp ,(- (add1 (length c)))) rax)
+            ,@c-body))]))
+
+(define (compile-prim p c)
+  (match p
+    [`add1
+         `(,@assert-integer
+          (add rax 2))]
+    [`sub1
+         `(,@assert-integer
+          (sub rax 2))]
+    [`zero?
+     (let ((l0 (gensym))
+           (l1 (gensym)))
+        `(,@assert-integer
+         (cmp rax 0)
+         (mov rax #b01) ; #f
+         (jne ,l0)
+         (mov rax #b11) ; #t
+         ,l0))]))
 
 ;; Variable CEnv -> Natural
 (define (lookup x cenv)
   (match cenv
     ['() (error "undefined variable:" x)]
-    [(cons y cenv)
+    [(cons y rest)
      (match (symbol=? x y)
-       [#t (length cenv)]
-       [#f (lookup x cenv)])]))
+       [#t (length rest)]
+       [#f (lookup x rest)])]))
 
 (define assert-integer
   `((mov rbx rax)
