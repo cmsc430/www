@@ -16,7 +16,7 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "fraud" f))))))
-	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt" "ast.rkt" "syntax.rkt"))
 
 @title[#:tag "Fraud"]{Fraud: local binding and variables}
 
@@ -239,15 +239,15 @@ We can confirm the interpreter computes the right result for the
 examples given earlier:
 
 @ex[
-(interp 'x)
-(interp '(let ((x 7)) x))
-(interp '(let ((x 7)) 2))
-(interp '(let ((x 7)) (add1 x)))
-(interp '(let ((x (add1 7))) x))
-(interp '(let ((x 7)) (let ((y 2)) x)))
-(interp '(let ((x 7)) (let ((x 2)) x)))
-(interp '(let ((x (add1 x))) x))
-(interp '(let ((x 7)) (let ((x (add1 x))) x)))
+(eval:error (interp (sexpr->ast 'x)))
+(interp (sexpr->ast '(let ((x 7)) x)))
+(interp (sexpr->ast '(let ((x 7)) 2)))
+(interp (sexpr->ast '(let ((x 7)) (add1 x))))
+(interp (sexpr->ast '(let ((x (add1 7))) x)))
+(interp (sexpr->ast '(let ((x 7)) (let ((y 2)) x))))
+(interp (sexpr->ast '(let ((x 7)) (let ((x 2)) x))))
+(eval:error (interp (sexpr->ast '(let ((x (add1 x))) x))))
+(interp (sexpr->ast '(let ((x 7)) (let ((x (add1 x))) x))))
 ]
 
 @bold{Interpreter Correctness}: @emph{For all Fraud expressions
@@ -452,26 +452,26 @@ offset from the top of the stack we need use.
 
 
 @ex[
-(eval:error (asm-display (compile 'x)))
-(asm-display (compile '(let ((x 7)) x)))
-(asm-display (compile '(let ((x 7)) 2)))
-(asm-display (compile '(let ((x 7)) (add1 x))))
-(asm-display (compile '(let ((x (add1 7))) x)))
-(asm-display (compile '(let ((x 7)) (let ((y 2)) x))))
-(asm-display (compile '(let ((x 7)) (let ((x 2)) x))))
-(eval:error (asm-display (compile '(let ((x (add1 x))) x))))
-(asm-display (compile '(let ((x 7)) (let ((x (add1 x))) x))))
+(eval:error (asm-display (compile (sexpr->ast 'x))))
+(asm-display (compile             (sexpr->ast '(let ((x 7)) x))))
+(asm-display (compile             (sexpr->ast '(let ((x 7)) 2))))
+(asm-display (compile             (sexpr->ast '(let ((x 7)) (add1 x)))))
+(asm-display (compile             (sexpr->ast '(let ((x (add1 7))) x))))
+(asm-display (compile             (sexpr->ast '(let ((x 7)) (let ((y 2)) x)))))
+(asm-display (compile             (sexpr->ast '(let ((x 7)) (let ((x 2)) x)))))
+(eval:error (asm-display (compile (sexpr->ast '(let ((x (add1 x))) x)))))
+(asm-display (compile             (sexpr->ast '(let ((x 7)) (let ((x (add1 x))) x)))))
 ]
 
 And running the examples:
 @ex[
-(eval:error (asm-interp (compile 'x)))
-(asm-interp (compile '(let ((x 7)) x)))
-(asm-interp (compile '(let ((x 7)) 2)))
-(asm-interp (compile '(let ((x 7)) (add1 x))))
-(asm-interp (compile '(let ((x (add1 7))) x)))
-(asm-interp (compile '(let ((x 7)) (let ((y 2)) x))))
-(asm-interp (compile '(let ((x 7)) (let ((x 2)) x))))
-(eval:error (asm-interp (compile '(let ((x (add1 x))) x))))
-(asm-interp (compile '(let ((x 7)) (let ((x (add1 x))) x))))
+(eval:error (asm-interp (compile (sexpr->ast 'x))))
+(asm-interp (compile             (sexpr->ast '(let ((x 7)) x))))
+(asm-interp (compile             (sexpr->ast '(let ((x 7)) 2))))
+(asm-interp (compile             (sexpr->ast '(let ((x 7)) (add1 x)))))
+(asm-interp (compile             (sexpr->ast '(let ((x (add1 7))) x))))
+(asm-interp (compile             (sexpr->ast '(let ((x 7)) (let ((y 2)) x)))))
+(asm-interp (compile             (sexpr->ast '(let ((x 7)) (let ((x 2)) x)))))
+(eval:error (asm-interp (compile (sexpr->ast '(let ((x (add1 x))) x)))))
+(asm-interp (compile             (sexpr->ast '(let ((x 7)) (let ((x (add1 x))) x)))))
 ]
