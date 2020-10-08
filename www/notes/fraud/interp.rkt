@@ -32,11 +32,12 @@
         (if v
             (interp-env e1 r)
             (interp-env e2 r))])]
-    [(let-e bnd body)
+    [(let-e (list bnd) body)
        (match bnd
          [(binding v def)
-            (let ((val (interp-env def r)))
-              (interp-env body (ext r v val)))])]))
+              (match (interp-env def r)
+                ['err 'err]
+                [val  (interp-env body (ext r v val))])])]))
 
 (define (interp-prim p e r)
   (match p
@@ -59,9 +60,9 @@
 (define (lookup-prime init r v)
   (match r
     ['() (error (format "~a is not found in the environment. Current env: ~a" v init))]
-    [(cons (list (var-e var) val) rest) (if (symbol=? v var)
-                                            val
-                                            (lookup-prime init rest v))]))
+    [(cons (list var val) rest) (if (symbol=? v var)
+                                    val
+                                    (lookup-prime init rest v))]))
 
 (define (ext r v val)
   (cons (list v val) r))
