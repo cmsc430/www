@@ -164,8 +164,9 @@ For example:
 
 )
 
-To make things interesting, you should not use Racket's @racket[+]
-and @racket[*] in @racket[interp].
+To make things interesting, you should not use Racket's variadic @racket[+] and
+@racket[*] in @racket[interp] (but you can use them as binary operators, e.g.
+@tt{(+ a b)} is okay but @tt{(+ a b c)} is not).
 
 You can assume two new AST nodes @tt{sum-e} and @tt{prod-e} that each have one
 field, which is a list of expressions.
