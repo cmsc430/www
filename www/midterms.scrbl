@@ -3,13 +3,13 @@
 @title[#:style '(toc unnumbered)]{Midterms}
 
 There will be two midterm examinations, which will be @bold{take-home}
-exams.  Exams will be distributed at least 48 hours before the due
+exams.  Exams will be distributed at least 72 hours before the due
 date of the midterm.
 
 @itemlist[
-  @item{Midterm 1: @bold{@m1-date}}
+  @item{Midterm 1: @bold{}}
   @item{Midterm 2: @bold{@m2-date}}
 ]
 
-@;include-section["midterms/1.scrbl"]
+@include-section["midterms/1.scrbl"]
 @;include-section["midterms/2.scrbl"]
