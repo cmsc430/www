@@ -1,6 +1,8 @@
 #lang racket
 (provide (all-defined-out))
 
+(require "ast.rkt")
+
 (define imm-shift        1)
 (define imm-type-mask    (sub1 (arithmetic-shift 1 imm-shift)))
 (define imm-type-int     #b0)
@@ -20,16 +22,12 @@
 ;; Expr CEnv -> Asm
 (define (compile-e e c)
   (match e
-    [(? integer? i)        (compile-integer i)]
-    [(? boolean? b)        (compile-boolean b)]
-    [(? symbol? x)         (compile-variable x c)]    
-    [`(add1 ,e0)           (compile-add1 e0 c)]
-    [`(sub1 ,e0)           (compile-sub1 e0 c)]
-    [`(zero? ,e0)          (compile-zero? e0 c)]
-    [`(if ,e0 ,e1 ,e2)     (compile-if e0 e1 e2 c)]
-    [`(let ((,x ,e0)) ,e1) (compile-let x e0 e1 c)]
-    [`(+ ,e0 ,e1)          (compile-+ e0 e1 c)]
-    [`(- ,e0 ,e1)          (compile-- e0 e1 c)]))
+    [(int-e i)               (compile-integer i)]
+    [(bool-e b)              (compile-boolean b)]
+    [(var-e v)               (compile-variable v c)]
+    [(prim-e (? prim? p) es) (compile-prim p es c)]
+    [(if-e p t f)            (compile-if p t f c)]
+    [(let-e (list b) body)   (compile-let b body c)]))
 
 ;; Integer -> Asm
 (define (compile-integer i)
@@ -38,6 +36,16 @@
 ;; Boolean -> Asm
 (define (compile-boolean b)
   `((mov rax ,(if b imm-val-true imm-val-false))))
+
+(define (compile-prim p es c)
+  (match (cons p es)
+    [`(add1 ,e0)  (compile-add1 e0 c)]
+    [`(sub1 ,e0)  (compile-sub1 e0 c)]
+    [`(zero? ,e0) (compile-zero? e0 c)]
+    [`(+ ,e0 ,e1) (compile-+ e0 e1 c)]
+    [`(- ,e0 ,e1) (compile-- e0 e1 c)]
+    [_            (error
+                    (format "prim applied to wrong number of args: ~a ~a" p es))]))
 
 ;; Expr CEnv -> Asm
 (define (compile-add1 e0 c)
@@ -66,6 +74,26 @@
       (mov rax ,imm-val-true)
       ,l0)))
 
+(define (compile-+ e0 e1 c)
+  (let ((c1 (compile-e e1 c))
+        (c0 (compile-e e0 (cons #f c))))
+    `(,@c1
+      ,@assert-integer
+      (mov (offset rsp ,(- (add1 (length c)))) rax)
+      ,@c0
+      ,@assert-integer
+      (add rax (offset rsp ,(- (add1 (length c))))))))
+
+(define (compile-- e0 e1 c)
+  (let ((c1 (compile-e e1 c))
+        (c0 (compile-e e0 (cons #f c))))
+    `(,@c1
+      ,@assert-integer
+      (mov (offset rsp ,(- (add1 (length c)))) rax)
+      ,@c0
+      ,@assert-integer
+      (sub rax (offset rsp ,(- (add1 (length c))))))))
+
 ;; Expr Expr Expr CEnv -> Asm
 (define (compile-if e0 e1 e2 c)
   (let ((c0 (compile-e e0 c))
@@ -88,34 +116,15 @@
     `((mov rax (offset rsp ,(- (add1 i)))))))
 
 ;; Variable Expr Expr CEnv -> Asm
-(define (compile-let x e0 e1 c)
-  (let ((c0 (compile-e e0 c))
-        (c1 (compile-e e1 (cons x c))))
-    `(,@c0
-      (mov (offset rsp ,(- (add1 (length c)))) rax)
-      ,@c1)))
+(define (compile-let b e1 c)
+  (match b
+    [(binding x e0)
+      (let ((c0 (compile-e e0 c))
+            (c1 (compile-e e1 (cons x c))))
+        `(,@c0
+          (mov (offset rsp ,(- (add1 (length c)))) rax)
+          ,@c1))]))
 
-;; Expr Expr CEnv -> Asm
-(define (compile-+ e0 e1 c)
-  (let ((c1 (compile-e e1 c))
-        (c0 (compile-e e0 (cons #f c))))
-    `(,@c1
-      ,@assert-integer
-      (mov (offset rsp ,(- (add1 (length c)))) rax)
-      ,@c0
-      ,@assert-integer
-      (add rax (offset rsp ,(- (add1 (length c))))))))
-
-;; Expr Expr CEnv -> Asm
-(define (compile-- e0 e1 c)
-  (let ((c1 (compile-e e1 c))
-        (c0 (compile-e e0 (cons #f c))))
-    `(,@c1
-      ,@assert-integer
-      (mov (offset rsp ,(- (add1 (length c)))) rax)
-      ,@c0
-      ,@assert-integer
-      (sub rax (offset rsp ,(- (add1 (length c))))))))
 
 ;; Variable CEnv -> Natural
 (define (lookup x cenv)
