@@ -13,7 +13,7 @@ Midterm repository:
 
 The repository contains a single plaintext file @tt{m1.txt}, which you
 can edit to submit your answers to the following questions.  Your
-submission must be pushed by midnight on Tuesday.
+submission must be pushed by 11:59 EDT on Tuesday, October 13th.
 
 During the 72 hours of the exam period, you may only ask private questions to
 the staff (via email, discord, etc.) if you need clarification.
