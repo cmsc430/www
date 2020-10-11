@@ -12,7 +12,7 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "grift" f))))))
-	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt" "ast.rkt" "syntax.rkt"))
 
 @title[#:tag "Grift"]{Grift: binary operations}
 
@@ -98,9 +98,9 @@ The interpreter is likewise straightforward:
 We can see that it works as expected:
 
 @ex[
-(interp '(+ 3 4))
-(interp '(+ 3 (+ 2 2)))
-(interp '(+ #f 8))
+(interp (sexpr->ast '(+ 3 4)))
+(interp (sexpr->ast '(+ 3 (+ 2 2))))
+(interp (sexpr->ast '(+ #f 8)))
 ]
 
 @section{A Compile for Grift}
