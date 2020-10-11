@@ -7,7 +7,7 @@ exams.  Exams will be distributed at least 72 hours before the due
 date of the midterm.
 
 @itemlist[
-  @item{Midterm 1: @bold{}}
+  @item{Midterm 1: @bold{@m1-date}}
   @item{Midterm 2: @bold{@m2-date}}
 ]
 
