@@ -58,3 +58,6 @@ deploy:
     branch: master
     condition: "$TRAVIS_OS_NAME = linux"
 
+notifications:
+  slack: cmsc430workspace:nvLth66uka7skWab0nuyDBL9
+
