@@ -47,13 +47,10 @@ executing each of these.
 [10 points]
 
 Assume that the register @tt{rbx} currently holds the value 2048.
-Pleae write two sequences of instructions.
+Please write two sequences of instructions.
 The first should load the value @emph{stored} at address 2048 in memory,
 and place that value in @tt{rax}.
 The second should store the value 42 at address 2048.
-
-(hint: the second part of this question cannot be done with a single
-instruction)
 
 
 @section{Representation}
@@ -68,7 +65,7 @@ being represented was an integer (tagged with @code[#:lang
 "racket"]{#b0}) or a boolean (tagged with @code[#:lang
 "racket"]{#b1}).
 
-What is one alternative approach to dissambiguating types at runtime (i.e. not
+What is one alternative approach to disambiguating types at runtime (i.e. not
 a static type system)? It can be a completely new design of your own if you'd like.
 
 One way to consider the possibilities is to think about how you would implement the logic
@@ -82,7 +79,7 @@ Once you've described your chosen alternative approach, do the following:
 @item{Describe one way in which this design is worse that the tagging
 approach we have used in class.}
 
-@item{Describe on way in which this design is better than the tagging approach
+@item{Describe one way in which this design is better than the tagging approach
 used in class.}
 
 @item{Describe, at a high-level in English, how you could implement
@@ -201,7 +198,7 @@ Things that may make your life easier:
 
 @item{If you'd like, you can use the generalized @tt{let-e} from Assignment \#4.}
 
-@item{Redudant @tt{let-e}'s are fine, as long as the restrction described above
+@item{Redundant @tt{let-e}'s are fine, as long as the restriction described above
 is maintained.}
 
 ]
