@@ -42,16 +42,16 @@
                (list @wk{10/05}
 	       	           @seclink["Assignment 4"]{A4}
                      @elem{@secref["Grift"]}
-                     @elem{@secref["Hustle"]})
+                     @elem{Exam Review})
                
                (list @wk{10/12}
 	       	     @bold{@seclink["Midterm_1"]{M1}}
                      @elem{No lecture (exam)}
-                     @elem{@secref["Iniquity"]})
+                     @elem{@secref["Hustle"]})
 
                (list @wk{10/19}
                      ""
-                     @elem{@secref["Iniquity"] (cont.)}
+                     @elem{@secref["Iniquity"]}
                      @elem{@secref["Jig"]})
                
                (list @wk{10/26}
