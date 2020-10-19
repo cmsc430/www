@@ -1,11 +1,18 @@
 #lang racket
 (provide (all-defined-out))
 
+(require "ast.rkt")
+
+;; type Answer = Value | 'err
+
 ;; type Value =
-;; ....
-;; | (box Value)
-;; | '()
-;; | (cons Value Value)
+;; | Integer
+;; | Boolean
+;; | Box Value
+;; | Nil
+;; | Cons Value Value
+
+;; type REnv = (Listof (List Variable Value))
 
 ;; Expr -> Answer
 (define (interp e)
@@ -14,13 +21,15 @@
 ;; Expr REnv -> Integer
 (define (interp-env e r)
   (match e
-    [''() '()]
-    [(? value? v) v]
-    [(list (? prim? p) es ...)
-     (let ((as (interp-env* es r)))
-       (interp-prim p as))]
-    [`(if ,e0 ,e1 ,e2)
-     (match (interp-env e0 r)
+    [(var-e v)  (lookup r v)]
+    [(int-e i)  i]
+    [(bool-e b) b]
+    [(nil-e)    '()]
+    [(prim-e (? prim? p) es)
+         (let ((as (interp-env* es r)))
+           (interp-prim p as))]
+    [(if-e p e1 e2)
+     (match (interp-env p r)
        ['err 'err]
        [v
         (if v
@@ -28,11 +37,11 @@
             (interp-env e2 r))])]    
     [(? symbol? x)
      (lookup r x)]
-    [`(let ((,x ,e0)) ,e1)
-     (match (interp-env e0 r)
+    [(let-e (list (binding x def)) body)
+     (match (interp-env def r)
        ['err 'err]
        [v
-        (interp-env e1 (ext r x v))])]))
+        (interp-env body (ext r x v))])]))
 
 ;; [Listof Expr] REnv -> [Listof Answer]
 (define (interp-env* es r)
@@ -49,19 +58,9 @@
                       ;; New for Hustle
                       box unbox empty? cons car cdr))))
 
-;; Any -> Boolean
-(define (value? x)
-  (or (integer? x)
-      (boolean? x)
-      (null? x)
-      (and (pair? x)
-           (value? (car x))
-           (value? (cdr x)))))
-
 ;; Prim [Listof Answer] -> Answer
 (define (interp-prim p as)
   (match (cons p as)
-    [(list p (? value?) ... 'err _ ...) 'err]
     [(list 'add1 (? integer? i0)) (+ i0 1)]
     [(list 'sub1 (? integer? i0)) (- i0 1)]
     [(list 'zero? (? integer? i0)) (zero? i0)]
