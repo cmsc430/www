@@ -9,7 +9,7 @@
     ,@(compile-e e)
     ret
     err
-    (push rbp) ; push before calling
+    (push rbp)
     (call error)))
 
 ;; Expr -> Asm
