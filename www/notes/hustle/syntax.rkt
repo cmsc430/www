@@ -40,7 +40,7 @@
     [`(,p ,e)       (if (unop? p)
                         (prim-e p (list (sexpr->ast e)))
                         (error (format "~a is not a primitive" p)))]
-    [`(,p ,e1, e2)  (if (biop? p)
+    [`(,p ,e1 ,e2)  (if (biop? p)
                         (prim-e p (list (sexpr->ast e1) (sexpr->ast e2)))
                         (error (format "~a is not a primitive" p)))]
     [_              (error "operation not supported")]))
