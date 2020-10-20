@@ -13,7 +13,7 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "hustle" f))))))
-	   '() #;'("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+	   '() #;'("interp.rkt" "ast.rkt" "syntax.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
 @title[#:tag "Hustle"]{Hustle: heaps and lists}
 
@@ -91,7 +91,6 @@ function.  On the relevant bits of
 ;; Prim [Listof Answer] -> Answer
 (define (interp-prim p as)
   (match (cons p as)
-    [(list p (? value?) ... 'err _ ...) 'err]
     [(list 'add1 (? integer? i0)) (+ i0 1)]
     [(list 'sub1 (? integer? i0)) (- i0 1)]
     [(list 'zero? (? integer? i0)) (zero? i0)]
