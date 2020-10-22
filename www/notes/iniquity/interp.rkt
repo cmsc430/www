@@ -13,8 +13,7 @@
 (define (interp p)
   (match p
     [(prog ds e)
-     (interp-env e '() ds)]
-    [(prog '() e) (interp-env e '() '())]))
+     (interp-env e '() ds)]))
 
 ;; Expr REnv (Listof Defn) -> Answer
 (define (interp-env e r ds)
