@@ -12,7 +12,7 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "iniquity" f))))))
-	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+	   '("interp.rkt" "ast.rkt" "syntax.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
 @title[#:tag "Iniquity"]{Iniquity: function definitions and calls}
 
@@ -93,26 +93,26 @@ have significantly increased the expressivity of our language.}
 We can try it out:
 
 @ex[
-(interp '(begin (define (double x) (+ x x))
-		(double 5)))
+(interp (sexpr->prog '(begin (define (double x) (+ x x))
+		(double 5))))
 ]
 
 We can see it works with recursive functions, too. Here's a recursive
 function for computing triangular numbers:
 
 @ex[
-(interp '(begin (define (tri x)
+(interp (sexpr->prog '(begin (define (tri x)
 		  (if (zero? x)
 		      0
 		      (+ x (tri (sub1 x)))))
-		(tri 9)))
+		(tri 9))))
 ]
 
 We can even define mutually recursive functions such as @racket[even?]
 and @racket[odd?]:
 
 @ex[
-(interp '(begin (define (even? x)
+(interp (sexpr->prog '(begin (define (even? x)
 		  (if (zero? x)
 		      #t
 		      (odd? (sub1 x))))
@@ -120,7 +120,7 @@ and @racket[odd?]:
 		  (if (zero? x)
 		      #f
 		      (even? (sub1 x))))
-		(even? 101)))
+		(even? 101))))
 ]
 
 @section[#:tag-prefix "iniquity"]{Compiling a Call}
@@ -432,23 +432,23 @@ single list:
 Here's an example of the code this compiler emits:
 
 @ex[
-(asm-display (compile '(begin (define (double x) (+ x x)) (double 5))))
+(asm-display (compile (sexpr->prog '(begin (define (double x) (+ x x)) (double 5)))))
 ]
 
 And we can confirm running the code produces results consistent with
 the interpreter:
 
 @ex[
-(asm-interp (compile '(begin (define (double x) (+ x x))
-			     (double 5))))
+(asm-interp (compile (sexpr->prog '(begin (define (double x) (+ x x))
+			     (double 5)))))
 
-(asm-interp (compile '(begin (define (tri x)
+(asm-interp (compile (sexpr->prog '(begin (define (tri x)
 			      (if (zero? x)
 				  0
 				  (+ x (tri (sub1 x)))))
-			    (tri 9))))
+			    (tri 9)))))
 
-(asm-interp (compile '(begin (define (even? x)
+(asm-interp (compile (sexpr->prog '(begin (define (even? x)
 			       (if (zero? x)
 				   #t
 				   (odd? (sub1 x))))
@@ -456,7 +456,7 @@ the interpreter:
 			       (if (zero? x)
 				   #f
 				   (even? (sub1 x))))
-			     (even? 101))))
+			     (even? 101)))))
 ]
 
 
