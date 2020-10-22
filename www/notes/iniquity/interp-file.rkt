@@ -11,4 +11,4 @@
       (let ((c (read-line)))
         (let ((p (read)))
           (unless (expr? p) (error "syntax error" p))
-          (writeln (interp p)))))))
+          (writeln (interp (sexpr->prog p))))))))

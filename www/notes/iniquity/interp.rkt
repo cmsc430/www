@@ -1,6 +1,8 @@
 #lang racket
 (provide (all-defined-out))
 
+(require "ast.rkt")
+
 ;; type Prog =
 ;; | `(begin ,@(Listof Defn) ,Expr)
 ;; | Expr
@@ -10,48 +12,46 @@
 ;; Prog -> Answer
 (define (interp p)
   (match p
-    [(list 'begin ds ... e)
+    [(prog ds e)
      (interp-env e '() ds)]
-    [e (interp-env e '() '())]))
+    [(prog '() e) (interp-env e '() '())]))
 
 ;; Expr REnv (Listof Defn) -> Answer
 (define (interp-env e r ds)
   (match e
-    [''() '()]
-    [(? value? v) v]
-    [(list (? prim? p) es ...)
-     (match (interp-env* es r ds)
-       [(list vs ...) (interp-prim p vs)]
-       [_ 'err])]
-    [`(if ,e0 ,e1 ,e2)
-     (match (interp-env e0 r ds)
+    [(var-e v)  (lookup r v)]
+    [(int-e i)  i]
+    [(bool-e b) b]
+    [(nil-e)    '()]
+    [(prim-e (? prim? p) es)
+         (let ((as (interp-env* es r ds)))
+           (interp-prim p as))]
+    [(if-e p e1 e2)
+     (match (interp-env p r ds)
        ['err 'err]
        [v
         (if v
             (interp-env e1 r ds)
             (interp-env e2 r ds))])]    
-    [(? symbol? x)
-     (lookup r x)]
-    [`(let ((,x ,e0)) ,e1)
-     (match (interp-env e0 r ds)
+    [(let-e (list (binding x def)) body)
+     (match (interp-env def r ds)
        ['err 'err]
        [v
-        (interp-env e1 (ext r x v) ds)])]
-    
-    [`(,f . ,es)
+        (interp-env body (ext r x v) ds)])]
+    [(app-e f es)
      (match (interp-env* es r ds)
        [(list vs ...)
         (match (defns-lookup ds f)
-          [`(define (,f ,xs ...) ,e)
+          [(fundef f xs body)
            ; check arity matches
            (if (= (length xs) (length vs))
-               (interp-env e (zip xs vs) ds)
+               (interp-env body (zip xs vs) ds)
                'err)])]
        [_ 'err])]))
 
 ;; (Listof Defn) Symbol -> Defn
 (define (defns-lookup ds f)
-  (findf (match-lambda [`(define (,g . ,_) ,_) (eq? f g)])
+  (findf (match-lambda [(fundef g _ _) (eq? f g)])
          ds))
 
 ;; (Listof Expr) REnv -> (Listof Value) | 'err
