@@ -1,6 +1,8 @@
 #lang racket
 (provide (all-defined-out))
 
+(require "ast.rkt")
+
 ;; An immediate is anything ending in #b000
 ;; All other tags in mask #b111 are pointers
 
@@ -27,20 +29,14 @@
 ;; type CEnv = (Listof (Maybe Variable))
 ;; type Imm = Integer | Boolean | Char | ''()
 
-;; type Prog =
-;; | Expr
-;; | `(begin ,@(Listof (define (,Variable ,@(Listof Variable)) ,Expr))
-;;           ,Expr)           
-
 ;; Prog -> Asm
 (define (compile p)
   (match p
-    [(list 'begin `(define (,fs . ,xss) ,es) ... e0)
-     (let ((ds (compile-defines fs xss es))
-           (c0 (compile-entry e0)))
+    [(prog defs e)
+     (let ((ds (compile-defines defs))
+           (c0 (compile-entry e)))
        `(,@c0
-         ,@ds))]
-    [e (compile-entry e)]))
+         ,@ds))]))
 
 ;; Expr -> Asm
 ;; Compile e as the entry point
@@ -57,21 +53,28 @@
 ;; Expr CEnv -> Asm
 (define (compile-e e c)
   (match e
-    [(? symbol? x)         (compile-variable x c)]
-    [(? imm? i)            (compile-imm i)]
-    [`(box ,e0)            (compile-box e0 c)]
-    [`(unbox ,e0)          (compile-unbox e0 c)]
-    [`(cons ,e0 ,e1)       (compile-cons e0 e1 c)]
-    [`(car ,e0)            (compile-car e0 c)]
-    [`(cdr ,e0)            (compile-cdr e0 c)]
+    [(? imm? i)              (compile-imm i)]
+    [(var-e v)               (compile-var v c)]
+    [(prim-e (? prim? p) es) (compile-prim p es c)]
+    [(if-e p t f)            (compile-if p t f c)]
+    [(let-e (list b) body)   (compile-let b body c)]
+    [(app-e f es)            (compile-call f es c)]))
+
+(define (compile-prim p es c)
+  (match (cons p es)
     [`(add1 ,e0)           (compile-add1 e0 c)]
     [`(sub1 ,e0)           (compile-sub1 e0 c)]
     [`(zero? ,e0)          (compile-zero? e0 c)]
-    [`(empty? ,e0)         (compile-empty? e0 c)]
-    [`(if ,e0 ,e1 ,e2)     (compile-if e0 e1 e2 c)]
     [`(+ ,e0 ,e1)          (compile-+ e0 e1 c)]
-    [`(let ((,x ,e0)) ,e1) (compile-let x e0 e1 c)]    
-    [`(,f . ,es)           (compile-call f es c)]))
+    [`(- ,e0 ,e1)          (compile-- e0 e1 c)]
+    [`(box ,e0)            (compile-box e0 c)]
+    [`(unbox ,e0)          (compile-unbox e0 c)]
+    [`(empty? ,e0)         (compile-empty? e0 c)]
+    [`(cons ,e0 ,e1)       (compile-cons e0 e1 c)]
+    [`(car ,e0)            (compile-car e0 c)]
+    [`(cdr ,e0)            (compile-cdr e0 c)]
+    [_            (error
+                    (format "prim applied to wrong number of args: ~a ~a" p es))]))
 
 ;; Variable (Listof Expr) CEnv -> Asm
 ;; Statically know the function we're calling
@@ -95,28 +98,24 @@
          ,@cs))]))
 
 ;; Variable (Listof Variable) Expr -> Asm
-(define (compile-define f xs e0)
-  (let ((c0 (compile-e e0 (reverse xs))))
-    `(,(symbol->label f)
-      ,@c0
-      ret)))
+(define (compile-define def)
+  (match def
+    [(fundef name args body)
+      (let ((c0 (compile-e body (reverse args))))
+        `(,(symbol->label name)
+          ,@c0
+          ret))]))
 
 ;; (Listof Variable) (Listof (Listof Variable)) (Listof Expr) -> Asm
-(define (compile-defines fs xss es)
-  (append-map compile-define fs xss es))
+(define (compile-defines defs)
+  (append-map compile-define defs))
 
 ;; Any -> Boolean
 (define (imm? x)
-  (or (integer? x)
-      (boolean? x)
-      (char? x)
-      (equal? ''() x)))
-
-;; Any -> Boolean
-(define (type-pred? x)
-  (memq x '(integer?
-            char?
-            empty?)))
+  (or (int-e? x)
+      (bool-e? x)
+      ;; TODO (char? x)
+      (nil-e? x)))
 
 ;; Imm -> Asm
 (define (compile-imm i)
@@ -125,13 +124,13 @@
 ;; Imm -> Integer
 (define (imm->bits i)
   (match i
-    [(? integer? i) (arithmetic-shift i imm-shift)]
-    [(? char? c)    (+ (arithmetic-shift (char->integer c) imm-shift) imm-type-char)]
-    [(? boolean? b) (if b imm-val-true imm-val-false)]
-    [''()           imm-type-empty]))
+    [(int-e i)  (arithmetic-shift i imm-shift)]
+    ; TODO [(char-e c)    (+ (arithmetic-shift (char->integer c) imm-shift) imm-type-char)]
+    [(bool-e b) (if b imm-val-true imm-val-false)]
+    [(nil-e)    imm-type-empty]))
 
 ;; Variable CEnv -> Asm
-(define (compile-variable x c)
+(define (compile-var x c)
   (let ((i (lookup x c)))
     `((mov rax (offset rsp ,(- (add1 i)))))))
 
@@ -238,12 +237,15 @@
       ,l1)))
 
 ;; Variable Expr Expr CEnv -> Asm
-(define (compile-let x e0 e1 c)
-  (let ((c0 (compile-e e0 c))
-        (c1 (compile-e e1 (cons x c))))
-    `(,@c0
-      (mov (offset rsp ,(- (add1 (length c)))) rax)
-      ,@c1)))
+(define (compile-let b e1 c)
+  (match b
+    [(binding v def)
+       (let ((c0 (compile-e def c))
+             (c1 (compile-e e1 (cons v c))))
+         `(,@c0
+           (mov (offset rsp ,(- (add1 (length c)))) rax)
+           ,@c1))]
+    [_ (error "Compile-let can only handle bindings")]))
 
 ;; Expr Expr CEnv -> Asm
 (define (compile-+ e0 e1 c)
@@ -255,6 +257,17 @@
       ,@c0
       ,@assert-integer
       (add rax (offset rsp ,(- (add1 (length c))))))))
+
+;; Expr Expr CEnv -> Asm
+(define (compile-- e0 e1 c)
+  (let ((c1 (compile-e e1 c))
+        (c0 (compile-e e0 (cons #f c))))
+    `(,@c1
+      ,@assert-integer
+      (mov (offset rsp ,(- (add1 (length c)))) rax)
+      ,@c0
+      ,@assert-integer
+      (sub rax (offset rsp ,(- (add1 (length c))))))))
 
 
 (define (type-pred->mask p)
