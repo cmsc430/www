@@ -4,16 +4,6 @@
 (require "ast.rkt")
 
 ;; Any -> Boolean
-(define (binop? x)
-  (and (symbol? x)
-       (memq x '(+ - cons))))
-
-;; Any -> Boolean
-(define (unop? x)
-  (and (symbol? x)
-       (memq x '(add1 sub1 zero? box unbox car cdr map-zero?))))
-
-;; Any -> Boolean
 ;; Is x a well-formed expression?
 (define (expr? x)
   (match x
@@ -22,7 +12,7 @@
     [(? boolean?) #t]
     [''() #t]
     [`(,(? unop? p) ,x) (expr? x)]
-    [`(,(? binop? p) ,x ,y) 
+    [`(,(? biop? p) ,x ,y)
       (and
         (expr? x)
         (expr? y))]
@@ -55,7 +45,7 @@
 ; SExpr -> FunDef
 (define (sexpr->fundef def)
   (match def
-    [`(define (,f . ,as) ,body) (fundef f as body)]))
+    [`(define (,f . ,as) ,body) (fundef f as (sexpr->expr body))]))
 
 ; SExpr -> Expr
 ; Parse the s-expr into our Expr AST
@@ -68,10 +58,10 @@
     [''()           (nil-e)]
     [`(if ,p ,t ,f) (if-e (sexpr->expr p) (sexpr->expr t) (sexpr->expr f))]
     [`(let ((,bnd ,def)) ,body) (let-e (list (binding bnd (sexpr->expr def))) (sexpr->expr body))]
-    [`(,p ,e)       (if (unop? p)
-                        (prim-e p (list (sexpr->expr e)))
-                        (error (format "~a is not a primitive" p)))]
-    [`(,p ,e1 ,e2)  (if (biop? p)
-                        (prim-e p (list (sexpr->expr e1) (sexpr->expr e2)))
-                        (error (format "~a is not a primitive" p)))]
+    [`(,(? unop? p) ,e)
+      (prim-e p (list (sexpr->expr e)))]
+    [`(,(? biop? p) ,e1 ,e2)
+      (prim-e p (list (sexpr->expr e1) (sexpr->expr e2)))]
+    [`(,f . ,as)
+      (app-e f (map sexpr->expr as))]
     [_              (error "operation not supported")]))

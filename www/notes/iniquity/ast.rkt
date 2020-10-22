@@ -53,6 +53,7 @@
 (struct bool-e (b)     #:transparent)
 (struct var-e  (v)     #:transparent)
 (struct prim-e (p es)  #:transparent)
+(struct app-e  (f es)  #:transparent) ; <- new for Iniquity
 (struct if-e   (e t f) #:transparent)
 (struct let-e  (bs b)  #:transparent)
 (struct nil-e  ()      #:transparent)
@@ -67,7 +68,7 @@
 ;;;;;; AST utility functions (predicates)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define unops '(add1 sub1 zero? box unbox car cdr))
+(define unops '(add1 sub1 zero? box unbox empty? car cdr))
 (define biops '(+ - cons))
 
 ;; Any -> Boolean
@@ -134,6 +135,7 @@
     [(var-e v)     `(var-e ,v)]
     [(nil-e)       ''()]
     [(prim-e p es) `(prim-e ,p ,@(map ast-debug es))]
+    [(app-e f es)  `(app-e ,f ,@(map ast-debug es))]
     [(if-e e t f)  `(if-e ,(ast-debug e)
                           ,(ast-debug t)
                           ,(ast-debug f))]
