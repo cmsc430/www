@@ -47,22 +47,22 @@
                (list @wk{10/12}
 	       	     @bold{@seclink["Midterm_1"]{M1}}
                      @elem{No lecture (exam)}
-                     @elem{@secref["Hustle"]})
+                     @elem{Exam Q+A})
 
                (list @wk{10/19}
                      ""
-                     @elem{@secref["Iniquity"]}
-                     @elem{@secref["Jig"]})
+                     @elem{@secref["Hustle"]}
+                     @elem{@secref["Iniquity"]})
                
                (list @wk{10/26}
                      @seclink["Assignment 5"]{A5}
-                     @elem{@secref["Knock"]}
-                     @elem{Digression: Taking a look at ASTs})
+                     @elem{@secref["Jig"]}
+                     @elem{@secref["Knock"]})
                
                (list @wk{11/02}
                      ""
-                     @elem{@secref["Loot"]}
-                     @elem{@secref["Loot"] (cont.)})
+                     @elem{Digression: Taking a look at ASTs}
+                     @elem{@secref["Loot"]})
                                     
                (list @wk{11/09}
                      @bold{@seclink["Midterm_2"]{M2}}

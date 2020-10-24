@@ -7,9 +7,9 @@
 
 @(require "../notes/ev.rkt")
 
-@bold{Due: Tues, April 28, 11:59PM EST}
+@bold{Due: Friday, Oct 30, 11:59PM EDT}
 
-@(define repo "https://classroom.github.com/a/Q8hyY0yo")
+@(define repo "https://classroom.github.com/a/fqM9KeO1")
 
 The goal of this assignment is to extend a compiler with data types
 that require memory allocation and dereferencing.
@@ -73,6 +73,21 @@ If you want to understand the details of how strings are implemented in
 the run-time system. See the function @tt{print_string()}
 in @tt{main.c}.
 
+In order to get all the points for this section of the assignment you will
+need to modify the following files:
+
+@itemlist[
+
+@item{@tt{compile.rkt}}
+
+@item{@tt{syntax.rkt}}
+
+]
+
+As usual, the code in @tt{ast.rkt} will need to be studied in order to
+understand the structure of the AST and how to traverse/operate on
+Hustle+ programs.
+
 @section[#:tag-prefix "a5-" #:style 'unnumbered]{More operations}
 
 Add the following operations to the Hustle+ language:
@@ -105,10 +120,32 @@ two booleans are equal.}
 
 ]
 
+Tests for these primitives have not been provided in @tt{test/compile.rkt},
+therefore you will need to write appropriate tests for these primitives.
+
+In order to get all the points for this section of the assignment you will
+need to modify the following files:
+
+@itemlist[
+
+@item{@tt{compile.rkt}}
+
+@item{@tt{syntax.rkt}}
+
+@item{@tt{test/compile.rkt}}
+
+]
+
 @section[#:tag-prefix "a5-" #:style 'unnumbered]{Extending the Parser}
 
-The parser has been extended from the Fraud+ parser for the Hustle+ language
-based on the following grammar:
+You should not need to make any changes to @tt{lex.rkt} or to @tt{parse.rkt},
+but you do need to understand the structure of the resulting AST, which is why
+the information below is provided. The grammar, along with the definitions and
+utility functions in @tt{ast.rkt} provide all the information necessary to
+work with the AST in implementing the new features of Hustle+.
+
+The parser has been extended @emph{for you} from the Fraud+ parser for the
+Hustle+ language based on the following grammar:
 
 @verbatim{
 <expr> ::= integer
@@ -200,17 +237,14 @@ The lexer will take care of reading the @tt{#lang racket} header and
 remove any whitespace.
 
 The code in @tt{parse.rkt} implements the parser which constructs an
-s-expression representing a valid Hustle+ expression, if possible, from a list
+AST representing a valid Hustle+ expression, if possible, from a list
 of tokens. 
 
-As an example, @racket[parse] should produce @racket['(add1 (sub1 7))]
+As an example, @racket[parse] should produce
+@racket[(prim-e 'add1 (list (prim-e 'sub1 (list (int-e 7))))))]
 if given
 
 @racketblock['(lparen (prim add1) lparen (prim sub1) 7 rparen rparen eof)]
-
-You should not need to make any changes to @tt{lex.rkt} or to @tt{parse.rkt},
-but you do need to understand the structure of the resulting AST, which is why
-the information above was provided.
 
 @section[#:tag-prefix "a5-" #:style 'unnumbered]{Testing}
 
