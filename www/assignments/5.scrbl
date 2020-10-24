@@ -241,7 +241,7 @@ AST representing a valid Hustle+ expression, if possible, from a list
 of tokens. 
 
 As an example, @racket[parse] should produce
-@racket[(prim-e 'add1 (list (prim-e 'sub1 (list (int-e 7))))))]
+@racket[(prim-e `add1 (list (prim-e `sub1 (list (int-e 7)))))]
 if given
 
 @racketblock['(lparen (prim add1) lparen (prim sub1) 7 rparen rparen eof)]
