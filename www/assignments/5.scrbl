@@ -23,6 +23,9 @@ with:
 
 @itemlist[
 
+@item{incorporating the Con+ features you added in
+@seclink["Assignment 3"]{Assignment 3},}
+
 @item{incorporating the Fraud+ features you added in
 @seclink["Assignment 4"]{Assignment 4},}
 
@@ -32,10 +35,24 @@ with:
 
 ]
 
+As usual, the code in @tt{ast.rkt} will need to be studied in order to
+understand the structure of the AST and how to traverse/operate on
+Hustle+ programs.
+
 @section[#:tag-prefix "a5-" #:style 'unnumbered]{From Fraud+ to Hustle+}
 
-Implement all the features of Fraud+, extended to Hustle+.
+Implement all the features of Con+ and Fraud+, extended to Hustle+.
 
+In order to get all the points for this section of the assignment you will
+need to modify the following files:
+
+@itemlist[
+
+@item{@tt{compile.rkt}}
+
+@item{@tt{syntax.rkt}}
+
+]
 
 @section[#:tag-prefix "a5-" #:style 'unnumbered]{Strung out}
 
@@ -83,10 +100,6 @@ need to modify the following files:
 @item{@tt{syntax.rkt}}
 
 ]
-
-As usual, the code in @tt{ast.rkt} will need to be studied in order to
-understand the structure of the AST and how to traverse/operate on
-Hustle+ programs.
 
 @section[#:tag-prefix "a5-" #:style 'unnumbered]{More operations}
 
