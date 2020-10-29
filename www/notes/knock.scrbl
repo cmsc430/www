@@ -12,7 +12,7 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "knock" f))))))
-	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+	   '("interp.rkt" "compile.rkt" "syntax.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
 @title[#:tag "Knock"]{Knock: first-class function (pointers)}
 
@@ -141,26 +141,26 @@ like before:
 
 @ex[
 (asm-interp
-   (compile '(begin (define (f x)
-                      (if (zero? x)
-		          0
-			  (add1 (call (fun f) (sub1 x)))))
-                    (call (fun f) 10))))
+   (compile (sexpr->prog '(begin (define (f x)
+                            (if (zero? x)
+      		          0
+      			  (add1 (call (fun f) (sub1 x)))))
+                          (call (fun f) 10)))))
 ]
 
 But it also works when functions are put in lists:
 
 @ex[
 (asm-interp
-   (compile '(begin (define (f x) x)
-                    (call (car (cons (fun f) '())) 7))))
+   (compile (sexpr->prog '(begin (define (f x) x)
+                            (call (car (cons (fun f) '())) 7)))))
 ]
 
 And functions that produce functions:
 
 @ex[
 (asm-interp
-   (compile '(begin (define (f x) (fun h))
-                    (define (h y) y)
-                    (call (call (fun f) 5) 9))))
+   (compile (sexpr->prog '(begin (define (f x) (fun h))
+                            (define (h y) y)
+                            (call (call (fun f) 5) 9)))))
 ]

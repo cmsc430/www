@@ -292,7 +292,7 @@ everything:
 @centered{@tt{https://github.com/cmsc430/assign05-test.git}}
 
 This repository will evolve as the week goes on, but any time there's
-a significant update it will be announced on Piazza.
+a significant update it will be announced on ELMS.
 
 @section[#:tag-prefix "a5-" #:style 'unnumbered]{Submitting}
 
