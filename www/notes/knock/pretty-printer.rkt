@@ -5,28 +5,41 @@
 ;;;;; Principal data structure for describing pretty-printed things
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; type Seq
+; | Str String
+; | Nil
+; | Newline
+; | Indent Seq
+; | Append Seq Seq
+
 (struct str    (s)     #:transparent)
 (struct nil    ()      #:transparent)
 (struct nl     ()      #:transparent)
 (struct indent (s)     #:transparent)
 (struct ++     (s1 s2) #:transparent)
 
+;(list (cons (list (++ (++ (str "main") 
+;                      (++ (str " ") (++ (str "->")
+;                      (++ (str " ") (str "print")))))
+;                      (++ (str " ") (nil)))) 
+;             2)
+;      (cons (++ (nl) (str "}")) 0))
 ; Efficiently converting that data structure into a string, avoiding the
 ; n^2 append when dealing with left-nested appends
-(define (flatten col ss)
+(define (flatten-seq col ss)
   (match ss
     ['() ""]
-    [(cons (cons (indent s) i) rest) (flatten col `((,s . ,col) ,@rest))]
-    [(cons (cons (nil) i)      rest) (flatten col rest)]
+    [(cons (cons (indent s) i) rest) (flatten-seq col `((,s . ,col) ,@rest))]
+    [(cons (cons (nil) i)      rest) (flatten-seq col rest)]
     [(cons (cons (str s) i)    rest) (string-append s
-                                       (flatten (+ (string-length s) i) rest))]
-    [(cons (cons (++ s1 s2) i) rest) (flatten col `(,(cons s1 i)
+                                       (flatten-seq (+ (string-length s) i) rest))]
+    [(cons (cons (++ s1 s2) i) rest) (flatten-seq col `(,(cons s1 i)
                                                     ,(cons s2 i)
                                                     ,@rest))]
     [(cons (cons (nl) i)       rest) (string-append
                                        "\n"
                                        (make-string i #\ )
-                                       (flatten i rest))]))
+                                       (flatten-seq i rest))]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Pretty-printing API
@@ -34,7 +47,7 @@
 
 ; Top-level pretty-print, 
 (define (seq->string seq)
-  (flatten 0 (list (cons seq 0))))
+  (flatten-seq 0 (list (cons seq 0))))
 
 ;;;;; Appending Things
 
@@ -46,8 +59,12 @@
 (define (+-> s1 s2)
   (+++ s1 (+++ (str "->") s2)))
 
-; Append two things with an equals in between
+; Append two things with an equals in between (no space)
 (define (+= s1 s2)
+  (++ s1 (++ (str "=") s2)))
+
+; Append two things with an equals in between (space)
+(define (+=+ s1 s2)
   (+++ s1 (+++ (str "=") s2)))
 
 ;;;;; List of sequences
@@ -74,6 +91,9 @@
 (define (semi-sep seqs)
   (lst seqs sem))
 
+(define (vert seqs)
+  (lst seqs (nl)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Enclosing things
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -93,6 +113,10 @@
 ; Enclose the given sequence with parentheses
 (define (par seq)
   (enc (str "(") (str ")") seq))
+
+; Enclose the given sequence with double-quotes
+(define (qt seq)
+  (enc (str "\"") (str "\"") seq))
 
 ;; Same as above but with an indented sequence
 
@@ -126,6 +150,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Miscelanious Characters or Symbols
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; When you have a symbol
+(define (sym s)
+  (str (symbol->string s)))
 
 ; A set number of spaces
 (define (space i)
