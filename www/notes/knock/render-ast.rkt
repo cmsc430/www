@@ -29,17 +29,25 @@
     [(var-e v)     (cons i (list (label (symbol->string v) i)))]
     [(char-e c)    (cons i (list (label (~a c) i)))]
     [(fun-e f)     (cons i (list (label (~a "fun " f) i)))]
-    [(call-e f es) (cons i (render-subs i (~a "(call " f " ...)") es))]
-    [(app-e f es)  (cons i (render-subs i (~a "(" f " ...)") es))]
-    [(prim-e p es) (cons i (render-subs i (~a "(" (symbol->string p) " ...)") es))]
-    [(if-e e t f)  (cons i (render-subs i "if" (list e t f)))]
+    [(call-e f es)
+      (cons i (let ((l (label (~a "(call " (fname f) " ...)") i)))
+                   (render-subs i l es)))]
+    [(app-e f es)
+      (cons i (let ((l (label (~a "(" f " ...)") i)))
+                   (render-subs i l es)))]
+    [(prim-e p es)
+      (cons i (let* ((l (label (~a "(" (symbol->string p) " ...)") i))
+                     (l2 (color "red" l)))
+                    (render-subs i l2 es)))]
+    [(if-e e t f)
+      (cons i (let ((l (label "if" i)))
+                   (render-subs i l (list e t f))))]
     [(let-e bs b)  (cons i (render-let i "let" bs b))])))
 
 ; On big programs this will be bad (it's n^2, I think)
-(define (render-subs pid str es)
+(define (render-subs pid parent es)
     (let* ((subps (map render-expr es))
            (subs  (append* (map cdr subps)))
-           (parent (label str pid))
            (ids (map car subps)))
           `(,@subs
             ,parent
@@ -63,3 +71,8 @@
              (bn (render-expr body))
              (cid (car bn)))
             (cons i `(,@(cdr bn) ,vn ,(color "deeppink2" (e i cid)))))]))
+
+(define (fname f)
+  (match f
+    [(fun-e f) f]
+    [_         f]))
