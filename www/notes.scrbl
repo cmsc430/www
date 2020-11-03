@@ -18,5 +18,6 @@
 @include-section{notes/iniquity.scrbl}
 @include-section{notes/jig.scrbl}
 @include-section{notes/knock.scrbl}
+@include-section{notes/graphviz.scrbl}
 @include-section{notes/loot.scrbl}
 @include-section{notes/mug.scrbl}
