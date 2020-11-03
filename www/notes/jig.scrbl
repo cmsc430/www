@@ -180,8 +180,6 @@ Had we transliterated this program to Java, we'd be in trouble as the
 interpeter would inherit the lack of tail calls and we would have to
 re-write the interpreter, but as it is, we're already done.
 
-@section[#:tag-prefix "jig"]{An example}
-
 @section[#:tag-prefix "jig"]{A Compiler with Proper Tail Calls}
 
 @codeblock-include["jig/compile.rkt"]
