@@ -61,7 +61,7 @@
                
                (list @wk{11/02}
                      ""
-                     @elem{Digression: Taking a look at ASTs}
+                     @elem{@secref["Graphviz"]}
                      @elem{@secref["Loot"]})
                                     
                (list @wk{11/09}
