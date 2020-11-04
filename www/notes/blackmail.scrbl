@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label (except-in racket ...)))
+@(require (for-label (except-in racket compile ...)))
 @(require scribble/examples
           redex/pict
 	  "../fancyverb.rkt"
@@ -13,7 +13,7 @@
 
 @(ev '(require rackunit))
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "blackmail" f))))))
-	   '("interp.rkt" "compile.rkt" "random.rkt" "asm/interp.rkt" "asm/printer.rkt" "ast.rkt" "syntax.rkt"))
+	   '("interp.rkt" "compile.rkt" "random.rkt"  "asm/ast.rkt" "asm/interp.rkt" "asm/printer.rkt" "ast.rkt"))
 
 @(define (shellbox . s)
    (parameterize ([current-directory (build-path notes "blackmail")])
@@ -29,7 +29,7 @@
 	       #'(void)))]))
 
 @;{ Have to compile 42.s (at expand time) before listing it }
-@(shell-expand "echo '#lang racket\n(add1 (add1 40))' > add1-add1-40.rkt" "racket -t compile-file.rkt -m add1-add1-40.rkt > add1-add1-40.s")
+@(shell-expand "racket -t compile-file.rkt -m add1-add1-40.rkt > add1-add1-40.s")
 
 @title[#:tag "Blackmail"]{Blackmail: incrementing and decrementing}
 
@@ -53,31 +53,42 @@ Expressions in Blackmail include integer literals and increment and
 decrement operations.  It's still a dead simple language, but at least
 programs @emph{do} something.
 
+@section{Concrete syntax for Blackmail}
+
+A Blackmail program consists of @tt{#lang racket} line and a
+single expression, and the grammar of concrete expressions
+is:
+
+@centered{@render-language[B-concrete]}
+
+So, @racket[0], @racket[120], and @racket[-42] are Blackmail expressions,
+but so are @racket[(add1 0)], @racket[(sub1 120)], @racket[(add1
+(add1 (add1 -42)))].
+
+An example concrete program:
+
+@codeblock-include["blackmail/add1-add1-40.rkt"]
+
 @section{Abstract syntax for Blackmail}
 
-A Blackmail program consists of a single expression, and the grammar
-of expressions is:
+The grammar of abstract Backmail expressions is:
 
 @centered{@render-language[B]}
 
-So, @racket[0], @racket[120], and @racket[-42] are Blackmail programs,
-but so are @racket['(add1 0)], @racket['(sub1 120)], @racket['(add1
-(add1 (add1 -42)))].
+So, @racket[(Int 0)], @racket[(Int 120)], and
+@racket[(Int -42)] are Blackmail AST expressions, but so are
+@racket[(Add1 (Int 0))], @racket[(Sub1 (Int 120))],
+@racket[(Add1 (Add1 (Add1 (Int -42))))].
 
 A datatype for representing expressions can be defined as:
 
-@#reader scribble/comment-reader
-(racketblock
-;; type Expr = 
-;; | Integer
-;; | `(add1 ,Expr)
-;; | `(sub1 ,Expr)
-)
+@codeblock-include["blackmail/ast.rkt"]
 
-A predicate for recognizing well-formed expressions is more involved
-than Abscond, but still straightforward:
+The parser is more involved than Abscond, but still
+straightforward:
 
-@codeblock-include["blackmail/syntax.rkt"]
+@codeblock-include["blackmail/parse.rkt"]
+
 
 @section{Meaning of Blackmail programs}
 
@@ -116,16 +127,16 @@ contrast to the first rule, which applies unconditionally.
 
 We can understand these rules as saying the following:
 @itemlist[
-@item{For all integers @math{i}, @math{(i,i)} is in @render-term[B 𝑩].}
+@item{For all integers @math{i}, @math{((Int i),i)} is in @render-term[B 𝑩].}
 
 @item{For expressions @math{e_0} and all integers @math{i_0} and
 @math{i_1}, if @math{(e_0,i_0)} is in @render-term[B 𝑩] and @math{i_1
-= i_0 + 1}, then @math{(@RACKET['(add1 (UNSYNTAX @math{e_0}))], i_1)}
+= i_0 + 1}, then @math{(@RACKET[(Add1 (UNSYNTAX @math{e_0}))], i_1)}
 is in @render-term[B 𝑩].}
 
 @item{For expressions @math{e_0} and all integers @math{i_0} and
 @math{i_1}, if @math{(e_0,i_0)} is in @render-term[B 𝑩] and @math{i_1
-= i_0 - 1}, then @math{(@RACKET['(sub1 (UNSYNTAX @math{e_0}))], i_1)}
+= i_0 - 1}, then @math{(@RACKET[(Sub1 (UNSYNTAX @math{e_0}))], i_1)}
 is in @render-term[B 𝑩].}
 ]
 
@@ -144,11 +155,11 @@ interpreter, one for each form of expression:
 @codeblock-include["blackmail/interp.rkt"]
 
 @examples[#:eval ev
-(interp (sexpr->ast 42))
-(interp (sexpr->ast -7))
-(interp (sexpr->ast '(add1 42)))
-(interp (sexpr->ast '(sub1 8)))
-(interp (sexpr->ast '(add1 (add1 (add1 8)))))
+(interp (Int 42))
+(interp (Int -7))
+(interp (Add1 (Int 42)))
+(interp (Sub1 (Int 8)))
+(interp (Add1 (Add1 (Add1 (Int 8)))))
 ]
 
 Here's how to connect the dots between the semantics and interpreter:
@@ -159,23 +170,23 @@ expression, which determines which rule of the semantics applies.
 
 @itemlist[
 
-@item{if @math{e} is an integer @math{i}, then we're done: this is the
+@item{if @math{e} is an integer @math{(Int i)}, then we're done: this is the
 right-hand-side of the pair @math{(e,i)} in @render-term[B 𝑩].}
 
-@item{if @math{e} is an expression @RACKET['(add1 (UNSYNTAX
+@item{if @math{e} is an expression @RACKET[(Add1 (UNSYNTAX
 @math{e_0}))], then we recursively use the interpreter to compute
 @math{i_0} such that @math{(e_0,i_0)} is in @render-term[B 𝑩].  But
 now we can compute the right-hand-side by adding 1 to @math{i_0}.}
 
-@item{if @math{e} is an expression @RACKET['(sub1 (UNSYNTAX
+@item{if @math{e} is an expression @RACKET[(Sub1 (UNSYNTAX
 @math{e_0}))], then we recursively use the interpreter to compute
 @math{i_0} such that @math{(e_0,i_0)} is in @render-term[B 𝑩].  But
 now we can compute the right-hand-side by substracting 1 from @math{i_0}.}
 
 ]
 
-This explaination of the correspondence is essentially a proof (by
-induction) of the interpreter's correctness:
+This explaination of the correspondence is essentially a proof by
+induction of the interpreter's correctness:
 
 @bold{Interpreter Correctness}: @emph{For all Blackmail expressions
 @racket[e] and integers @racket[i], if (@racket[e],@racket[i]) in
@@ -187,8 +198,8 @@ induction) of the interpreter's correctness:
 Just as we did with Abscond, let's approach writing the compiler by
 first writing an example.
 
-Suppose we want to compile @racket['(add1 (add1 40))].  We already
-know how to compile the @racket[40]: @racket['(mov rax 40)].  To do
+Suppose we want to compile @racket[(add1 (add1 40))].  We already
+know how to compile the @racket[40]: @racket[(Mov 'rax 40)].  To do
 the increment (and decrement) we need to know a bit more x86-64.  In
 particular, the @tt{add} (and @tt{sub}) instruction is relevant.  It
 increments the contents of a register by some given amount.
@@ -209,8 +220,10 @@ To represent these new instructions, we extend the Asm AST data type:
 #lang racket
 ;; type Instruction =
 ;; ...
-;; | `(add ,Arg ,Arg)
-;; | `(sub ,Arg ,Arg)
+;; | (Add ,Arg ,Arg)
+;; | (Sub ,Arg ,Arg)
+(struct Add (a1 a2) #:prefab)
+(struct Sub (a1 a2) #:prefab)
 }
 
 And correspondingly update the printer:
@@ -221,20 +234,22 @@ And correspondingly update the printer:
 (define (instr->string i)
   (match i
     ...
-    [`(add ,a1 ,a2)
+    [(Add a1 a2)
      (string-append "\tadd " (arg->string a1) ", " (arg->string a2) "\n")]
-    [`(sub ,a1 ,a2)
+    [(Sub a1 a2)
      (string-append "\tsub " (arg->string a1) ", " (arg->string a2) "\n")]))
 }
 
 We can now print the assembly of our example from an AST:
 
 @ex[
-(asm-display
-  '(entry (mov rax 40)
-          (add rax 1)
-          (add rax 1)
-          ret))
+(displayln
+ (asm-string
+  (list (Label 'entry)
+        (Mov 'rax 40)
+        (Add 'rax 1)
+        (Add 'rax 1)
+        (Ret))))
 ]
 
 The compiler consists of two functions: the first, which is given a
@@ -250,25 +265,22 @@ recursion, much like the interpreter.
 We can now try out a few examples:
 
 @ex[
-(compile (sexpr->ast '(add1 (add1 40))))
-(compile (sexpr->ast '(sub1 8)))
-(compile (sexpr->ast '(add1 (add1 (sub1 (add1 -8))))))
+(compile (Add1 (Add1 (Int 40))))
+(compile (Sub1 (Int 8)))
+(compile (Add1 (Add1 (Sub1 (Add1 (Int -8))))))
 ]
 
 And give a command line wrapper for parsing, checking, and compiling
-files:
+files in @link["code/blackmail/compile-file.rkt"]{@tt{compile-file.rkt}},
+we can compile files as follows:
 
-@codeblock-include["blackmail/compile-file.rkt"]
-
-Here it is in action:
-
-@shellbox["echo \"#lang racket\\n(add1 (add1 40))\" > add1-add1-40.rkt"
-          "racket -t compile-file.rkt -m add1-add1-40.rkt"]
+@shellbox["racket -t compile-file.rkt -m add1-add1-40.rkt"]
 
 And using the same @link["code/blackmail/Makefile"]{@tt{Makefile}}
 setup as in Abscond, we capture the whole compilation process with a
 single command:
 
+@void[(shellbox "touch add1-add1-40.rkt")]
 @shellbox["make add1-add1-40.run" "./add1-add1-40.run"]
 
 Likewise, to test the compiler from within Racket, we use the same
@@ -276,9 +288,9 @@ Likewise, to test the compiler from within Racket, we use the same
 encapsulate running assembly code:
 
 @ex[
-(asm-interp (compile (sexpr->ast '(add1 (add1 40)))))
-(asm-interp (compile (sexpr->ast '(sub1 8))))
-(asm-interp (compile (sexpr->ast '(add1 (add1 (sub1 (add1 -8)))))))
+(asm-interp (compile (Add1 (Add1 (Int 40)))))
+(asm-interp (compile (Sub1 (Int 8))))
+(asm-interp (compile (Add1 (Add1 (Sub1 (Add1 (Int -8)))))))
 ]
 
 @section{Correctness and random testing}
@@ -297,8 +309,8 @@ which hopefully holds:
 
 @ex[
 (define (check-compiler e)
-  (check-eqv? (interp (sexpr->ast e))
-              (asm-interp (compile (sexpr->ast e)))))]
+  (check-eqv? (interp e)
+              (asm-interp (compile e))))]
 
 The problem, however, is that generating random Blackmail programs is
 less obvious compared to generating random Abscond programs
@@ -316,33 +328,27 @@ implemented.
 (random-expr)
 (random-expr)
 (random-expr)
-(asm-display (compile (sexpr->ast (random-expr))))
+(displayln (asm-string (compile (random-expr))))
 (for ([i (in-range 10)])
   (check-compiler (random-expr)))
 ]
-
 
 @section{Looking back, looking forward}
 
 We've now built two compilers; enough to start observing a pattern.
 
 Recall the phases of a compiler described in
-@secref["What does a Compiler look like?"].
-Let's identify these peices in the two
-compilers we've written:
+@secref["What does a Compiler look like?"]. Let's identify
+these pieces in the two compilers we've written:
 
 @itemlist[
 @item{@bold{Parsed} into a data structure called an @bold{Abstract Syntax Tree}
 
-@itemlist[@item{we use @tt{read} to parse text into a s-expression}]
+@itemlist[@item{we use @racket[read] to parse text into a s-expression}]
 
-@itemlist[@item{we use @tt{sexpr->ast} to convert an s-expression into our AST}]}
+@itemlist[@item{we use @racket[parse] to convert an s-expression into an AST}]}
 
-@item{@bold{Checked} to make sure code is well-formed (and well-typed)
-
-@itemlist[@item{we use a predicate, @racket[integer?] for Abscond and
-@racket[expr?] for Blackmail, to check whether an s-expression is a
-well-formed AST}]}
+@item{@bold{Checked} to make sure code is well-formed (and well-typed)}
 
 @item{@bold{Simplified} into some convenient @bold{Intermediate Representation}
 
@@ -354,8 +360,8 @@ well-formed AST}]}
 
 @item{@bold{Generated} into assembly x86
 
-@itemlist[@item{we use @racket[abscond-compile] and @racket[compile] to generate assembly (in AST form),
-  and use @racket[asm-display] to print concrete X86-64}]}
+@itemlist[@item{we use @racket[compile] to generate assembly (in AST form),
+  and use @racket[asm-string] to obtain printable concrete X86-64 code}]}
 
 @item{@bold{Linked} against a run-time (usually written in C)
 
@@ -375,4 +381,3 @@ Our recipe for building compiler involves:
 As we move forward, the language we are compiling will grow.  As the
 language grows, you should apply this recipe to grow the compiler
 along with the language.
-
