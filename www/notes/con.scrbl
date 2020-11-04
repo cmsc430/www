@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label (except-in racket ...)))
+@(require (for-label (except-in racket compile ...)))
 @(require redex/pict
           racket/runtime-path
           scribble/examples
@@ -18,7 +18,7 @@
 
 @(ev '(require rackunit))
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "con" f))))))
-	   '("interp.rkt" "compile.rkt" "ast.rkt" "syntax.rkt" "asm/interp.rkt" "asm/printer.rkt" "random.rkt"))
+	   '("interp.rkt" "compile.rkt" "parse.rkt" "ast.rkt" "asm/interp.rkt" "asm/printer.rkt" "random.rkt"))
 
 
 @title[#:tag "Con"]{Con: branching with conditionals}
@@ -29,14 +29,18 @@
 
 @section{Conditional execution}
 
-Let's now consider add a notion of @bold{conditionals} to our target
+Let's now consider adding a notion of @bold{conditionals} to our target
 language.
 
 We'll call it @bold{Con}.
 
-We will use the following syntax: @racket[(if (zero? _e0) _e1 _e2)].
+We will use the following concrete syntax: @racket[(if (zero? _e0) _e1 _e2)].
 
-Together this leads to the following grammar for Con:
+This leads to the following grammar for concrete Con:
+
+@centered{@render-language[C-concrete]}
+
+And abstract grammar:
 
 @centered{@render-language[C]}
 
@@ -44,12 +48,15 @@ Which can be modeled with the following definitions:
 
 @codeblock-include["con/ast.rkt"]
 
-We will also need a predicate for well-formed Con expressions, but
+@;{
+ We will also need a predicate for well-formed Con expressions, but
 let's return to this after considering the semantics and interpreter.
+}
 
-Because it is tedious to write out the AST directly all the time,
-we define a helper function @racket[sexpr->ast] that can automate
-the process (but only if it's given a well-formed Con expression).
+The parser is similar to what we've seen before:
+
+@codeblock-include["con/parse.rkt"]
+
 
 @section{Meaning of Con programs}
 
@@ -58,20 +65,20 @@ the new form is an if-expression.
 
 @itemlist[
 
-@item{the meaning of a if expression @racket[(if (zero? _e0) _e1 _e2)] is the
+@item{the meaning of a if expression @racket[(IfZero _e0 _e1 _e2)] is the
 meaning of @racket[_e1] if the meaning of @racket[_e1] if the meaning of
 @racket[_e0] is 0 and is the meaning of @racket[_e2] otherwise.}
 
 ]
 
-Let's consider some examples:
+Let's consider some examples (using concrete notation):
 
 @itemlist[
 
-@item{@racket['(if (zero? 0) (add1 2) 4)] means @racket[3].}
-@item{@racket['(if (zero? 1) (add1 2) 4)] means @racket[4].}
-@item{@racket['(if (zero? (if (zero? (sub1 1)) 1 0)) (add1 2) 4)] means @racket[4].}
-@item{@racket['(if (zero? (add1 0)) (add1 2) (if (zero? (sub1 1)) 1 0))] means @racket[1].}
+@item{@racket[(if (zero? 0) (add1 2) 4)] means @racket[3].}
+@item{@racket[(if (zero? 1) (add1 2) 4)] means @racket[4].}
+@item{@racket[(if (zero? (if (zero? (sub1 1)) 1 0)) (add1 2) 4)] means @racket[4].}
+@item{@racket[(if (zero? (add1 0)) (add1 2) (if (zero? (sub1 1)) 1 0))] means @racket[1].}
 
 ]
 
@@ -159,13 +166,14 @@ value.
 @codeblock-include["con/interp.rkt"]
 
 We can confirm the interpreter computes the right result for the
-examples given earlier:
+examples given earlier (using @racket[parse] to state the examples
+with concrete notation):
 
 @ex[
-(interp (sexpr->ast '(if (zero? 0) (add1 2) 4)))
-(interp (sexpr->ast '(if (zero? 1) (add1 2) 4)))
-(interp (sexpr->ast '(if (zero? (if (zero? (sub1 1)) 1 0)) (add1 2) 4)))
-(interp (sexpr->ast '(if (zero? (add1 0)) (add1 2) (if (zero? (sub1 1)) 1 0))))
+(interp (parse '(if (zero? 0) (add1 2) 4)))
+(interp (parse '(if (zero? 1) (add1 2) 4)))
+(interp (parse '(if (zero? (if (zero? (sub1 1)) 1 0)) (add1 2) 4)))
+(interp (parse '(if (zero? (add1 0)) (add1 2) (if (zero? (sub1 1)) 1 0))))
 ]
 
 The argument for the correctness of the interpreter follows the same
@@ -174,7 +182,7 @@ if-expressions.
 
 @section{An Example of Con compilation}
 
-Suppose we want to compile @racket['(if (zero? 8) 2 3)]...
+Suppose we want to compile @racket[(if (zero? 8) 2 3)]...
 
 We already know how to compile the @racket[8], @racket[2], and
 @racket[3] part.
@@ -189,60 +197,59 @@ What needs to happen?
 ]
 
 We can determine whether @racket[8] evaluates to @racket[0] using a
-comparison instruction: @racket['(cmp rax 0)].  To do the conditional
+comparison instruction: @racket[(Cmp rax 0)].  To do the conditional
 execution, we will need to jump to different parts of the code to
 either execute the code for @racket[2] or @racket[3].  There are
 several ways we could accomplish this, but we take the following
 approach: immediately after the comparison, do a conditional jump to
-the code for the else branch when non-zero. Should the jump not occur,
-the next instructions will carry out the evaluation of the then
-branch, then (unconditionally) jump over the else branch code.
+the code for the then branch when zero. Should the jump not occur,
+the next instructions will carry out the evaluation of the else
+branch, then (unconditionally) jump over the then branch code.
 
-To accomplish this, we will need two new labels: one for the else
-branch code and one for the end of the else branch code.  The
+To accomplish this, we will need two new labels: one for the then
+branch code and one for the end of the then branch code.  The
 @racket[gensym] function can be used to generate symbols that have not
 appeared before.
 
 In total, the code for this example would look like:
 
 @racketblock[
-'((mov rax 8)
-  (cmp rax 0)
-  (jne if-else-begin)
-  (mov rax 2)
-  (jmp if-else-end)
-  if-else-begin
-  (mov rax 3)
-  if-else-end)
+(let ((l0 (gensym))
+      (l1 (gensym)))
+  (list (Mov 'rax 8)
+        (Cmp 'rax 0)
+        (Je l0)
+        (Mov 'rax 3)
+        (Jmp l1)
+        (Label l0)
+        (Mov rax 2)
+        (Label l1)))
 ]
 
 
 @section{A Compiler for Con}
 
-Notice that the @racket['(mov rax 8)], @racket['(mov rax 3)] and
-@racket['(mov rax 2)] parts are just the instructions generated by
+Notice that the @racket[(Mov 'rax 8)], @racket[(Mov rax 3)] and
+@racket[(Mov rax 2)] parts are just the instructions generated by
 compiling @racket[8], @racket[2] and @racket[3].  Generalizing from
 this, we arrive at the following code for the compiler:
 
 @racketblock[
-(let ((c0 (compile-e e0))
-      (c1 (compile-e e1))
-      (c2 (compile-e e2))
-      (l0 (gensym "if"))
-      (l1 (gensym "if")))
-  `(,@c0
-    (cmp rax 0)
-    (jne ,l0)
-    ,@c1
-    (jmp ,l1)
-    ,l0
-    ,@c2
-    ,l1))
+(let ((l0 (gensym 'if))
+      (l1 (gensym 'if)))
+  (append (compile-e e1)
+          (list (Cmp 'rax 0)
+                (Je l0))
+          (compile-e e3)
+          (list (Jmp l1)
+                (Label l0))
+          (compile-e e2)
+          (list (Label l1))))
 ]
 
 
 This will require extending our representation of x86 instructions; in
-particular, we add @racket['jmp], @racket['jne], and @racket['cmp]
+particular, we add @racket[Jmp], @racket[Je], and @racket[Cmp]
 instructions:
 
 @codeblock-include["con/asm/ast.rkt"]
@@ -256,18 +263,24 @@ The complete compiler code is:
 
 Let's take a look at a few examples:
 @ex[
-(asm-display (compile (sexpr->ast '(if (zero? 8) 2 3))))
-(asm-display (compile (sexpr->ast '(if (zero? 0) 1 2))))
-(asm-display (compile (sexpr->ast '(if (zero? 0) (if (zero? 0) 8 9) 2))))
-(asm-display (compile (sexpr->ast '(if (zero? (if (zero? 2) 1 0)) 4 5))))
+(define (show s)
+  (displayln (asm-string (compile (parse s)))))
+    
+(show '(if (zero? 8) 2 3))
+(show '(if (zero? 0) 1 2))
+(show '(if (zero? 0) (if (zero? 0) 8 9) 2))
+(show '(if (zero? (if (zero? 2) 1 0)) 4 5))
 ]
 
 And confirm they are running as expected:
 @ex[
-(asm-interp (compile (sexpr->ast '(if (zero? 8) 2 3))))
-(asm-interp (compile (sexpr->ast '(if (zero? 0) 1 2))))
-(asm-interp (compile (sexpr->ast '(if (zero? 0) (if (zero? 0) 8 9) 2))))
-(asm-interp (compile (sexpr->ast '(if (zero? (if (zero? 2) 1 0)) 4 5))))
+(define (tell s)
+  (asm-interp (compile (parse s))))
+
+(tell '(if (zero? 8) 2 3))
+(tell '(if (zero? 0) 1 2))
+(tell '(if (zero? 0) (if (zero? 0) 8 9) 2))
+(tell '(if (zero? (if (zero? 2) 1 0)) 4 5))
 ]
 
 
@@ -282,11 +295,10 @@ then @racket[(asm-interp (compile e))] equals @racket[i].}
 Again, we formulate correctness as a property that can be tested:
 
 @ex[
-(define (check-compiler s)
-  (let ((e (sexpr->ast s)))
-    (check-equal? (asm-interp (compile e))
-                  (interp e)
-                  e)))]
+(define (check-compiler e)
+  (check-equal? (asm-interp (compile e))
+                (interp e)
+                e))]
 
 Generating random Con programs is essentially the same as Blackmail
 programs, and are provided in a @link["con/random.rkt"]{random.rkt}
@@ -301,4 +313,3 @@ module.
 (for ([i (in-range 10)])
   (check-compiler (random-expr)))
 ]
-
