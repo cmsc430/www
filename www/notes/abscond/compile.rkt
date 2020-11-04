@@ -1,8 +1,12 @@
 #lang racket
-(provide (all-defined-out))
+(provide compile)
+(require "ast.rkt"
+         "asm/ast.rkt")
 
 ;; Expr -> Asm
 (define (compile e)
-  `(entry
-    (mov rax ,e)
-    ret))
+  (match e
+    [(Int i)
+     (list (Label 'entry)
+           (Mov 'rax i)
+           (Ret))]))

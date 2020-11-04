@@ -12,7 +12,7 @@
     (with-output-to-file t.s
       #:exists 'truncate
       (λ ()
-        (asm-display a)))
+        (displayln (asm-string a))))
     (system (format "(cd ~a && make -s ~a) 2>&1 >/dev/null" dir t.run))
     (delete-file t.s)
     (with-input-from-string
