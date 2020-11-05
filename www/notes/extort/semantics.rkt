@@ -10,14 +10,17 @@
 (define-extended-judgment-form E 𝑫
   #:mode (𝑬 I O)
   #:contract (𝑬 e a)
-  [--------
-   (𝑬 (add1 b) err)]
+  [(𝑬 e b)
+   --------
+   (𝑬 (add1 e) err)]
 
-  [-----------
-   (𝑬 (sub1 b) err)]
+  [(𝑬 e b)
+   -----------
+   (𝑬 (sub1 e) err)]
 
-  [-----------
-   (𝑬 (zero? b) err)]
+  [(𝑬 e b)
+   -----------
+   (𝑬 (zero? e) err)]
 
   [(𝑬 e err)
    -----------
