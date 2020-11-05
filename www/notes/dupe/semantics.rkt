@@ -45,18 +45,18 @@
    (𝑫 (If e_0 e_1 e_2) v_2)])
 
 (module+ test
-  (test-judgment-holds (𝑫 7 7))
-  (test-judgment-holds (𝑫 #f #f))
-  (test-judgment-holds (𝑫 #t #t))
-  (test-judgment-holds (𝑫 (add1 8) 9))
-  (test-judgment-holds (𝑫 (sub1 8) 7))
+  (test-judgment-holds (𝑫 (Int 7) 7))
+  (test-judgment-holds (𝑫 (Bool #f) #f))
+  (test-judgment-holds (𝑫 (Bool #t) #t))
+  (test-judgment-holds (𝑫 (Add1 (Int 8)) 9))
+  (test-judgment-holds (𝑫 (Sub1 (Int 8)) 7))
 
-  (test-judgment-holds (𝑫 (if #f 3 4) 4))
-  (test-judgment-holds (𝑫 (if #t 3 4) 3))
-  (test-judgment-holds (𝑫 (zero? 0) #t))
-  (test-judgment-holds (𝑫 (zero? 1) #f))
-  (test-judgment-holds (𝑫 (if (zero? 0) 3 4) 3))
-  (test-judgment-holds (𝑫 (if (zero? 1) 3 4) 4)))
+  (test-judgment-holds (𝑫 (If (Bool #f) (Int 3) (Int 4)) 4))
+  (test-judgment-holds (𝑫 (If (Bool #t) (Int 3) (Int 4)) 3))
+  (test-judgment-holds (𝑫 (Zero? (Int 0)) #t))
+  (test-judgment-holds (𝑫 (Zero? (Int 1)) #f))
+  (test-judgment-holds (𝑫 (If (Zero? (Int 0)) (Int 3) (Int 4)) 3))
+  (test-judgment-holds (𝑫 (If (Zero? (Int 1)) (Int 3) (Int 4)) 4)))
 
 (define-judgment-form D
   #:mode (is-true I)
