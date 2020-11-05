@@ -1,5 +1,5 @@
 #lang racket
-(provide (all-defined-out))
+(provide interp)
 (require "ast.rkt")
 
 ;; Expr -> Integer
