@@ -1,6 +1,5 @@
 #lang racket
-(provide (all-defined-out))
-
+(provide interp)
 (require "ast.rkt")
 
 ;; type Answer = Value | 'err
@@ -9,25 +8,24 @@
 ;; | Integer
 ;; | Boolean
 
-
 ;; Expr -> Answer
 (define (interp e)
   (match e
-    [(int-e i) i]
-    [(bool-e b) b]
-    [(add1-e e0)
+    [(Int i) i]
+    [(Bool b) b]
+    [(Add1 e0)
      (match (interp e0)
        [(? integer? i) (add1 i)]
        [_ 'err])]
-    [(sub1-e e0)
+    [(Sub1 e0)
      (match (interp e0)
        [(? integer? i) (sub1 i)]
        [_ 'err])]
-    [(zero?-e e0)
+    [(Zero? e0)
      (match (interp e0)
        [(? integer? i) (zero? i)]
        [_ 'err])]
-    [(if-e p e1 e2)
+    [(If p e1 e2)
      (match (interp p)
        ['err 'err]
        [v
