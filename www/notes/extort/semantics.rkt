@@ -58,6 +58,10 @@
   (test-judgment-holds (𝑬 (zero? #t) err))
   (test-judgment-holds (𝑬 (zero? #f) err))
 
+  (test-judgment-holds (𝑬 (add1 (if #t #t #t)) err))
+  (test-judgment-holds (𝑬 (sub1 (if #t #t #t)) err))
+  (test-judgment-holds (𝑬 (zero? (if #t #t #t)) err))
+
   (test-judgment-holds (𝑬 (add1 (zero? #f)) err))
   (test-judgment-holds (𝑬 (sub1 (zero? #f)) err))
   (test-judgment-holds (𝑬 (zero? (zero? #f)) err))
