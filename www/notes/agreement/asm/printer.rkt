@@ -39,6 +39,6 @@
   (let ((g (findf symbol? a)))
     (display 
       (string-append "\tglobal " (label->string g) "\n"
-      		     "\textern get_int\n"
+      		     "\textern " (label->string 'get_int) "\n"
       		     "\tsection .text\n"
                      (asm->string a)))))
