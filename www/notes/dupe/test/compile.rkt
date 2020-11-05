@@ -1,8 +1,8 @@
 #lang racket
-(require "../compile.rkt" "../asm/interp.rkt" "../syntax.rkt" rackunit)
+(require "../compile.rkt" "../asm/interp.rkt" "../parse.rkt" rackunit)
 
 (define (run e)
-  (asm-interp (compile (sexpr->ast e))))
+  (asm-interp (compile (parse e))))
 
 ;; Abscond examples
 (check-equal? (run 7) 7)
