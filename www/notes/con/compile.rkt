@@ -1,7 +1,6 @@
 #lang racket
-(provide (all-defined-out))
-(require "ast.rkt")
-(require "asm/ast.rkt")
+(provide compile compile-e)
+(require "ast.rkt" "asm/ast.rkt")
 
 ;; Expr -> Asm
 (define (compile e)
