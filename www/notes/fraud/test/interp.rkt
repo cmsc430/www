@@ -1,13 +1,13 @@
 #lang racket
 (require "../interp.rkt"
-         "../syntax.rkt"
-         (only-in "../semantics.rkt" F 𝑭)
+         "../parse.rkt"
+         "../semantics.rkt"
          rackunit
          redex/reduction-semantics)
 
 
 (define (run e)
-  (interp (sexpr->ast e)))
+  (interp (parse e)))
 
 (check-equal? (run 7) 7)
 (check-equal? (run -8) -8)
@@ -28,7 +28,7 @@
 ;; switch the the new AST even though I put `sexpr->ast` into `run` above
 
 ;;; check totality of interpreter
-;(redex-check F e
+;(redex-check F-concrete e
 ;             (check-not-exn (lambda () (run (term e)))
 ;                            (term e))
 ;             #:print? #f)
