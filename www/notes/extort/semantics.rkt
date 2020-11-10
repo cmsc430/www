@@ -1,5 +1,5 @@
 #lang racket
-(provide E 𝑬)
+(provide E-concrete E 𝑬)
 (require redex/reduction-semantics
          (only-in "../dupe/semantics.rkt" D-concrete D 𝑫))
 

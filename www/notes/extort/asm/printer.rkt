@@ -50,8 +50,6 @@
 (define (arg->string a)
   (match a
     [(? reg?) (reg->string a)]
-    [(Offset r i)
-     (string-append "[" (reg->string r) " + " (number->string (* i 8)) "]")]
     [(? integer?) (number->string a)]))
 
 ;; Any -> Boolean

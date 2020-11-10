@@ -19,7 +19,6 @@
 ;; type Arg =
 ;; | Reg
 ;; | Number
-;; | (Offset Reg Integer)
 ;; type Reg =
 ;; | 'rax
 ;; | 'rbx
