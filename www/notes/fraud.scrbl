@@ -16,7 +16,7 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "fraud" f))))))
-	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt" "ast.rkt" "syntax.rkt"))
+	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt" "ast.rkt" "parse.rkt"))
 
 @title[#:tag "Fraud"]{Fraud: local binding and variables}
 
@@ -239,15 +239,15 @@ We can confirm the interpreter computes the right result for the
 examples given earlier:
 
 @ex[
-(eval:error (interp (sexpr->ast 'x)))
-(interp (sexpr->ast '(let ((x 7)) x)))
-(interp (sexpr->ast '(let ((x 7)) 2)))
-(interp (sexpr->ast '(let ((x 7)) (add1 x))))
-(interp (sexpr->ast '(let ((x (add1 7))) x)))
-(interp (sexpr->ast '(let ((x 7)) (let ((y 2)) x))))
-(interp (sexpr->ast '(let ((x 7)) (let ((x 2)) x))))
-(eval:error (interp (sexpr->ast '(let ((x (add1 x))) x))))
-(interp (sexpr->ast '(let ((x 7)) (let ((x (add1 x))) x))))
+(eval:error (interp (parse 'x)))
+(interp (parse '(let ((x 7)) x)))
+(interp (parse '(let ((x 7)) 2)))
+(interp (parse '(let ((x 7)) (add1 x))))
+(interp (parse '(let ((x (add1 7))) x)))
+(interp (parse '(let ((x 7)) (let ((y 2)) x))))
+(interp (parse '(let ((x 7)) (let ((x 2)) x))))
+(eval:error (interp (parse '(let ((x (add1 x))) x))))
+(interp (parse '(let ((x 7)) (let ((x (add1 x))) x))))
 ]
 
 @bold{Interpreter Correctness}: @emph{For all Fraud expressions
@@ -330,41 +330,41 @@ variables, but just lexical addresses:
 @#reader scribble/comment-reader
 (racketblock
 ;; type IExpr =
-;; | Integer
-;; | Boolean
-;; | `(address ,Natural)
-;; | `(add1 ,Expr)
-;; | `(sub1 ,Expr)
-;; | `(zero? ,Expr)
-;; | `(if ,Expr ,Expr ,Expr)
-;; | `(let ((_ ,Expr)) ,Expr)
+;; | (Int Integer)
+;; | (Bool Boolean)
+;; | (Prim Op Expr)
+;; | (If Expr Expr Expr)
+;; | (Let '_ Expr Expr)
+;; | (Var Addr)
+;; type Addr = Natural
+;; type prim = 'add1 | 'sub1 | 'zero?
 )
 
-Notice that variables have gone away, replaced by a @racket[`(address
-,Natural)] form.  The @racket[let] binding form no longer binds a
+Notice that variables have gone away, replaced by a @racket[(Var
+Natural)] form.  The @racket[let] binding form no longer binds a
 variable name either.
 
 The idea is that we will translate expression (@tt{Expr}) like:
 
 @racketblock[
-(let ((x ...)) x)]
+(Let "x" (Int 7) (Var x))]
 
 into intermediate expressions (@tt{IExpr}) like:
 
 @racketblock[
-(let ((_ ...)) (address 0))
+(Let '_ (Int 7) (Var 0))
 ]
 
 And:
 
 @racketblock[
-(let ((x ...)) (let ((y ...)) x))
+(Let "x" (Int 7) (Let "y" (Int 9) (Var "x")))
 ]
 
 into:
 
 @racketblock[
-(let ((_ ...)) (let ((_ ...)) (address 1)))
+(Let '_ (Int 7) (Let "y" (Int 9) (Var 1)))
 ]
 
 
@@ -452,26 +452,30 @@ offset from the top of the stack we need use.
 
 
 @ex[
-(eval:error (asm-display (compile (sexpr->ast 'x))))
-(asm-display (compile             (sexpr->ast '(let ((x 7)) x))))
-(asm-display (compile             (sexpr->ast '(let ((x 7)) 2))))
-(asm-display (compile             (sexpr->ast '(let ((x 7)) (add1 x)))))
-(asm-display (compile             (sexpr->ast '(let ((x (add1 7))) x))))
-(asm-display (compile             (sexpr->ast '(let ((x 7)) (let ((y 2)) x)))))
-(asm-display (compile             (sexpr->ast '(let ((x 7)) (let ((x 2)) x)))))
-(eval:error (asm-display (compile (sexpr->ast '(let ((x (add1 x))) x)))))
-(asm-display (compile             (sexpr->ast '(let ((x 7)) (let ((x (add1 x))) x)))))
+(define (show e)
+  (displayln (asm-string (compile (parse e)))))
+(eval:error (show 'x))
+(show '(let ((x 7)) x))
+(show '(let ((x 7)) 2))
+(show '(let ((x 7)) (add1 x)))
+(show '(let ((x (add1 7))) x))
+(show '(let ((x 7)) (let ((y 2)) x)))
+(show '(let ((x 7)) (let ((x 2)) x)))
+(eval:error (show '(let ((x (add1 x))) x)))
+(show '(let ((x 7)) (let ((x (add1 x))) x)))
 ]
 
 And running the examples:
 @ex[
-(eval:error (asm-interp (compile (sexpr->ast 'x))))
-(asm-interp (compile             (sexpr->ast '(let ((x 7)) x))))
-(asm-interp (compile             (sexpr->ast '(let ((x 7)) 2))))
-(asm-interp (compile             (sexpr->ast '(let ((x 7)) (add1 x)))))
-(asm-interp (compile             (sexpr->ast '(let ((x (add1 7))) x))))
-(asm-interp (compile             (sexpr->ast '(let ((x 7)) (let ((y 2)) x)))))
-(asm-interp (compile             (sexpr->ast '(let ((x 7)) (let ((x 2)) x)))))
-(eval:error (asm-interp (compile (sexpr->ast '(let ((x (add1 x))) x)))))
-(asm-interp (compile             (sexpr->ast '(let ((x 7)) (let ((x (add1 x))) x)))))
+(define (tell e)
+  (asm-interp (compile (parse e))))
+(eval:error (tell 'x))
+(tell '(let ((x 7)) x))
+(tell '(let ((x 7)) 2))
+(tell '(let ((x 7)) (add1 x)))
+(tell '(let ((x (add1 7))) x))
+(tell '(let ((x 7)) (let ((y 2)) x)))
+(tell '(let ((x 7)) (let ((x 2)) x)))
+(eval:error (tell '(let ((x (add1 x))) x)))
+(tell '(let ((x 7)) (let ((x (add1 x))) x)))
 ]

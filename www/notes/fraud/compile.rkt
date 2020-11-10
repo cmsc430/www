@@ -1,72 +1,58 @@
 #lang racket
 (provide (all-defined-out))
-
-(require "ast.rkt")
+(require "ast.rkt" "asm/ast.rkt")
 
 ;; type CEnv = [Listof Variable]
 
 ;; Expr -> Asm
 (define (compile e)
-  `(entry
-    ,@(compile-e e '())
-    ret
-    err
-    (push rbp)
-    (call error)
-    ret))
+  (append (list (Label 'entry))
+          (compile-e e '())
+          (list (Ret)
+                (Label 'err)
+                (Push 'rbp)
+                (Call 'error))))
 
-;; Expr CEnv -> Asm
+;; Expr -> Asm
 (define (compile-e e c)
   (match e
-    [(int-e i)
-     `((mov rax ,(* i 2)))]
-    [(bool-e b)
-     `((mov rax ,(if b #b11 #b01)))]
-    [(prim-e p e)
-     (let ((c0 (compile-e e c)))
-       `(,@c0
-         ,@(compile-prim p c)))]
-    [(if-e p t f)
-     (let ((c0 (compile-e p c))
-           (c1 (compile-e t c))
-           (c2 (compile-e f c))
-           (l0 (gensym))
-           (l1 (gensym)))
-       `(,@c0
-         (cmp rax #b01) ; compare to #f
-         (je ,l0)       ; jump to c2 if #f
-         ,@c1
-         (jmp ,l1)      ; jump past c2
-         ,l0
-         ,@c2
-         ,l1))]
-    [(var-e v) 
-      (let ((pos (lookup v c)))
-        `((mov rax (offset rsp ,(- (add1 pos))))))]
-    [(let-e (list (binding v def)) body)
-      (let ((c-def  (compile-e def c))
-            (c-body (compile-e body (cons v c))))
-           `(,@c-def
-            (mov (offset rsp ,(- (add1 (length c)))) rax)
-            ,@c-body))]))
+    [(Int i)  (list (Mov 'rax (* i 2)))]
+    [(Bool b) (list (Mov 'rax (if b #b11 #b01)))]
+    [(Prim p e)
+     (append (compile-e e c)
+             assert-integer
+             (compile-p p))]         
+    [(If e1 e2 e3)
+     (let ((l1 (gensym 'if))
+           (l2 (gensym 'if)))
+       (append (compile-e e1 c)
+               (list (Cmp 'rax #b01)
+                     (Je l1))
+               (compile-e e2 c)
+               (list (Jmp l2)
+                     (Label l1))
+               (compile-e e3 c)
+               (list (Label l2))))]    
+    [(Var x) 
+     (let ((pos (lookup x c)))
+       (list (Mov 'rax (Offset 'rsp (- (add1 pos))))))]    
+    [(Let x e1 e2)
+     (append (compile-e e1 c)
+             (list (Mov (Offset 'rsp (- (add1 (length c)))) 'rax))
+             (compile-e e2 (cons x c)))]))
 
-(define (compile-prim p c)
+;; Op -> Asm
+(define (compile-p p)
   (match p
-    [`add1
-         `(,@assert-integer
-          (add rax 2))]
-    [`sub1
-         `(,@assert-integer
-          (sub rax 2))]
-    [`zero?
-     (let ((l0 (gensym))
-           (l1 (gensym)))
-        `(,@assert-integer
-         (cmp rax 0)
-         (mov rax #b01) ; #f
-         (jne ,l0)
-         (mov rax #b11) ; #t
-         ,l0))]))
+    ['add1 (list (Add 'rax 2))]
+    ['sub1 (list (Sub 'rax 2))]
+    ['zero?
+     (let ((l1 (gensym 'nzero)))
+       (list (Cmp 'rax 0)
+             (Mov 'rax #b11)
+             (Je l1)
+             (Mov 'rax #b01)
+             (Label l1)))]))
 
 ;; Variable CEnv -> Natural
 (define (lookup x cenv)
@@ -78,7 +64,7 @@
        [#f (lookup x rest)])]))
 
 (define assert-integer
-  `((mov rbx rax)
-    (and rbx 1)
-    (cmp rbx 0)
-    (jne err)))
+  (list (Mov 'rbx 'rax)
+        (And 'rbx 1)
+        (Cmp 'rbx 0)
+        (Jne 'err)))
