@@ -302,7 +302,7 @@ Part B:
 )
 
 
-@bold{Question 5 Extra Credit}
+@bold{Question NaN: Extra Credit}
 
 [10 points]
 
@@ -311,7 +311,8 @@ that shows the difference between interpreters and compilers. You can lay this
 out however you'd like, but the following items should definitely be present in
 one, or both, of the graphs (though not necessarily connected in the diagram!).
 These are in alphabetical order, so don't assume that their order reveals
-anything about how the diagram should be layed out.
+anything about how the diagram should be layed out. If you can think of
+other things that belong in the diagram, feel free to include them.
 
 @itemlist[
 
