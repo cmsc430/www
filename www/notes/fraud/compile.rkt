@@ -13,7 +13,7 @@
                 (Push 'rbp)
                 (Call 'error))))
 
-;; Expr -> Asm
+;; Expr CEnv -> Asm
 (define (compile-e e c)
   (match e
     [(Int i)  (list (Mov 'rax (* i 2)))]
@@ -63,6 +63,7 @@
        [#t (length rest)]
        [#f (lookup x rest)])]))
 
+;; Asm
 (define assert-integer
   (list (Mov 'rbx 'rax)
         (And 'rbx 1)
