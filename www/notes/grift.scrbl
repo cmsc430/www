@@ -228,7 +228,7 @@ the same thing by sticking in something that no variable is equal to:
 ;; Expr Expr CEnv -> Asm
 (define (compile-+ e0 e1 c)
   (let ((c0 (compile-e e0 c))      
-        (c1 (compile-e e1 (cons x c))))
+        (c1 (compile-e e1 (cons #f c))))
     `(,@c0
       (mov (offset rsp ,(add1 (- (length c)))) rax)
       ,@c1
