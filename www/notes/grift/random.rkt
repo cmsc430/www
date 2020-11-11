@@ -1,10 +1,12 @@
 #lang racket
 (provide (all-defined-out))
+(require "parse.rkt")
 
 ;; Randomly generate an expression
 ;; Note: this will often generate programs with type errors
 (define (random-expr)
-  (close (random-open-expr)))
+  (parse
+   (close (random-open-expr))))
 
 ;; Randomly generate an expression (often with free variables)
 (define (random-open-expr)

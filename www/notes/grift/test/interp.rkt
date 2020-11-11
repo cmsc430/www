@@ -1,12 +1,12 @@
 #lang racket
 (require "../interp.rkt"
-         (only-in "../semantics.rkt" G 𝑮)
-         "../syntax.rkt"
+         (only-in "../semantics.rkt" G G-concrete 𝑮)
+         "../parse.rkt"
          rackunit
          redex/reduction-semantics)
 
 (define (run e)
-  (interp (sexpr->ast e)))
+  (interp (parse e)))
 
 (check-equal? (run 7) 7)
 (check-equal? (run -8) -8)
@@ -29,12 +29,17 @@
 (check-equal? (run '(zero? 0)) #t)
 (check-equal? (run '(zero? 1)) #f)
 
-;; JMCT: I don't get it :(
 ;;; check totality of interpreter
-;(redex-check G e
-;             (check-not-exn (lambda () (run (term e))))
-;             #:print? #f)
-;
+(redex-check G-concrete e
+             (check-not-exn (lambda () (run (term e))))
+             #:print? #f)
+
+;; DVH: there's a problem here between the AST and the AST-looking S-Expr used in the semantics.  Ugh.
+;; Possible solutions:
+;; (1) use an S-Expr based AST (i.e. get rid of prefab structs)
+;; (2) write a parser for the AST-like S-Expr
+;; (3) use prefabs in Redex models (not actually possible in Redex currently)
+
 ;;; check equivalence of interpreter and semantics
 ;(redex-check G e
 ;             (check-equal? (list (run (term e)))
