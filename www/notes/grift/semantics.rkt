@@ -1,14 +1,20 @@
 #lang racket
-(provide G 𝑮 𝑮-𝒆𝒏𝒗 𝑮-𝒑𝒓𝒊𝒎)
+(provide G G-concrete 𝑮 𝑮-𝒆𝒏𝒗 𝑮-𝒑𝒓𝒊𝒎)
 (require redex/reduction-semantics
-         (only-in "../fraud/semantics.rkt" F))
+         (only-in "../fraud/semantics.rkt" F F-concrete))
 
-(define-extended-language G F
-  (e ::= .... (p1 e) (p2 e e))
+(define-extended-language G-concrete F-concrete
+  (e ::= x i b (if e e e) (let ((x e)) e) (p1 e) (p2 e e))
   (p2 ::= + -)
   (p1 ::= add1 sub1 zero?)
   (p ::= p1 p2))
 
+(define-extended-language G F
+  (e ::= (Int i) (Bool b) (If e e e) (Var x) (Let x e e) (Prim1 p1 e) (Prim2 p2 e e))
+  (p2 ::= + -)
+  (p1 ::= add1 sub1 zero?)
+  (p ::= p1 p2))
+  
 (define-judgment-form G
   #:contract (𝑮 e a)
   #:mode (𝑮 I O)
@@ -21,39 +27,46 @@
   #:mode (𝑮-𝒆𝒏𝒗 I I O)
 
   ;; Value
-  [-----------
-   (𝑮-𝒆𝒏𝒗 v r v)]
+  [----------- "int-lit"
+   (𝑮-𝒆𝒏𝒗 (Int i) r i)]
+  [----------- "bool-lit"
+   (𝑮-𝒆𝒏𝒗 (Bool b) r b)]  
 
   ;; If
   [(𝑮-𝒆𝒏𝒗 e_0 r v_0) (side-condition (is-true v_0)) (𝑮-𝒆𝒏𝒗 e_1 r a)
-   --------
-   (𝑮-𝒆𝒏𝒗 (if e_0 e_1 e_2) r a)]
+   -------- "if-true"
+   (𝑮-𝒆𝒏𝒗 (If e_0 e_1 e_2) r a)]
 
   [(𝑮-𝒆𝒏𝒗 e_0 r v_0) (side-condition (is-false v_0)) (𝑮-𝒆𝒏𝒗 e_2 r a)
-   --------
-   (𝑮-𝒆𝒏𝒗 (if e_0 e_1 e_2) r a)]
+   -------- "if-false"
+   (𝑮-𝒆𝒏𝒗 (If e_0 e_1 e_2) r a)]
 
   [(𝑮-𝒆𝒏𝒗 e_0 r err)
-   --------
-   (𝑮-𝒆𝒏𝒗 (if e_0 e_1 e_2) r err)]
+   -------- "if-err"
+   (𝑮-𝒆𝒏𝒗 (If e_0 e_1 e_2) r err)]
 
   ;; Let and variable
   [(where a (lookup r x))
-   -----------
-   (𝑮-𝒆𝒏𝒗 x r a)]
+   ----------- "var"
+   (𝑮-𝒆𝒏𝒗 (Var x) r a)]
 
   [(𝑮-𝒆𝒏𝒗 e_0 r v_0) (𝑮-𝒆𝒏𝒗 e_1 (ext r x v_0) a)
-   -----
-   (𝑮-𝒆𝒏𝒗 (let ((x e_0)) e_1) r a)]
+   ----- "let"
+   (𝑮-𝒆𝒏𝒗 (Let x e_0 e_1) r a)]
 
   [(𝑮-𝒆𝒏𝒗 e_0 r err)
-   -----------
-   (𝑮-𝒆𝒏𝒗 (let ((x e_0)) e_1) r err)]
+   ----------- "let-err"
+   (𝑮-𝒆𝒏𝒗 (Let x e_0 e_1) r err)]
 
   ;; Primitive application
-  [(𝑮-𝒆𝒏𝒗 e_0 r a_0) ...
-   ----------- prim
-   (𝑮-𝒆𝒏𝒗 (p e_0 ...) r (𝑮-𝒑𝒓𝒊𝒎 (p a_0 ...)))])
+  [(𝑮-𝒆𝒏𝒗 e_0 r a_0)
+   ----------- "prim1"
+   (𝑮-𝒆𝒏𝒗 (Prim1 p e_0) r (𝑮-𝒑𝒓𝒊𝒎 (p a_0)))]
+
+  [(𝑮-𝒆𝒏𝒗 e_0 r a_0)
+   (𝑮-𝒆𝒏𝒗 e_1 r a_1)
+   ----------- "prim2"
+   (𝑮-𝒆𝒏𝒗 (Prim2 p e_0 e_1) r (𝑮-𝒑𝒓𝒊𝒎 (p a_0 a_1)))])
 
 (define-metafunction G
   𝑮-𝒑𝒓𝒊𝒎 : (p a ...) -> a
@@ -89,32 +102,32 @@
   [(is-false v)  #f])
 
 (module+ test
-  (test-judgment-holds (𝑮 7 7))
-  (test-judgment-holds (𝑮 (add1 7) 8))
+  (test-judgment-holds (𝑮 (Int 7) 7))
+  (test-judgment-holds (𝑮 (Prim1 add1 (Int 7)) 8))
 
-  (test-judgment-holds (𝑮 (add1 #f) err))
+  (test-judgment-holds (𝑮 (Prim1 add1 (Bool #f)) err))
   
-  (test-judgment-holds (𝑮 (let ((x 7)) 8) 8))
-  (test-judgment-holds (𝑮 (let ((x 7)) x) 7))
-  (test-judgment-holds (𝑮 (let ((x 7)) (add1 x)) 8))
-  (test-judgment-holds (𝑮 (sub1 (let ((x 7)) (add1 x))) 7))
-  (test-judgment-holds (𝑮 (sub1 (let ((x 7))
-                                  (let ((y x))
-                                    (add1 x))))
+  (test-judgment-holds (𝑮 (Let x (Int 7) (Int 8)) 8))
+  (test-judgment-holds (𝑮 (Let x (Int 7) (Var x)) 7))
+  (test-judgment-holds (𝑮 (Let x (Int 7) (Prim1 add1 (Var x))) 8))
+  (test-judgment-holds (𝑮 (Prim1 sub1 (Let x (Int 7) (Prim1 add1 (Var x)))) 7))
+  (test-judgment-holds (𝑮 (Prim1 sub1 (Let x (Int 7)
+                                           (Let y (Var x)
+                                                (Prim1 add1 (Var x)))))
                           7))
-  (test-judgment-holds (𝑮 (sub1 (let ((x 7))
-                                  (let ((x 8))
-                                    (add1 x))))
+  (test-judgment-holds (𝑮 (Prim1 sub1 (Let x (Int 7)
+                                           (Let x (Int 8)
+                                                (Prim1 add1 (Var x)))))
                           8))
 
-  (test-judgment-holds (𝑮 (+ 1 2) 3))
-  (test-judgment-holds (𝑮 (- 1 2) -1))
-  (test-judgment-holds (𝑮 (add1 #f) err))
-  (test-judgment-holds (𝑮 (if (add1 #f) 1 2) err))
-  (test-judgment-holds (𝑮 (+ 1 (add1 #f)) err))
-  (test-judgment-holds (𝑮 (+ 1 #f) err))
-  (test-judgment-holds (𝑮 (- 1 #f) err))
-  (test-judgment-holds (𝑮 (- (add1 #f) #f) err)))
+  (test-judgment-holds (𝑮 (Prim2 + (Int 1) (Int 2)) 3))
+  (test-judgment-holds (𝑮 (Prim2 - (Int 1) (Int 2)) -1))
+  (test-judgment-holds (𝑮 (Prim1 add1 (Bool #f)) err))
+  (test-judgment-holds (𝑮 (If (Prim1 add1 (Bool #f)) (Int 1) (Int 2)) err))
+  (test-judgment-holds (𝑮 (Prim2 + (Int 1) (Prim1 add1 (Bool #f))) err))
+  (test-judgment-holds (𝑮 (Prim2 + (Int 1) (Bool #f)) err))
+  (test-judgment-holds (𝑮 (Prim2 - (Int 1) (Bool #f)) err))
+  (test-judgment-holds (𝑮 (Prim2 - (Prim1 add1 (Bool #f)) (Bool #f)) err)))
 
 (module+ test
   (require rackunit)
