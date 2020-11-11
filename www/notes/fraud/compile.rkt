@@ -21,7 +21,16 @@
     [(Prim p e)
      (append (compile-e e c)
              assert-integer
-             (compile-p p))]         
+             (match p
+               ['add1 (list (Add 'rax 2))]
+               ['sub1 (list (Sub 'rax 2))]
+               ['zero?
+                (let ((l1 (gensym 'nzero)))
+                  (list (Cmp 'rax 0)
+                        (Mov 'rax #b11)
+                        (Je l1)
+                        (Mov 'rax #b01)
+                        (Label l1)))]))]
     [(If e1 e2 e3)
      (let ((l1 (gensym 'if))
            (l2 (gensym 'if)))
@@ -40,19 +49,6 @@
      (append (compile-e e1 c)
              (list (Mov (Offset 'rsp (- (add1 (length c)))) 'rax))
              (compile-e e2 (cons x c)))]))
-
-;; Op -> Asm
-(define (compile-p p)
-  (match p
-    ['add1 (list (Add 'rax 2))]
-    ['sub1 (list (Sub 'rax 2))]
-    ['zero?
-     (let ((l1 (gensym 'nzero)))
-       (list (Cmp 'rax 0)
-             (Mov 'rax #b11)
-             (Je l1)
-             (Mov 'rax #b01)
-             (Label l1)))]))
 
 ;; Variable CEnv -> Natural
 (define (lookup x cenv)

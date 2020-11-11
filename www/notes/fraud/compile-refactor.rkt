@@ -41,20 +41,16 @@
 (define (compile-prim p e c)
   (append (compile-e e c)
           assert-integer
-          (compile-p p)))
-
-;; Op -> Asm
-(define (compile-p p)
-  (match p
-    ['add1 (list (Add 'rax 2))]
-    ['sub1 (list (Sub 'rax 2))]
-    ['zero?
-     (let ((l1 (gensym 'nzero)))
-       (list (Cmp 'rax 0)
-             (Mov 'rax #b11)
-             (Je l1)
-             (Mov 'rax #b01)
-             (Label l1)))]))
+          (match p
+            ['add1 (list (Add 'rax 2))]
+            ['sub1 (list (Sub 'rax 2))]
+            ['zero?
+             (let ((l1 (gensym 'nzero)))
+               (list (Cmp 'rax 0)
+                     (Mov 'rax #b11)
+                     (Je l1)
+                     (Mov 'rax #b01)
+                     (Label l1)))])))
 
 ;; Expr Expr Expr CEnv -> Asm
 (define (compile-if e1 e2 e3 c)
