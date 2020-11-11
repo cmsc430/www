@@ -43,7 +43,7 @@ equivalent to each of the following:
 
 @item{@verbatim{`(,(add1 1) . 2)}}
 
-@item{@verbatim|{`(,@'(1 2) ,@'(x) ,3)}|}
+@item{@verbatim{`(,@'(1 2) ,@'(x) ,3)}}
 ]
 
 For example, @racket['(1 2 3)] is equivalent to @racket[(cons 1 (cons 2 (cons 3 '())))].
