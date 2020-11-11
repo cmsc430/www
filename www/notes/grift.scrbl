@@ -12,7 +12,7 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "grift" f))))))
-	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt" "ast.rkt" "syntax.rkt"))
+	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt" "ast.rkt" "parse.rkt"))
 
 @title[#:tag "Grift"]{Grift: binary operations}
 
@@ -98,9 +98,9 @@ The interpreter is likewise straightforward:
 We can see that it works as expected:
 
 @ex[
-(interp (sexpr->ast '(+ 3 4)))
-(interp (sexpr->ast '(+ 3 (+ 2 2))))
-(interp (sexpr->ast '(+ #f 8)))
+(interp (parse '(+ 3 4)))
+(interp (parse '(+ 3 (+ 2 2))))
+(interp (parse '(+ #f 8)))
 ]
 
 @section{A Compile for Grift}
@@ -116,11 +116,9 @@ ignoring type errors for the moment):
 (racketblock
 ;; Expr Expr CEnv -> Asm
 (define (compile-+ e0 e1 c)
-  (let ((c0 (compile-e e0 c))
-        (c1 (compile-e e1 c)))
-    `(,@c0 ; result in rax
-      ,@c1 ; result in rax
-      (add rax _???))))
+  (append (compile-e e0 c)
+          (compile-e e1 c)
+          (list (Add 'rax _????))))
 )
 
 The problem here is that executing @racket[c0] places its result in
@@ -134,12 +132,10 @@ the first subexpression:
 (racketblock
 ;; Expr Expr CEnv -> Asm
 (define (compile-+ e0 e1 c)
-  (let ((c0 (compile-e e0 c))
-        (c1 (compile-e e1 c)))
-    `(,@c0 ; result in rax
-      (mov rbx rax)
-      ,@c1 ; result in rax
-      (add rax rbx))))
+  (append (compile-e e0 c)
+          (list (Mov 'rbx 'rax))
+          (compile-e e1 c)
+          (list (Add 'rax 'rbx))))
 )
 
 Can you think of how this could go wrong?
@@ -159,17 +155,15 @@ could emit working code.  For example:
 ;; Integer Expr CEnv -> Asm
 ;; A special case for compiling (+ i0 e1)
 (define (compile-+-int i0 e1 c)
-  (let ((c1 (compile-e e1 c)))
-    `(,@c1 ; result in rax
-      (add rax ,(arithmetic-shift i0 imm-shift)))))
+  (append (compile-e e1 c)
+          (list (Add 'rax (arithmetic-shift i0 imm-shift)))))
 
-;; Variable Expr CEnv -> Asm
+;; Id Expr CEnv -> Asm
 ;; A special case for compiling (+ x0 e1)
 (define (compile-+-var x0 e1)
-  (let ((c1 (compile-e e1 c))
-        (i (lookup x0 c)))
-    `(,@c1
-      (add rax (offset rsp ,(- (add1 i)))))))         
+  (let ((i (lookup x0 c)))
+    (append (compile-e e1 c)   
+            (list (Add 'rax (Offset 'rsp (- (add1 i))))))))
 )
 
 The latter suggests a general solution could be to transform binary
@@ -204,12 +198,10 @@ Here is a first cut:
 ;; Expr Expr CEnv -> Asm
 (define (compile-+ e0 e1 c)
   (let ((x (gensym))) ; generate a fresh variable
-    (let ((c0 (compile-e e0 c))      
-          (c1 (compile-e e1 (cons x c))))
-      `(,@c0
-        (mov (offset rsp ,(add1 (- (length c)))) rax)
-        ,@c1
-        (add rax (offset rsp ,(- (add1 (lookup x (cons x c))))))))))
+    (append (compile-e e0 c)
+            (list (Mov (Offset 'rsp (add1 (- (length c)))) 'rax))
+            (compile-e e1 (cons x c))
+            (list (Add 'rax (Offset 'rsp (- (add1 (lookup x (cons x c))))))))))
 )
 
 There are a couple things to notice.  First: the @racket[(lookup x
@@ -227,15 +219,11 @@ the same thing by sticking in something that no variable is equal to:
 (racketblock
 ;; Expr Expr CEnv -> Asm
 (define (compile-+ e0 e1 c)
-  (let ((c0 (compile-e e0 c))      
-        (c1 (compile-e e1 (cons x c))))
-    `(,@c0
-      (mov (offset rsp ,(add1 (- (length c)))) rax)
-      ,@c1
-      (add rax (offset rsp ,(- (add1 (length c))))))))
+  (append (compile-e e0 c)
+          (list (Mov (Offset 'rsp (add1 (- (length c)))) 'rax))
+          (compile-e e1 (cons #f c))
+          (list (Add 'rax (Offset 'rsp (- (add1 (length c))))))))
 )
-
-
 
 The complete code for the compiler is:
 
