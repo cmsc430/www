@@ -43,7 +43,7 @@ equivalent to each of the following:
 
 @item{@verbatim{`(,(add1 1) . 2)}}
 
-@item{@verbatim{`(,@'(1 2) ,@'(x) ,3)}}
+@item{@verbatim|{`(,@'(1 2) ,@'(x) ,3)}|}
 ]
 
 For example, @racket['(1 2 3)] is equivalent to @racket[(cons 1 (cons 2 (cons 3 '())))].
@@ -183,10 +183,10 @@ all uses of @tt{f} in the program} (this includes other function definitions!).
 
 You can assume that you have a function @tt{fvs} that given an expression,
 returns a list of all the free variables in that expression. This is be
-necessary to avoid creating incorrect programs (see Example 2 below). If dealing
-with variable clashes and creating new names seems too complicated, you can
-assume the existence of a function @tt{barendregtify} which given a program
-makes sure that all variables are unique, running it on the following:
+necessary to avoid creating incorrect programs. If dealing with variable
+clashes and creating new names seems too complicated, you can assume the
+existence of a function @tt{barendregtify} which given a program makes sure
+that all variables are unique, running it on the following:
 
 
 @#reader scribble/comment-reader
@@ -271,7 +271,7 @@ Other things you should consider:
 
 @item{If @tt{f} does not exist in the program, the program should be unchanged}
 
-@item{You have to be careful with variable shadowing/capture (see Example 2).}
+@item{You have to be careful with variable shadowing/capture.}
 
 ]
 
@@ -296,7 +296,9 @@ Part B:
 (racketblock
 (define (inline f p)
   (match p
-    [(prog ds e) ;TODO]))
+    [(prog ds e)
+          ;TODO
+     ]))
 )
 
 
