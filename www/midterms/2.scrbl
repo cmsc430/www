@@ -7,7 +7,7 @@
 
 @bold{Due: Friday, November 13th 11:59PM}
 
-@(define repo "TBD")
+@(define repo "https://classroom.github.com/a/Gv1cRIkD")
 
 Midterm repository:
 @centered{@link[repo repo]}
@@ -60,7 +60,7 @@ answer.
 (define (fact x)
   (if (<= x 1)
       1
-      (* x (sub1 x))))
+      (* x (fact (sub1 x)))))
 )
 
 How about this one?  Again, justify your answer.
@@ -82,7 +82,7 @@ Hint: consider Jig.
 [8 points]
 
 For each of the following expressions, which subexpressions are in tail
-position?
+position? Assume that the top-level expression is in tail position.
 
 @itemlist[
 
@@ -208,9 +208,53 @@ Would produce something like:
   (f (g 10)))
 )
 
+Why should you care about @tt{fvs} or @tt{barendregtify}? Well, consider the
+following inlining:
 
-In addition to your code, make sure you answer the following question as part of your
-submission:
+@#reader scribble/comment-reader
+(racketblock
+(begin
+  (define (f x) (let ((y 5)) x))
+  (let ((y 42)) (f y)))
+)
+
+If you inline @tt{f} without care, you would get the following:
+
+@#reader scribble/comment-reader
+(racketblock
+(begin
+  (define (f x) (let ((y 5)) x))
+  (let ((y 42)) (let ((y 5)) y)))
+)
+
+Now you've changed the program, it would result in 5 instead of 42!
+You can use @tt{fvs} to figure out which variables might be captured,
+and deal with that, or you can use @tt{barendregtify} to make sure
+that all variables are unique. Notice how if we had used @tt{barendregtify}
+we could have avoided the problem:
+
+@#reader scribble/comment-reader
+(racketblock
+(begin
+  (define (f var1) (let ((var2 5)) var1))
+  (let ((var3 42)) (f var3)))
+)
+
+Then inlining @tt{f} we get:
+
+@#reader scribble/comment-reader
+(racketblock
+(begin
+  (define (f var1) (let ((var2 5)) var1))
+  (let ((var3 42)) (let ((var2 5)) var3)))
+)
+
+You may have to run/call @tt{barendregtify} more than once to ensure
+correctness, when inlining functions.
+
+
+In addition to your code, make sure you answer the following question as part
+of your submission:
 
 @itemlist[
 
@@ -231,46 +275,30 @@ Other things you should consider:
 
 ]
 
+Part A:
 
-
-@subsection{Example 1}
-
-@#reader scribble/comment-reader
-(racketblock
-;todo
-)
-
-Would be unchanged.
-
-@subsection{Example 2}
+5 points from the total of 20 will be given if you can produce the correct
+inlining of @tt{f} for the following program (you are free to do this by hand):
 
 @#reader scribble/comment-reader
 (racketblock
-;todo
+(begin
+  (define (f x) (let ((y (+ x 10))) (let ((z 42)) (+ x (+ y z)))))
+  (define (g x) (f x))
+  (let ((y 1024)) (g (f y))))
 )
 
-Becomes:
+Part B:
+
+15 points for completing the implementation below:
 
 @#reader scribble/comment-reader
 (racketblock
-;todo
+(define (inline f p)
+  (match p
+    [(prog ds e) ;TODO]))
 )
 
-@subsection{Example 3}
-
-Don't forget about nested expressions!
-
-@#reader scribble/comment-reader
-(racketblock
-;todo
-)
-
-Becomes:
-
-@#reader scribble/comment-reader
-(racketblock
-;todo
-)
 
 @bold{Question 5 Extra Credit}
 
