@@ -2,7 +2,7 @@
 (provide (all-defined-out))
 (require "ast.rkt" "asm/ast.rkt")
 
-;; type CEnv = [Listof Id]
+;; type CEnv = [Listof [Maybe Id]]
 
 (define imm-shift        1)
 (define imm-type-mask    (sub1 (arithmetic-shift 1 imm-shift)))
@@ -22,13 +22,13 @@
 ;; Expr CEnv -> Asm
 (define (compile-e e c)
   (match e
-    [(Int i)          (compile-integer i)]
-    [(Bool b)         (compile-boolean b)]
-    [(Prim1 p e)      (compile-prim1 p e c)]
-    [(Prim2 '+ e1 e2) (compile-prim2 '+ e1 e2 c)]
-    [(If e1 e2 e3)    (compile-if e1 e2 e3 c)] 
-    [(Var x)          (compile-var x c)]
-    [(Let x e1 e2)    (compile-let x e1 e2 c)]))
+    [(Int i)         (compile-integer i)]
+    [(Bool b)        (compile-boolean b)]
+    [(Prim1 p e)     (compile-prim1 p e c)]
+    [(Prim2 p e1 e2) (compile-prim2 p e1 e2 c)]
+    [(If e1 e2 e3)   (compile-if e1 e2 e3 c)] 
+    [(Var x)         (compile-var x c)]
+    [(Let x e1 e2)   (compile-let x e1 e2 c)]))
     
 ;; Integer -> Asm
 (define (compile-integer i)
@@ -57,7 +57,7 @@
 (define (compile-prim2 p e1 e2 c)
   (append (compile-e e2 c)
           assert-integer
-          (Mov (Offset 'rsp (add1 (- (length c)))) 'rax)
+          (list (Mov (Offset 'rsp (- (add1 (length c)))) 'rax))
           (compile-e e1 (cons #f c))
           assert-integer
           (list ((match p ['+ Add] ['- Sub])
@@ -87,12 +87,12 @@
           (list (Mov (Offset 'rsp (- (add1 (length c)))) 'rax))
           (compile-e e2 (cons x c))))
 
-;; Variable CEnv -> Natural
+;; Id CEnv -> Natural
 (define (lookup x cenv)
   (match cenv
     ['() (error "undefined variable:" x)]
     [(cons y rest)
-     (match (symbol=? x y)
+     (match (eq? x y)
        [#t (length rest)]
        [#f (lookup x rest)])]))
 
