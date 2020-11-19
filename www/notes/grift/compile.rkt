@@ -12,12 +12,12 @@
 
 ;; Expr -> Asm
 (define (compile e)
-  (append (list (Label 'entry))
-          (compile-e e '())
-          (list (Ret)
-                (Label 'err)
-                (Push 'rbp)
-                (Call 'error))))
+  (seq (Label 'entry)
+       (compile-e e '())
+       (Ret)
+       (Label 'err)
+       (Push 'rbp)
+       (Call 'error)))
 
 ;; Expr CEnv -> Asm
 (define (compile-e e c)
@@ -32,60 +32,61 @@
     
 ;; Integer -> Asm
 (define (compile-integer i)
-  (list (Mov 'rax (arithmetic-shift i imm-shift))))
+  (seq (Mov 'rax (arithmetic-shift i imm-shift))))
 
 ;; Boolean -> Asm
 (define (compile-boolean b)
-  (list (Mov 'rax (if b imm-val-true imm-val-false))))
+  (seq (Mov 'rax (if b imm-val-true imm-val-false))))
 
 ;; Op1 Expr CEnv -> Asm
 (define (compile-prim1 p e c)
-  (append (compile-e e c)
-          assert-integer          
-          (match p    
-            ['add1 (list (Add 'rax 2))]
-            ['sub1 (list (Sub 'rax 2))]
-            ['zero?
-             (let ((l1 (gensym 'nzero)))
-               (list (Cmp 'rax 0)
-                     (Mov 'rax #b11)
-                     (Je l1)
-                     (Mov 'rax #b01)
-                     (Label l1)))])))
+  (seq (compile-e e c)
+       assert-integer
+       (match p
+         ['add1 (Add 'rax 2)]
+         ['sub1 (Sub 'rax 2)]
+         ['zero?
+          (let ((l1 (gensym 'nzero)))
+            (seq (Cmp 'rax 0)
+                 (Mov 'rax #b11)
+                 (Je l1)
+                 (Mov 'rax #b01)
+                 (Label l1)))])))
 
 ;; Op2 Expr Expr CEnv -> Asm
 (define (compile-prim2 p e1 e2 c)
-  (append (compile-e e2 c)
-          assert-integer
-          (list (Mov (Offset 'rsp (- (add1 (length c)))) 'rax))
-          (compile-e e1 (cons #f c))
-          assert-integer
-          (list ((match p ['+ Add] ['- Sub])
-                 'rax (Offset 'rsp (- (add1 (length c))))))))
+  ;; FIXME: do type checking after evaluation
+  (seq (compile-e e2 c)
+       assert-integer
+       (Mov (Offset 'rsp (- (add1 (length c)))) 'rax)
+       (compile-e e1 (cons #f c))
+       assert-integer
+       ((match p ['+ Add] ['- Sub])
+        'rax (Offset 'rsp (- (add1 (length c)))))))
 
 ;; Expr Expr Expr CEnv -> Asm
 (define (compile-if e1 e2 e3 c)
   (let ((l1 (gensym 'if))
         (l2 (gensym 'if)))
-    (append (compile-e e1 c)
-            (list (Cmp 'rax #b01)
-                  (Je l1))
-            (compile-e e2 c)
-            (list (Jmp l2)
-                  (Label l1))
-            (compile-e e3 c)
-            (list (Label l2)))))
+    (seq (compile-e e1 c)
+         (Cmp 'rax #b01)
+         (Je l1)
+         (compile-e e2 c)
+         (Jmp l2)
+         (Label l1)
+         (compile-e e3 c)
+         (Label l2))))
 
 ;; Id CEnv -> Asm
 (define (compile-var x c)
   (let ((pos (lookup x c)))
-    (list (Mov 'rax (Offset 'rsp (- (add1 pos)))))))
+    (seq (Mov 'rax (Offset 'rsp (- (add1 pos)))))))
 
 ;; Id Expr Expr CEnv -> Asm
 (define (compile-let x e1 e2 c)
-  (append (compile-e e1 c)
-          (list (Mov (Offset 'rsp (- (add1 (length c)))) 'rax))
-          (compile-e e2 (cons x c))))
+  (seq (compile-e e1 c)
+       (Mov (Offset 'rsp (- (add1 (length c)))) 'rax)
+       (compile-e e2 (cons x c))))
 
 ;; Id CEnv -> Natural
 (define (lookup x cenv)
@@ -98,7 +99,7 @@
 
 ;; Asm
 (define assert-integer
-  (list (Mov 'rbx 'rax)
-        (And 'rbx 1)
-        (Cmp 'rbx 0)
-        (Jne 'err)))
+  (seq (Mov 'rbx 'rax)
+       (And 'rbx 1)
+       (Cmp 'rbx 0)
+       (Jne 'err)))
