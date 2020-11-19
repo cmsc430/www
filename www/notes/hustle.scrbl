@@ -13,7 +13,7 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "hustle" f))))))
-	   '() #;'("interp.rkt" "ast.rkt" "syntax.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+	   '() #;'("interp.rkt" "ast.rkt" "parse.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
 @title[#:tag "Hustle"]{Hustle: heaps and lists}
 
@@ -214,11 +214,11 @@ So for example the following creates a box containing the value 7:
 
 @#reader scribble/comment-reader
 (racketblock
-`((mov rax ,(arithmetic-shift 7 imm-shift))  
-  (mov (offset rdi 0) rax) ; write '7' into address held by rdi
-  (mov rax rdi)            ; copy pointer into return register
-  (or rax ,type-box)       ; tag pointer as a box
-  (add rdi 8))             ; advance rdi one word
+(seq (Mov 'rax (arithmetic-shift 7 imm-shift))  
+     (Mov (Offset 'rdi 0) 'rax) ; write '7' into address held by rdi
+     (Mov 'rax 'rdi)            ; copy pointer into return register
+     (Or 'rax type-box)         ; tag pointer as a box
+     (Add 'rdi 8))              ; advance rdi one word
 )
 
 If @racket['rax] holds a box value, we can ``unbox'' it by erasing the
@@ -227,21 +227,21 @@ dereferencing the memory:
 
 @#reader scribble/comment-reader
 (racketblock
-`((xor rax ,type-box)       ; erase the box tag
-  (mov rax (offset rax 0))) ; load memory into rax
+(seq (Xor 'rax type-box)         ; erase the box tag
+     (Mov 'rax (Offset 'rax 0))) ; load memory into rax
 )
 
 Pairs are similar.  Suppose we want to make @racket[(cons 3 4)]:
 
 @#reader scribble/comment-reader
 (racketblock
-`((mov rax ,(arithmetic-shift 3 imm-shift))
-  (mov (offset rdi 0) rax) ; write '3' into address held by rdi
-  (mov rax ,(arithmetic-shift 4 imm-shift))
-  (mov (offset rdi 1) rax) ; write '4' into word after address held by rdi
-  (mov rax rdi)            ; copy pointer into return register
-  (or rax ,type-pair)      ; tag pointer as a pair
-  (add rdi 16))            ; advance rdi 2 words
+(seq (Mov 'rax (arithmetic-shift 3 imm-shift))
+     (Mov (Offset 'rdi 0) 'rax) ; write '3' into address held by rdi
+     (Mov 'rax (arithmetic-shift 4 imm-shift))
+     (Mov (Offset 'rdi 1) 'rax) ; write '4' into word after address held by rdi
+     (Mov 'rax rdi)             ; copy pointer into return register
+     (Or 'rax type-pair)        ; tag pointer as a pair
+     (Add 'rdi 16))             ; advance rdi 2 words
 )
 
 If @racket['rax] holds a pair value, we can project out the elements
@@ -250,9 +250,9 @@ then dereferencing either the first or second word of memory:
 
 @#reader scribble/comment-reader
 (racketblock
-`((xor rax ,type-pair)       ; erase the pair tag
-  (mov rax (offset rax 0))   ; load car into rax
-  (mov rax (offset rax 1)))  ; or... load cdr into rax
+(seq (Xor 'rax type-pair)         ; erase the pair tag
+     (Mov 'rax (Offset 'rax 0))   ; load car into rax
+     (Mov 'rax (Offset 'rax 1)))  ; or... load cdr into rax
 )
 
 From here, writing the compiler for @racket[box], @racket[unbox],
