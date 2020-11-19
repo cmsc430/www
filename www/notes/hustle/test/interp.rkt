@@ -1,12 +1,11 @@
 #lang racket
-(require "../interp.rkt" "../syntax.rkt"
+(require "../interp.rkt" "../parse.rkt"
          (only-in "../semantics.rkt" H 𝑯 convert)
          rackunit
          redex/reduction-semantics)
 
 (define (run e)
-  (let ((e (sexpr->ast e)))
-  (interp e)))
+  (interp (parse e)))
 
 (check-equal? (run 7) 7)
 (check-equal? (run -8) -8)

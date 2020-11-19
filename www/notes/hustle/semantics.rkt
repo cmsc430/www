@@ -1,17 +1,22 @@
 #lang racket
-(provide H 𝑯 𝑯-𝒆𝒏𝒗 𝑯-𝒑𝒓𝒊𝒎 lookup ext convert)
+(provide H H-concrete 𝑯 𝑯-𝒆𝒏𝒗 𝑯-𝒑𝒓𝒊𝒎 lookup ext convert)
 (require redex/reduction-semantics
-         (only-in "../grift/semantics.rkt" G))
+         (only-in "../grift/semantics.rkt" G G-concrete))
+
+(define-extended-language H-concrete G-concrete
+  (p2 ::= .... cons)
+  (p1 ::= .... box unbox car cdr))
 
 (define-extended-language H G
   (p2 ::= .... cons)
   (p1 ::= .... box unbox car cdr)
+  (e  ::= .... (Empty))
   (v ::= .... (box v) (cons v v) '()))
 
 (module+ test
-  (test-equal (redex-match? H e (term '())) #t)
-  (test-equal (redex-match? H e (term (cons 3 '()))) #t)
-  (test-equal (redex-match? H e (term (cons x y))) #t)
+  (test-equal (redex-match? H e (term (Empty))) #t)
+  (test-equal (redex-match? H e (term (Prim2 cons (Int 3) (Empty)))) #t)
+  (test-equal (redex-match? H e (term (Prim2 cons (Var x) (Var y)))) #t)
   (test-equal (redex-match? H v (term (cons 1 2))) #t)
   (test-equal (redex-match? H v (term (cons 1 (cons 2 '())))) #t))
 
@@ -29,39 +34,48 @@
   #:mode (𝑯-𝒆𝒏𝒗 I I O)
 
   ;; Value
-  [-----------
-   (𝑯-𝒆𝒏𝒗 v r v)]
+  [----------- "int-lit"
+   (𝑯-𝒆𝒏𝒗 (Int i) r i)]
+  [----------- "bool-lit"
+   (𝑯-𝒆𝒏𝒗 (Bool b) r b)]
+  [----------- "empty-lit"
+   (𝑯-𝒆𝒏𝒗 (Empty) r '())]
 
   ;; If
   [(𝑯-𝒆𝒏𝒗 e_0 r v_0) (side-condition (is-true v_0)) (𝑯-𝒆𝒏𝒗 e_1 r a)
-   --------
-   (𝑯-𝒆𝒏𝒗 (if e_0 e_1 e_2) r a)]
+   -------- "if-true"
+   (𝑯-𝒆𝒏𝒗 (If e_0 e_1 e_2) r a)]
 
   [(𝑯-𝒆𝒏𝒗 e_0 r v_0) (side-condition (is-false v_0)) (𝑯-𝒆𝒏𝒗 e_2 r a)
-   --------
-   (𝑯-𝒆𝒏𝒗 (if e_0 e_1 e_2) r a)]
+   -------- "if-false"
+   (𝑯-𝒆𝒏𝒗 (If e_0 e_1 e_2) r a)]
 
   [(𝑯-𝒆𝒏𝒗 e_0 r err)
-   --------
-   (𝑯-𝒆𝒏𝒗 (if e_0 e_1 e_2) r err)]
+   -------- "if-err"
+   (𝑯-𝒆𝒏𝒗 (If e_0 e_1 e_2) r err)]
 
   ;; Let and variable
   [(where a (lookup r x))
-   -----------
-   (𝑯-𝒆𝒏𝒗 x r a)]
+   ----------- "var"
+   (𝑯-𝒆𝒏𝒗 (Var x) r a)]
 
   [(𝑯-𝒆𝒏𝒗 e_0 r v_0) (𝑯-𝒆𝒏𝒗 e_1 (ext r x v_0) a)
-   -----
-   (𝑯-𝒆𝒏𝒗 (let ((x e_0)) e_1) r a)]
+   ----- "let"
+   (𝑯-𝒆𝒏𝒗 (Let x e_0 e_1) r a)]
 
   [(𝑯-𝒆𝒏𝒗 e_0 r err)
-   -----------
-   (𝑯-𝒆𝒏𝒗 (let ((x e_0)) e_1) r err)]
+   ----------- "let-err"
+   (𝑯-𝒆𝒏𝒗 (Let x e_0 e_1) r err)]
 
   ;; Primitive application
-  [(𝑯-𝒆𝒏𝒗 e_0 r a_0) ...
-   -----------
-   (𝑯-𝒆𝒏𝒗 (p e_0 ...) r (𝑯-𝒑𝒓𝒊𝒎 (p a_0 ...)))])
+  [(𝑯-𝒆𝒏𝒗 e_0 r a_0)
+   ----------- "prim1"
+   (𝑯-𝒆𝒏𝒗 (Prim1 p e_0) r (𝑯-𝒑𝒓𝒊𝒎 (p a_0)))]
+
+  [(𝑯-𝒆𝒏𝒗 e_0 r a_0)
+   (𝑯-𝒆𝒏𝒗 e_1 r a_1)
+   ----------- "prim2"
+   (𝑯-𝒆𝒏𝒗 (Prim2 p e_0 e_1) r (𝑯-𝒑𝒓𝒊𝒎 (p a_0 a_1)))])
 
 (define-metafunction H
   𝑯-𝒑𝒓𝒊𝒎 : (p a ...) -> a
@@ -111,54 +125,52 @@
   [(convert a) a])
 
 (module+ test
-  (test-judgment-holds (𝑯 7 7))
-  (test-judgment-holds (𝑯 (add1 7) 8))
+  (test-judgment-holds (𝑯 (Int 7) 7))
+  (test-judgment-holds (𝑯 (Prim1 add1 (Int 7)) 8))
 
-  (test-judgment-holds (𝑯 (add1 #f) err))
+  (test-judgment-holds (𝑯 (Prim1 add1 (Bool #f)) err))
 
-  (test-judgment-holds (𝑯 (let ((x 7)) 8) 8))
-  (test-judgment-holds (𝑯 (let ((x 7)) x) 7))
-  (test-judgment-holds (𝑯 (let ((x 7)) (add1 x)) 8))
-  (test-judgment-holds (𝑯 (sub1 (let ((x 7)) (add1 x))) 7))
-  (test-judgment-holds (𝑯 (sub1 (let ((x 7))
-                                  (let ((y x))
-                                    (add1 x))))
-                          7))
-  (test-judgment-holds (𝑯 (sub1 (let ((x 7))
-                                  (let ((x 8))
-                                    (add1 x))))
+  (test-judgment-holds (𝑯 (Let x (Int 7) (Int 8)) 8))
+  (test-judgment-holds (𝑯 (Let x (Int 7) (Var x)) 7)) 
+  (test-judgment-holds (𝑯 (Let x (Int 7) (Prim1 add1 (Var x))) 8))
+  (test-judgment-holds (𝑯 (Prim1 sub1 (Let x (Int 7) (Prim1 add1 (Var x)))) 7))
+  (test-judgment-holds (𝑯 (Prim1 sub1 (Let x (Int 7)
+                                           (Let y (Var x)
+                                                (Prim1 add1 (Var x)))))
+                          7))  
+  (test-judgment-holds (𝑯 (Prim1 sub1 (Let x (Int 7)
+                                           (Let x (Int 8)
+                                                (Prim1 add1 (Var x)))))
                           8))
 
-  (test-judgment-holds (𝑯 (zero? 0) #t))
-  (test-judgment-holds (𝑯 (zero? 1) #f))
-  (test-judgment-holds (𝑯 (zero? #f) err))
+  (test-judgment-holds (𝑯 (Prim1 zero? (Int 0)) #t))
+  (test-judgment-holds (𝑯 (Prim1 zero? (Int 1)) #f))
+  (test-judgment-holds (𝑯 (Prim1 zero? (Bool #f)) err))
 
-  (test-judgment-holds (𝑯 (+ 1 2) 3))
-  (test-judgment-holds (𝑯 (- 1 2) -1))
-  (test-judgment-holds (𝑯 (add1 #f) err))
-  (test-judgment-holds (𝑯 (if (add1 #f) 1 2) err))
-  (test-judgment-holds (𝑯 (if (zero? #t) (add1 #f) 2) err))
-  (test-judgment-holds (𝑯 (+ 1 (add1 #f)) err))
-  (test-judgment-holds (𝑯 (+ 1 #f) err))
-  (test-judgment-holds (𝑯 (- 1 #f) err))
-  (test-judgment-holds (𝑯 (- (add1 #f) #f) err))
+  (test-judgment-holds (𝑯 (Prim2 + (Int 1) (Int 2)) 3))
+  (test-judgment-holds (𝑯 (Prim2 - (Int 1) (Int 2)) -1))
+  (test-judgment-holds (𝑯 (Prim1 add1 (Bool #f)) err))
+  (test-judgment-holds (𝑯 (If (Prim1 add1 (Bool #f)) (Int 1) (Int 2)) err))
+  (test-judgment-holds (𝑯 (If (Prim1 zero? (Bool #t)) (Prim1 add1 (Bool #f)) (Int 2)) err)) 
+  (test-judgment-holds (𝑯 (Prim2 + (Int 1) (Prim1 add1 (Bool #f))) err))
+  (test-judgment-holds (𝑯 (Prim2 + (Int 1) (Bool #f)) err))
+  (test-judgment-holds (𝑯 (Prim2 - (Int 1) (Bool #f)) err))
+  (test-judgment-holds (𝑯 (Prim2 - (Prim1 add1 (Bool #f)) (Bool #f)) err))
 
-  (test-judgment-holds (𝑯 '() '()))
-  (test-judgment-holds (𝑯 (cons 1 2) (cons 1 2)))
-  (test-judgment-holds (𝑯 (cons 1 (add1 #f)) err))
-  (test-judgment-holds (𝑯 (let ((x 1))
-                            (let ((y 2))
-                              (cons x y)))
+  (test-judgment-holds (𝑯 (Empty) '()))
+  (test-judgment-holds (𝑯 (Prim2 cons (Int 1) (Int 2)) (cons 1 2)))
+  (test-judgment-holds (𝑯 (Prim2 cons (Int 1) (Prim1 add1 (Bool #f))) err))
+  (test-judgment-holds (𝑯 (Let x (Int 1)
+                            (Let y (Int 2)
+                              (Prim2 cons (Var x) (Var y))))
                           (cons 1 2)))
-
-  (test-judgment-holds (𝑯 (car (cons 1 2)) 1))
-  (test-judgment-holds (𝑯 (cdr (cons 1 2)) 2))
-  (test-judgment-holds (𝑯 (cdr (cons 1 (cons 2 '()))) (cons 2 '())))
-  (test-judgment-holds (𝑯 (car (cons (add1 7) '())) 8))
-
-  (test-judgment-holds (𝑯 (box 7) (box 7)))
-  (test-judgment-holds (𝑯 (unbox (box 7)) 7))
-  (test-judgment-holds (𝑯 (unbox 7) err))
+  (test-judgment-holds (𝑯 (Prim1 car (Prim2 cons (Int 1) (Int 2))) 1))
+  (test-judgment-holds (𝑯 (Prim1 cdr (Prim2 cons (Int 1) (Int 2))) 2))
+  (test-judgment-holds (𝑯 (Prim1 cdr (Prim2 cons (Int 1) (Prim2 cons (Int 2) (Empty)))) (cons 2 '())))
+  (test-judgment-holds (𝑯 (Prim1 car (Prim2 cons (Prim1 add1 (Int 7)) (Empty))) 8))
+  (test-judgment-holds (𝑯 (Prim1 box (Int 7)) (box 7)))
+  (test-judgment-holds (𝑯 (Prim1 unbox (Prim1 box (Int 7))) 7))
+  (test-judgment-holds (𝑯 (Prim1 unbox (Prim1 unbox (Int 7))) err))
 
   (test-equal (term (convert '())) '())
   (test-equal (term (convert (cons 1 2))) '(1 . 2)))
