@@ -43,7 +43,7 @@
 
 (struct Offset (r i) #:prefab)
 
-;; (U Instruction [Listof Instruction]) ... -> [Listof Instruction]
+;; (U Instruction Asm) ... -> Asm
 ;; Convenient for sequencing instructions or groups of instructions
 (define (seq . xs)
   (foldr (λ (x is)
