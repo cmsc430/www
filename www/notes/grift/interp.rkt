@@ -38,26 +38,17 @@
 
 ;; Op1 Answer -> Answer
 (define (interp-prim1 p a)
-  (match a
-    [(? integer? i)
-     ((match p
-        ['add1 add1]
-        ['sub1 sub1]
-        ['zero? zero?])
-      i)]
+  (match (list p a)
+    [(list 'add1 (? integer? i)) (add1 i)]
+    [(list 'sub1 (? integer? i)) (sub1 i)]
+    [(list 'zero? (? integer? i)) (zero? i)]
     [_ 'err]))
 
 ;; Op2 Answer Answer -> Answer
 (define (interp-prim2 p a1 a2)
-  (match a1
-    [(? integer? i1)
-     (match a2
-       [(? integer? i2)
-        ((match p
-           ['+ +]
-           ['- -])
-         i1 i2)]
-       [_ 'err])]
+  (match (list p a1 a2)
+    [(list '+ (? integer? i1) (? integer? i2)) (+ i1 i2)]
+    [(list '- (? integer? i1) (? integer? i2)) (- i1 i2)]
     [_ 'err]))
 
 ;; Env Id -> Ans
