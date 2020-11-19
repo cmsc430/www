@@ -1,4 +1,4 @@
-#lang racket
+>#lang racket
 (provide (all-defined-out))
 
 ;; type Asm = [Listof Instruction]
@@ -43,6 +43,8 @@
 
 (struct Offset (r i) #:prefab)
 
+;; (U Instruction [Listof Instruction]) ... -> [Listof Instruction]
+;; Convenient for sequencing instructions or groups of instructions
 (define (seq . xs)
   (foldr (λ (x is)
            (if (list? x)

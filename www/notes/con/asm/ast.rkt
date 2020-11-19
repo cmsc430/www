@@ -22,3 +22,13 @@
 (struct Cmp (a1 a2) #:prefab)
 (struct Jmp (x) #:prefab)
 (struct Je (x) #:prefab)
+
+;; (U Instruction Asm) ... -> Asm
+;; Convenient for sequencing instructions or groups of instructions
+(define (seq . xs)
+  (foldr (λ (x is)
+           (if (list? x)
+               (append x is)
+               (cons x is)))
+         '()
+         xs))

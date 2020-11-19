@@ -38,3 +38,13 @@
 (struct Pop (r) #:prefab)
 
 (struct Offset (r i) #:prefab)
+
+;; (U Instruction Asm) ... -> Asm
+;; Convenient for sequencing instructions or groups of instructions
+(define (seq . xs)
+  (foldr (λ (x is)
+           (if (list? x)
+               (append x is)
+               (cons x is)))
+         '()
+         xs))
