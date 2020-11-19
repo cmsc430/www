@@ -1,6 +1,5 @@
 #lang racket
-(provide (all-defined-out))
-
+(provide interp interp-env interp-prim1 interp-prim2)
 (require "ast.rkt")
 
 ;; type Answer = Value | 'err
@@ -8,11 +7,11 @@
 ;; type Value =
 ;; | Integer
 ;; | Boolean
-;; | Box Value
-;; | Nil
-;; | Cons Value Value
+;; | '()
+;; | (box Value)
+;; | (cons Value Value)
 
-;; type REnv = (Listof (List Variable Value))
+;; type REnv = (Listof (List Id Value))
 
 ;; Expr -> Answer
 (define (interp e)
@@ -21,58 +20,51 @@
 ;; Expr REnv -> Integer
 (define (interp-env e r)
   (match e
-    [(var-e v)  (lookup r v)]
-    [(int-e i)  i]
-    [(bool-e b) b]
-    [(nil-e)    '()]
-    [(prim-e (? prim? p) es)
-         (let ((as (interp-env* es r)))
-           (interp-prim p as))]
-    [(if-e p e1 e2)
+    [(Var x) (lookup r x)]
+    [(Int i) i]
+    [(Bool b) b]
+    [(Empty) '()]
+    [(Prim1 p e)
+     (interp-prim1 p (interp-env e r))]
+    [(Prim2 p e1 e2)
+     (interp-prim2 p (interp-env e1 r) (interp-env e2 r))]
+    [(If p e1 e2)
      (match (interp-env p r)
        ['err 'err]
        [v
         (if v
             (interp-env e1 r)
-            (interp-env e2 r))])]    
-    [(? symbol? x)
-     (lookup r x)]
-    [(let-e (list (binding x def)) body)
-     (match (interp-env def r)
+            (interp-env e2 r))])]
+    [(Let x e1 e2)
+     (match (interp-env e1 r)
        ['err 'err]
-       [v
-        (interp-env body (ext r x v))])]))
+       [v (interp-env e2 (ext r x v))])]))
 
-;; [Listof Expr] REnv -> [Listof Answer]
-(define (interp-env* es r)
-  (match es
-    ['() '()]
-    [(cons e es)
-     (cons (interp-env e r)
-           (interp-env* es r))]))
+;; Answer -> Bool
+(define (value? a)
+  (match a
+    ['err #f]
+    [_ #t]))
 
-;; Any -> Boolean
-(define (prim? x)
-  (and (symbol? x)
-       (memq x '(add1 sub1 + - zero?
-                      ;; New for Hustle
-                      box unbox empty? cons car cdr))))
+;; Op1 Answer -> Answer
+(define (interp-prim1 p a)
+  (match (list p a)
+    [(list 'add1 (? integer? i)) (add1 i)]
+    [(list 'sub1 (? integer? i)) (sub1 i)]
+    [(list 'zero? (? integer? i)) (zero? i)]
+    [(list 'box (? value? v)) (box v)]
+    [(list 'unbox (? box? b)) (unbox b)]
+    [(list 'car (? pair? p)) (car p)]
+    [(list 'cdr (? integer? i)) (cdr p)]
+    [(list 'empty? (? value? v)) (empty? v)]
+    [_ 'err]))
 
-;; Prim [Listof Answer] -> Answer
-(define (interp-prim p as)
-  (match (cons p as)
-    [(list 'add1 (? integer? i0)) (+ i0 1)]
-    [(list 'sub1 (? integer? i0)) (- i0 1)]
-    [(list 'zero? (? integer? i0)) (zero? i0)]
-    [(list '+ (? integer? i0) (? integer? i1)) (+ i0 i1)]
-    [(list '- (? integer? i0) (? integer? i1)) (- i0 i1)]
-    ;; New for Hustle
-    [(list 'box v0) (box v0)]
-    [(list 'unbox (? box? v0)) (unbox v0)]
-    [(list 'empty? v0) (empty? v0)]    
-    [(list 'cons v0 v1) (cons v0 v1)]
-    [(list 'car (cons v0 v1)) v0]
-    [(list 'cdr (cons v0 v1)) v1]
+;; Op2 Answer Answer -> Answer
+(define (interp-prim2 p a1 a2)
+  (match (list p a1 a2)
+    [(list '+ (? integer? i1) (? integer? i2)) (+ i1 i2)]
+    [(list '- (? integer? i1) (? integer? i2)) (- i1 i2)]
+    [(list 'cons (? value? v1) (? value? v2)) (cons v1 v2)]
     [_ 'err]))
 
 ;; Env Variable -> Answer
