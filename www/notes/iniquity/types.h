@@ -6,7 +6,7 @@
 #define type_string      3
 #define type_proc        4
 
-#define imm_shift      (2 + result_shift)
+#define imm_shift      (3 + result_shift)
 #define imm_type_mask  ((1 << imm_shift) - 1)
 #define imm_type_int   (0 << result_shift)
 #define imm_type_bool  (1 << result_shift)

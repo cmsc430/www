@@ -1,7 +1,6 @@
 #lang racket
 (provide (all-defined-out))
-
-(require "ast.rkt")
+(require "ast.rkt" "asm/ast.rkt")
 
 ;; An immediate is anything ending in #b000
 ;; All other tags in mask #b111 are pointers
@@ -11,17 +10,13 @@
 (define type-imm         #b000)
 (define type-box         #b001)
 (define type-pair        #b010)
-(define type-string      #b011)
 
-(define imm-shift        (+ 2 result-shift))
-(define imm-type-mask    (sub1 (arithmetic-shift 1 imm-shift)))
-(define imm-type-int     (arithmetic-shift #b00 result-shift))
-(define imm-type-bool    (arithmetic-shift #b01 result-shift))
-(define imm-type-char    (arithmetic-shift #b10 result-shift))
-(define imm-type-empty   (arithmetic-shift #b11 result-shift))
-
-(define imm-val-false    imm-type-bool)
-(define imm-val-true     (bitwise-ior (arithmetic-shift 1 (add1 imm-shift)) imm-type-bool))
+(define imm-shift     (+ 3 result-shift))
+(define imm-type-mask (sub1 (arithmetic-shift 1 imm-shift)))
+(define imm-type-int  (arithmetic-shift #b000 result-shift))
+(define imm-val-false (arithmetic-shift #b001 result-shift))
+(define imm-val-true  (bitwise-ior (arithmetic-shift 1 (add1 imm-shift)) imm-val-false))
+(define imm-val-empty (arithmetic-shift #b011 result-shift))
 
 ;; Allocate in 64-bit (8-byte) increments, so pointers
 ;; end in #b000 and we tag with #b001 for boxes, etc.
@@ -32,299 +27,198 @@
 ;; Prog -> Asm
 (define (compile p)
   (match p
-    [(prog defs e)
-     (let ((ds (compile-defines defs))
-           (c0 (compile-entry e)))
-       `(,@c0
-         ,@ds))]))
+    [(Prog ds e)
+     (seq (compile-entry e)
+          (compile-defines ds))]))
+
+;; [Listof Defn] -> Asm
+(define (compile-defines ds)
+  (match ds
+    ['() (seq)]
+    [(cons d ds)
+     (seq (compile-define d)
+          (compile-defines ds))]))
+  
+;; Defn -> Asm
+(define (compile-define d)
+  (match d
+    [(Defn f xs e)
+     (seq (Label (symbol->label f))
+          (compile-e e (reverse xs))
+          (Ret))]))
 
 ;; Expr -> Asm
 ;; Compile e as the entry point
 (define (compile-entry e)
-  `(entry
-    ,@(compile-e e '())
-    ret
-
-    err
-    (push rbp)
-    (call error)
-    ret))
+  (seq (Label 'entry)
+       (compile-e e '())
+       (Ret)
+       (Label 'err)
+       (Push 'rbp)
+       (Call 'error)
+       (Ret)))
 
 ;; Expr CEnv -> Asm
 (define (compile-e e c)
   (match e
-    [(? imm? i)              (compile-imm i)]
-    [(var-e v)               (compile-var v c)]
-    [(prim-e (? prim? p) es) (compile-prim p es c)]
-    [(if-e p t f)            (compile-if p t f c)]
-    [(let-e (list b) body)   (compile-let b body c)]
-    [(app-e f es)            (compile-call f es c)]))
+    [(App f es)      (compile-app f es c)]
+    [(Int i)         (compile-integer i)]
+    [(Bool b)        (compile-boolean b)]
+    [(Empty)         (compile-empty)]
+    [(Prim1 p e)     (compile-prim1 p e c)]
+    [(Prim2 p e1 e2) (compile-prim2 p e1 e2 c)]
+    [(If e1 e2 e3)   (compile-if e1 e2 e3 c)] 
+    [(Var x)         (compile-var x c)]
+    [(Let x e1 e2)   (compile-let x e1 e2 c)]))
 
-(define (compile-prim p es c)
-  (match (cons p es)
-    [`(add1 ,e0)           (compile-add1 e0 c)]
-    [`(sub1 ,e0)           (compile-sub1 e0 c)]
-    [`(zero? ,e0)          (compile-zero? e0 c)]
-    [`(+ ,e0 ,e1)          (compile-+ e0 e1 c)]
-    [`(- ,e0 ,e1)          (compile-- e0 e1 c)]
-    [`(box ,e0)            (compile-box e0 c)]
-    [`(unbox ,e0)          (compile-unbox e0 c)]
-    [`(empty? ,e0)         (compile-empty? e0 c)]
-    [`(cons ,e0 ,e1)       (compile-cons e0 e1 c)]
-    [`(car ,e0)            (compile-car e0 c)]
-    [`(cdr ,e0)            (compile-cdr e0 c)]
-    [_            (error
-                    (format "prim applied to wrong number of args: ~a ~a" p es))]))
+;; Id [Listof Expr] CEnv -> Asm
+(define (compile-app f es c)
+  (let ((stack-size (* 8 (length c))))
+    (seq (compile-es es (cons #f c))
+         (Sub 'rsp stack-size)
+         (Call (symbol->label f))
+         (Add 'rsp stack-size))))
 
-;; Variable (Listof Expr) CEnv -> Asm
-;; Statically know the function we're calling
-(define (compile-call f es c)
-  (let ((cs (compile-es es (cons #f c)))
-        (stack-size (* 8 (length c))))
-    `(,@cs
-      (sub rsp ,stack-size)
-      (call ,(symbol->label f))
-      (add rsp ,stack-size))))
-
-;; (Listof Expr) CEnv -> Asm
+;; [Listof Expr] CEnv -> Asm
 (define (compile-es es c)
   (match es
     ['() '()]
     [(cons e es)
-     (let ((c0 (compile-e e c))
-           (cs (compile-es es (cons #f c))))
-       `(,@c0
-         (mov (offset rsp ,(- (add1 (length c)))) rax)
-         ,@cs))]))
+     (seq (compile-e e c)
+          (Mov (Offset 'rsp (- (add1 (length c)))) 'rax)
+          (compile-es es (cons #f c)))]))
 
-;; Variable (Listof Variable) Expr -> Asm
-(define (compile-define def)
-  (match def
-    [(fundef name args body)
-      (let ((c0 (compile-e body (reverse args))))
-        `(,(symbol->label name)
-          ,@c0
-          ret))]))
+;; Integer -> Asm
+(define (compile-integer i)
+  (seq (Mov 'rax (arithmetic-shift i imm-shift))))
 
-;; (Listof Variable) (Listof (Listof Variable)) (Listof Expr) -> Asm
-(define (compile-defines defs)
-  (append-map compile-define defs))
+;; Boolean -> Asm
+(define (compile-boolean b)
+  (seq (Mov 'rax (if b imm-val-true imm-val-false))))
 
-;; Any -> Boolean
-(define (imm? x)
-  (or (int-e? x)
-      (bool-e? x)
-      ;; TODO (char? x)
-      (nil-e? x)))
+;; -> Asm
+(define (compile-empty)
+  (seq (Mov 'rax imm-val-empty)))
 
-;; Imm -> Asm
-(define (compile-imm i)
-  `((mov rax ,(imm->bits i))))
+;; Op1 Expr CEnv -> Asm
+(define (compile-prim1 p e c)
+  (seq (compile-e e c)
+       (compile-op1 p)))
 
-;; Imm -> Integer
-(define (imm->bits i)
-  (match i
-    [(int-e i)  (arithmetic-shift i imm-shift)]
-    ; TODO [(char-e c)    (+ (arithmetic-shift (char->integer c) imm-shift) imm-type-char)]
-    [(bool-e b) (if b imm-val-true imm-val-false)]
-    [(nil-e)    imm-type-empty]))
+;; Op1 -> Asm
+(define (compile-op1 p)
+  (match p
+    ['box
+     (seq (Mov (Offset 'rdi 0) 'rax)
+          (Mov 'rax 'rdi)
+          (Or 'rax type-box)
+          (Add 'rdi 8))]
+    ['unbox
+     (seq (assert-box 'rax)
+          (Xor 'rax type-box)
+          (Mov 'rax (Offset 'rax 0)))]
+    ['car
+     (seq (assert-pair 'rax)
+          (Xor 'rax type-pair)
+          (Mov 'rax (Offset 'rax 1)))]
+    ['cdr
+     (seq (assert-pair 'rax)
+          (Xor 'rax type-pair)
+          (Mov 'rax (Offset 'rax 0)))]
+    ['add1
+     (seq (assert-integer 'rax)
+          (Add 'rax (arithmetic-shift 1 imm-shift)))]
+    ['sub1
+     (seq (assert-integer 'rax)
+          (Sub 'rax (arithmetic-shift 1 imm-shift)))]
+    ['zero?
+     (seq (assert-integer 'rax)
+          (let ((l1 (gensym 'nzero)))
+            (seq (Cmp 'rax 0)
+                 (Mov 'rax imm-val-true)
+                 (Je l1)
+                 (Mov 'rax imm-val-false)
+                 (Label l1))))]
+    ['empty?
+     (seq (let ((l1 (gensym 'nempty)))
+            (seq (Cmp 'rax imm-val-empty)
+                 (Mov 'rax imm-val-true)
+                 (Je l1)
+                 (Mov 'rax imm-val-false)
+                 (Label l1))))]))
 
-;; Variable CEnv -> Asm
-(define (compile-var x c)
-  (let ((i (lookup x c)))
-    `((mov rax (offset rsp ,(- (add1 i)))))))
+;; Op2 Expr Expr CEnv -> Asm
+(define (compile-prim2 p e1 e2 c)
+  (let ((i (- (add1 (length c)))))
+    (seq (compile-e e1 c)
+         (Mov (Offset 'rsp i) 'rax)
+         (compile-e e2 (cons #f c))
+         (compile-op2 p i))))
 
-;; Expr CEnv -> Asm
-(define (compile-box e0 c)
-  (let ((c0 (compile-e e0 c)))
-    `(,@c0
-      (mov (offset rdi 0) rax)
-      (mov rax rdi)
-      (or rax ,type-box)
-      (add rdi 8)))) ; allocate 8 bytes
-
-;; Expr CEnv -> Asm
-(define (compile-unbox e0 c)
-  (let ((c0 (compile-e e0 c)))
-    `(,@c0
-      ,@assert-box
-      (xor rax ,type-box)
-      (mov rax (offset rax 0)))))
-
-;; Expr Expr CEnv -> Asm
-(define (compile-cons e0 e1 c)
-  (let ((c0 (compile-e e0 c))
-        (c1 (compile-e e1 (cons #f c))))
-    `(,@c0
-      (mov (offset rsp ,(- (add1 (length c)))) rax)
-      ,@c1
-      (mov (offset rdi 0) rax)
-      (mov rax (offset rsp ,(- (add1 (length c)))))
-      (mov (offset rdi 1) rax)
-      (mov rax rdi)
-      (or rax ,type-pair)
-      (add rdi 16))))
-
-;; Expr CEnv -> Asm
-(define (compile-car e0 c)
-  (let ((c0 (compile-e e0 c)))
-    `(,@c0
-      ,@assert-pair
-      (xor rax ,type-pair)
-      (mov rax (offset rax 1)))))
-
-;; Expr CEnv -> Asm
-(define (compile-cdr e0 c)
-  (let ((c0 (compile-e e0 c)))
-    `(,@c0
-      ,@assert-pair
-      (xor rax ,type-pair)
-      (mov rax (offset rax 0)))))
-
-;; Expr CEnv -> Asm
-(define (compile-empty? e0 c)
-  (let ((c0 (compile-e e0 c))
-        (l0 (gensym)))
-    `(,@c0
-      (and rax ,imm-type-mask)
-      (cmp rax ,imm-type-empty)
-      (mov rax ,imm-val-false)
-      (jne ,l0)
-      (mov rax ,imm-val-true)
-      ,l0)))
-
-;; Expr CEnv -> Asm
-(define (compile-add1 e0 c)
-  (let ((c0 (compile-e e0 c)))
-    `(,@c0
-      ,@assert-integer
-      (add rax ,(arithmetic-shift 1 imm-shift)))))
-
-;; Expr CEnv -> Asm
-(define (compile-sub1 e0 c)
-  (let ((c0 (compile-e e0 c)))
-    `(,@c0
-      ,@assert-integer
-      (sub rax ,(arithmetic-shift 1 imm-shift)))))
-
-;; Expr CEnv -> Asm
-(define (compile-zero? e0 c)
-  (let ((c0 (compile-e e0 c))
-        (l0 (gensym))
-        (l1 (gensym)))
-    `(,@c0
-      ,@assert-integer
-      (cmp rax 0)
-      (mov rax ,imm-val-false)
-      (jne ,l0)
-      (mov rax ,imm-val-true)
-      ,l0)))
+;; e1's value is [rsp + i]
+;; e2's value is in rax
+(define (compile-op2 p i)
+  (match p
+    ['+
+     (seq (assert-integer (Offset 'rsp i))
+          (assert-integer 'rax)   
+          (Add 'rax (Offset 'rsp i)))]
+    ['-
+     (seq (assert-integer (Offset 'rsp i))
+          (assert-integer 'rax)   
+          (Sub (Offset 'rsp i) 'rax)
+          (Mov 'rax (Offset 'rsp i)))]
+    ['cons
+     (seq (Mov (Offset 'rdi 0) 'rax)
+          (Mov 'rax (Offset 'rsp i))
+          (Mov (Offset 'rdi 1) 'rax)
+          (Mov 'rax 'rdi)
+          (Or 'rax type-pair)
+          (Add 'rdi 16))]))
 
 ;; Expr Expr Expr CEnv -> Asm
-(define (compile-if e0 e1 e2 c)
-  (let ((c0 (compile-e e0 c))
-        (c1 (compile-e e1 c))
-        (c2 (compile-e e2 c))
-        (l0 (gensym))
-        (l1 (gensym)))
-    `(,@c0
-      (cmp rax ,imm-val-false)
-      (je ,l0)
-      ,@c1
-      (jmp ,l1)
-      ,l0
-      ,@c2
-      ,l1)))
+(define (compile-if e1 e2 e3 c)
+  (let ((l1 (gensym 'if))
+        (l2 (gensym 'if)))
+    (seq (compile-e e1 c)
+         (Cmp 'rax imm-val-false)
+         (Je l1)
+         (compile-e e2 c)
+         (Jmp l2)
+         (Label l1)
+         (compile-e e3 c)
+         (Label l2))))
 
-;; Variable Expr Expr CEnv -> Asm
-(define (compile-let b e1 c)
-  (match b
-    [(binding v def)
-       (let ((c0 (compile-e def c))
-             (c1 (compile-e e1 (cons v c))))
-         `(,@c0
-           (mov (offset rsp ,(- (add1 (length c)))) rax)
-           ,@c1))]
-    [_ (error "Compile-let can only handle bindings")]))
+;; Id CEnv -> Asm
+(define (compile-var x c)
+  (let ((pos (lookup x c)))
+    (seq (Mov 'rax (Offset 'rsp (- (add1 pos)))))))
 
-;; Expr Expr CEnv -> Asm
-(define (compile-+ e0 e1 c)
-  (let ((c1 (compile-e e1 c))
-        (c0 (compile-e e0 (cons #f c))))
-    `(,@c1
-      ,@assert-integer
-      (mov (offset rsp ,(- (add1 (length c)))) rax)
-      ,@c0
-      ,@assert-integer
-      (add rax (offset rsp ,(- (add1 (length c))))))))
+;; Id Expr Expr CEnv -> Asm
+(define (compile-let x e1 e2 c)
+  (seq (compile-e e1 c)
+       (Mov (Offset 'rsp (- (add1 (length c)))) 'rax)
+       (compile-e e2 (cons x c))))
 
-;; Expr Expr CEnv -> Asm
-(define (compile-- e0 e1 c)
-  (let ((c1 (compile-e e1 c))
-        (c0 (compile-e e0 (cons #f c))))
-    `(,@c1
-      ,@assert-integer
-      (mov (offset rsp ,(- (add1 (length c)))) rax)
-      ,@c0
-      ,@assert-integer
-      (sub rax (offset rsp ,(- (add1 (length c))))))))
-
-
-(define (type-pred->mask p)
-  (match p
-    [(or 'box? 'cons? 'string?) result-type-mask]
-    [_ imm-type-mask]))
-
-(define (type-pred->tag p)
-  (match p
-    ['box?     type-box]
-    ['cons?    type-pair]
-    ['string?  type-string]
-    ['integer? imm-type-int]
-    ['empty?   imm-type-empty]
-    ['char?    imm-type-char]
-    ['boolean? imm-type-bool]))
-
-;; Variable CEnv -> Natural
+;; Id CEnv -> Natural
 (define (lookup x cenv)
   (match cenv
     ['() (error "undefined variable:" x)]
-    [(cons y cenv)
+    [(cons y rest)
      (match (eq? x y)
-       [#t (length cenv)]
-       [#f (lookup x cenv)])]))
+       [#t (length rest)]
+       [#f (lookup x rest)])]))
 
-(define (assert-type p)
-  `((mov rbx rax)
-    (and rbx ,(type-pred->mask p))
-    (cmp rbx ,(type-pred->tag p))
-    (jne err)))
+(define (assert-type mask type)
+  (λ (arg)
+    (seq (Mov 'rbx arg)
+         (And 'rbx mask)
+         (Cmp 'rbx type)
+         (Jne 'err))))
 
-(define assert-integer (assert-type 'integer?))
-(define assert-box     (assert-type 'box?))
-(define assert-pair    (assert-type 'cons?))
-(define assert-string  (assert-type 'string?))
-(define assert-char    (assert-type 'char?))
-
-;; Asm
-(define assert-natural
-  `(,@assert-integer
-    (cmp rax -1)
-    (jle err)))
-
-;; Asm
-(define assert-integer-codepoint
-  `((mov rbx rax)
-    (and rbx ,imm-type-mask)
-    (cmp rbx 0)
-    (jne err)
-    (cmp rax ,(arithmetic-shift -1 imm-shift))
-    (jle err)
-    (cmp rax ,(arithmetic-shift #x10FFFF imm-shift))
-    (mov rbx rax)
-    (sar rbx ,(+ 11 imm-shift))
-    (cmp rbx #b11011)
-    (je err)))
+(define assert-integer (assert-type imm-type-mask imm-type-int))
+(define assert-box     (assert-type result-type-mask type-box))
+(define assert-pair    (assert-type result-type-mask type-pair))
 
 ;; Symbol -> Label
 ;; Produce a symbol that is a valid Nasm label
