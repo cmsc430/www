@@ -12,7 +12,7 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "iniquity" f))))))
-	   '("interp.rkt" "ast.rkt" "syntax.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+	   '("interp.rkt" "ast.rkt" "parse.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
 @title[#:tag "Iniquity"]{Iniquity: function definitions and calls}
 
@@ -93,7 +93,7 @@ have significantly increased the expressivity of our language.}
 We can try it out:
 
 @ex[
-(interp (sexpr->prog '(begin (define (double x) (+ x x))
+(interp (parse '(begin (define (double x) (+ x x))
 		(double 5))))
 ]
 
@@ -101,7 +101,7 @@ We can see it works with recursive functions, too. Here's a recursive
 function for computing triangular numbers:
 
 @ex[
-(interp (sexpr->prog '(begin (define (tri x)
+(interp (parse '(begin (define (tri x)
 		  (if (zero? x)
 		      0
 		      (+ x (tri (sub1 x)))))
@@ -112,7 +112,7 @@ We can even define mutually recursive functions such as @racket[even?]
 and @racket[odd?]:
 
 @ex[
-(interp (sexpr->prog '(begin (define (even? x)
+(interp (parse '(begin (define (even? x)
 		  (if (zero? x)
 		      #t
 		      (odd? (sub1 x))))
@@ -432,31 +432,37 @@ single list:
 Here's an example of the code this compiler emits:
 
 @ex[
-(asm-display (compile (sexpr->prog '(begin (define (double x) (+ x x)) (double 5)))))
+(displayln
+ (asm-string
+  (compile
+   (parse '(begin (define (double x) (+ x x)) (double 5))))))
 ]
 
 And we can confirm running the code produces results consistent with
 the interpreter:
 
 @ex[
-(asm-interp (compile (sexpr->prog '(begin (define (double x) (+ x x))
-			     (double 5)))))
+(define (run e)
+  (asm-interp (compile (parse e))))
 
-(asm-interp (compile (sexpr->prog '(begin (define (tri x)
-			      (if (zero? x)
-				  0
-				  (+ x (tri (sub1 x)))))
-			    (tri 9)))))
+(run '(begin (define (double x) (+ x x))
+             (double 5)))
 
-(asm-interp (compile (sexpr->prog '(begin (define (even? x)
-			       (if (zero? x)
-				   #t
-				   (odd? (sub1 x))))
-			     (define (odd? x)
-			       (if (zero? x)
-				   #f
-				   (even? (sub1 x))))
-			     (even? 101)))))
+(run '(begin (define (tri x)
+               (if (zero? x)
+                   0
+                   (+ x (tri (sub1 x)))))
+             (tri 9)))
+
+(run '(begin (define (even? x)
+               (if (zero? x)
+                   #t
+                   (odd? (sub1 x))))
+             (define (odd? x)
+               (if (zero? x)
+                   #f
+                   (even? (sub1 x))))
+             (even? 101)))
 ]
 
 
