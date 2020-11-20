@@ -9,7 +9,7 @@
 ;; | (Let Id Expr Expr)
 ;; | (Var Id)
 ;; type Id = Symbol
-;; type prim = 'add1 | 'sub1 | 'zero?
+;; type Op = 'add1 | 'sub1 | 'zero?
 (struct Int (i) #:prefab)
 (struct Bool (b) #:prefab)
 (struct Prim (p e) #:prefab)

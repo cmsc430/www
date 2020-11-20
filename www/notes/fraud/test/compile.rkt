@@ -40,3 +40,6 @@
                       (add1 (if (zero? x) 7 8))))
               9)
 
+
+;; Errs
+(check-equal? (run '(add1 #f)) 'err)
