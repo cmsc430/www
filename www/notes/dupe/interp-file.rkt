@@ -6,7 +6,8 @@
 ;; Parse and interpret contents of given filename,
 ;; print result on stdout
 (define (main fn)
-  (with-input-from-file fn
-    (λ ()
-      (let ((_ (read-line))) ; ignore #lang racket line           
-        (displayln (interp (parse (read))))))))
+  (let ((p (open-input-file fn)))
+    (begin
+      (read-line p) ; ignore #lang racket line
+      (displayln (interp (parse (read p))))
+      (close-input-port p))))
