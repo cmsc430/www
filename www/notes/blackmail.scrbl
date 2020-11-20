@@ -77,8 +77,8 @@ The grammar of abstract Backmail expressions is:
 
 So, @racket[(Int 0)], @racket[(Int 120)], and
 @racket[(Int -42)] are Blackmail AST expressions, but so are
-@racket[(Add1 (Int 0))], @racket[(Sub1 (Int 120))],
-@racket[(Add1 (Add1 (Add1 (Int -42))))].
+@racket[(Prim 'add1 (Int 0))], @racket[(Sub1 (Int 120))],
+@racket[(Prim 'add1 (Prim 'add1 (Prim 'add1 (Int -42))))].
 
 A datatype for representing expressions can be defined as:
 
@@ -157,9 +157,9 @@ interpreter, one for each form of expression:
 @examples[#:eval ev
 (interp (Int 42))
 (interp (Int -7))
-(interp (Add1 (Int 42)))
-(interp (Sub1 (Int 8)))
-(interp (Add1 (Add1 (Add1 (Int 8)))))
+(interp (Prim 'add1 (Int 42)))
+(interp (Prim 'sub1 (Int 8)))
+(interp (Prim 'add1 (Prim 'add1 (Prim 'add1 (Int 8)))))
 ]
 
 Here's how to connect the dots between the semantics and interpreter:
@@ -265,9 +265,9 @@ recursion, much like the interpreter.
 We can now try out a few examples:
 
 @ex[
-(compile (Add1 (Add1 (Int 40))))
-(compile (Sub1 (Int 8)))
-(compile (Add1 (Add1 (Sub1 (Add1 (Int -8))))))
+(compile (Prim 'add1 (Prim 'add1 (Int 40))))
+(compile (Prim 'sub1 (Int 8)))
+(compile (Prim 'add1 (Prim 'add1 (Prim 'sub1 (Prim 'add1 (Int -8))))))
 ]
 
 And give a command line wrapper for parsing, checking, and compiling
@@ -288,9 +288,9 @@ Likewise, to test the compiler from within Racket, we use the same
 encapsulate running assembly code:
 
 @ex[
-(asm-interp (compile (Add1 (Add1 (Int 40)))))
-(asm-interp (compile (Sub1 (Int 8))))
-(asm-interp (compile (Add1 (Add1 (Sub1 (Add1 (Int -8)))))))
+(asm-interp (compile (Prim 'add1 (Prim 'add1 (Int 40)))))
+(asm-interp (compile (Prim 'sub1 (Int 8))))
+(asm-interp (compile (Prim 'add1 (Prim 'add1 (Prim 'add1 (Prim 'add1 (Int -8)))))))
 ]
 
 @section{Correctness and random testing}
