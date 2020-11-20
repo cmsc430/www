@@ -6,7 +6,8 @@
 ;; Compile contents of given file name,
 ;; emit asm code on stdout
 (define (main fn)
-  (with-input-from-file fn
-    (λ ()
-      (let ((_ (read-line))) ; ignore #lang racket line
-        (displayln (asm-string (compile (parse (read)))))))))
+  (let ((p (open-input-file fn)))
+    (begin
+      (read-line p) ; ignore #lang racket line
+      (displayln (asm-string (compile (parse (read p)))))
+      (close-input-port p))))
