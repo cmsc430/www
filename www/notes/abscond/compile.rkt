@@ -5,8 +5,11 @@
 
 ;; Expr -> Asm
 (define (compile e)
+  (seq (Label 'entry)
+       (compile-e e)
+       (Ret)))
+
+;; Expr -> Asm
+(define (compile-e e)
   (match e
-    [(Int i)
-     (list (Label 'entry)
-           (Mov 'rax i)
-           (Ret))]))
+    [(Int i) (seq (Mov 'rax i))]))

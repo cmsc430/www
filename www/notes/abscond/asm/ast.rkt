@@ -12,3 +12,13 @@
 (struct Label (x) #:prefab)
 (struct Ret () #:prefab)
 (struct Mov (a1 a2) #:prefab)
+
+;; (U Instruction Asm) ... -> Asm
+;; Convenient for sequencing instructions or groups of instructions
+(define (seq . xs)
+  (foldr (λ (x is)
+           (if (list? x)
+               (append x is)
+               (cons x is)))
+         '()
+         xs))

@@ -1,10 +1,9 @@
 #lang racket
-(provide Int Add1 Sub1)
+(provide Int Prim)
 
 ;; type Expr =
 ;; | (Int Integer)
-;; | (Add1 Expr)
-;; | (Sub1 Expr)
+;; | (Prim Op Expr)
+;; type Op = 'add1 | 'sub1
 (struct Int (i) #:prefab)
-(struct Add1 (e) #:prefab)
-(struct Sub1 (e) #:prefab)
+(struct Prim (p e) #:prefab)

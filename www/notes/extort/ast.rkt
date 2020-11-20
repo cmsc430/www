@@ -1,16 +1,13 @@
 #lang racket
-(provide Int Bool Add1 Sub1 If Zero?)
+(provide Int Bool Prim If)
 
 ;; type Expr =
 ;; | (Int Integer)
 ;; | (Bool Boolean)
-;; | (Add1 Expr)
-;; | (Sub1 Expr)
+;; | (Prim Op Expr)
 ;; | (If Expr Expr Expr)
-;; | (Zero? Expr)
+;; type Op = 'add1 | 'sub1 | 'zero?
 (struct Int (i) #:prefab)
 (struct Bool (b) #:prefab)
-(struct Add1 (e) #:prefab)
-(struct Sub1 (e) #:prefab)
+(struct Prim (p e) #:prefab)
 (struct If (e1 e2 e3) #:prefab)
-(struct Zero? (e) #:prefab)

@@ -13,15 +13,15 @@
   (match e
     [(Int i) i]
     [(Bool b) b]
-    [(Add1 e0)
+    [(Prim 'add1 e0)
      (match (interp e0)
        [(? integer? i) (add1 i)]
        [_ 'err])]
-    [(Sub1 e0)
+    [(Prim 'sub1 e0)
      (match (interp e0)
        [(? integer? i) (sub1 i)]
        [_ 'err])]
-    [(Zero? e0)
+    [(Prim 'zero? e0)
      (match (interp e0)
        [(? integer? i) (zero? i)]
        [_ 'err])]
