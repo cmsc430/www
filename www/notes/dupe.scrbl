@@ -677,7 +677,7 @@ interpreter in a final conversion:
 Notice the last two examples.  What's going on?
 
 The @racket[interp.v2] function is also a correct interpreter for
-Dupe, and importantly, it sheds like how to implement the compiler
+Dupe, and importantly, it sheds light on how to implement the compiler
 since it uses the same representation of values.
 
 @section{An Example of Dupe compilation}
