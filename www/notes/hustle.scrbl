@@ -61,7 +61,7 @@ We can model this as an AST data type:
 
 @codeblock-include["hustle/ast.rkt"]
 
-@section{Meaning of Hustle programs}
+@section{Meaning of Hustle programs, implicitly}
 
 The meaning of Hustle programs is just a slight update to Grift
 programs, namely we add a few new primitives.
@@ -109,6 +109,131 @@ Inductively defined data is easy to model in the semantics and
 interpreter because we can rely on inductively defined data at the
 meta-level in math or Racket, respectively.
 
+In some sense, the semantics and interpreter don't shed light on
+how constructing inductive data works because they simply use
+the mechanism of the defining language to construct inductive data.
+Let's try to address that.
+
+@section{Meaning of Hustle programs, explicitly}
+
+Let's develop an alternative semantics and interpreter that
+describes constructing inductive data without itself
+constructing inductive data.
+
+The key here is to describe explicitly the mechanisms of
+memory allocation and dereference. Abstractly, memory can be
+thought of as association between memory addresses and
+values stored in those addresses. As programs run, there is
+a current state of the memory, which can be used to look up
+values (i.e. dereference memory) or to extend by making a
+new association between an available address and a value
+(i.e. allocating memory). Memory will be assumed to be
+limited to some finite association, but we'll always assume
+programs are given a sufficiently large memory to run to
+completion.
+
+In the semantics, we can model memory as a finite function
+from addresses to values. The datatype of addresses is left
+abstract. All that matters is we can compare them for
+equality.
+
+We now change our definition of values to make it
+non-recursive:
+
+@centered{@render-language[Hm]}
+
+We define an alternative semantic relation equivalent to 𝑯 called
+𝑯′:
+
+@centered[(render-judgment-form 𝑯′)]
+
+Like 𝑯, it is defined in terms of another relation. Instead
+of 𝑯-𝒆𝒏𝒗, we define a similar relation 𝑯-𝒎𝒆𝒎-𝒆𝒏𝒗 that has an
+added memory component both as input and out:
+
+@centered[(render-judgment-form 𝑯-𝒎𝒆𝒎-𝒆𝒏𝒗)]
+
+For most of the relation, the given memory σ is simply
+threaded through the judgment. When interpreting a primitive
+operation, we also thread the memory through a relation
+analagous to 𝑯-𝒑𝒓𝒊𝒎 called 𝑯-𝒎𝒆𝒎-𝒑𝒓𝒊𝒎. The key difference
+for 𝑯-𝒎𝒆𝒎-𝒑𝒓𝒊𝒎 is that @racket[cons] and @racket[box]
+operations allocate memory by extending the given memory σ
+and the @racket[car], @racket[cdr], and @racket[unbox]
+operations dereference memory by looking up an association
+in the given memory σ:
+
+@centered[(render-metafunction 𝑯-𝒎𝒆𝒎-𝒑𝒓𝒊𝒎 #:contract? #t)]
+
+
+There are only two unexplained bits at this point:
+
+@itemlist[
+ @item{the metafunction
+@render-term[Hm (alloc σ (v ...))] which consumes a memory
+and a list of values. It produces a memory and an address
+@render-term[Hm (σ_′ α)] such that @render-term[Hm σ_′] is
+like @render-term[Hm σ] except it has a new association for
+some @render-term[Hm α] and @render-term[Hm α] is @bold{
+ fresh}, i.e. it does not appear in the domain of
+@render-term[Hm σ].}
+
+ @item{the metafunction @render-term[Hm (unload σ a)] used
+  in the conclusion of @render-term[Hm 𝑯′]. This function does
+  a final unloading of the answer and memory to obtain a answer
+  in the style of 𝑯.}]
+
+
+The definition of @render-term[Hm (alloc σ (v ...))] is
+omitted, since it depends on the particular representation
+chosen for @render-term[Hm α], but however you choose to
+represent addresses, it will be easy to define appropriately.
+
+The definition of @render-term[Hm (unload σ a)] just traces
+through the memory to reconstruct an inductive piece of data:
+
+@centered[(render-metafunction unload #:contract? #t)]
+                         
+
+With the semantics of explicit memory allocation and
+dereference in place, we can write an interepreter to match
+it closely.
+
+We could define something @emph{very} similar to the
+semantics by threading through some representation of a
+finite function serving as the memory, just like the
+semantics. Or we could do something that will produce the
+same result but using a more concrete mechanism that is like
+the actual memory on a computer.  Let's consider the latter
+approach.
+
+We can use a Racket @racket[vector] to model the memory. A
+vector is a mutable, indexed data structure; basically it is
+like an array. Here are some examples of creating an using
+@racket[vector]s:
+
+@ex[
+(define v (make-vector 10)) ; a vector of length 10
+(vector-set! v 0 "zero") ; v[0] = "zero"
+(vector-set! v 1 'blue)  ; v[1] = 'blue
+(vector-ref v 0) ; "zero"
+(vector-ref v 1) ; 'blue                        
+]
+
+We will use a @racket[vector] of some size to model the
+memory used in a program's evaluation. We can think of
+@racket[vector] as giving us a continguous array of memory
+that we can read and write to using natural number indices
+as addresses. The interpreter keeps track of both the
+@racket[vector] and an index for the next available memory
+address. Every time the interpreter allocates, it writes in
+to the appropriate cell in the @racket[vector] and bumps the
+current address by 1.
+
+@codeblock-include["hustle/interp-heap.rkt"]
+
+
+
 The real trickiness comes when we want to model such data in an
 impoverished setting that doesn't have such things, which of course is
 the case in assembly.
@@ -132,7 +257,7 @@ the place in memory that contains the data.
 
 @;codeblock-include["hustle/interp.rkt"]
 
-@section{A Compiler for Hustle}
+@section{Representing Hustle values}
 
 The first thing do is make another distinction in the kind of values
 in our language.  Up until now, each value could be represented in a
@@ -204,11 +329,9 @@ have a box pointer, we can simply zero out the box type tag to obtain
 the address of the boxes content.  Likewise with pairs.
 
 
-We use a register, @racket['rdi], to hold the address of the next free
-memory location in memory.  To allocate memory, we simply increment
-the content of @racket['rdi] by a multiple of 8.  To initialize the
-memory, we just write into the memory at that location.  To contruct a
-pair or box value, we just tag the unused bits of the address.
+
+
+
 
 So for example the following creates a box containing the value 7:
 
@@ -260,13 +383,27 @@ From here, writing the compiler for @racket[box], @racket[unbox],
 putting together pieces we've already seen such as evaluating multiple
 subexpressions and type tag checking before doing projections.
 
+@section{Allocating Hustle values}
+
+We use a register, @racket['rdi], to hold the address of the next free
+memory location in memory.  To allocate memory, we simply increment
+the content of @racket['rdi] by a multiple of 8.  To initialize the
+memory, we just write into the memory at that location.  To contruct a
+pair or box value, we just tag the unused bits of the address.
+
+
+... will have to coordinate with the run-time system to
+initialize @racket['rdi] appropriately.
+@secref["hustle-run-time"]
+
+@section{A Compiler for Hustle}
 
 
 The complete compiler is given below.
 
 @codeblock-include["hustle/compile.rkt"]
 
-@section{A Run-Time for Hustle}
+@section[#:tag "hustle-run-time"]{A Run-Time for Hustle}
 
 The run-time system for Hustle is more involved for two main reasons:
 
