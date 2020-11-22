@@ -333,6 +333,82 @@ implemented.
   (check-compiler (random-expr)))
 ]
 
+It's now probably time to acknowledge a short-coming in our
+compiler. Although it's great that random testing is
+confirming the correctness of the compiler on
+@emph{specific} examples, the compiler is unfortunately not
+correct in general.  Neither was the Abscond compiler.
+
+To see why, recall that integers in Blackmail are
+represented as 64-bit values in the compiled code. The
+problem arises when 64 bits isn't enough. Since the run-time
+system interprets the 64-bit values as a @emph{signed}
+integer, we have 1 bit devoted to the sign and 63 bits
+devoted to the magnitude of the integer. So the largest
+number we can represent is @racket[(sub1 (expt 2 63))] and
+the smallest number is @racket[(- (expt 2 63))]. What
+happens if a program exceeds these bounds? Well, whatever
+x86 does.  Let's see:
+
+
+@ex[
+(define max-int (sub1 (expt 2 63)))
+(define min-int (- (expt 2 63)))
+(asm-interp (compile (Int max-int)))
+(asm-interp (compile (Prim 'add1 (Int max-int))))
+(asm-interp (compile (Int min-int)))
+(asm-interp (compile (Prim 'sub1 (Int min-int))))]
+
+Now there's a fact you didn't learn in grade school: in the
+first example, adding 1 to a number made it smaller; in the
+second, subtracting 1 made it bigger!
+
+This problem doesn't exist in the interpreter:
+
+@ex[
+(interp (Int max-int))
+(interp (Prim 'add1 (Int max-int)))
+(interp (Int min-int))
+(interp (Prim 'sub1 (Int min-int)))
+]
+
+So we have found a counter-example to the claim of compiler
+correctness:
+
+@ex[
+(check-compiler (Prim 'add1 (Int max-int)))
+(check-compiler (Prim 'sub1 (Int min-int)))
+]
+
+What can we do? This is the basic problem of a program not
+satisfying its specification.  We have two choices:
+
+@itemlist[
+ @item{change the spec (i.e. the semantics and interpreter)}
+ @item{change the program (i.e. the compiler)}
+]
+
+We could change the spec to make it match the behaviour of
+the compiler. This would involve writing out definitions
+that match the ``wrapping'' behavior we see in the compiled
+code. Of course if the specification is meant to capture
+what Racket actually does, taking this route would be a
+mistake. Even independent of Racket, this seems like a
+questionable design choice. Wouldn't it be nice to reason
+about programs using the usual laws of mathematics (or at
+least something as close as possible to what we think of as
+math)? For example, wouldn't you like know that
+@racket[(< i (add1 i))] for all integers @racket[i]?
+
+Unforunately, the other choice seems to paint us in to a
+corner. How can we ever hope to represent all possible
+integers in just 64 bits? We can't. We need some new tricks.
+So in the meantime, our compiler is not correct, but writing
+down what it means to be correct is half the battle. We will
+get to correctness, but for the time being, we view the
+specification aspirationally.
+
+
 @section{Looking back, looking forward}
 
 We've now built two compilers; enough to start observing a pattern.
