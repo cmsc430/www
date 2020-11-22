@@ -2,110 +2,110 @@
 (provide interp interp-env-heap)
 (require "ast.rkt")
 
-;; type AAnswer = AValue | 'err
-;; type Answer  = Value | 'err
-
-;; type AValue =
+;; type Answer* =
+;; | (cons Heap Value*)
+;; | 'err
+;; type Value* =
 ;; | Integer
 ;; | Boolean
 ;; | '()
 ;; | (list 'box  Address)
 ;; | (list 'cons Address)
+;; type Heap = (Listof Value*)
+;; type REnv = (Listof (List Id Value*))
 
-;; type Heap = (Vectorof AValue)
+;; type Answer = Value | 'err
+;; type Value =
+;; | Integer
+;; | Boolean
+;; | '()
+;; | (box Value)
+;; | (cons Value Value)
 
-;; type REnv = (Listof (List Id AValue))
-
-;; heap size in "words"
-(define heap-size 10000) 
 
 ;; Expr -> Answer
-(define (interp e)
-  (let ((h (make-vector heap-size)))
-    (unload (interp-env-heap e '() h) h)))
+(define (interp e)  
+  (unload (interp-env-heap e '() '())))
 
-;; AAnswer Heap -> Answer
-(define (unload v h)
-  (match v
-    [(? integer? i) i]
-    [(? boolean? b) b]
-    ['() '()]
-    [(list 'box a) (box (unload (vector-ref h a) h))]
-    [(list 'cons a) (cons (unload (vector-ref h a) h)
-                          (unload (vector-ref h (add1 a)) h))]))
-
-;; Expr REnv Heap -> Integer
+;; Expr REnv Heap -> Answer
 (define (interp-env-heap e r h)
-  (local [;; Memory management
-          (define a (box 0))
+  (match e
+    [(Var x)  (cons h (lookup r x))]
+    [(Int i)  (cons h i)]
+    [(Bool b) (cons h b)]
+    [(Empty)  (cons h '())]
+    [(Prim1 p e)
+     (match (interp-env-heap e r h)
+       ['err 'err]
+       [(cons h a)
+        (interp-prim1 p a h)])]
+    [(Prim2 p e1 e2)
+     (match (interp-env-heap e1 r h)
+       ['err 'err]
+       [(cons h a1)        
+        (match (interp-env-heap e2 r h)
+          ['err 'err]
+          [(cons h a2)
+           (interp-prim2 p a1 a2 h)])])]
+    [(If p e1 e2)
+     (match (interp-env-heap p r h)
+       ['err 'err]
+       [(cons h v)
+        (if v
+            (interp-env-heap e1 r h)
+            (interp-env-heap e2 r h))])]
+    [(Let x e1 e2)
+     (match (interp-env-heap e1 r h)
+       ['err 'err]
+       [(cons h v)
+        (interp-env-heap e2 (ext r x v) h)])]))
 
-          ;; Value -> Address
-          (define (alloc-box v)
-            (let ((i (unbox a)))
-              (vector-set! h i v)
-              (set-box! a (add1 i))
-              (list 'box i)))
 
-          ;; Value Value -> Address
-          (define (alloc-cons v1 v2)
-            (let ((i (unbox a)))
-              (vector-set! h (+ i 0) v1)
-              (vector-set! h (+ i 1) v1)
-              (set-box! a (+ i 2))
-              (list 'cons i)))
-          
-          ;; Expr Env -> Answer
-          (define (interp-env e r)
-            (match e
-              [(Var x) (lookup r x)]
-              [(Int i) i]
-              [(Bool b) b]
-              [(Empty) '()]
-              [(Prim1 p e)
-               (interp-prim1 p (interp-env e r))]
-              [(Prim2 p e1 e2)
-               (interp-prim2 p (interp-env e1 r) (interp-env e2 r))]
-              [(If p e1 e2)
-               (match (interp-env p r)
-                 ['err 'err]
-                 [v
-                  (if v
-                      (interp-env e1 r)
-                      (interp-env e2 r))])]
-              [(Let x e1 e2)
-               (match (interp-env e1 r)
-                 ['err 'err]
-                 [v (interp-env e2 (ext r x v))])]))
+;;;;;;;;;;;;;
+;; Primitives
 
-          
-          ;; Op1 Answer -> Answer
-          (define (interp-prim1 p a)
-            (match (list p a)
-              [(list 'add1 (? integer? i)) (add1 i)]
-              [(list 'sub1 (? integer? i)) (sub1 i)]
-              [(list 'zero? (? integer? i)) (zero? i)]
-              [(list 'box (? value? v))     (alloc-box v)]
-              [(list 'unbox (list 'box i))  (vector-ref h i)]
-              [(list 'car   (list 'cons i)) (vector-ref h i)]
-              [(list 'cdr   (list 'cons i)) (vector-ref h (add1 i))]              
-              [(list 'empty? (? value? v)) (empty? v)]
-              [_ 'err]))
+;; Op1 Value* Heap -> Answer*
+(define (interp-prim1 p v h)
+  (match (list p v)
+    [(list 'add1 (? integer? i))  (cons h (add1 i))]
+    [(list 'sub1 (? integer? i))  (cons h (sub1 i))]
+    [(list 'zero? (? integer? i)) (cons h (zero? i))]
+    [(list 'box v)                (alloc-box v h)]
+    [(list 'unbox (list 'box i))  (cons h (heap-ref h i))]
+    [(list 'car   (list 'cons i)) (cons h (heap-ref h i))]
+    [(list 'cdr   (list 'cons i)) (cons h (heap-ref h (add1 i)))]
+    [(list 'empty? v)             (cons h (empty? v))]
+    [_ 'err]))
 
-          ;; Op2 Answer Answer -> Answer
-          (define (interp-prim2 p a1 a2)
-            (match (list p a1 a2)
-              [(list '+ (? integer? i1) (? integer? i2)) (+ i1 i2)]
-              [(list '- (? integer? i1) (? integer? i2)) (- i1 i2)]
-              [(list 'cons (? value? v1) (? value? v2)) (alloc-cons v1 v2)]
-              [_ 'err]))]
-    
-    (interp-env e r)))
+;; Op2 Value* Value* Heap -> Answer*
+(define (interp-prim2 p v1 v2 h)
+  (match (list p v1 v2)
+    [(list '+ (? integer? i1) (? integer? i2)) (cons h (+ i1 i2))]
+    [(list '- (? integer? i1) (? integer? i2)) (cons h (- i1 i2))]
+    [(list 'cons v1 v2)                        (alloc-cons v1 v2 h)]
+    [_ 'err]))
 
-;; Answer -> Bool
-(define (value? a)
-  (match a
-    ['err #f]
-    [_ #t]))
+
+;;;;;;;;
+;; Heaps
+
+;; Value* Heap -> Answer
+(define (alloc-box v h)
+  (cons (cons v h)
+        (list 'box (length h))))
+
+;; Value* Value* Heap -> Answer
+(define (alloc-cons v1 v2 h)
+  (cons (cons v1 (cons v2 h))
+        (list 'cons (length h))))
+
+;; Heap Address -> Value*
+(define (heap-ref h a)
+  (list-ref h a))
+
+
+;;;;;;;;;;;;;;;
+;; Environments
 
 ;; Env Variable -> Answer
 (define (lookup env x)
@@ -119,3 +119,22 @@
 ;; Env Variable Value -> Value
 (define (ext r x i)
   (cons (list x i) r))
+
+;;;;;;;;;;;;
+;; Unloading
+
+;; Answer* -> Answer
+(define (unload a)
+  (match a
+    ['err 'err]
+    [(cons h v) (unload-value v h)]))
+
+;; Value* Heap -> Value
+(define (unload-value v h)
+  (match v
+    [(? integer? i) i]
+    [(? boolean? b) b]
+    ['() '()]
+    [(list 'box a)  (box (unload-value (heap-ref h a) h))]
+    [(list 'cons a) (cons (unload-value (heap-ref h a) h)
+                          (unload-value (heap-ref h (add1 a)) h))]))
