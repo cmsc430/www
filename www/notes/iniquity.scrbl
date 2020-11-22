@@ -20,16 +20,38 @@
 
 @section[#:tag-prefix "iniquity"]{Functions}
 
-Our programming languages so far have been impoverished in the
-following sense: in order to process arbitrarily large data, the
-programs themselves must be proportionally as large.  Want to compute
-something over a billion element list?  You'll need a billion
-expressions.  Consequently, the expressiveness of our language is
-severely restricted.
+With @secref{Hustle}, we removed a major computational
+shortcoming by adding the ability to use inductively defined
+data. Doing so gives programmers the ability to represent
+arbitrarily large pieces of information.
 
-Let's now remove that restriction by incorporating @bold{functions},
-and in particular, @bold{recursive functions}, which will allow us to
-compute over arbitrarily large data with finite-sized programs.
+And yet, the language remains hamstrung. It has no mechanism
+to @emph{compute} with such data. Sure, a programmer could
+compute the sum of the first @emph{n} elements of a list,
+for some fixed @emph{n}. But the size of this program would
+be proportional to the size of @emph{n}. Want to compute the
+sum of a billion element list? You'll need (at least) a
+billion expressions. Want to compute the sum of a larger
+list? Write a longer program! But if you want to compute the
+sum of @emph{any} list, regardless of its size? You'll need
+an arbitrarily long program. Of course programs are always
+of some fixed size, since after all, you have to write them
+down and at some point you have to stop writing. This means
+the expressiveness of our language is @emph{still} severely
+restricted.
+
+The solution is to bring in the computational analog of
+inductive data. When you have arbitrarily large data, you
+need arbitrarily long running computations to process them.
+Crucially, these arbitrarily long running computations need
+to be described by finite sized programs. The analog of
+inductive data are @bold{recursive functions}.
+
+
+So let's now remove the computational shackles by
+incorporating @bold{ functions}, and in particular,
+@bold{recursive functions}, which will allow us to compute over
+arbitrarily large data with finite-sized programs.
 
 Let's call it @bold{Iniquity}.
 
