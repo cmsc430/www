@@ -1,28 +1,11 @@
 #lang racket
 (provide (all-defined-out))
-(require "ast.rkt" "asm/ast.rkt")
-
-;; An immediate is anything ending in #b000
-;; All other tags in mask #b111 are pointers
-
-(define result-shift     3)
-(define result-type-mask (sub1 (arithmetic-shift 1 result-shift)))
-(define type-imm         #b000)
-(define type-box         #b001)
-(define type-pair        #b010)
-
-(define imm-shift     (+ 3 result-shift))
-(define imm-type-mask (sub1 (arithmetic-shift 1 imm-shift)))
-(define imm-type-int  (arithmetic-shift #b000 result-shift))
-(define imm-val-false (arithmetic-shift #b001 result-shift))
-(define imm-val-true  (bitwise-ior (arithmetic-shift 1 (add1 imm-shift)) imm-val-false))
-(define imm-val-empty (arithmetic-shift #b011 result-shift))
+(require "ast.rkt" "asm/ast.rkt" "types.rkt")
 
 ;; Allocate in 64-bit (8-byte) increments, so pointers
-;; end in #b000 and we tag with #b001 for boxes, etc.
+;; end in #b000 and tag with pointer types.
 
-;; type CEnv = (Listof (Maybe Variable))
-;; type Imm = Integer | Boolean | Char | ''()
+;; type CEnv = (Listof (Maybe Id))
 
 ;; Prog -> Asm
 (define (compile p)
@@ -90,15 +73,15 @@
 
 ;; Integer -> Asm
 (define (compile-integer i)
-  (seq (Mov 'rax (arithmetic-shift i imm-shift))))
+  (seq (Mov 'rax (arithmetic-shift i int-shift))))
 
 ;; Boolean -> Asm
 (define (compile-boolean b)
-  (seq (Mov 'rax (if b imm-val-true imm-val-false))))
+  (seq (Mov 'rax (if b val-true val-false))))
 
 ;; -> Asm
 (define (compile-empty)
-  (seq (Mov 'rax imm-val-empty)))
+  (seq (Mov 'rax val-empty)))
 
 ;; Op1 Expr CEnv -> Asm
 (define (compile-prim1 p e c)
@@ -111,40 +94,40 @@
     ['box
      (seq (Mov (Offset 'rdi 0) 'rax)
           (Mov 'rax 'rdi)
-          (Or 'rax type-box)
+          (Or 'rax box-type-tag)
           (Add 'rdi 8))]
     ['unbox
      (seq (assert-box 'rax)
-          (Xor 'rax type-box)
+          (Xor 'rax box-type-tag)
           (Mov 'rax (Offset 'rax 0)))]
     ['car
      (seq (assert-pair 'rax)
-          (Xor 'rax type-pair)
+          (Xor 'rax pair-type-tag)
           (Mov 'rax (Offset 'rax 1)))]
     ['cdr
      (seq (assert-pair 'rax)
-          (Xor 'rax type-pair)
+          (Xor 'rax pair-type-tag)
           (Mov 'rax (Offset 'rax 0)))]
     ['add1
      (seq (assert-integer 'rax)
-          (Add 'rax (arithmetic-shift 1 imm-shift)))]
+          (Add 'rax (arithmetic-shift 1 int-shift)))]
     ['sub1
      (seq (assert-integer 'rax)
-          (Sub 'rax (arithmetic-shift 1 imm-shift)))]
+          (Sub 'rax (arithmetic-shift 1 int-shift)))]
     ['zero?
      (seq (assert-integer 'rax)
           (let ((l1 (gensym 'nzero)))
             (seq (Cmp 'rax 0)
-                 (Mov 'rax imm-val-true)
+                 (Mov 'rax val-true)
                  (Je l1)
-                 (Mov 'rax imm-val-false)
+                 (Mov 'rax val-false)
                  (Label l1))))]
     ['empty?
      (seq (let ((l1 (gensym 'nempty)))
-            (seq (Cmp 'rax imm-val-empty)
-                 (Mov 'rax imm-val-true)
+            (seq (Cmp 'rax val-empty)
+                 (Mov 'rax val-true)
                  (Je l1)
-                 (Mov 'rax imm-val-false)
+                 (Mov 'rax val-false)
                  (Label l1))))]))
 
 ;; Op2 Expr Expr CEnv -> Asm
@@ -173,7 +156,7 @@
           (Mov 'rax (Offset 'rsp i))
           (Mov (Offset 'rdi 1) 'rax)
           (Mov 'rax 'rdi)
-          (Or 'rax type-pair)
+          (Or 'rax pair-type-tag)
           (Add 'rdi 16))]))
 
 ;; Expr Expr Expr CEnv -> Asm
@@ -181,7 +164,7 @@
   (let ((l1 (gensym 'if))
         (l2 (gensym 'if)))
     (seq (compile-e e1 c)
-         (Cmp 'rax imm-val-false)
+         (Cmp 'rax val-false)
          (Je l1)
          (compile-e e2 c)
          (Jmp l2)
@@ -216,9 +199,9 @@
          (Cmp 'rbx type)
          (Jne 'err))))
 
-(define assert-integer (assert-type imm-type-mask imm-type-int))
-(define assert-box     (assert-type result-type-mask type-box))
-(define assert-pair    (assert-type result-type-mask type-pair))
+(define assert-integer (assert-type int-type-mask int-type-tag))
+(define assert-box     (assert-type imm-type-mask box-type-tag))
+(define assert-pair    (assert-type imm-type-mask pair-type-tag))
 
 ;; Symbol -> Label
 ;; Produce a symbol that is a valid Nasm label
