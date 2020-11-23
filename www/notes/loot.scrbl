@@ -960,7 +960,7 @@ We can give a spin:
                         (even? 10)))))
 
 (asm-interp 
-  (compile (sexpr->expr
+  (compile (sexpr->prog
     '(letrec ((map (λ (f ls)
                     (letrec ((mapper (λ (ls)
                                        (if (empty? ls)
