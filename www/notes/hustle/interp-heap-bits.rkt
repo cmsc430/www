@@ -10,11 +10,13 @@
 ;; | FalseBytes    (#b10000)
 ;; | EmptyBytes    (#b11000)
 
-(define imm-shift      3)
-(define imm-mask   #b111)
-(define type-int   #b000)
-(define type-box   #b001)
-(define type-cons  #b010)
+(define imm-shift        3)
+(define int-shift        5)
+(define imm-mask     #b111)
+(define int-mask   #b11111)
+(define type-int     #b000)
+(define type-box     #b001)
+(define type-cons    #b010)
 
 (define val-true   (arithmetic-shift #b01 imm-shift))
 (define val-false  (arithmetic-shift #b10 imm-shift))
@@ -49,7 +51,7 @@
 (define (interp-env-heap e r h)
   (match e
     [(Var x)  (cons h (lookup r x))]
-    [(Int i)  (cons h (arithmetic-shift i imm-shift))]
+    [(Int i)  (cons h (arithmetic-shift i int-shift))]
     [(Bool b) (cons h (if b val-true val-false))]
     [(Empty)  (cons h val-empty)]
     [(Prim1 p e)
@@ -83,7 +85,7 @@
 ;; Bit representations
 
 (define (int-bits? v)
-  (zero? (bitwise-xor (bitwise-and v imm-mask) type-int)))
+  (zero? (bitwise-and v int-mask)))
 
 (define (cons-bits? v)
   (zero? (bitwise-xor (bitwise-and v imm-mask) type-cons)))
@@ -103,7 +105,7 @@
     [(list 'box v)                  (alloc-box v h)]
     [(list 'unbox (? box-bits?  i)) (cons h (heap-ref h i))]
     [(list 'car   (? cons-bits? i)) (cons h (heap-ref h i))]
-    [(list 'cdr   (? cons-bits? i)) (cons h (heap-ref h (add1 i)))]
+    [(list 'cdr   (? cons-bits? i)) (cons h (heap-ref h (+ i (arithmetic-shift 1 imm-shift))))]
     [(list 'empty? v)               (cons h (= val-empty v))]
     [_ 'err]))
 
@@ -139,7 +141,7 @@
 
 ;; Heap Address -> Value*
 (define (heap-ref h a)
-  (list-ref h a))
+  (list-ref h (arithmetic-shift a (- imm-shift))))
 
 
 ;;;;;;;;;;;;;;;
@@ -170,14 +172,12 @@
 ;; Value* Heap -> Value
 (define (unload-value v h)
   (match v
-    [(? int-bits? i) (arithmetic-shift i (- imm-shift))]
+    [(? int-bits? i) (arithmetic-shift i (- int-shift))]
     [(? box-bits? i)
-     (let ((a (arithmetic-shift i (- imm-shift))))
-       (box  (unload-value (heap-ref h a) h)))]
+     (box  (unload-value (heap-ref h i) h))]
     [(? cons-bits? i)
-     (let ((a (arithmetic-shift i (- imm-shift))))
-       (cons (unload-value (heap-ref h a) h)
-             (unload-value (heap-ref h (add1 a)) h)))]
+     (cons (unload-value (heap-ref h i) h)
+           (unload-value (heap-ref h (+ i (arithmetic-shift 1 imm-shift))) h))]
     [_
      (cond
        [(= v val-false) #f]
