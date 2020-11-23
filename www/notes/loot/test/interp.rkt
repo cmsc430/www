@@ -159,9 +159,8 @@
      [(? procedure?) 'procedure]
      [v v])))
 
-; TODO: Change the defunctionalization to work with AST
-;(test-suite
-;  (λ (e)
-;   (match (defun:interp e)
-;     [(? defun:function?) 'procedure]
-;     [v v])))
+(test-suite
+  (λ (e)
+   (match (defun:interp (sexpr->prog e))
+     [(? defun:function?) 'procedure]
+     [v v])))
