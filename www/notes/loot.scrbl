@@ -281,7 +281,7 @@ And then use them from within Racket:
 We can also ``import'' Racket functions in to Loot:
 
 @ex[
-(interp-env (sexpr->prog '(expt 2 10))
+(interp-env (sexpr->expr '(expt 2 10))
             `((expt ,expt)))
 ]
 
