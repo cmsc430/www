@@ -16,7 +16,7 @@
 
 @(ev '(require rackunit))
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "dodger" f))))))
-	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "random.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
 
 @title[#:tag "Dodger"]{Dodger: addressing a lack of character}
