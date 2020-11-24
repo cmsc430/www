@@ -7,6 +7,7 @@
 ;; | Boolean
 ;; | Character
 ;; | Eof
+;; | Void
 
 ;; Expr -> Value
 (define (interp e)
@@ -19,6 +20,8 @@
      (read-byte)]
     [(Prim1 'write-byte e0)     
      (write-byte (interp e0))]
+    [(Prim1 'eof-object? e0)     
+     (eof-object? (interp e0))]
     [(Prim1 'add1 e0)
      (add1 (interp e0))]
     [(Prim1 'sub1 e0)

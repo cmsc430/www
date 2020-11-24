@@ -25,6 +25,8 @@ void print_result(int64_t result) {
       printf("#f\n"); break;
     case val_eof:
       printf("#<eof>\n"); break;
+    case val_void:
+      /* nothing */ break;
     }
   }  
 }

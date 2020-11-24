@@ -77,8 +77,7 @@
                (Mov 'rdi 'rax)
                (Call 'write_byte)
                (Pop 'rbp)
-               
-               )])))
+               (Mov 'rax val-void))])))
          
 
 ;; Expr Expr Expr -> Asm

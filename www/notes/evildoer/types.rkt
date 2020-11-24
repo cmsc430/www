@@ -9,6 +9,7 @@
 (define val-true  #b0011)
 (define val-false #b0111)
 (define val-eof   #b1011)
+(define val-void  #b1111)
 
 (define (bits->value b)
   (cond [(= type-int (bitwise-and b #b1))
@@ -18,6 +19,7 @@
         [(= b val-true)  #t]
         [(= b val-false) #f]
         [(= b val-eof)  eof]
+        [(= b val-void) (void)]
         [else (error "invalid bits")]))
 
 (define (value->bits v)
@@ -27,5 +29,6 @@
          (bitwise-ior type-char
                       (arithmetic-shift (char->integer v) char-shift))]
         [(eq? v #t) val-true]
-        [(eq? v #f) val-false]))
+        [(eq? v #f) val-false]
+        [(void? v)  val-void]))
 
