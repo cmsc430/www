@@ -294,4 +294,4 @@ alignment of our stack before, so this will also need consideration.
 
 @codeblock-include["shakedown/compile.rkt"]
 @filebox-include[fancy-make "shakedown/Makefile"]
-@filebox-include["shakedown/clib.c"]
+@filebox-include[fancy-c "shakedown/clib.c"]
