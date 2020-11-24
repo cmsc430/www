@@ -6,8 +6,8 @@
 ;; | Integer
 ;; | Boolean
 
-(define shift 1)
-(define type-int  #b0)
+(define int-shift    1)
+(define type-int   #b0)
 (define val-true  #b01)
 (define val-false #b11)
 
@@ -16,14 +16,16 @@
 ;; Expr -> Bits
 (define (interp-bits e)
   (match e
-    [(Int i)  (arithmetic-shift i shift)]
-    [(Bool b) (if b val-true val-false)]
+    [(Int i)  (arithmetic-shift i int-shift)]
+    [(Bool b) (if b val-true val-false)]    
     [(Prim 'add1 e0)
-     (add1 (interp-bits e0))]
+     (+ (interp-bits e0) (arithmetic-shift 1 int-shift))]
     [(Prim 'sub1 e0)
-     (sub1 (interp-bits e0))]
+     (- (interp-bits e0) (arithmetic-shift 1 int-shift))]
     [(Prim 'zero? e)
-     (zero? (interp-bits e))]
+     (if (zero? (interp-bits e))
+         val-true
+         val-false)]
     [(If e1 e2 e3)
      (if (= (interp-bits e1) val-false)
          (interp-bits e3)
@@ -33,8 +35,8 @@
   (bits->value (interp-bits e)))
 
 (define (bits->value b)
-  (if (even? b)
-      (arithmetic-shift b (- shift))
-      (cond [(= b val-true)  #t]
-            [(= b val-false) #f]
-            [else (error "invalid bits")])))
+  (cond [(= type-int (bitwise-and b #b1))
+         (arithmetic-shift b (- int-shift))]     
+        [(= b val-true)  #t]
+        [(= b val-false) #f]
+        [else (error "invalid bits")]))
