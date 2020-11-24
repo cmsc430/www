@@ -30,6 +30,18 @@
 
 @table-of-contents[]
 
+@verbatim|{
+TODO:
+* explain compilation of `begin'
+* explain push, pop, call
+* explain ABI for calling C
+* explain "extern" in ASM
+* discuss asm-interp/io as analog of interp-io
+* show examples with asm-interp/io, asm-interp only for "pure" programs
+* add peek-byte?
+}|
+
+
 @section{Reading and writing bytes}
 
 So far, the languages we've consider have had the following
