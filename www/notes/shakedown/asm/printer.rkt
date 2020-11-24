@@ -34,6 +34,9 @@
      (string-append "\tcall " (arg->string l) "\n")]
     [`(push ,r)
      (string-append "\tpush " (reg->string r) "\n")]    
+    [`(extern ,f)
+     (string-append "\textern " (label->string f) "\n")]
+    [`(section text) "\tsection .text\n"]
     [l (string-append (label->string l) ":\n")]))
 
 (define (opcode2? x)
@@ -75,6 +78,4 @@
      (string-append "\tglobal " (label->string g) "\n"
                     "\tdefault rel\n"
                     "\textern " (label->string 'error) "\n"                    
-                    "\textern " (label->string 'c_fun) "\n"                    
-                    "\tsection .text\n"
                     (asm->string a)))))
