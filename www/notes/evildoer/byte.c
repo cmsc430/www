@@ -10,7 +10,7 @@ int64_t read_byte(void) {
 }
 
 int64_t write_byte(int64_t c) {
-  int64_t codepoint = c >> char_shift;
+  int64_t codepoint = c >> int_shift;
   printf("%c", (char) codepoint);
   return 0;
 }
