@@ -15,5 +15,4 @@
         (asm-display (compile (sexpr->prog p)))))))
 
 (define (read-program)
-  (regexp-match "^#lang racket" (current-input-port))
   (read))

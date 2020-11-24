@@ -1,11 +1,12 @@
 #lang racket
 (require "../compile.rkt"
+         "../syntax.rkt"
          "../asm/interp.rkt"
          rackunit
          redex/reduction-semantics)
 
 (define (run e)
-  (asm-interp (compile e)))
+  (asm-interp (compile (sexpr->prog e))))
 
 (check-equal? (run 7) 7)
 (check-equal? (run -8) -8)
@@ -118,19 +119,19 @@
                            '())))))
  '(1 -1))
 
-(check-equal?
- (run
-  '(begin (define (map f ls)
-            (begin (define (mapper ls)
-                     (if (empty? ls)
-                         '()
-                         (cons (f (car ls)) (mapper (cdr ls)))))
-                   (mapper ls)))
-          (map (λ (f) (f 0))
-               (cons (λ (x) (add1 x))
-                     (cons (λ (x) (sub1 x))
-                           '())))))
- '(1 -1))
+;(check-equal?
+; (run
+;  '(begin (define (map f ls)
+;            (begin (define (mapper ls)
+;                     (if (empty? ls)
+;                         '()
+;                         (cons (f (car ls)) (mapper (cdr ls)))))
+;                   (mapper ls)))
+;          (map (λ (f) (f 0))
+;               (cons (λ (x) (add1 x))
+;                     (cons (λ (x) (sub1 x))
+;                           '())))))
+; '(1 -1))
 
 (check-equal? (run
                '(let ((id (λ (x) x)))
