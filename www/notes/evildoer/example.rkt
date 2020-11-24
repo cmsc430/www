@@ -1,0 +1,13 @@
+#lang racket
+(begin (write-byte #\h)
+       (begin (write-byte #\e)
+              (begin (write-byte #\l)
+                     (begin (write-byte #\l)
+                            (begin (write-byte #\ )
+                                   (begin (write-byte #\w)
+                                          (begin (write-byte #\o)
+                                                 (begin (write-byte #\r)
+                                                        (begin (write-byte #\l)
+                                                               (begin (write-byte #\d)
+                                                                      (begin (write-byte #\!)
+                                                                             (write-byte #\newline))))))))))))
