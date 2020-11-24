@@ -122,25 +122,78 @@
 
 ;; Label (listof Expr) -> Asm
 (define (compile-ccall f es c)
-  (let ((stack-size (* 8 (length c))))
+  (let* ((c0 (store-caller-save caller-saves c))
+         (c* (car c0))
+         (c1 (compile-es-ffi es c* 0))
+         (c2 (cdr (load-caller-save caller-saves c)))
+         (stack-size (* 8 (length c*))))
+
+       ; We don't actually have to do all caller-save (that's a lot!)
+       ; Just the ones that our compiler emits
+      `(,@(cdr c0)
+
+        ,@c1
+        (mov r15 rsp) ; Using the fact that r15 is callee save
+
+        ; change rsp to reflect the top of the stack
+        (sub rsp ,stack-size)
+
+        ; align rsp to safest 16-byte aligned spot
+        (and rsp -16)
+
+        ; Actually call the function
+        (call ,f)
+
+        ; Restore our stack
+        (mov rsp r15)
+
+        ; Put the caller-saved values back
+        ,@c2)))
+
+;; The registers that we can use to pass arguments to C functions
+;; (in the right order)
+;;
+(define arg-regs '(rdi rsi rdx rcx r8 r9))
+(define callee-saves '(rbp rbx r12 r13 r14 r15))
+(define caller-saves '(rcx rdx rdi rsi r8 r9 r10 r11))
+
+; Make sure we store every caller-save register that we care about on the stack.
+; This is basiclaly a foldMR, but I need to learn more Racket
+(define (store-caller-save rs c)
+  (match rs
+    ['()         (cons c '())]
+    [(cons r rs)
+      (match (store-caller-save rs c)
+        [(cons d asm)
+          (cons (cons #f d)
+                (append asm `((mov (offset rsp ,(- (add1 (length d)))) ,r))))])]))
+
+; Same as above but inverse
+(define (load-caller-save rs c)
+  (match rs
+    ['()         (cons c '())]
+    [(cons r rs)
+      (match (load-caller-save rs c)
+        [(cons d asm)
+          (cons (cons #f d)
+                (append asm `((mov ,r (offset rsp ,(- (add1 (length d))))))))])]))
+
+
+;; JMCT: I keep 'programming in Haskell in Racket' and I need to stop that...
+;; the above is my monadic habits biting me
+
+;; (Listof LExpr) CEnv -> Asm
+(define (compile-es-ffi es c i)
   (match es
-    [`()
-      `(
+    ['() '()]
+    [(cons e es)
+     (let ((c0 (compile-e e c))
+           (cs (compile-es-ffi es c (add1 i))))
+       `(,@c0
+         (sar rax ,imm-shift)
+         (mov ,(list-ref arg-regs i) rax) ; Put the result in the appropriate register
+         ,@cs))]))
 
-       (mov r15 rsp)
-
-       ; change rsp to reflect the top of the stack
-       (sub rsp ,stack-size)
-
-       ; align rsp to safest 16-byte aligned spot
-       (and rsp -16)
-
-       (call ,f)
-
-       (mov rsp r15)
-
-       )]
-    [_   `()])))
 
 ;; (Listof Variable) Label (Listof Variable) CEnv -> Asm
 (define (compile-λ xs f ys c)
