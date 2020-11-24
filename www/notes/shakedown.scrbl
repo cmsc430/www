@@ -4,6 +4,7 @@
 @(require redex/pict
 	  racket/runtime-path
 	  scribble/examples
+	  "../fancyverb.rkt"
 	  "utils.rkt"
 	  "ev.rkt"
 	  "../utils.rkt")
