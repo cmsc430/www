@@ -264,7 +264,7 @@ rbp, rbx, and r12-r15 (inclusive)
 }|
 
 All other registers are @emph{caller}-save. The one exception is the register
-@{rsp}, which is expected to be used by both the caller and the callee to
+@tt{rsp}, which is expected to be used by both the caller and the callee to
 manage the stack in concert, so it's not `saved' by either the caller or the
 callee.
 
