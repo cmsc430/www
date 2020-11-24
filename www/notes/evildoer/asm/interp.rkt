@@ -30,5 +30,6 @@
       (λ ()
         (system (string-append "cat " (path->string t.in)
                                " | " (path->string t.run)))
+        (delete-file t.in)
         (delete-file t.run)))))     
   
