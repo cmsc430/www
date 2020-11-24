@@ -23,5 +23,6 @@ void print_result(int64_t result) {
       printf("#t\n"); break;
     case val_false:
       printf("#f\n"); break;
-  }  
+    }
+  }
 }
