@@ -53,10 +53,12 @@
     [(? integer?) (number->string a)]
     [(? symbol?) (label->string a)]))
 
+(define all-regs '(rax rbx rcx rdx rsp rdi rip rbp rsi r8 r9 r10 r11 r12 r13 r14 r15))
+
 ;; Any -> Boolean
 (define (reg? x)
   (and (symbol? x)
-       (memq x '(rax rbx rcx rdx rsp rdi rip rbp rsi r8 r9 r10 r11 r12 r13 r14 r15))))
+       (memq x all-regs)))
 
 ;; Reg -> String
 (define (reg->string r)

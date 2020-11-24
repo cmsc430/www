@@ -1,1 +1,1 @@
-(let ((y (ccall c_fun))) ((lambda (x) y) 11))
+(let ((y (ccall c_fun1 42))) ((lambda (x) y) 11))
