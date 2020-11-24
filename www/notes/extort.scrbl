@@ -116,9 +116,9 @@ We can confirm the interpreter computes the right result for the
 examples given earlier:
 
 @ex[
-(interp (Prim 'add1 (Bool #f)))
-(interp (Prim 'zero? (Bool #t)))
-(interp (If (Prim 'zero? (Bool #f)) (Int 1) (Int 2)))
+(interp (Prim1 'add1 (Bool #f)))
+(interp (Prim1 'zero? (Bool #t)))
+(interp (If (Prim1 'zero? (Bool #f)) (Int 1) (Int 2)))
 ]
 
 The statement of correctness stays the same, but now observe that
@@ -142,7 +142,7 @@ The compiler now emits code to check the type of arguments:
 
 Here's the code we generate for @racket['(add1 #f)]:
 @ex[
-(displayln (asm-string (compile (Prim 'add1 (Bool #f)))))
+(displayln (asm-string (compile (Prim1 'add1 (Bool #f)))))
 ]
 
 Here are some examples running the compiler:
@@ -172,7 +172,7 @@ usual way again:
                 (interp e)
                 e))
 
-(check-correctness (Prim 'add1 (Int 7)))
-(check-correctness (Prim 'add1 (Bool #f)))
+(check-correctness (Prim1 'add1 (Int 7)))
+(check-correctness (Prim1 'add1 (Bool #f)))
 ]
 
