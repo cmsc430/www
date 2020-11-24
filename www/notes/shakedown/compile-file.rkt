@@ -1,6 +1,6 @@
 #lang racket
 (provide (all-defined-out))
-(require "compile.rkt" #;"syntax.rkt" "asm/printer.rkt")
+(require "compile.rkt" "syntax.rkt" "asm/printer.rkt")
 
 ;; String -> Void
 ;; Compile contents of given file name,
@@ -12,7 +12,7 @@
         ; assumed OK for now
         ;(unless (and (prog? p) (closed? p))
         ;  (error "syntax error"))          
-        (asm-display (compile p))))))
+        (asm-display (compile (sexpr->prog p)))))))
 
 (define (read-program)
   (regexp-match "^#lang racket" (current-input-port))

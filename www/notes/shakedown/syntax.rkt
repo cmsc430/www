@@ -1,108 +1,137 @@
 #lang racket
 (provide (all-defined-out))
 
+(require "ast.rkt")
+
+; In order to desugar a program into a single let-rec, we take all of the
+; top-level definitions and convert them into bindings for a top-level
+; let-rec
+(define (desugar-prog p)
+  (match p
+    [(prog ds e) (let ((bs (map desugar-def ds)))
+                      (prog '() (letr-e bs e)))]))
+
+(define (desugar-def d)
+  (match d
+    [(fundef n args body)
+      (binding n (lam-e args body))]))
+
 ;; Expr+ -> Expr
+; The only case that is interesting is the `letr-e` case, where bindings
+; get turned into lambdas
 (define (desugar e+)
   (match e+
-    [`(begin ,@(list `(define (,fs . ,xss) ,es) ...) ,e)
-     `(letrec ,(map (λ (f xs e) `(,f (λ ,xs ,(desugar e)))) fs xss es)
-        ,(desugar e))]
-    [(? symbol? x)         x]
-    [(? imm? i)            i]
-    [`(box ,e0)            `(box ,(desugar e0))]
-    [`(unbox ,e0)          `(unbox ,(desugar e0))]
-    [`(cons ,e0 ,e1)       `(cons ,(desugar e0) ,(desugar e1))]
-    [`(car ,e0)            `(car ,(desugar e0))]
-    [`(cdr ,e0)            `(cdr ,(desugar e0))]
-    [`(add1 ,e0)           `(add1 ,(desugar e0))]
-    [`(sub1 ,e0)           `(sub1 ,(desugar e0))]
-    [`(zero? ,e0)          `(zero? ,(desugar e0))]
-    [`(empty? ,e0)         `(empty? ,(desugar e0))]
-    [`(if ,e0 ,e1 ,e2)     `(if ,(desugar e0) ,(desugar e1) ,(desugar e2))]
-    [`(+ ,e0 ,e1)          `(+ ,(desugar e0) ,(desugar e1))]
-    [`(let ((,x ,e0)) ,e1) `(let ((,x ,(desugar e0))) ,(desugar e1))]
-    [`(letrec ,bs ,e0)
-     `(letrec ,(map (λ (b) (list (first b) (desugar (second b)))) bs)
-        ,(desugar e0))]
-    [`(λ ,xs ,e0)          `(λ ,xs ,(desugar e0))]
-    [`(lambda ,xs ,e0)     `(λ ,xs ,(desugar e0))]
-    [`(ccall ,f . ,es)     `(ccall ,f ,@(map desugar es))]
-    [`(,e . ,es)           `(,(desugar e) ,@(map desugar es))]))
+    [(? imm? i)       e+]
+    [(var-e v)        e+]
+    [(prim-e p es)    (prim-e p (map desugar es))]
+    [(if-e e0 e1 e2)  (if-e (desugar e0) (desugar e1) (desugar e2))]
+    [(let-e bs body)  (let-e (bindings-map-def desugar bs) (desugar body))]
+    [(letr-e bs body) (letr-e (bindings-map-def desugar bs) (desugar body))]
+    [(lam-e xs e0)    (lam-e xs (desugar e0))]
+    [(ccall-e f es)   (ccall-e f (map desugar es))]
+    [(app-e f es)     (app-e (desugar f) (map desugar es))]))
 
 ;; Any -> Boolean
 (define (imm? x)
-  (or (integer? x)
-      (boolean? x)
-      (char? x)
-      (equal? ''() x)))
+  (or (int-e? x)
+      (bool-e? x)
+      (char-e? x)
+      (nil-e? x)))
 
 ;; Expr -> LExpr
 (define (label-λ e)
   (match e
-    [(? symbol? x)         x]
-    [(? imm? i)            i]
-    [`(box ,e0)            `(box ,(label-λ e0))]
-    [`(unbox ,e0)          `(unbox ,(label-λ e0))]
-    [`(cons ,e0 ,e1)       `(cons ,(label-λ e0) ,(label-λ e1))]
-    [`(car ,e0)            `(car ,(label-λ e0))]
-    [`(cdr ,e0)            `(cdr ,(label-λ e0))]
-    [`(add1 ,e0)           `(add1 ,(label-λ e0))]
-    [`(sub1 ,e0)           `(sub1 ,(label-λ e0))]
-    [`(zero? ,e0)          `(zero? ,(label-λ e0))]
-    [`(empty? ,e0)         `(empty? ,(label-λ e0))]
-    [`(if ,e0 ,e1 ,e2)     `(if ,(label-λ e0) ,(label-λ e1) ,(label-λ e2))]
-    [`(+ ,e0 ,e1)          `(+ ,(label-λ e0) ,(label-λ e1))]
-    [`(let ((,x ,e0)) ,e1) `(let ((,x ,(label-λ e0))) ,(label-λ e1))]
-    [`(letrec ,bs ,e0)     `(letrec ,(map (λ (b) (list (first b) (label-λ (second b)))) bs)
-                              ,(label-λ e0))]
-    [`(λ ,xs ,e0)          `(λ ,xs ',(gensym) ,(label-λ e0))]    
-    [`(ccall ,f . ,es)     `(ccall ,f ,@(map label-λ es))]
-    [`(,e . ,es)           `(,(label-λ e) ,@(map label-λ es))]))
+    [(? imm? i)       e]
+    [(var-e v)        e]
+    [(prim-e p es)    (prim-e p (map label-λ es))]
+    [(if-e e0 e1 e2)  (if-e (label-λ e0) (label-λ e1) (label-λ e2))]
+    [(let-e bs body)  (let-e (bindings-map-def label-λ bs) (label-λ body))]
+    [(letr-e bs body) (letr-e (bindings-map-def label-λ bs) (label-λ body))]
+    [(lam-e xs e0)    (lam-t (gensym) xs (label-λ e0))]
+    [(ccall-e f es)   (ccall-e f (map label-λ es))]
+    [(app-e f es)     (app-e (label-λ f) (map label-λ es))]))
 
 ;; LExpr -> (Listof LExpr)
 ;; Extract all the lambda expressions
 (define (λs e)
   (match e
-    [(? symbol? x)         '()]
-    [(? imm? i)            '()]
-    [`(box ,e0)            (λs e0)]
-    [`(unbox ,e0)          (λs e0)]
-    [`(cons ,e0 ,e1)       (append (λs e0) (λs e1))]
-    [`(car ,e0)            (λs e0)]
-    [`(cdr ,e0)            (λs e0)]
-    [`(add1 ,e0)           (λs e0)]
-    [`(sub1 ,e0)           (λs e0)]
-    [`(zero? ,e0)          (λs e0)]
-    [`(empty? ,e0)         (λs e0)]
-    [`(if ,e0 ,e1 ,e2)     (append (λs e0) (λs e1) (λs e2))]
-    [`(+ ,e0 ,e1)          (append (λs e0) (λs e1))]
-    [`(let ((,x ,e0)) ,e1) (append (λs e0) (λs e1))]
-    [`(letrec ,bs ,e0)     (append (apply append (map (compose λs second) bs)) (λs e0))]
-    [`(λ ,xs ,l ,e0)       (cons e (λs e0))]
-    [`(ccall ,f . ,es)     (apply append (map λs es))]
-    [`(,e . ,es)           (append (λs e) (apply append (map λs es)))]))
+    [(? imm? i)       '()]
+    [(var-e v)        '()]
+    [(prim-e p es)    (apply append (map λs es))]
+    [(if-e e0 e1 e2)  (append (λs e0) (λs e1) (λs e2))]
+    [(let-e (list (binding v def)) body)
+                      (append (λs def) (λs body))]
+    [(letr-e bs body) (append (apply append (map λs (get-defs bs))) (λs body))]
+    [(lam-e xs e0)    (cons e (λs e0))]
+    [(lam-t _ xs e0)  (cons e (λs e0))]
+    [(ccall-e f es)   (apply append (map λs es))]
+    [(app-e f es)     (append (λs f) (apply append (map λs es)))]))
 
 ;; LExpr -> (Listof Variable)
 (define (fvs e)
   (define (fvs e)
     (match e
-      [(? symbol? x)         (list x)]
-      [(? imm? i)            '()]
-      [`(box ,e0)            (fvs e0)]
-      [`(unbox ,e0)          (fvs e0)]
-      [`(cons ,e0 ,e1)       (append (fvs e0) (fvs e1))]
-      [`(car ,e0)            (fvs e0)]
-      [`(cdr ,e0)            (fvs e0)]
-      [`(add1 ,e0)           (fvs e0)]
-      [`(sub1 ,e0)           (fvs e0)]
-      [`(zero? ,e0)          (fvs e0)]
-      [`(empty? ,e0)         (fvs e0)]
-      [`(if ,e0 ,e1 ,e2)     (append (fvs e0) (fvs e1) (fvs e2))]
-      [`(+ ,e0 ,e1)          (append (fvs e0) (fvs e1))]
-      [`(let ((,x ,e0)) ,e1) (append (fvs e0) (remq* (list x) (fvs e1)))]
-      [`(letrec ,bs ,e0)     (remq* (map first bs)
-                                    (apply append (fvs e0) (map fvs (map second bs))))]      
-      [`(λ ,xs ,l ,e0)       (remq* xs (fvs e0))]
-      [`(ccall ,f . ,es)     (apply append (map fvs es))]
-      [`(,e . ,es)           (append (fvs e) (apply append (map fvs es)))]))          
+      [(? imm? i)       '()]
+      [(var-e v)        (list v)]
+      [(prim-e p es)    (apply append (map fvs es))]
+      [(if-e e0 e1 e2)  (append (fvs e0) (fvs e1) (fvs e2))]
+      [(let-e bs body)  (append (apply append (map fvs (get-defs bs)))
+                                (remq* (get-vars bs) (fvs body)))]
+      [(letr-e bs body) (remq* (get-vars bs) (append (apply append (map fvs (get-defs bs))) (fvs body)))]
+      [(lam-t _ xs e0)  (remq* xs (fvs e0))]
+      [(lam-e xs e0)    (remq* xs (fvs e0))]
+      [(ccall-e f es)   (apply append (map fvs es))]
+      [(app-e f es)     (append (fvs f) (apply append (map fvs es)))]))
   (remove-duplicates (fvs e)))
+
+;; LExpr -> (Listof Symbol)
+;; Extract all the calls to C Functions
+(define (ffi-calls e)
+  (match e
+    [(? imm? i)       '()]
+    [(var-e v)        '()]
+    [(prim-e p es)    (apply append (map ffi-calls es))]
+    [(if-e e0 e1 e2)  (append (ffi-calls e0) (ffi-calls e1) (ffi-calls e2))]
+    [(let-e (list (binding v def)) body)
+                      (append (ffi-calls def) (ffi-calls body))]
+    [(letr-e bs body) (append (apply append (map ffi-calls (get-defs bs))) (ffi-calls body))]
+    [(lam-e xs e0)    (ffi-calls e0)]
+    [(lam-t _ xs e0)  (ffi-calls e0)]
+    [(ccall-e f es)   (cons f (apply append (map ffi-calls es)))]
+    [(app-e f es)     (append (ffi-calls f) (apply append (map ffi-calls es)))]))
+
+; SExpr -> Prog
+(define (sexpr->prog s)
+  (match s
+    [(list 'begin defs ... e) (prog (map sexpr->fundef defs) (sexpr->expr e))]
+    [e                        (prog '() (sexpr->expr e))]))
+
+; SExpr -> FunDef
+(define (sexpr->fundef def)
+  (match def
+    [`(define (,f . ,as) ,body) (fundef f as (sexpr->expr body))]))
+
+; SExpr -> Expr
+; Parse the s-expr into our Expr AST
+; This should be a one-to-one mapping for now.
+(define (sexpr->expr s)
+  (match s
+    [(? symbol? v)   (var-e v)]
+    [(? integer? s)  (int-e s)]
+    [(? boolean? b)  (bool-e b)]
+    [(? char? c)     (char-e c)]
+    [''()            (nil-e)]
+    [`(if ,p ,t ,f)  (if-e (sexpr->expr p) (sexpr->expr t) (sexpr->expr f))]
+    [`(let ((,bnd ,def)) ,body)
+                     (let-e (list (binding bnd (sexpr->expr def))) (sexpr->expr body))]
+    [`(letrec ,bs ,body)
+                     (letr-e (map (lambda (b) (binding (first b) (sexpr->expr (second b)))) bs) (sexpr->expr body))]
+    [`(,(? unop? p) ,e)
+                     (prim-e p (list (sexpr->expr e)))]
+    [`(,(? biop? p) ,e1 ,e2)
+                     (prim-e p (list (sexpr->expr e1) (sexpr->expr e2)))]
+    [`(λ ,xs ,e0)    (lam-e xs (sexpr->expr e0))]
+    [`(lambda ,a ,e) (lam-e a (sexpr->expr e))]
+    [`(ccall ,f . ,es) (ccall-e f (map sexpr->expr es))]
+    [`(,f . ,as)     (app-e (sexpr->expr f) (map sexpr->expr as))]
+    [_               (error "operation not supported")]))
