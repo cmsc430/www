@@ -65,13 +65,12 @@
                (Sal 'rax char-shift)
                (Xor 'rax type-char))]
          ['eof-object?
-          (seq
-           (let ((l1 (gensym)))
+          (let ((l1 (gensym)))
             (seq (Cmp 'rax val-eof)
                  (Mov 'rax val-true)
                  (Je l1)
                  (Mov 'rax val-false)
-                 (Label l1))))]
+                 (Label l1)))]
          ['write-byte
           (seq (Push 'rbp)
                (Mov 'rdi 'rax)
