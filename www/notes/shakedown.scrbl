@@ -216,14 +216,82 @@ In short, a calling convention specifies @emph{at least} the following:
 @item{What things is the @emph{callee} responsible for keeping track of?}
 ]
 
+Note that there are many ways to solve this coordination problem! The pro and
+con of using a convention is that it's not really up to us, instead we just
+look up what the convention specifies. For Shakedown we're only going to
+implement calling C functions with (up to 6) integer arguments. As mentioned
+above, this is not a restriction from the System V ABI, which desscribes how to
+pass more than 6 arguments as well as arguments of various types.
+
+The calling convention specifies that the first 6 integer arguments are passed
+@emph{in left to right order} in the following registers:
+
+@verbatim|{
+rdi, rsi, rdx, rcx, r8, and r9
+}|
+
+What this means is that in order to call a C function @tt{f(int x, int y)}, we
+should put the value of @tt{x} in @tt{rdi} and @tt{y} in @tt{rsi}, and so on.
+This means that if you were using any of these registers, you need to save
+those values elsewhere. Which brings us to the next two concerns: who is in
+charge of keeping track of what?
 
 
+@subsection[#:tag-prefix "shakedown"]{Who saves what?}
 
-@subsection[#:tag-prefix "shakedown"]{Determining the point of the argument}
+In calling conventions there are @emph{caller}-save and @emph{callee}-save
+registers. This determines which `side' of the function call is responsible for
+keeping track of what the value stored in a register should be once the
+call/return cycle of a function call is complete.
 
-We can now discuss
+@emph{Caller}-save registers are the ones that a called function can assume
+they are safe to use, with no consequences. Because of this, if you are calling
+a function (i.e. you are the @emph{caller}) and you care about what is stored
+in one of these registers, it is your responsibility to save it elsewhere
+(could be on the stack, as long as it's not in another caller-save register).
+@emph{Callee}-save registers are registers that can be used to store
+information before @emph{calling} a function. If the function being called (the
+@emph{callee}) wants to use any of these registers, it is that function's
+responsibility to remember the value in that register in some way (perhaps
+putting it on the stack) and restoring that register to its original value
+before returning.
+
+The @emph{callee}-save registers are the following:
+
+@verbatim|{
+rbp, rbx, and r12-r15 (inclusive)
+}|
+
+All other registers are @emph{caller}-save. The one exception is the register
+@{rsp}, which is expected to be used by both the caller and the callee to
+manage the stack in concert, so it's not `saved' by either the caller or the
+callee.
+
+The `ownership' of the various registers is described in Section 3.2.1 of the
+System V ABI document.
 
 @subsection[#:tag-prefix "shakedown"]{Securing the result}
 
-@codeblock-include["shakedown/compile.rkt"]
+The System V ABI specifies that at the end of the function's execution it is
+expected to put the first @emph{integer} machine word of its result (remember
+that in in C you can return a struct that contains more than one machine word)
+in @tt{rax}. We've already been following this part of the convention! In fact,
+this is how our generated code has communicated its result with the runtime
+system, we just chose to use @tt{rax} for the result of @emph{all} intermediate
+computations as well.
 
+This is described near the end of Section 3.2.3 (page 22) of the System V ABI
+document.
+
+
+@subsection[#:tag-prefix "shakedown"]{But wait, there's more!}
+
+Earlier we mentioned that a calling convention would specify @emph{at least}
+the three things above. The System V ABI for x86_64 also specifies that our
+stack pointer (@tt{rsp}) should be aligned to 16 bytes! (this is described in
+Section 3.2.2 of the System V ABI document). We've never worried about the
+alignment of our stack before, so this will also need consideration.
+
+@codeblock-include["shakedown/compile.rkt"]
+@filebox-include[fancy-make "shakedown/Makefile"]
+@filebox-include["shakedown/clib.c"]
