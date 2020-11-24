@@ -148,8 +148,10 @@
                              '())))))
    '(1 -1)))
 
-(test-suite
- (λ (e)
-   (match (interp e)
-     [(? procedure?) 'procedure]
-     [v v])))
+; TODO: Not sure if I actually want to write an interpreter for this as it's
+; mostly about the System V calling convention
+;(test-suite
+; (λ (e)
+;   (match (interp e)
+;     [(? procedure?) 'procedure]
+;     [v v])))
