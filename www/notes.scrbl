@@ -11,6 +11,7 @@
 @include-section{notes/con.scrbl}
 @include-section{notes/dupe.scrbl}
 @include-section{notes/dodger.scrbl}
+@include-section{notes/evildoer.scrbl}
 @include-section{notes/extort.scrbl}
 @include-section{notes/fraud.scrbl}
 @include-section{notes/grift.scrbl}
