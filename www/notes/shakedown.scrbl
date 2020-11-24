@@ -109,14 +109,121 @@ have to solve:
 
 
 @itemlist[
+@item{How do we represent this in our AST?}
 @item{How does our runtime system know where @tt{function_in_c} is?}
 @item{How do we `tell' @tt{function_in_c} that the argument is 3?}
 @item{How do we `get' the result from @tt{function_in_c}?}
 ]
 
-The first of these issues has to do with how we @emph{link} our program. In
-order to safely call (or jump to) @tt{function_is_c} we have to convince our
-assembler (NASM) and our linker that we know where @tt{function_in_c} is!
+@subsection[#:tag-prefix "shakedown"]{Representation Matters}
+
+In addressing the first issue, we can create a new AST node for FFI calls:
+
+@#reader scribble/comment-reader
+(racketblock
+(struct ccall-e (f es))
+)
+
+There are other possible representations (treating it as a primitive, for
+example), but this representation will make the next step slightly easier.
+
+@subsection[#:tag-prefix "shakedown"]{Who you gonna call?}
+
+The second issue is a bit more intricate. It deals with how we @emph{link} our
+program. In order to safely call (or jump to) @tt{function_is_c} we have to
+convince our assembler (NASM) and our linker that we know where
+@tt{function_in_c} is!
+
+Our assembler, @tt{nasm}, requires that we declare which symbols are not
+defined locally. This is so that the assembler can catch simple errors, like
+misspelling the target of a jump. Not all assemblers require this, but because
+@tt{nasm} does, we need to address accommodate it.
+
+First we can collect all the uses of the @tt{ccall} construct that we are
+introducing. This is a straightforward traversal of the AST, keeping track of
+the symbols used for a @tt{ccall}.
+
+@#reader scribble/comment-reader
+(racketblock
+;; LExpr -> (Listof Symbol)
+;; Extract all the calls to C Functions
+(define (ffi-calls e)
+  (match e
+    [(? imm? i)       '()]
+    [(var-e v)        '()]
+    [(prim-e p es)    (apply append (map ffi-calls es))]
+    [(if-e e0 e1 e2)  (append (ffi-calls e0) (ffi-calls e1) (ffi-calls e2))]
+    [(let-e (list (binding v def)) body)
+                      (append (ffi-calls def) (ffi-calls body))]
+    [(letr-e bs body) (append (apply append (map ffi-calls (get-defs bs))) (ffi-calls body))]
+    [(lam-e xs e0)    (ffi-calls e0)]
+    [(lam-t _ xs e0)  (ffi-calls e0)]
+    [(ccall-e f es)   (cons f (apply append (map ffi-calls es)))]
+    [(app-e f es)     (append (ffi-calls f) (apply append (map ffi-calls es)))]))
+)
+
+Once we've collected all the uses of @tt{ccall} we can adapt our
+@tt{compile-entry} function so that all of the external symbols are generated
+in our assembly file:
+
+@#reader scribble/comment-reader
+(racketblock
+;; Expr -> Asm
+(define (compile-entry e)
+    `(,@(make-externs (ffi-calls e)) 
+      (section text)
+      entry
+      ,@(compile-tail-e e '())
+      ret
+      ,@(compile-λ-definitions (λs e)) 
+      err
+      (push rbp)
+      (call error)
+      ret))
+)
+
+The addition of the @tt{(section text)} directive is something we were doing in
+our printer before, as part of the preamble for our generated code. Now that we
+are adding the @tt{extern} directives we need make the distinction between the
+preamble and the code itself (text stands for code in ASM).
+
+The next two points are related by a single concept: Calling Conventions
+
+
+@section[#:tag-prefix "shakedown"]{Calling Conventions}
+
+How functions accept their arguments and provide their results is known as a
+@emph{calling convention}. All of our languages since @secref["Iniquity"] have
+had calling conventions, but it's been mostly up to us (modulo the issue with
+moving @tt{rsp}. This has worked @emph{because} we haven't had to communicate
+with any other language, that expects its arguments to be provided in a
+specific manner.
+
+The calling convention we are using the
+@link["https://uclibc.org/docs/psABI-x86_64.pdf"]{x86_64 System V Application
+Binary Interface (ABI)} (which means this may not work on Windows systems). The
+document is quite long (approximately 130 pages), so we will only focus on some
+of the basics. For every limitation that our implementation, the details on how
+we might address that limitation will be in that document. For example, we will
+only deal with integer arguments and results here, but the System V ABI also
+describes the convention for Floating Point arguments/results.
+
+In short, a calling convention specifies @emph{at least} the following:
+
+@itemlist[
+@item{How do you pass arguments?}
+@item{What things is the @emph{caller} responsible for keeping track of?}
+@item{What things is the @emph{callee} responsible for keeping track of?}
+]
+
+
+
+
+@subsection[#:tag-prefix "shakedown"]{Determining the point of the argument}
+
+We can now discuss
+
+@subsection[#:tag-prefix "shakedown"]{Securing the result}
 
 @codeblock-include["shakedown/compile.rkt"]
 
