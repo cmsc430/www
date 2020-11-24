@@ -10,11 +10,13 @@
 @include-section{notes/blackmail.scrbl}
 @include-section{notes/con.scrbl}
 @include-section{notes/dupe.scrbl}
+@include-section{notes/dodger.scrbl}
 @include-section{notes/extort.scrbl}
 @include-section{notes/fraud.scrbl}
 @include-section{notes/grift.scrbl}
 @include-section{notes/hustle.scrbl}
 @include-section{notes/iniquity.scrbl}
+@include-section{notes/juvie.scrbl}
 @include-section{notes/jig.scrbl}
 @include-section{notes/knock.scrbl}
 @include-section{notes/graphviz.scrbl}
