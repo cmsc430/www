@@ -13,17 +13,15 @@ int main(int argc, char** argv) {
 
 void print_result(int64_t result) {
   if (int_type_tag == (int_type_mask & result)) {
-    printf("%" PRId64, result >> int_shift);
+    printf("%" PRId64 "\n", result >> int_shift);
   } else if (char_type_tag == (char_type_mask & result)) {
     print_char(result);
+    printf("\n");
   } else {
     switch (result) {
     case val_true:
-      printf("#t");
-      break;
+      printf("#t\n"); break;
     case val_false:
-      printf("#f");
-      break;
-    }   
+      printf("#f\n"); break;
   }  
 }
