@@ -24,7 +24,7 @@
     [(Eof)           (compile-value eof)]
     [(Empty)         (compile-value '())]
     [(Var x)         (compile-variable x c)]
-    [(Prim0 p)       (compile-prim0 p)]
+    [(Prim0 p)       (compile-prim0 p c)]
     [(Prim1 p e)     (compile-prim1 p e c)]
     [(Prim2 p e1 e2) (compile-prim2 p e1 e2 c)]
     [(If e1 e2 e3)   (compile-if e1 e2 e3 c)]
@@ -39,14 +39,29 @@
 (define (compile-variable x c)
   (let ((i (lookup x c)))       
     (seq (Mov 'rax (Offset 'rsp i)))))
-    
-;; Op0 -> Asm
-(define (compile-prim0 p)
+
+;; adjust in 16-byte alignments
+(define (stack-adjust c)
+  (let ((l (length c)))
+    (if (even? l)
+        (* 8 l)
+        (* 8 (add1 l)))))
+
+;; Op0 CEnv -> Asm
+(define (compile-prim0 p c)
   (match p
     ['read-byte
-     (seq (Push 'rbp)
-          (Call 'read_byte)
-          (Pop 'rbp))]))
+     (let ((l (stack-adjust c)))
+       (seq (Sub 'rsp l)
+            (Push 'rbp)
+            (Push 'rsp)
+            (Push 'rdi) ; save heap loc
+            (Mov 'rdi 'rax)
+            (Call 'read_byte)
+            (Pop 'rdi)
+            (Pop 'rsp)
+            (Pop 'rbp)
+            (Add 'rsp l)))]))
 
 ;; Op1 Expr CEnv -> Asm
 (define (compile-prim1 p e c)
@@ -86,14 +101,19 @@
                (Xor 'rax type-char))]
          ['eof-object? (eq-imm val-eof)]
          ['write-byte
-          (seq assert-byte
-               (Push 'rbp)
-               (Push 'rdi) ; save heap loc
-               (Mov 'rdi 'rax)
-               (Call 'write_byte)
-               (Pop 'rdi) ; restore
-               (Pop 'rbp)
-               (Mov 'rax val-void))]
+          (let ((l (stack-adjust c)))
+            (seq assert-byte
+                 (Sub 'rsp l)
+                 (Push 'rbp)
+                 (Push 'rsp)
+                 (Push 'rdi) ; save heap loc
+                 (Mov 'rdi 'rax)
+                 (Call 'write_byte)
+                 (Pop 'rdi) ; restore
+                 (Pop 'rsp)
+                 (Pop 'rbp)
+                 (Add 'rsp l)
+                 (Mov 'rax val-void)))]
          ['box
           (seq (Mov (Offset 'rdi 0) 'rax)
                (Mov 'rax 'rdi)
