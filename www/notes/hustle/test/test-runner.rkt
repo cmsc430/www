@@ -78,11 +78,13 @@
                           (+ (+ x x) z))))
                 7)
   ;; Hustle examples
+  (check-equal? (run ''()) '())  
   (check-equal? (run '(box 1)) (box 1))
   (check-equal? (run '(cons 1 2)) (cons 1 2))
   (check-equal? (run '(unbox (box 1))) 1)
   (check-equal? (run '(car (cons 1 2))) 1)
-  (check-equal? (run '(cdr (cons 1 2))) 2))
+  (check-equal? (run '(cdr (cons 1 2))) 2)
+  (check-equal? (run '(cons 1 '())) (list 1)))
   
 
 (define (test-runner-io run)
