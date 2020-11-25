@@ -7,11 +7,17 @@ else
   format=elf64
 endif
 
-%.run: %.o main.o
-	gcc main.o $< -o $@
+%.run: %.o main.o char.o byte.o
+	gcc main.o char.o byte.o $< -o $@
 
-main.o: main.c
+main.o: main.c types.h
 	gcc -c main.c -o main.o
+
+char.o: char.c types.h
+	gcc -c char.c -o char.o
+
+byte.o: byte.c types.h
+	gcc -c byte.c -o byte.o
 
 %.o: %.s
 	nasm -f $(format) -o $@ $<
