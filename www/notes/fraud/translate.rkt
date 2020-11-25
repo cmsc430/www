@@ -25,8 +25,8 @@
      (Var (lexical-address x r))]
     [(Int i) e]
     [(Bool b) e]   
-    [(Prim p e)
-     (Prim p (translate-e e r))]
+    [(Prim1 p e)
+     (Prim1 p (translate-e e r))]
     [(If e0 e1 e2)
      (If (translate-e e0 r)
          (translate-e e1 r)

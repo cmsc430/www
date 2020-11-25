@@ -20,7 +20,7 @@
     [(Var x) (lookup r x)]
     [(Int i) i]
     [(Bool b) b]
-    [(Prim p e) (interp-prim p (interp-env e r))]
+    [(Prim1 p e) (interp-prim p (interp-env e r))]
     [(If p e1 e2)
      (match (interp-env p r)
        ['err 'err]
