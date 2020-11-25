@@ -4,7 +4,6 @@
 
 ;; Randomly generate an expression
 ;; Note: this will often generate programs with type errors
-;; -> Expr
 (define (random-expr)
   (parse
    (close (random-open-expr))))
@@ -21,7 +20,10 @@
                       (list/c 'sub1 e)
                       (list/c 'zero? e)
                       (list/c 'if e e e)
-                      (list/c 'let (list/c (list/c simple-symbol/c e)) e))))
+                      (list/c 'let (list/c (list/c simple-symbol/c e)) e)
+                      (list/c '+ e e)
+                      (list/c '- e e))))
+                       
 
 ;; Take an expression and close it (randomly)
 (define (close e)
@@ -33,7 +35,7 @@
   (match e
     [(? symbol?)
      (match bvs
-       ['() (random-extort-expr)]
+       ['() (random-letless-expr)]
        [_ (pick-random bvs)])]
     [(? integer?) e]
     [(? boolean?) e]
@@ -65,7 +67,7 @@
   (apply first-or/c syms))
 
 ;; Randomly generate an extort expression (no lets or vars)
-(define (random-extort-expr)
+(define (random-letless-expr)
   (contract-random-generate
    (flat-rec-contract e
                       #t
@@ -74,5 +76,7 @@
                       (list/c 'add1 e)
                       (list/c 'sub1 e)
                       (list/c 'zero? e)
-                      (list/c 'if e e e))))
+                      (list/c 'if e e e)
+                      (list/c '+ e e)
+                      (list/c '- e e))))
 

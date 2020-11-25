@@ -21,6 +21,8 @@
        [(list 'eof-object? e)   (Prim1 'eof-object? (parse e))]
        [(list 'integer->char e) (Prim1 'integer->char (parse e))]
        [(list 'char->integer e) (Prim1 'char->integer (parse e))]
+       [(list '+ e1 e2)         (Prim2 '+ (parse e1) (parse e2))]
+       [(list '- e1 e2)         (Prim2 '- (parse e1) (parse e2))]
        [(list 'begin e1 e2)     (Begin (parse e1) (parse e2))]
        [(list 'if e1 e2 e3)
         (If (parse e1) (parse e2) (parse e3))]

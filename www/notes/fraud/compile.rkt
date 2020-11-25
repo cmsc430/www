@@ -18,16 +18,17 @@
 ;; Expr CEnv -> Asm
 (define (compile-e e c)
   (match e
-    [(Int i)       (compile-value i)]
-    [(Bool b)      (compile-value b)]
-    [(Char c)      (compile-value c)]
-    [(Eof)         (compile-value eof)]
-    [(Var x)       (compile-variable x c)]
-    [(Prim0 p)     (compile-prim0 p)]
-    [(Prim1 p e)   (compile-prim1 p e c)]
-    [(If e1 e2 e3) (compile-if e1 e2 e3 c)]
-    [(Begin e1 e2) (compile-begin e1 e2 c)]
-    [(Let x e1 e2) (compile-let x e1 e2 c)]))
+    [(Int i)         (compile-value i)]
+    [(Bool b)        (compile-value b)]
+    [(Char c)        (compile-value c)]
+    [(Eof)           (compile-value eof)]
+    [(Var x)         (compile-variable x c)]
+    [(Prim0 p)       (compile-prim0 p)]
+    [(Prim1 p e)     (compile-prim1 p e c)]
+    [(Prim2 p e1 e2) (compile-prim2 p e1 e2 c)]
+    [(If e1 e2 e3)   (compile-if e1 e2 e3 c)]
+    [(Begin e1 e2)   (compile-begin e1 e2 c)]
+    [(Let x e1 e2)   (compile-let x e1 e2 c)]))
 
 ;; Value -> Asm
 (define (compile-value v)
@@ -51,14 +52,14 @@
   (seq (compile-e e c)
        (match p
          ['add1
-          (seq assert-integer
+          (seq (assert-integer 'rax)
                (Add 'rax (value->bits 1)))]
          ['sub1
-          (seq assert-integer
+          (seq (assert-integer 'rax)
                (Sub 'rax (value->bits 1)))]         
          ['zero?
           (let ((l1 (gensym)))
-            (seq assert-integer
+            (seq (assert-integer 'rax)
                  (Cmp 'rax 0)
                  (Mov 'rax val-true)
                  (Je l1)
@@ -74,7 +75,7 @@
                  (Mov 'rax val-false)
                  (Label l1)))]
          ['char->integer
-          (seq assert-char
+          (seq (assert-char 'rax)
                (Sar 'rax char-shift)
                (Sal 'rax int-shift))]
          ['integer->char
@@ -96,6 +97,23 @@
                (Call 'write_byte)
                (Pop 'rbp)
                (Mov 'rax val-void))])))
+
+;; Op2 Expr Expr CEnv -> Asm
+(define (compile-prim2 p e1 e2 c)
+  (let ((i (next c)))
+    (seq (compile-e e1 c)       
+         (Mov (Offset 'rsp i) 'rax)
+         (compile-e e2 (cons #f c))       
+         (match p
+           ['+
+            (seq (assert-integer (Offset 'rsp i))
+                 (assert-integer 'rax)   
+                 (Add 'rax (Offset 'rsp i)))]
+           ['-
+            (seq (assert-integer (Offset 'rsp i))
+                 (assert-integer 'rax)   
+                 (Sub (Offset 'rsp i) 'rax)
+                 (Mov 'rax (Offset 'rsp i)))]))))
 
 ;; Expr Expr Expr CEnv -> Asm
 (define (compile-if e1 e2 e3 c)
@@ -130,15 +148,16 @@
   (match cenv
     ['() (error "undefined variable:" x)]
     [(cons y rest)
-     (match (symbol=? x y)
+     (match (eq? x y)
        [#t (- (* 8 (length cenv)))]
        [#f (lookup x rest)])]))
 
 (define (assert-type mask type)
-  (seq (Mov 'rbx 'rax)
-       (And 'rbx mask)
-       (Cmp 'rbx type)
-       (Jne 'err)))
+  (λ (arg)
+    (seq (Mov 'rbx arg)
+         (And 'rbx mask)
+         (Cmp 'rbx type)
+         (Jne 'err))))
 
 (define assert-integer
   (assert-type mask-int type-int))
@@ -147,7 +166,7 @@
 
 (define assert-codepoint
   (let ((ok (gensym)))
-    (seq assert-integer
+    (seq (assert-integer 'rax)
          (Cmp 'rax (value->bits 0))
          (Jl 'err)
          (Cmp 'rax (value->bits 1114111))
@@ -160,7 +179,7 @@
          (Label ok))))
        
 (define assert-byte
-  (seq assert-integer
+  (seq (assert-integer 'rax)
        (Cmp 'rax (value->bits 0))
        (Jl 'err)
        (Cmp 'rax (value->bits 255))
