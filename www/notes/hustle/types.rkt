@@ -3,6 +3,7 @@
 
 (define imm-shift          3)
 (define imm-mask       #b111)
+(define ptr-mask       #b111)
 (define type-box       #b001)
 (define type-cons      #b010)
 (define int-shift  (+ 1 imm-shift))
