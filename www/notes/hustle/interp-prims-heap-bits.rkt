@@ -12,13 +12,13 @@
     [(list 'char? v)                      (cons h (imm->bits (char-bits? v)))]
     [(list 'char->integer (? char-bits?)) (cons h (imm->bits (char->integer (bits->imm v))))]
     [(list 'integer->char (? cp-bits?))   (cons h (imm->bits (integer->char (bits->imm v))))]
-    [(list 'eof-object? v)                (cons h (= v (imm->bits eof)))]
-    [(list 'write-byte (? byte-bits?))    (cons h (write-byte (bits->imm v)))]
+    [(list 'eof-object? v)                (cons h (if (= v (imm->bits eof)) val-true val-false))]
+    [(list 'write-byte (? byte-bits?))    (cons h (begin (write-byte (bits->imm v)) val-void))]
     [(list 'box v)                        (alloc-box v h)]
     [(list 'unbox (? box-bits?  i))       (cons h (heap-ref h i))]
     [(list 'car   (? cons-bits? i))       (cons h (heap-ref h i))]
     [(list 'cdr   (? cons-bits? i))       (cons h (heap-ref h (+ i (arithmetic-shift 1 imm-shift))))]
-    [(list 'empty? v)                     (cons h (= (imm->bits '()) v))]
+    [(list 'empty? v)                     (cons h (if (= (imm->bits '()) v) val-true val-false))]
     [_                                    'err]))
 
 ;; Op2 Value* Value* Heap -> Answer*
