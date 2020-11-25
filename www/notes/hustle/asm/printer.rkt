@@ -73,13 +73,13 @@
   (match a
     [(? reg?) (reg->string a)]
     [(? integer?) (number->string a)]
-    [(Offset r i)
+    [(Offset (? reg? r) i)
      (string-append "[" (reg->string r) " + " (number->string i) "]")]))
 
 ;; Any -> Boolean
 (define (reg? x)
   (and (symbol? x)
-       (memq x '(rax rbx rbp rdi))))
+       (memq x '(rax rbx rbp rdi rsp))))
 
 ;; Reg -> String
 (define (reg->string r)

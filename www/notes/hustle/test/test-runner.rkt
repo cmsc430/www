@@ -102,6 +102,19 @@
   (check-equal? (run '(eof-object? (read-byte)) "a") "#f\n")
   (check-equal? (run '(begin (write-byte 97) (write-byte 98)) "") "ab")
   ;; Hustle examples
+  (check-equal? (run '(let ((x 1))
+                        (begin (write-byte 97)
+                               1))
+                     "")
+                "a1\n")
+
+  (check-equal? (run '(let ((x 1))
+                        (let ((y 2))
+                          (begin (write-byte 97)
+                                 1)))
+                     "")
+                "a1\n")
+
   ;; corrupts rdi if you don't save it... but how do you observe the problem...
   ;; just starts allocating in some random spot in memory
   (check-equal? (run '(let ((x (cons 1 2)))

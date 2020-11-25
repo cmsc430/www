@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
   void * heap = malloc(heap_size);
   int64_t result = entry(heap);
   print_result(result);
-  printf("\n");
+  if (result != val_void) printf("\n");
   free(heap);
   return 0;
 }
