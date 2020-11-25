@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label (except-in racket ...)))
+@(require (for-label (except-in racket ... compile)))
 @(require redex/pict
           racket/runtime-path
           scribble/examples
@@ -23,6 +23,15 @@
 @emph{To be is to be the value of a variable.}
 
 @table-of-contents[]
+
+@verbatim|{
+TODO:
+* Interp is only for subset of language
+* Update the "fake" ASM AST defn given
+* Note that semantics is for (pure) subset
+* Update random testing for full language
+* Combine with Grift
+}|
 
 @section{Variables}
 

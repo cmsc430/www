@@ -23,8 +23,24 @@
      (string-append "\tcmp "
                     (arg->string a1) ", "
                     (arg->string a2) "\n")]
+    [(Sal a1 a2)
+     (string-append "\tsal "
+                    (arg->string a1) ", "
+                    (arg->string a2) "\n")]
+    [(Sar a1 a2)
+     (string-append "\tsar "
+                    (arg->string a1) ", "
+                    (arg->string a2) "\n")]
     [(And a1 a2)
      (string-append "\tand "
+                    (arg->string a1) ", "
+                    (arg->string a2) "\n")]
+    [(Or a1 a2)
+     (string-append "\txor "
+                    (arg->string a1) ", "
+                    (arg->string a2) "\n")]    
+    [(Xor a1 a2)
+     (string-append "\txor "
                     (arg->string a1) ", "
                     (arg->string a2) "\n")]
     [(Jmp l)
@@ -36,12 +52,18 @@
     [(Jne l)
      (string-append "\tjne "
                     (label-symbol->string l) "\n")]
+    [(Jl l)
+     (string-append "\tjl "
+                    (label-symbol->string l) "\n")]
+    [(Jg l)
+     (string-append "\tjg "
+                    (label-symbol->string l) "\n")]
     [(Call l)
      (string-append "\tcall "
                     (label-symbol->string l) "\n")]
-    [(Push r)
+    [(Push a)
      (string-append "\tpush "
-                    (reg->string r) "\n")]
+                    (arg->string a) "\n")]
     [(Pop r)
      (string-append "\tpop "
                     (reg->string r) "\n")]))
@@ -50,14 +72,14 @@
 (define (arg->string a)
   (match a
     [(? reg?) (reg->string a)]
+    [(? integer?) (number->string a)]
     [(Offset r i)
-     (string-append "[" (reg->string r) " + " (number->string (* i 8)) "]")]
-    [(? integer?) (number->string a)]))
+     (string-append "[" (reg->string r) " + " (number->string i) "]")]))
 
 ;; Any -> Boolean
 (define (reg? x)
   (and (symbol? x)
-       (memq x '(rax rbx))))
+       (memq x '(rax rbx rbp rdi))))
 
 ;; Reg -> String
 (define (reg->string r)
@@ -78,7 +100,8 @@
     [(Label g)
      (string-append
       "\tglobal " (label-symbol->string g) "\n"
+      "\textern " (label-symbol->string 'write_byte) "\n"
+      "\textern " (label-symbol->string 'read_byte) "\n"
       "\textern " (label-symbol->string 'error) "\n"
-      "\tsection .text\n"      
+      "\tsection .text\n"
       (foldr (λ (i s) (string-append (instr->string i) s)) "" a))]))
-
