@@ -58,9 +58,9 @@
             (interp-env-heap e1 r h)
             (interp-env-heap e2 r h))])]
     [(Begin e1 e2)     
-     (match (interp-env-heap e1 r)
+     (match (interp-env-heap e1 r h)
        ['err 'err]
-       [_    (interp-env-heap e2 r)])]
+       [_    (interp-env-heap e2 r h)])]
     [(Let x e1 e2)
      (match (interp-env-heap e1 r h)
        ['err 'err]

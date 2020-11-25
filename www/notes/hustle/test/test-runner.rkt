@@ -2,8 +2,7 @@
 (provide test-runner test-runner-io)
 (require rackunit)
 
-(define (test-runner run)
-  
+(define (test-runner run) 
   ;; Abscond examples
   (check-equal? (run 7) 7)
   (check-equal? (run -8) -8)
@@ -77,14 +76,19 @@
                         (let ((z (- 4 x)))
                           (+ (+ x x) z))))
                 7)
-  ;; Hustle examples
+  ;; Hustle examples  
   (check-equal? (run ''()) '())  
   (check-equal? (run '(box 1)) (box 1))
   (check-equal? (run '(cons 1 2)) (cons 1 2))
   (check-equal? (run '(unbox (box 1))) 1)
   (check-equal? (run '(car (cons 1 2))) 1)
   (check-equal? (run '(cdr (cons 1 2))) 2)
-  (check-equal? (run '(cons 1 '())) (list 1)))
+  (check-equal? (run '(cons 1 '())) (list 1))
+  (check-equal? (run '(let ((x (cons 1 2)))
+                        (begin (cdr x)
+                               (car x))))
+                1))
+  
   
 
 (define (test-runner-io run)
@@ -96,4 +100,12 @@
   (check-equal? (run '(read-byte) "") "#<eof>\n")
   (check-equal? (run '(eof-object? (read-byte)) "") "#t\n")
   (check-equal? (run '(eof-object? (read-byte)) "a") "#f\n")
-  (check-equal? (run '(begin (write-byte 97) (write-byte 98)) "") "ab"))
+  (check-equal? (run '(begin (write-byte 97) (write-byte 98)) "") "ab")
+  ;; Hustle examples
+  ;; corrupts rdi if you don't save it... but how do you observe the problem...
+  ;; just starts allocating in some random spot in memory
+  (check-equal? (run '(let ((x (cons 1 2)))
+                        (begin (write-byte 97)
+                               (car x)))
+                     "")
+                "a1\n"))
