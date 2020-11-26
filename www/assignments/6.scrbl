@@ -7,9 +7,9 @@
 
 @(require "../notes/ev.rkt")
 
-@bold{Due: Tues, April 28, 11:59PM EST}
+@bold{Due: Thursday, December 10th, 11:59PM EST}
 
-@(define repo "https://classroom.github.com/a/CxdcWxG7")
+@(define repo "")
 
 The goal of this assignment is to (1) implement arity checking in a
 language with functions, (2) to implement the @racket[apply]
