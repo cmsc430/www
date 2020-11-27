@@ -4,752 +4,295 @@
 @(require redex/pict
 	  racket/runtime-path
 	  scribble/examples
-	  "hustle/semantics.rkt"
+	  "../fancyverb.rkt"
 	  "utils.rkt"
 	  "ev.rkt"
 	  "../utils.rkt")
 
 @(define codeblock-include (make-codeblock-include #'h))
 
-@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "loot" f))))))
-	   '("interp.rkt" "compile.rkt" "syntax.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "shakedown" f))))))
+	   '("compile.rkt" "syntax.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
 @title[#:tag "Shakedown"]{Shakedown: Calling functions C functions}
 
 @table-of-contents[]
 
-@section[#:tag-prefix "shakedown"]{Foreign Function Calls}
+@section[#:tag-prefix "shakedown"]{No Man Is An Island}
 
-@section[#:tag-prefix "loot"]{Long Live Lambda!}
-@section[#:tag-prefix "loot"]{Lambda is Dead!}
+@emph{No man is an island,
+Entire of itself;
+Every man is a piece of the continent, 
+A part of the main.} -- John Donne
+
+So far we've been creating new languages by adding more sophisticated features
+to a language we have already implemented. By the time we added lambdas in
+@secref{Loot}, our languages are @emph{universal} in that any computation that
+can be expressed, is able to be expressed in our languages (modulo constraints
+on the machine they are run on).
+
+Being able to express any possible computation only gets you so far, however.
+In order for general purpose languages to be @emph{useful} in addition to
+@emph{interesting}, they must be able to interact with their context. This can
+take various forms: being able to perform input/output, being able to
+communicate on a network, etc. Ultimately, it is the host operating system that
+enables this sort of interaction and communication, via @emph{system calls}.
+
+We could implement system calls directly, but this approach has a few
+downsides:
 
 
 @itemlist[
 
-@item{it is packaging up the parameters, body, and environment, so that}
+@item{System calls are not portable across different operating systems (and
+      often not portable across different architectures, even with the same OS)}
 
-@item{when applied it can evaluate the body, binding the parameters, in an extension of the functions environment.}
-
+@item{Adding new functionality would often mean changing the @emph{compiler} in
+      order to implement a new system call}
 ]
 
-We can achive these things without using a function value by:
+Instead, we can implement a @emph{Foreign Function Interface} (FFI), a way for
+our language to communicate with another programming language directly. The
+question then becomes: which language, and how?
+
+@section[#:tag-prefix "shakedown"]{Pick your Poison}
+
+There are a few languages you might choose to implement as a target for an FFI,
+many languages end up with FFIs that can communicate with a selection of
+languages. For our FFI, we are going to target C. This is because, for better
+or worse, C is the lingua franca of computing.
+
+Most non-embedded systems provide C-libraries that provide a wrapper around
+their system calls, often these libraries will actually provide the same
+functionality across OSs and machine architectures. The GNU project produces
+@tt{glibc}, which is available for most major platforms, and there are projects
+such as @tt{musl} which serve a similar purpose through various tradeoffs. By
+providing a C-FFI, we can access these standard libraries and any other library
+that provides a C interface.
+
+In addition to the motivating factors above, C is appealing as an FFI target
+because many languages provide C FFIs, which means that C can be treated as a
+`middle ground' between two languages.
+
+@section[#:tag-prefix "shakedown"]{Some considerations}
+
+An FFI can take several forms. As usual, these forms come with varying
+tradeoffs. Some FFIs are `type aware', and can do the @emph{marshalling} (the
+conversion between data representations in one format to another)
+automatically. Other FFIs require the programmer to write the marshaling code
+themselves.
+
+Orthogonally, some languages provide facilities for marshalling data in the
+language itself (Racket and Haskell do this, for example), while other
+languages require the programmer to write `wrapper' code in C that performs
+this functionality (OCaml and Lua do this, for example).
+
+We are going to write an FFI that is not type-aware requiring us to write the
+marshalling code ourselves, and requires writing C wrapper code. This done so
+that we can focus on the core new concept, calling conventions, without
+@emph{also} having to solve the problems of marshalling data automatically or
+providing functionality for reasoning about C-types in our language.
+
+
+@section[#:tag-prefix "shakedown"]{What's it look like?}
+
+Now that we've described the high-level shape of our problem, we can take a look
+at how we might express that in our language:
+
+@#reader scribble/comment-reader
+(racketblock
+(ccall function_in_c 3)
+)
+
+This program would call a function written in C, @tt{function_in_c}, with an
+integer argument with a value of 3. This raises the following issues that we
+have to solve:
+
 
 @itemlist[
-@item{creating a data structure to hold the parameters, body, and environment, and}
-@item{rewriting the application of the function to use those values to evaluate
-the body, binding the parameters, etc.}
+@item{How do we represent this in our AST?}
+@item{How does our runtime system know where @tt{function_in_c} is?}
+@item{How do we `tell' @tt{function_in_c} that the argument is 3?}
+@item{How do we `get' the result from @tt{function_in_c}?}
 ]
 
-So we are changing the representation of functions from:
+@subsection[#:tag-prefix "shakedown"]{Representation Matters}
 
-And now we have simultaneously arrived at our representation of function values:
+In addressing the first issue, we can create a new AST node for FFI calls:
+
 @#reader scribble/comment-reader
 (racketblock
-;; type Value =
-;; | ....
-;; | (Value ... -> Answer)
+(struct ccall-e (f es))
 )
 
-To:
+There are other possible representations (treating it as a primitive, for
+example), but this representation will make the next step slightly easier.
+
+@subsection[#:tag-prefix "shakedown"]{Who you gonna call?}
+
+The second issue is a bit more intricate. It deals with how we @emph{link} our
+program. In order to safely call (or jump to) @tt{function_is_c} we have to
+convince our assembler (NASM) and our linker that we know where
+@tt{function_in_c} is!
+
+Our assembler, @tt{nasm}, requires that we declare which symbols are not
+defined locally. This is so that the assembler can catch simple errors, like
+misspelling the target of a jump. Not all assemblers require this, but because
+@tt{nasm} does, we need to address accommodate it.
+
+First we can collect all the uses of the @tt{ccall} construct that we are
+introducing. This is a straightforward traversal of the AST, keeping track of
+the symbols used for a @tt{ccall}.
 
 @#reader scribble/comment-reader
 (racketblock
-;; type Value =
-;; | ....
-;; | `(closure ,Formals ,Expr ,Env)
-)
-
-When a @racket[λ] is evaluated, a closure is created.  When a function
-is applied, we deconstruct the closure and execute the code that used
-to be in the (Racket) function:
-
-@#reader scribble/comment-reader
-(racketblock
-;; Expr REnv -> Answer
-(define (interp-env e r)
-    ;;...
-    [`(λ (,xs ...) ,e)
-     `(closure ,xs ,e ,r)]
-    [`(,e . ,es)
-     (let ((f (interp-eval e r))
-           (vs (interp-eval* es r)))
-       (match f
-         [`(closure ,xs ,e ,r)
-	  (if (= (length vs) (length xs))
-              (interp-env e (append (zip xs vs) r))
-	      'err)]
-	 [_ 'err]))])
-)
-
-We can give it a try:
-
-
-@(ev `(require (file ,(path->string (build-path notes "loot" "interp-defun.rkt")))))
-
-@ex[
-(interp '(λ (x) x))
-(interp '((λ (x) (λ (y) x)) 8))
-]
-
-Notice in the second example how the closure contains the body of the
-function and the environment mapping the free variable @racket['x] to
-8.
-
-We can also confirm our larger example works:
-
-@ex[
-(interp
-  '(((λ (t)
-       ((λ (f) (t (λ (z) ((f f) z))))
-        (λ (f) (t (λ (z) ((f f) z))))))
-     (λ (tri)
-       (λ (n)
-         (if (zero? n)
-             1
-             (+ n (tri (sub1 n)))))))
-    10))
-]
-
-While can't apply the interpretation of functions in Racket
-like we did previously, we can @racket[apply-function] the
-interpretation of functions:
-
-@ex[
-(define Y
-  (interp
-    '(λ (t)
-       ((λ (f) (t (λ (z) ((f f) z))))
-        (λ (f) (t (λ (z) ((f f) z))))))))
-
-(define tri
-  (interp '(λ (tri)
-             (λ (n)
-               (if (zero? n)
-                   1
-                   (+ n (tri (sub1 n))))))))
-
-(apply-function (apply-function Y tri) 10)
-]
-
-The process we used to eliminate function values from the interpreter
-is an instance of a general-purpose whole-program transformation
-called @bold{defunctionalization} for replacing function values with
-data structures.
-
-@section[#:tag-prefix "loot"]{Defunctionalization at work}
-
-Let's digress for a moment and learn this very useful transformation.
-
-Here is a data type for representing regular expressions:
-
-@#reader scribble/comment-reader
-(racketblock
-;; type Regexp =
-;; | 'zero
-;; | 'one
-;; | `(char ,Char)
-;; | `(times ,Regexp ,Regexp)
-;; | `(plus ,Regexp ,Regexp)
-;; | `(star ,Regexp)
-)
-
-The regular expression @racket['zero] matches nothing; @racket['one]
-matches the empty string; @racket[`(char ,_c)] matches the character
-@racket[_c]; @racket[`(times ,_r1 ,_r2)] matches the concatenation of
-a string matching @racket[_r1] followed by a string matching
-@racket[_r2]; @racket[`(plus ,_r1 ,_r2)] matching either a string
-matching @racket[_r1] or a string matching @racket[_r2]; and
-@racket[`(star ,_r)] matches a string made up of any number of
-substrings, each of which match @racket[_r].
-
-A really nice way to write a matcher is to use a continuation-passing
-style that keeps track of what is required of the remainder of the
-string after matching a prefix against the regexp:
-
-@codeblock-include["loot/regexp.rkt"]
-
-@(ev `(require (file ,(path->string (build-path notes "loot" "regexp.rkt")))))
-
-Let's give it a try:
-@ex[
-(accepts `(star (char #\a)) "aaaaa")
-(accepts `(star (char #\a)) "aaaab")
-(accepts `(star (plus (char #\a) (char #\b))) "aaaab")
-]
-	
-But what if needed to program this regular expression matching without
-the use of function values?  We can arrive at such code systematically
-by applying defunctionalization.
-
-@codeblock-include["loot/regexp-defun.rkt"]
-
-@(ev `(require (file ,(path->string (build-path notes "loot" "regexp-defun.rkt")))))
-
-
-And we get the same results:
-
-@ex[
-(accepts `(star (char #\a)) "aaaaa")
-(accepts `(star (char #\a)) "aaaab")
-(accepts `(star (plus (char #\a) (char #\b))) "aaaab")
-]
-
-
-@section[#:tag-prefix "loot"]{Compiling Loot}
-
-Compiling a @racket[λ]-expression will involve generating two
-different chunks of instructions:
-
-@itemlist[
-
-@item{one to implement the function, i.e. the code to be executed when
-the function created by the @racket[λ]-expression is called, and}
-
-@item{one to create a closure, i.e. to capture the environment at the
-point the @racket[λ]-expression is evaluated.}
-
-]
-
-@section[#:tag-prefix "loot"]{Compiling Function Definitions}
-
-The first part closely follows the appoach of defining a function
-definition @racket[(define (_f _x ...) _e)] from our previous compilers.
-
-Ther are two important differences from the past though:
-
-@itemlist[
-
-@item{@racket[λ]-expressions don't have a name, and}
-
-@item{the body of the @racket[λ]-expression may reference variables
-bound outside of the @racket[λ]-expression.}
-
-]
-
-To deal with the first issue, we first make a pass over the program
-inserting computed names for each @racket[λ]-expression.
-
-To accomodate this, we will introduce the following data type for
-``labelled'' expressions:
-
-@#reader scribble/comment-reader
-(racketblock
-;; type LExpr =
-;; ....
-;; | `(λ ,Formals ',Symbol ,Expr)
-)
-
-An @tt{LExpr} is just like a @tt{Expr} except that
-@racket[λ]-expressions have the form like @racket[(λ (x) 'fred (+ x
-x))].  The symbol @racket['fred] here is used to give a name to the
-@racket[λ]-expression.  The use of @racket[quote] is so that
-@tt{LExprs} are still a valid subset of Racket expressions.
-
-The first step of the compiler will be to label every
-@racket[λ]-expression using the following function:
-
-@#reader scribble/comment-reader
-(racketblock
-;; Expr -> LExpr
-(define (label-λ e)
+;; LExpr -> (Listof Symbol)
+;; Extract all the calls to C Functions
+(define (ffi-calls e)
   (match e
-    [(? symbol? x)         x]
-    [(? imm? i)            i]
-    [`(box ,e0)            `(box ,(label-λ e0))]
-    [`(unbox ,e0)          `(unbox ,(label-λ e0))]
-    [`(cons ,e0 ,e1)       `(cons ,(label-λ e0) ,(label-λ e1))]
-    [`(car ,e0)            `(car ,(label-λ e0))]
-    [`(cdr ,e0)            `(cdr ,(label-λ e0))]
-    [`(add1 ,e0)           `(add1 ,(label-λ e0))]
-    [`(sub1 ,e0)           `(sub1 ,(label-λ e0))]
-    [`(zero? ,e0)          `(zero? ,(label-λ e0))]
-    [`(empty? ,e0)         `(empty? ,(label-λ e0))]
-    [`(if ,e0 ,e1 ,e2)     `(if ,(label-λ e0) ,(label-λ e1) ,(label-λ e2))]
-    [`(+ ,e0 ,e1)          `(+ ,(label-λ e0) ,(label-λ e1))]
-    [`(let ((,x ,e0)) ,e1) `(let ((,x ,(label-λ e0))) ,(label-λ e1))]
-    [`(λ ,xs ,e0)          `(λ ,xs ',(gensym) ,(label-λ e0))]
-    [`(,e . ,es)           `(,(label-λ e) ,@(map label-λ es))]))
+    [(? imm? i)       '()]
+    [(var-e v)        '()]
+    [(prim-e p es)    (apply append (map ffi-calls es))]
+    [(if-e e0 e1 e2)  (append (ffi-calls e0) (ffi-calls e1) (ffi-calls e2))]
+    [(let-e (list (binding v def)) body)
+                      (append (ffi-calls def) (ffi-calls body))]
+    [(letr-e bs body) (append (apply append (map ffi-calls (get-defs bs))) (ffi-calls body))]
+    [(lam-e xs e0)    (ffi-calls e0)]
+    [(lam-t _ xs e0)  (ffi-calls e0)]
+    [(ccall-e f es)   (cons f (apply append (map ffi-calls es)))]
+    [(app-e f es)     (append (ffi-calls f) (apply append (map ffi-calls es)))]))
 )
 
-Here it is at work:
-
-@ex[
-(label-λ
-  '(λ (t)
-    ((λ (f) (t (λ (z) ((f f) z))))
-     (λ (f) (t (λ (z) ((f f) z)))))))
-]
-
-Now turning to the second issue--@racket[λ]-expression may reference
-variables bound outside of the expression---let's consider how to
-compile something like @racket[(λ (x) z)]?
-
-There are many possible solutions, but perhaps the simplest is to
-compile this as a function that takes @emph{two} arguments,
-i.e. compile it as if it were: @racket[(λ (x z) z)].  The idea is that
-a @racket[λ]-expression defines a function of both explicit arguments
-(the parameters) and implicit arguments (the free variables of the
-@racket[λ]-expression).
-
-This will have to work in concert with closure creation and function
-calls.  When the @racket[λ]-expression is evaluated, a closure will be
-created storing the value of @racket[z].  When the function is
-applied, the caller will need to retrieve that value and place it as
-the second argument on stack before calling the function's code.
-
-To implement this, we will need to compute the free variables, which
-we do with the following function:
-
-@#reader scribble/comment-reader
-(racketblock
-;; LExpr -> (Listof Variable)
-(define (fvs e)
-  (define (fvs e)
-    (match e
-      [(? symbol? x)         (list x)]
-      [(? imm? i)            '()]
-      [`(box ,e0)            (fvs e0)]
-      [`(unbox ,e0)          (fvs e0)]
-      [`(cons ,e0 ,e1)       (append (fvs e0) (fvs e1))]
-      [`(car ,e0)            (fvs e0)]
-      [`(cdr ,e0)            (fvs e0)]
-      [`(add1 ,e0)           (fvs e0)]
-      [`(sub1 ,e0)           (fvs e0)]
-      [`(zero? ,e0)          (fvs e0)]
-      [`(empty? ,e0)         (fvs e0)]
-      [`(if ,e0 ,e1 ,e2)     (append (fvs e0) (fvs e1) (fvs e2))]
-      [`(+ ,e0 ,e1)          (append (fvs e0) (fvs e1))]
-      [`(let ((,x ,e0)) ,e1) (append (fvs e0) (remq* (list x) (fvs e1)))]
-      [`(λ ,xs ,l ,e0)       (remq* xs (fvs e0))]
-      [`(,e . ,es)           (append (fvs e) (apply append (map fvs es)))]))          
-  (remove-duplicates (fvs e)))
-)
-
-We can now write the function that compiles a labelled
-@racket[λ]-expression into a function in assembly:
-
-@#reader scribble/comment-reader
-(racketblock
-;; Lambda -> Asm
-(define (compile-λ-definition l)
-  (match l
-    [`(λ ,xs ',f ,e0)
-     (let ((c0 (compile-tail-e e0 (reverse (append xs (fvs l))))))
-       `(,f
-         ,@c0
-         ret))]))
-)
-
-Here's what's emitted for a @racket[λ]-expression with a free variable:
-@ex[
-(compile-λ-definition '(λ (x) 'f z))
-]
-
-Notice that it's identical to a @racket[λ]-expression with an added
-parameter and no free variables:
-@ex[
-(compile-λ-definition '(λ (x z) 'f z))
-]
-
-The compiler will need to generate one such function for each
-@racket[λ]-expression in the program.  So we use a helper function for
-extracting all the @racket[λ]-expressions and another for compiling
-each of them:
-
-
-@#reader scribble/comment-reader
-(racketblock
-;; LExpr -> (Listof LExpr)
-;; Extract all the lambda expressions
-(define (λs e)
-  (match e
-    [(? symbol? x)         '()]
-    [(? imm? i)            '()]
-    [`(box ,e0)            (λs e0)]
-    [`(unbox ,e0)          (λs e0)]
-    [`(cons ,e0 ,e1)       (append (λs e0) (λs e1))]
-    [`(car ,e0)            (λs e0)]
-    [`(cdr ,e0)            (λs e0)]
-    [`(add1 ,e0)           (λs e0)]
-    [`(sub1 ,e0)           (λs e0)]
-    [`(zero? ,e0)          (λs e0)]
-    [`(empty? ,e0)         (λs e0)]
-    [`(if ,e0 ,e1 ,e2)     (append (λs e0) (λs e1) (λs e2))]
-    [`(+ ,e0 ,e1)          (append (λs e0) (λs e1))]
-    [`(let ((,x ,e0)) ,e1) (append (λs e0) (λs e1))]
-    [`(λ ,xs ,l ,e0)       (cons e (λs e0))]
-    [`(,e . ,es)           (append (λs e) (apply append (map λs es)))]))
-
-;; (Listof Lambda) -> Asm
-(define (compile-λ-definitions ls)
-  (apply append (map compile-λ-definition ls)))
-)
-
-
-The top-level @racket[compile] function now labels inserts labels and
-compiles all the @racket[λ]-expressions to functions:
+Once we've collected all the uses of @tt{ccall} we can adapt our
+@tt{compile-entry} function so that all of the external symbols are generated
+in our assembly file:
 
 @#reader scribble/comment-reader
 (racketblock
 ;; Expr -> Asm
-(define (compile e)
-  (let ((le (label-λ e)))
-    `(entry
-      ,@(compile-tail-e le '())
+(define (compile-entry e)
+    `(,@(make-externs (ffi-calls e)) 
+      (section text)
+      entry
+      ,@(compile-tail-e e '())
       ret
-      ,@(compile-λ-definitions (λs le))
+      ,@(compile-λ-definitions (λs e)) 
       err
       (push rbp)
       (call error)
-      ret)))
+      ret))
 )
 
-What remains is the issue of compiling @racket[λ]-expressions to code
-to create a closure.
+The addition of the @tt{(section text)} directive is something we were doing in
+our printer before, as part of the preamble for our generated code. Now that we
+are adding the @tt{extern} directives we need make the distinction between the
+preamble and the code itself (text stands for code in ASM).
 
-@section[#:tag-prefix "loot"]{Save the Environment: Create a Closure!}
-
-We've already seen how to create a reference to a function pointer,
-enabling functions to be first-class values that can be passed around,
-returned from other functions, stored in data structures, etc.  The
-basic idea was to allocate a location in memory and save the address
-of a function label there.
-
-A closure is just this, plus the environment that needs to be restored
-with the function is called.  So representing a closure is fairly
-straightforward: we will allocate a location in memory and save the
-function label, plus each value that is needed from the environment.
-In order to keep track of how many values there are, we'll also store
-the length of the environment.
-
-Here's the function for emitting closure construction code:
-
-@#reader scribble/comment-reader
-(racketblock
-;; (Listof Variable) Label (Listof Varialbe) CEnv -> Asm
-(define (compile-λ xs f ys c)
-  `(;; Save label address
-    (lea rax (offset ,f 0))
-    (mov (offset rdi 0) rax)
-
-    ;; Save the environment
-    (mov r8 ,(length ys))
-    (mov (offset rdi 1) r8)
-    (mov r9 rdi)
-    (add r9 16)
-    ,@(copy-env-to-heap ys c 0)
-
-    ;; Return a pointer to the closure
-    (mov rax rdi)
-    (or rax ,type-proc)
-    (add rdi ,(* 8 (+ 2 (length ys))))))
-)
-
-Compared the previous code we say for function pointer references, the
-only difference is the code to store the length and value of the free
-variables of the @racket[λ]-expression.  Also: the amount of memory
-allocated is no longer just a single cell, but depends on the number
-of free variables being closed over.
-
-The @racket[copy-env-to-heap] function generates instructions for
-dereferencing variables and copying them to the appropriate memory
-location where the closure is stored:
-
-@#reader scribble/comment-reader
-(racketblock
-;; (Listof Variable) CEnv Natural -> Asm
-;; Pointer to beginning of environment in r9
-(define (copy-env-to-heap fvs c i)
-  (match fvs
-    ['() '()]
-    [(cons x fvs)
-     `((mov r8 (offset rsp ,(- (add1 (lookup x c)))))
-       (mov (offset r9 ,i) r8)
-       ,@(copy-env-to-heap fvs c (add1 i)))]))
-)
-
-That's all there is to closure construction!
-
-@section[#:tag-prefix "loot"]{Calling Functions}
-
-The last final peice of the puzzle is making function calls and
-closures work together.  Remember that a @racket[λ]-expression is
-compiled into a function that expects two sets of arguments on the
-stack: the first are the explicit arguments that given at the call
-site; the other arguments are the implicit arguments corresponding to
-free variables the @racket[λ]-expression being called.  The value of
-these arguments are given by the environment saved in the closure of
-the @racket[λ]-expressions.
-
-So the code generated for a function call needs to manage running each
-subexpression, the first of which should evaluate to a function (a
-pointer to a closure).  The arguments are saved on the stack, and then
-the values stored in the environment part of the closure need to be
-copied from the heap to the stack:
-
-@#reader scribble/comment-reader
-(racketblock
-;; LExpr (Listof LExpr) CEnv -> Asm
-(define (compile-call e0 es c)
-  (let ((cs (compile-es es (cons #f c)))
-        (c0 (compile-e e0 c))
-        (i (- (add1 (length c))))
-        (stack-size (* 8 (length c))))
-    `(,@c0
-      (mov (offset rsp ,i) rax)
-      ,@cs
-      (mov rax (offset rsp ,i))
-      ,@assert-proc
-      (xor rax ,type-proc)
-      (sub rsp ,stack-size)      
-      ,@(copy-closure-env-to-stack (add1 (length es)))
-      (call (offset rax 0))      
-      (add rsp ,stack-size))))
-)
-
-The only new bit is the use of @racket[copy-closure-env-to-stack].
-Unlike the closure construction code, in which we statically know what
-and how many variables to save in a closure, we must dynamically
-loop over the environment to move values to the stack:
-
-@#reader scribble/comment-reader
-(racketblock
-;; Natural -> Asm
-;; Copy closure's (in rax) env to stack skipping n spots
-(define (copy-closure-env-to-stack n)
-  (let ((copy-loop (gensym 'copy_closure))
-        (copy-done (gensym 'copy_done)))
-    `((mov r8 (offset rax 1)) ; length
-      (mov r9 rax)
-      (add r9 16)             ; start of env
-      (mov rcx rsp)           ; start of stack
-      (add rcx ,(- (* 8 (add1 n))))
-      ,copy-loop
-      (cmp r8 0)
-      (je ,copy-done)                  
-      (mov rbx (offset r9 0))       
-      (mov (offset rcx 0) rbx)
-      (sub r8 1)
-      (add r9 8)
-      (sub rcx 8)      
-      (jmp ,copy-loop)
-      ,copy-done)))
-)
-
-Let's try it out:
-
-@ex[
-(asm-interp (compile '((let ((x 8)) (λ (y) x)) 2)))
-(asm-interp (compile '(((λ (x) (λ (y) x)) 8) 2)))
-(asm-interp (compile '((λ (f) (f (f 0))) (λ (x) (add1 x)))))
-]
-
-@section[#:tag-prefix "loot"]{Recursive Functions}
-
-Writing recursive programs with the Y-combinator is a bit
-inconvenient.  Let us now add a recursive function binding construct:
-@racket[letrec].
-
-A @racket[letrec]-expression has a shape like a
-@racket[let]-expression, but variables are bound in both the body
-@emph{and} the right-hand-side of the @racket[letrec].  To keep
-matters simple, we will assume the right-hand-sides of a
-@racket[letrec] are all @racket[λ]-expressions.  (Racket eases this
-restriction, but it significantly complicates compilation.)
-
-So for example, writing the @racket[even?] and @racket[odd?] functions
-using @racket[letrec] looks like:
-
-@ex[
-(letrec ((even?
-          (λ (x)
-            (if (zero? x)
-                #t
-                (odd? (sub1 x)))))
-         (odd?
-          (λ (x)
-            (if (zero? x)
-                #f
-                (even? (sub1 x))))))
-  (even? 10))
-]
+The next two points are related by a single concept: Calling Conventions
 
 
-To compile a @racket[letrec]-expression, we can compile the
-@racket[λ]-expression as functions just as before.  Notice that the
-recursive (or mutually recursive) occurrence will be considered a free
-variable within the @racket[λ]-expression, so just like any other free
-variable, the closure creation should capture the value of this
-binding.
+@section[#:tag-prefix "shakedown"]{Calling Conventions}
 
-We need to extend the syntax functions for computing free variables,
-extracting @racket[λ]-expressions, and so on.  All of this is
-straightforward.
+How functions accept their arguments and provide their results is known as a
+@emph{calling convention}. All of our languages since @secref["Iniquity"] have
+had calling conventions, but it's been mostly up to us (modulo the issue with
+moving @tt{rsp}. This has worked @emph{because} we haven't had to communicate
+with any other language, that expects its arguments to be provided in a
+specific manner.
 
-The key complication to compiling a @racket[letrec]-expression is that
-the name of a function should be bound---to itself---within the body
-of the function.  The key insight into achieving this is to first
-allocate closures, but to delay the actual population of the closures'
-environments.
+The calling convention we are using the
+@link["https://uclibc.org/docs/psABI-x86_64.pdf"]{x86_64 System V Application
+Binary Interface (ABI)} (which means this may not work on Windows systems). The
+document is quite long (approximately 130 pages), so we will only focus on some
+of the basics. For every limitation that our implementation, the details on how
+we might address that limitation will be in that document. For example, we will
+only deal with integer arguments and results here, but the System V ABI also
+describes the convention for Floating Point arguments/results.
 
-The way that compiling a @racket[letrec]-expression works is roughly:
+In short, a calling convention specifies @emph{at least} the following:
 
 @itemlist[
-
-@item{allocate a closure for each of the right-hand-side
-@racket[λ]-expressions, but do not copy the (relevant parts of the)
-environment in to closures (yet),}
-
-@item{push each of these closures on to the stack (effectively binding
-the left-hand-sides to the unitialized closures),}
-
-@item{now that the names are bound, we can populate the closures, and
-references to any of the @racket[letrec]-bound variables will be
-captured correctly,}
-
-@item{then compile the body in an environment that includes all of the
-@racket[letrec]-bound variables.}
-
+@item{How do you pass arguments?}
+@item{What things is the @emph{caller} responsible for keeping track of?}
+@item{What things is the @emph{callee} responsible for keeping track of?}
 ]
 
-The @racket[compile-letrec] function takes a list of variables to
-bind, the right-hand-side @racket[λ]-expressions, body, and
-compile-time environment.  It relies on three helper functions to
-handle the tasks listed above:
+Note that there are many ways to solve this coordination problem! The pro and
+con of using a convention is that it's not really up to us, instead we just
+look up what the convention specifies. For Shakedown we're only going to
+implement calling C functions with (up to 6) integer arguments. As mentioned
+above, this is not a restriction from the System V ABI, which desscribes how to
+pass more than 6 arguments as well as arguments of various types.
 
-@#reader scribble/comment-reader
-(racketblock
-;; (Listof Variable) (Listof Lambda) Expr CEnv -> Asm
-(define (compile-letrec fs ls e c)  
-  (let ((c0 (compile-letrec-λs ls c))
-        (c1 (compile-letrec-init fs ls (append (reverse fs) c)))
-        (c2 (compile-e e (append (reverse fs) c))))
-    `(,@c0
-      ,@c1
-      ,@c2)))
-)
+The calling convention specifies that the first 6 integer arguments are passed
+@emph{in left to right order} in the following registers:
 
-The first two tasks are taken care of by @racket[compile-letrec-λs],
-which allocates unitialized closures and pushes each on the stack.
+@verbatim|{
+rdi, rsi, rdx, rcx, r8, and r9
+}|
 
-@#reader scribble/comment-reader
-(racketblock
-;; (Listof Lambda) CEnv -> Asm
-;; Create a bunch of uninitialized closures and push them on the stack
-(define (compile-letrec-λs ls c)
-  (match ls
-    ['() '()]
-    [(cons l ls)
-     (let ((cs (compile-letrec-λs ls (cons #f c)))
-           (ys (fvs l)))
-       `((lea rax (offset ,(second (third l)) 0))
-         (mov (offset rdi 0) rax)
-         (mov rax ,(length ys))
-         (mov (offset rdi 1) rax)
-         (mov rax rdi)
-         (or rax ,type-proc)
-         (add rdi ,(* 8 (+ 2 (length ys))))
-         (mov (offset rsp ,(- (add1 (length c)))) rax)
-         ,@cs))]))
-)
-
-The @racket[compile-letrec-init] goes through each function and
-initializes its closure now that all of the function pointers are
-available.  Finally the body is compiled in an extended environment.
-
-@#reader scribble/comment-reader
-(racketblock
-;; (Listof Variable) (Listof Lambda) CEnv -> Asm
-;; Initialize closures bound to each variable in fs
-(define (compile-letrec-init fs ls c)
-  (match fs
-    ['() '()]
-    [(cons f fs)
-     (let ((ys (fvs (first ls)))
-           (cs (compile-letrec-init fs (rest ls) c)))
-       `((mov r9 (offset rsp ,(- (add1 (lookup f c)))))
-         (xor r9 ,type-proc)
-         (add r9 16) ; move past label and length
-         ,@(copy-env-to-heap ys c 0)
-         ,@cs))]))
-)
-
-We can give a spin:
-
-@ex[
-(asm-interp (compile '(letrec ((even?
-                                (λ (x)
-                                  (if (zero? x)
-                                      #t
-                                      (odd? (sub1 x)))))
-                               (odd?
-                                (λ (x)
-                                  (if (zero? x)
-                                      #f
-                                      (even? (sub1 x))))))
-                        (even? 10))))
-
-(asm-interp 
-  (compile
-    '(letrec ((map (λ (f ls)
-                    (letrec ((mapper (λ (ls)
-                                       (if (empty? ls)
-                                         '()
-                                         (cons (f (car ls)) (mapper (cdr ls)))))))
-                      (mapper ls)))))
-      (map (λ (f) (f 0))
-           (cons (λ (x) (add1 x))
-                 (cons (λ (x) (sub1 x))
-                       '()))))))
-]
+What this means is that in order to call a C function @tt{f(int x, int y)}, we
+should put the value of @tt{x} in @tt{rdi} and @tt{y} in @tt{rsi}, and so on.
+This means that if you were using any of these registers, you need to save
+those values elsewhere. Which brings us to the next two concerns: who is in
+charge of keeping track of what?
 
 
+@subsection[#:tag-prefix "shakedown"]{Who saves what?}
+
+In calling conventions there are @emph{caller}-save and @emph{callee}-save
+registers. This determines which `side' of the function call is responsible for
+keeping track of what the value stored in a register should be once the
+call/return cycle of a function call is complete.
+
+@emph{Caller}-save registers are the ones that a called function can assume
+they are safe to use, with no consequences. Because of this, if you are calling
+a function (i.e. you are the @emph{caller}) and you care about what is stored
+in one of these registers, it is your responsibility to save it elsewhere
+(could be on the stack, as long as it's not in another caller-save register).
+@emph{Callee}-save registers are registers that can be used to store
+information before @emph{calling} a function. If the function being called (the
+@emph{callee}) wants to use any of these registers, it is that function's
+responsibility to remember the value in that register in some way (perhaps
+putting it on the stack) and restoring that register to its original value
+before returning.
+
+The @emph{callee}-save registers are the following:
+
+@verbatim|{
+rbp, rbx, and r12-r15 (inclusive)
+}|
+
+All other registers are @emph{caller}-save. The one exception is the register
+@tt{rsp}, which is expected to be used by both the caller and the callee to
+manage the stack in concert, so it's not `saved' by either the caller or the
+callee.
+
+The `ownership' of the various registers is described in Section 3.2.1 of the
+System V ABI document.
+
+@subsection[#:tag-prefix "shakedown"]{Securing the result}
+
+The System V ABI specifies that at the end of the function's execution it is
+expected to put the first @emph{integer} machine word of its result (remember
+that in in C you can return a struct that contains more than one machine word)
+in @tt{rax}. We've already been following this part of the convention! In fact,
+this is how our generated code has communicated its result with the runtime
+system, we just chose to use @tt{rax} for the result of @emph{all} intermediate
+computations as well.
+
+This is described near the end of Section 3.2.3 (page 22) of the System V ABI
+document.
 
 
-@section[#:tag-prefix "loot"]{Syntactic sugar for function definitions}
+@subsection[#:tag-prefix "shakedown"]{But wait, there's more!}
 
-The @racket[letrec] form is a generlization of the
-@racket[(begin (define (_f _x ...) _e) ... _e0)] form we started with
-when we first started looking at adding functions to the language.  To
-fully subsume the language of @seclink["Iniquity"]{Iniquity}, we can
-add this form back in to the language as syntactic sugar for
-@racket[letrec], i.e. we can eliminate this form from programs by
-rewriting them.
-
-Let @tt{Expr+} refer to programs containing @racket[(begin (define (_f
-_x ...) _e) ... _e0)].  The @racket[desugar] function writes
-@tt{Expr+}s into @tt{Expr}s.
-
-@#reader scribble/comment-reader
-(racketblock
-;; Expr+ -> Expr
-(define (desugar e+)
-  (match e+
-    [`(begin ,@(list `(define (,fs . ,xss) ,es) ...) ,e)
-     `(letrec ,(map (λ (f xs e) `(,f (λ ,xs ,(desugar e)))) fs xss es)
-        ,(desugar e))]
-    [(? symbol? x)         x]
-    [(? imm? i)            i]
-    [`(box ,e0)            `(box ,(desugar e0))]
-    [`(unbox ,e0)          `(unbox ,(desugar e0))]
-    [`(cons ,e0 ,e1)       `(cons ,(desugar e0) ,(desugar e1))]
-    [`(car ,e0)            `(car ,(desugar e0))]
-    [`(cdr ,e0)            `(cdr ,(desugar e0))]
-    [`(add1 ,e0)           `(add1 ,(desugar e0))]
-    [`(sub1 ,e0)           `(sub1 ,(desugar e0))]
-    [`(zero? ,e0)          `(zero? ,(desugar e0))]
-    [`(empty? ,e0)         `(empty? ,(desugar e0))]
-    [`(if ,e0 ,e1 ,e2)     `(if ,(desugar e0) ,(desugar e1) ,(desugar e2))]
-    [`(+ ,e0 ,e1)          `(+ ,(desugar e0) ,(desugar e1))]
-    [`(let ((,x ,e0)) ,e1) `(let ((,x ,(desugar e0))) ,(desugar e1))]
-    [`(letrec ,bs ,e0)
-     `(letrec ,(map (λ (b) (list (first b) (desugar (second b)))) bs)
-        ,(desugar e0))]
-    [`(λ ,xs ,e0)          `(λ ,xs ,(desugar e0))]    
-    [`(,e . ,es)           `(,(desugar e) ,@(map desugar es))]))    
-)
-
-And now, the complete compiler:
+Earlier we mentioned that a calling convention would specify @emph{at least}
+the three things above. The System V ABI for x86_64 also specifies that our
+stack pointer (@tt{rsp}) should be aligned to 16 bytes! (this is described in
+Section 3.2.2 of the System V ABI document). We've never worried about the
+alignment of our stack before, so this will also need consideration.
 
 @codeblock-include["shakedown/compile.rkt"]
-
+@filebox-include[fancy-make "shakedown/Makefile"]
+@filebox-include[fancy-c "shakedown/clib.c"]

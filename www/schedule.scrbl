@@ -62,7 +62,7 @@
                (list @wk{11/02}
                      ""
                      @elem{@secref["Graphviz"]}
-                     @elem{@secref["Loot"]})
+                     @elem{Discussion of student-chosen topics})
                                     
                (list @wk{11/09}
                      @bold{@seclink["Midterm_2"]{M2}}
@@ -71,12 +71,12 @@
 
                (list @wk{11/16}
                      ""
-                     @elem{@secref["Shakedown"]}
-                     @elem{@secref["Shakedown"] (cont.)})
+                     @elem{@secref["Loot"]}
+                     @elem{@secref["Loot"] (cont.)})
 
                (list @wk{11/23}
-                     @seclink["Assignment 6"]{A6}
-                     @elem{@secref["Trick"]}
+                     ""
+                     @elem{@secref["Shakedown"]}
                      @elem{No lecture (Thanksgiving)})
 
                (list @wk{11/30}
@@ -85,7 +85,7 @@
                      @elem{Class-voted topic 1 (cont.)})
                
                (list @wk{12/7}
-                     @seclink["Assignment 7"]{A7}
+                     @seclink["Assignment 6"]{A6}
                      @elem{Class-voted topic 2}
                      @elem{Class-voted topic 2 (cont.)})
 

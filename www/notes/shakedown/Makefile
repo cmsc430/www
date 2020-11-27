@@ -24,7 +24,7 @@ clib.o: clib.c types.h
 %.o: %.s
 	nasm -f $(format) -o $@ $<
 
-%.s: %.rkt
+%.s: %.shk
 	racket -t compile-file.rkt -m $< > $@
 
 clean:

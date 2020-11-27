@@ -1,5 +1,5 @@
 #lang racket
-(require "syntax.rkt")
+(require "syntax.rkt" "ast.rkt")
 (provide (all-defined-out))
 
 ;; An immediate is anything ending in #b000
@@ -35,17 +35,24 @@
 
 ;; type Label = (quote Symbol)
 
+;; Prog -> Asm
+(define (compile p)
+  ; Remove all of the explicit function definitions
+  (match (desugar-prog p)
+    [(prog _ e)
+      (compile-entry (label-λ e))]))
+
+
 ;; Expr -> Asm
-(define (compile e)
-  (let ((le (label-λ (desugar e))))
-    `(entry
-      ,@(compile-tail-e le '())
+(define (compile-entry e)
+     `(entry
+      ,@(compile-tail-e e '())
       ret
-      ,@(compile-λ-definitions (λs le))
+      ,@(compile-λ-definitions (λs e))
       err
       (push rbp)
       (call error)
-      ret)))
+      ret))
 
 ;; (Listof Lambda) -> Asm
 (define (compile-λ-definitions ls)
@@ -54,40 +61,45 @@
 ;; Lambda -> Asm
 (define (compile-λ-definition l)
   (match l
-    [`(λ ,xs ',f ,e0)
+    [(lam-t f xs e0)
      (let ((c0 (compile-tail-e e0 (reverse (append xs (fvs l))))))
        `(,f
          ,@c0
-         ret))]))
+         ret))]
+    [(lam-e _ _) (error "Lambdas need to be labeled before compiling")]))
 
 ;; LExpr CEnv -> Asm
 ;; Compile an expression in tail position
 (define (compile-tail-e e c)
   (match e
-    [(? symbol? x)         (compile-variable x c)]
-    [(? imm? i)            (compile-imm i)]
-    [`(box ,e0)            (compile-box e0 c)]
-    [`(unbox ,e0)          (compile-unbox e0 c)]
-    [`(cons ,e0 ,e1)       (compile-cons e0 e1 c)]
-    [`(car ,e0)            (compile-car e0 c)]
-    [`(cdr ,e0)            (compile-cdr e0 c)]
-    [`(add1 ,e0)           (compile-add1 e0 c)]
-    [`(sub1 ,e0)           (compile-sub1 e0 c)]
-    [`(zero? ,e0)          (compile-zero? e0 c)]
-    [`(empty? ,e0)         (compile-empty? e0 c)]
-    [`(if ,e0 ,e1 ,e2)     (compile-tail-if e0 e1 e2 c)]
-    [`(+ ,e0 ,e1)          (compile-+ e0 e1 c)]
-    [`(let ((,x ,e0)) ,e1) (compile-tail-let x e0 e1 c)]
-    [`(letrec ,bs ,e0)     (compile-tail-letrec (map first bs) (map second bs) e0 c)]
-    [`(λ ,xs ',l ,e0)      (compile-λ xs l (fvs e) c)]
-    [`(,e . ,es)           (compile-tail-call e es c)]))
+    [(var-e v)               (compile-variable v c)]
+    [(? imm? i)              (compile-imm i)]
+    [(prim-e (? prim? p) es) (compile-prim p es c)]
+    [(if-e p t f)            (compile-tail-if p t f c)]
+    [(let-e (list b) body)   (compile-tail-let b body c)]
+    [(letr-e bs body)        (compile-tail-letrec (get-vars bs) (get-defs bs) body c)]
+    [(app-e f es)            (compile-tail-call f es c)]
+    [(lam-t l xs e0)         (compile-λ xs l (fvs e) c)]))
+
+
 
 ;; LExpr CEnv -> Asm
 ;; Compile an expression in non-tail position
 (define (compile-e e c)
   (match e
-    [(? symbol? x)         (compile-variable x c)]
-    [(? imm? i)            (compile-imm i)]
+    [(var-e v)               (compile-variable v c)]
+    [(? imm? i)              (compile-imm i)]
+    [(prim-e (? prim? p) es) (compile-prim p es c)]
+    [(if-e p t f)            (compile-if p t f c)]
+    [(let-e (list b) body)   (compile-let b body c)]
+    [(letr-e bs body)        (compile-letrec (get-vars bs) (get-defs bs) body c)]
+    [(app-e f es)            (compile-call f es c)]
+    [(lam-t l xs e0)         (compile-λ xs l (fvs e) c)]))
+
+;; Our current set of primitive operations require no function calls,
+;; so there's no difference between tail and non-tail call positions
+(define (compile-prim p es c)
+  (match (cons p es)
     [`(box ,e0)            (compile-box e0 c)]
     [`(unbox ,e0)          (compile-unbox e0 c)]
     [`(cons ,e0 ,e1)       (compile-cons e0 e1 c)]
@@ -97,27 +109,24 @@
     [`(sub1 ,e0)           (compile-sub1 e0 c)]
     [`(zero? ,e0)          (compile-zero? e0 c)]
     [`(empty? ,e0)         (compile-empty? e0 c)]
-    [`(if ,e0 ,e1 ,e2)     (compile-if e0 e1 e2 c)]
     [`(+ ,e0 ,e1)          (compile-+ e0 e1 c)]
-    [`(let ((,x ,e0)) ,e1) (compile-let x e0 e1 c)]
-    [`(λ ,xs ',l ,e0)      (compile-λ xs l (fvs e) c)]
-    [`(letrec ,bs ,e0)     (compile-letrec (map first bs) (map second bs) e0 c)]
-    [`(,e . ,es)           (compile-call e es c)]))
+    [_            (error
+                    (format "prim applied to wrong number of args: ~a ~a" p es))]))
 
-;; (Listof Variable) Label (Listof Varialbe) CEnv -> Asm
+;; (Listof Variable) Label (Listof Variable) CEnv -> Asm
 (define (compile-λ xs f ys c)
-  `(;; Save label address
-    (lea rax (offset ,f 0))
+    ; Save label address
+  `((lea rax (offset ,f 0))
     (mov (offset rdi 0) rax)
 
-    ;; Save the environment
+    ; Save the environment
     (mov r8 ,(length ys))
     (mov (offset rdi 1) r8)
     (mov r9 rdi)
     (add r9 16)
     ,@(copy-env-to-heap ys c 0)
 
-    ;; Return a pointer to the closure
+    ; Return a pointer to the closure
     (mov rax rdi)
     (or rax ,type-proc)
     (add rdi ,(* 8 (+ 2 (length ys))))))
@@ -182,6 +191,7 @@
       ;,@(copy-closure-env-to-stack (length es))
       (jmp (offset rax 0)))))
 
+
 ;; -> Asm
 ;; Copy closure's (in rax) env to stack in rcx
 (define (copy-closure-env-to-stack)
@@ -194,7 +204,7 @@
       (cmp r8 0)
       (je ,copy-done)
       (mov rbx (offset r9 0))
-      (mov (offset rcx 0) rbx)
+      (mov (offset rcx 0) rbx) ; Move val onto stack
       (sub r8 1)
       (add r9 8)
       (sub rcx 8)
@@ -225,17 +235,19 @@
   (match ls
     ['() '()]
     [(cons l ls)
-     (let ((cs (compile-letrec-λs ls (cons #f c)))
-           (ys (fvs l)))
-       `((lea rax (offset ,(second (third l)) 0))
-         (mov (offset rdi 0) rax)
-         (mov rax ,(length ys))
-         (mov (offset rdi 1) rax)
-         (mov rax rdi)
-         (or rax ,type-proc)
-         (add rdi ,(* 8 (+ 2 (length ys))))
-         (mov (offset rsp ,(- (add1 (length c)))) rax)
-         ,@cs))]))
+     (match l
+       [(lam-t lab as body)
+         (let ((cs (compile-letrec-λs ls (cons #f c)))
+               (ys (fvs l)))
+           `((lea rax (offset ,lab 0))
+             (mov (offset rdi 0) rax)
+             (mov rax ,(length ys))
+             (mov (offset rdi 1) rax)
+             (mov rax rdi)
+             (or rax ,type-proc)
+             (add rdi ,(* 8 (+ 2 (length ys))))
+             (mov (offset rsp ,(- (add1 (length c)))) rax)
+             ,@cs))])]))
 
 ;; (Listof Variable) (Listof Lambda) CEnv -> Asm
 (define (compile-letrec-init fs ls c)
@@ -268,10 +280,11 @@
 ;; Imm -> Integer
 (define (imm->bits i)
   (match i
-    [(? integer? i) (arithmetic-shift i imm-shift)]
-    [(? char? c)    (+ (arithmetic-shift (char->integer c) imm-shift) imm-type-char)]
-    [(? boolean? b) (if b imm-val-true imm-val-false)]
-    [''()           imm-type-empty]))
+    [(int-e i)  (arithmetic-shift i imm-shift)]
+    [(char-e c) (+ (arithmetic-shift (char->integer c) imm-shift) imm-type-char)]
+    [(bool-e b) (if b imm-val-true imm-val-false)]
+    [(nil-e)    imm-type-empty]))
+
 
 ;; Variable CEnv -> Asm
 (define (compile-variable x c)
@@ -397,20 +410,24 @@
       ,l1)))
 
 ;; Variable LExpr LExpr CEnv -> Asm
-(define (compile-tail-let x e0 e1 c)
-  (let ((c0 (compile-e e0 c))
-        (c1 (compile-tail-e e1 (cons x c))))
-    `(,@c0
-      (mov (offset rsp ,(- (add1 (length c)))) rax)
-      ,@c1)))
+(define (compile-tail-let b body c)
+  (match b
+    [(binding x def) 
+      (let ((c0 (compile-e def c))
+            (c1 (compile-tail-e body (cons x c))))
+        `(,@c0
+          (mov (offset rsp ,(- (add1 (length c)))) rax)
+          ,@c1))]))
 
 ;; Variable LExpr LExpr CEnv -> Asm
-(define (compile-let x e0 e1 c)
-  (let ((c0 (compile-e e0 c))
-        (c1 (compile-e e1 (cons x c))))
-    `(,@c0
-      (mov (offset rsp ,(- (add1 (length c)))) rax)
-      ,@c1)))
+(define (compile-let b body c)
+  (match b
+    [(binding x def) 
+      (let ((c0 (compile-e def c))
+            (c1 (compile-e body (cons x c))))
+        `(,@c0
+          (mov (offset rsp ,(- (add1 (length c)))) rax)
+          ,@c1))]))
 
 ;; LExpr LExpr CEnv -> Asm
 (define (compile-+ e0 e1 c)

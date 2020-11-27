@@ -5,19 +5,19 @@
 
 @title{Midterm 2}
 
-@bold{Due: TBD}
+@bold{Due: Friday, November 13th 11:59PM}
 
-@(define repo "TBD")
+@(define repo "https://classroom.github.com/a/Gv1cRIkD")
 
 Midterm repository:
 @centered{@link[repo repo]}
 
 The repository contains a single markdown file @tt{m2.md}, which you can edit
 to submit your answers to the following questions.  Your submission must be
-pushed by 9pm on Saturday (unless you have already arranged otherwise).
+pushed by 11:59pm on Friday (unless you have already arranged otherwise).
 
-During the 60 hours of the exam period, you may only ask private
-questions on Piazza if you need assistance for the course staff.  You
+During the 72 hours of the exam period, you may only ask private
+questions on Discord if you need assistance for the course staff.  You
 may not communicate or collaborate with any one else about the content
 of this exam.
 
@@ -33,17 +33,17 @@ equivalent to each of the following:
 
 @itemlist[
 
-@item{@verbatim{'((10) y y z 2)}}
+@item{@verbatim{'(y y z (5) 2)}}
 
-@item{@verbatim{'((2) . 2)}}
+@item{@verbatim{'((1 2) . 2)}}
 
 @item{@verbatim{'(a . (b . (c)))}}
 
-@item{@verbatim{'(quote (x 2))}}
+@item{@verbatim{'(a . (b . c))}}
 
-@item{@verbatim{`(1 . ,(add1 2))}}
+@item{@verbatim{`(,(add1 1) . 2)}}
 
-@item{@verbatim|{`(1 ,@'(2 3) ,@'(x))}|}
+@item{@verbatim|{`(,@'(1 2) ,@'(x) ,3)}|}
 ]
 
 For example, @racket['(1 2 3)] is equivalent to @racket[(cons 1 (cons 2 (cons 3 '())))].
@@ -52,47 +52,49 @@ For example, @racket['(1 2 3)] is equivalent to @racket[(cons 1 (cons 2 (cons 3 
 
 [10 points]
 
-Will the following program run forever using only a constant amount of
-memory, or will it eventually consume all memory and crash?  Briefly
-justify your answer.
+Is it possible for the following program to run out of memory? Justify your
+answer.
 
 @#reader scribble/comment-reader
 (racketblock
-(begin (define (flip x)
-         (flop (add1 x)))
-       (define (flop y)
-         (flip (sub1 y)))
-       (flip 5)) 
+(define (fact x)
+  (if (<= x 1)
+      1
+      (* x (fact (sub1 x)))))
 )
 
 How about this one?  Again, justify your answer.
 
 @#reader scribble/comment-reader
 (racketblock
-(begin (define (flip x)
-         (flip (flop (add1 x))))
-       (define (flop y)
-         (flop (flip (sub1 y))))
-       (flip 5)) 
+(define (fact x)
+  (define (fact-prime acc i)
+    (if (<= i 1)
+        acc
+        (fact-prime (* acc i) (sub1 i))))
+  (fact-prime 1 x))
 )
 
+Hint: consider Jig.
 
 @bold{Question 3}
 
 [8 points]
 
 For each of the following expressions, which subexpressions are in tail
-position?
+position? Assume that the top-level expression is in tail position.
 
 @itemlist[
 
-@item{@verbatim{(if e0 e1 e2)}}
+@item{@verbatim{(if (if a0 a1 a2) e1 e2)}}
 
 @item{@verbatim{(match e0 [p1 e1] [p2 e2])}}
 
-@item{@verbatim{((λ (x y) e0) e1 e2)}}
+@item{@verbatim{(if e0 (if a0 a1 a2) e2)}}
 
-@item{@verbatim{(eq? e0 e1)}}
+@item{@verbatim{(add1 e0)}}
+
+@item{@verbatim{(cons e0 e1)}}
           
 ]
 
@@ -121,7 +123,7 @@ Here's an example (note: @racket[let] is used for sequencing here):
 ]
 
 Implement the following function in the compiler.  (You may assume
-this code will be added to the Loot compiler and may use any functions
+this code will be added to the Knock compiler and may use any functions
 given to you.)
 
 @#reader scribble/comment-reader
@@ -131,82 +133,206 @@ given to you.)
 (define (compile-set-box! e0 e1 c) ...)
 )
 
-@section[#:tag-prefix "m2"]{Closure Conversion}
+@section[#:tag-prefix "m2"]{Program Transformation: Inlining}
 
 @bold{Question 5}
 
 [20 points]
 
 
-In our @secref["Loot"] compiler we used Closure Conversion to
-help us implement higher-order functions on a target language
-that does not support higher-order functions natively (x86_64).
+In our @secref["Iniquity"] compiler we introduced function definitions to help
+us organize our code. Function definitions came along with function @emph{calls},
+and unfortunately function calls come with a performance hit.
 
-This was done by introducing an appropriate data structure
-for storing the environment and accessing the stored environment
-when necessary.
+One solution is @emph{inlining}: Taking the body of a funtion definition and
+replacing a call to that function with an instance of its body. This allows the
+programmer to have all the benefits of the function abstraction, without the
+overhead.
 
-Now imagine that our target was not x86_64, but a dialect of Racket
-that did not have higher-order functions. We could still perform
-closure conversion!
-
-For example, the following application of a constant function:
+For example, consider the following program:
 
 @#reader scribble/comment-reader
 (racketblock
-(let ((x 5)) ((lambda (y) x) 10))
+(begin
+  (define (f x) (+ x 5))
+  (+ 10 (f 42)))
 )
 
-Using the same definitions for @tt{lookup} and @tt{ext} first introduced in
-@secref["Fraud"], could be transformed to the following:
+If you inlined @tt{f}, the result would be the following program:
 
 @#reader scribble/comment-reader
 (racketblock
-
-(define (lam1 env y)
-  (lookup env 'x))
-
-(let ((x 5)) (lam1 (ext '() 'x x) 10))
+(begin
+  (define (f x) (+ x 5))
+  (+ 10 (+ 42 5)))
 )
 
-Perform closure conversion on the following higher-order program:
+
+Your task is to write and document a function named @tt{inline} which takes a
+function @tt{f} and a program @tt{p}, and inlines the function @tt{f} @emph{at
+all uses of @tt{f} in the program} (this includes other function definitions!).
+
 
 @#reader scribble/comment-reader
 (racketblock
-(let ((x 10)
-      (y 20)
-      (z 30))
- ((lambda (z) (+ x ((lambda (x) (+ x y)) y) z)) 1))
+(define (inline f p)
+  ;TODO
+)
 )
 
-You may assume @tt{lookup} and @tt{ext} exist.
 
-In order to receive full marks, show the steps of your transformation.
+You can assume that you have a function @tt{fvs} that given an expression,
+returns a list of all the free variables in that expression. This is be
+necessary to avoid creating incorrect programs. If dealing with variable
+clashes and creating new names seems too complicated, you can assume the
+existence of a function @tt{barendregtify} which given a program makes sure
+that all variables are unique, running it on the following:
 
-Clarification: I've completely removed @tt{map} as it was only essential to the
-extra credit below. To get full marks you must closure convert both of the
-lambdas that are present in the program above.
+
+@#reader scribble/comment-reader
+(racketblock
+(begin
+  (define (f x) (+ x 5))
+  (define (g x) (+ x 10))
+  (f (g 10)))
+)
+
+Would produce something like:
 
 
-@bold{Question 5 Extra Credit}
+@#reader scribble/comment-reader
+(racketblock
+(begin
+  (define (f var1) (+ var1 5))
+  (define (g var2) (+ var2 10))
+  (f (g 10)))
+)
+
+Why should you care about @tt{fvs} or @tt{barendregtify}? Well, consider the
+following inlining:
+
+@#reader scribble/comment-reader
+(racketblock
+(begin
+  (define (f x) (let ((y 5)) x))
+  (let ((y 42)) (f y)))
+)
+
+If you inline @tt{f} without care, you would get the following:
+
+@#reader scribble/comment-reader
+(racketblock
+(begin
+  (define (f x) (let ((y 5)) x))
+  (let ((y 42)) (let ((y 5)) y)))
+)
+
+Now you've changed the program, it would result in 5 instead of 42!
+You can use @tt{fvs} to figure out which variables might be captured,
+and deal with that, or you can use @tt{barendregtify} to make sure
+that all variables are unique. Notice how if we had used @tt{barendregtify}
+we could have avoided the problem:
+
+@#reader scribble/comment-reader
+(racketblock
+(begin
+  (define (f var1) (let ((var2 5)) var1))
+  (let ((var3 42)) (f var3)))
+)
+
+Then inlining @tt{f} we get:
+
+@#reader scribble/comment-reader
+(racketblock
+(begin
+  (define (f var1) (let ((var2 5)) var1))
+  (let ((var3 42)) (let ((var2 5)) var3)))
+)
+
+You may have to run/call @tt{barendregtify} more than once to ensure
+correctness, when inlining functions.
+
+
+In addition to your code, make sure you answer the following question as part
+of your submission:
+
+@itemlist[
+
+@item{Recursive functions refer to themselves... What should you do? (You do
+not have to worry about mutual recursion between sets of functions, for this
+exam we will assume either a function refers to itself directly, or it is not
+recusive at all).}
+
+]
+
+Other things you should consider:
+
+@itemlist[
+
+@item{If @tt{f} does not exist in the program, the program should be unchanged}
+
+@item{You have to be careful with variable shadowing/capture.}
+
+]
+
+Part A:
+
+5 points from the total of 20 will be given if you can produce the correct
+inlining of @tt{f} for the following program (you are free to do this by hand):
+
+@#reader scribble/comment-reader
+(racketblock
+(begin
+  (define (f x) (let ((y (+ x 10))) (let ((z 42)) (+ x (+ y z)))))
+  (define (g x) (f x))
+  (let ((y 1024)) (g (f y))))
+)
+
+Part B:
+
+15 points for completing the implementation below:
+
+@#reader scribble/comment-reader
+(racketblock
+(define (inline f p)
+  (match p
+    [(prog ds e)
+          ;TODO
+     ]))
+)
+
+
+@bold{Question NaN: Extra Credit}
 
 [10 points]
 
-Apply the full defunctionalization transformation introduced in @secref["Loot"]
-to the following code:
+Provide two graphs in dot format (explained in our lecture on Graphviz/Dot)
+that shows the difference between interpreters and compilers. You can lay this
+out however you'd like, but the following items should definitely be present in
+one, or both, of the graphs (though not necessarily connected in the diagram!).
+These are in alphabetical order, so don't assume that their order reveals
+anything about how the diagram should be layed out. If you can think of
+other things that belong in the diagram, feel free to include them.
 
-@#reader scribble/comment-reader
-(racketblock
-(define (map f xs)
-  (match xs
-    ['() '()]
-    [(cons y ys) (cons (f y) (map f ys))]))
+@itemlist[
 
-(define (main)
-  (let ((x 10)
-        (y 20)
-        (z 30))
-   (map (lambda (z) (+ x ((lambda (x) (+ x y)) y) z)) '(1 2 3))))
-)
+@item{Source Language}
+@item{Target Language}
+@item{AST}
+@item{Code-Gen}
+@item{CPU Execution}
+@item{Interp}
+@item{Parser}
+@item{RTS}
+@item{Source Language}
+@item{Target Language}
+@item{Value/Result}
 
-You can reuse whatever you feel is appropriate, if anything, from Question 5.
+]
+
+In order to get the points for this, we will take your description in dot and
+run @tt{dot} on it.  If it does not produce an output, you will get not points.
+
+If it produces an output that is a good-faith effort (i.e. there is a clear
+attempt and showing the difference between compilers and interpreters, you will
+get 5 points. If it accurately shows the difference you will get 10 points.
