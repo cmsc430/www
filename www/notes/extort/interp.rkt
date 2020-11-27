@@ -31,8 +31,9 @@
             (interp e2)
             (interp e3))])]
     [(Begin e1 e2)
-     (begin (interp e1)
-            (interp e2))]))
+     (match (interp e1)
+       ['err 'err]
+       [_ (interp e2)])]))
 
 ;; Op1 Value -> Answer
 (define (interp-prim1 p1 v)
