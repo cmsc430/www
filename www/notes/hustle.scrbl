@@ -24,6 +24,11 @@ makes an inundation.}
 
 @table-of-contents[]
 
+@verbatim|{
+TODO:
+* Add section introducing '()
+}|
+
 @section{Inductive data}
 
 So far all of the data we have considered can fit in a single machine
@@ -59,7 +64,13 @@ We use the following grammar for Hustle:
 
 We can model this as an AST data type:
 
-@codeblock-include["hustle/ast.rkt"]
+@filebox-include-fake[codeblock "hustle/ast.rkt"]{
+#lang racket
+;; type Op1 = ...
+;;          | 'box | 'car | 'cdr | 'unbox
+;; type Op2 = ...
+;;          | 'cons
+}
 
 @section{Meaning of Hustle programs, implicitly}
 
@@ -75,35 +86,10 @@ primitives:
 
 @centered[(render-metafunction 𝑯-𝒑𝒓𝒊𝒎 #:contract? #t)]
 
-The interpreter similarly has an update to the @racket[interp-prim]
-function.  On the relevant bits of
-@link["hustle/interp.rkt"]{@tt{interp.rkt}} are shown:
+The interpreter similarly has an update to the @racket[interp-prims]
+module:
 
-@#reader scribble/comment-reader
-(racketblock
-;; Any -> Boolean
-(define (prim? x)
-  (and (symbol? x)
-       (memq x '(add1 sub1 + - zero?
-                      ;; New
-                      box unbox cons car cdr))))
-
-;; Prim [Listof Answer] -> Answer
-(define (interp-prim p as)
-  (match (cons p as)
-    [(list 'add1 (? integer? i0)) (+ i0 1)]
-    [(list 'sub1 (? integer? i0)) (- i0 1)]
-    [(list 'zero? (? integer? i0)) (zero? i0)]
-    [(list '+ (? integer? i0) (? integer? i1)) (+ i0 i1)]
-    [(list '- (? integer? i0) (? integer? i1)) (- i0 i1)]
-    ;; New for Hustle
-    [(list 'box v0) (box v0)]
-    [(list 'unbox (? box? v0)) (unbox v0)]    
-    [(list 'cons v0 v1) (cons v0 v1)]
-    [(list 'car (cons v0 v1)) v0]
-    [(list 'cdr (cons v0 v1)) v1]
-    [_ 'err]))
-)
+@codeblock-include["hustle/interp-prims.rkt"]
 
 Inductively defined data is easy to model in the semantics and
 interpreter because we can rely on inductively defined data at the
@@ -207,19 +193,9 @@ same result but using a more concrete mechanism that is like
 the actual memory on a computer.  Let's consider the latter
 approach.
 
-We can use a Racket @racket[vector] to model the memory. A
-vector is a mutable, indexed data structure; basically it is
-like an array. Here are some examples of creating an using
-@racket[vector]s:
+We can use a Racket @racket[list] to model the memory.
 
-@ex[
-(define v (make-vector 10)) ; a vector of length 10
-(vector-set! v 0 "zero") ; v[0] = "zero"
-(vector-set! v 1 'blue)  ; v[1] = 'blue
-(vector-ref v 0) ; "zero"
-(vector-ref v 1) ; 'blue                        
-]
-
+@;{
 We will use a @racket[vector] of some size to model the
 memory used in a program's evaluation. We can think of
 @racket[vector] as giving us a continguous array of memory
@@ -228,7 +204,7 @@ as addresses. The interpreter keeps track of both the
 @racket[vector] and an index for the next available memory
 address. Every time the interpreter allocates, it writes in
 to the appropriate cell in the @racket[vector] and bumps the
-current address by 1.
+current address by 1.}
 
 @codeblock-include["hustle/interp-heap.rkt"]
 
