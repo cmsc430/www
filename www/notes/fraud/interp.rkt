@@ -44,8 +44,9 @@
             (interp-env e1 r)
             (interp-env e2 r))])]
     [(Begin e1 e2)
-     (begin (interp-env e1 r)
-            (interp-env e2 r))]
+     (match (interp-env e1 r)
+       ['err 'err]
+       [v    (interp-env e2 r)])]
     [(Let x e1 e2)
      (match (interp-env e1 r)
        ['err 'err]
