@@ -17,7 +17,7 @@ jobs:
       with:
         architecture: 'x64'
         distribution: 'full'
-        version: '7.9'
+        version: '7.4'
     - name: Build and test
       run: |
         raco make www/main.scrbl
