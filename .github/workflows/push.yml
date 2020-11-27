@@ -9,7 +9,8 @@ jobs:
       uses: actions/checkout@main
     - name: Install dependencies
       run: |
-        sudo apt-get install pandoc
+        wget https://github.com/jgm/pandoc/releases/download/2.11.2/pandoc-2.11.2-1-amd64.deb
+        sudo dpkg -i pandoc-2.11.2-1-amd64.deb
         sudo apt-get install nasm
     - name: Install Racket
       uses: Bogdanp/setup-racket@v0.10
