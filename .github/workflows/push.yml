@@ -20,8 +20,8 @@ jobs:
     - name: Build and test
       run: |
         raco make www/main.scrbl
-	raco test www
-	make -C www main
+        raco test www
+        make -C www main
     - name: Archive www
       uses: actions/upload-artifact@v2
       with:
