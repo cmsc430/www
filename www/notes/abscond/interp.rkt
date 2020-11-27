@@ -1,7 +1,9 @@
 #lang racket
-(provide (all-defined-out))
+(provide interp)
+(require "ast.rkt")
 
-; Expr -> Integer
-; Interpret given expression
+;; Expr -> Integer
+;; Interpret given expression
 (define (interp e)
-  e)
+  (match e
+    [(Int i) i]))

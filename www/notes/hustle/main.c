@@ -1,97 +1,70 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <inttypes.h>
+#include <stdlib.h>
+#include "types.h"
 
-#define result_shift     3
-#define result_type_mask ((1 << result_shift) - 1)
-#define type_imm         0
-#define type_box         1
-#define type_pair        2
-
-#define imm_shift      (3 + result_shift)
-#define imm_type_mask  ((1 << imm_shift) - 1)
-#define imm_type_int   (0 << result_shift)
-#define imm_val_true   (1 << result_shift)
-#define imm_val_false  (2 << result_shift)
-#define imm_val_empty (3 << result_shift)
+int64_t entry(void *);
+void print_result(int64_t);
 
 // in bytes
 #define heap_size 1000000
 
-int64_t entry(void *);
-void print_result(int64_t);
-void print_pair(int64_t);
-void print_immediate(int64_t);
-
 int main(int argc, char** argv) {
   void * heap = malloc(heap_size);
-  int64_t result = entry(heap);  
+  int64_t result = entry(heap);
   print_result(result);
-  printf("\n");
+  if (result != val_void) printf("\n");
   free(heap);
   return 0;
 }
 
-void error() {
-  printf("err");
-  exit(1);
-}
+void print_char(int64_t);
+void print_cons(int64_t);
 
-void internal_error() {
-  printf("rts-error");
-  exit(1);
-}
-
-void print_result(int64_t a) {
-  switch (result_type_mask & a) {
-  case type_imm:
-    print_immediate(a);
-    break;
-  case type_box:
-    printf("#&");
-    print_result (*((int64_t *)(a ^ type_box)));
-    break;
-  case type_pair:
+void print_result(int64_t result) {
+  if (cons_type_tag == (ptr_type_mask & result)) {
     printf("(");
-    print_pair(a);
+    print_cons(result);
     printf(")");
-    break;
-  default:
-    internal_error();
-  }
-}
- 
-void print_immediate(int64_t a) {
-  switch (imm_type_mask & a) {
-  case imm_type_int:
-    printf("%" PRId64, a >> imm_shift);
-    break;
-  case imm_val_true:
-    printf("#t");
-    break;
-  case imm_val_false:
-    printf("#f");
-    break;
-  case imm_val_empty:
-    printf("()");
-    break;
-  default:
-    break;
-    internal_error();    
-  }
+  } else if (box_type_tag == (ptr_type_mask & result)) {
+    printf("#&");
+    print_result (*((int64_t *)(result ^ box_type_tag)));
+  } else if (int_type_tag == (int_type_mask & result)) {
+    printf("%" PRId64, result >> int_shift);
+  } else if (char_type_tag == (char_type_mask & result)) {
+    print_char(result);
+  } else {
+    switch (result) {
+    case val_true:
+      printf("#t"); break;
+    case val_false:
+      printf("#f"); break;
+    case val_eof:
+      printf("#<eof>"); break;
+    case val_empty:
+      printf("()"); break;
+    case val_void:
+      /* nothing */ break;
+    }
+  }  
 }
 
-void print_pair(int64_t a) {  
-  int64_t car = *((int64_t *)((a + 8) ^ type_pair));
-  int64_t cdr = *((int64_t *)((a + 0) ^ type_pair));
+void print_cons(int64_t a) {  
+  int64_t car = *((int64_t *)((a + 8) ^ cons_type_tag));
+  int64_t cdr = *((int64_t *)((a + 0) ^ cons_type_tag));
   print_result(car);
-  if ((imm_type_mask & cdr) == imm_val_empty) {
+  if (cdr == val_empty) {
     // nothing
-  } else if ((result_type_mask & cdr) == type_pair) {
+  } else if (cons_type_tag == (ptr_type_mask & cdr)) {
     printf(" ");
-    print_pair(cdr);
+    print_cons(cdr);
   } else {
     printf(" . ");
     print_result(cdr);
   }
+}
+
+void error() {
+  printf("err\n");
+  exit(1);
 }

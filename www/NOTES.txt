@@ -1,0 +1,22 @@
+DVH rewrite Fall 2020
+
+Goals:
+
+- Make self-hosting by end
+- Eliminate quasiqote, unquote usage.
+- Eliminate s-expr-based data types.
+- Eliminate lexing and parsing; use read from start.
+- Add I/O, read-byte, write-byte.  Build from there.
+- Add symbols w/ symbol table.
+- Add GC.
+- Add Bignums.
+- Rewrite assignments.
+
+Possible assignment ideas:
+
+- After Extort: catch and signal errors on integer over/under-flow
+- Implement an interpreter for a86 (the mini-x86 language)
+- Implement read-char, peek-char in terms of read-byte, peek-byte
+- Implement read in terms of read-char, peek-char
+- Implement prefab structures
+- Implement bignum arithmetic library

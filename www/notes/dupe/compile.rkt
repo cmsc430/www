@@ -1,44 +1,55 @@
 #lang racket
 (provide (all-defined-out))
-(require "ast.rkt")
+(require "ast.rkt"
+         "asm/ast.rkt")
+
+(define imm-shift 1) ; lsb = 0 indicates integerness
 
 ;; Expr -> Asm
 (define (compile e)
-  `(entry
-    ,@(compile-e e)
-    ret))
+  (seq (Label 'entry)
+       (compile-e e)
+       (Ret)))
 
 ;; Expr -> Asm
 (define (compile-e e)
   (match e
-    [(int-e i)
-     `((mov rax ,(* i 2)))]
-    [(bool-e b)
-     `((mov rax ,(if b #b11 #b01)))]
-    [(add1-e e1) (let ((c1 (compile-e e1)))
-                `(,@c1
-                  (add rax 2)))]
-    [(sub1-e e1) (let ((c1 (compile-e e1)))
-                `(,@c1
-                  (sub rax 2)))]
-    [(zero?-e e1) (let ((c1 (compile-e e1))
-                        (l1 (gensym "nzero")))
-                 `(,@c1
-                  (cmp rax 0)
-                  (mov rax #b01)
-                  (jne ,l1)
-                  (mov rax #b11)
-                  ,l1))]
-    [(if-e p t f) (let ((c1 (compile-e p))
-                        (c2 (compile-e t))
-                        (c3 (compile-e f))
-                        (l1 (gensym "if"))
-                        (l2 (gensym "if")))
-                    `(,@c1
-                      (cmp rax #b01) ; compare to false
-                      (jne ,l1)
-                      ,@c3
-                      (jmp ,l2)
-                      ,l1
-                      ,@c2
-                      ,l2))]))
+    [(Int i)           (compile-integer i)]
+    [(Bool b)          (compile-boolean b)]
+    [(Prim p e)        (compile-prim p e)]
+    [(If e1 e2 e3)     (compile-if e1 e2 e3)]))
+
+;; Integer -> Asm
+(define (compile-integer i)
+  (seq (Mov 'rax (arithmetic-shift i imm-shift))))
+
+;; Boolean -> Asm
+(define (compile-boolean b)
+  (seq (Mov 'rax (if b #b11 #b01))))
+
+;; Op Expr -> Asm
+(define (compile-prim p e)
+  (seq (compile-e e)
+       (match p
+         ['add1 (Add 'rax (arithmetic-shift 1 imm-shift))]
+         ['sub1 (Sub 'rax (arithmetic-shift 1 imm-shift))]
+         ['zero?
+          (let ((l1 (gensym 'nzero)))
+            (seq (Cmp 'rax 0)
+                 (Mov 'rax #b11)
+                 (Je l1)
+                 (Mov 'rax #b01)
+                 (Label l1)))]))) 
+
+;; Expr Expr Expr -> Asm
+(define (compile-if e1 e2 e3)
+  (let ((l1 (gensym 'if))
+        (l2 (gensym 'if)))
+    (seq (compile-e e1)
+         (Cmp 'rax #b01)
+         (Je l1)
+         (compile-e e2)
+         (Jmp l2)
+         (Label l1)
+         (compile-e e3)
+         (Label l2))))

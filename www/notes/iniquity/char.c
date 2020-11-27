@@ -3,15 +3,15 @@
 #include "types.h"
 
 void print_string_char_u(int64_t v) {
-  printf("\\u%04X", (int)(v >> imm_shift));
+  printf("\\u%04X", (int)(v >> char_shift));
 }
 
 void print_string_char_U(int64_t v) {
-  printf("\\U%08X", (int)(v >> imm_shift));
+  printf("\\U%08X", (int)(v >> char_shift));
 }
 
 void print_codepoint(int64_t v) {
-  int64_t codepoint = v >> imm_shift;
+  int64_t codepoint = v >> char_shift;
   // Print using UTF-8 encoding of codepoint
   // https://en.wikipedia.org/wiki/UTF-8
   if (codepoint < 128) {
@@ -35,7 +35,7 @@ void print_codepoint(int64_t v) {
 }
 
 void print_string_char(int64_t v) {
-  switch (v >> imm_shift) {
+  switch (v >> char_shift) {
   case 0 ... 6:
     print_string_char_u(v);
     break;

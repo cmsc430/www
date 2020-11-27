@@ -1,13 +1,11 @@
 #lang racket
 (provide (all-defined-out))
-(require (only-in "interp.rkt" interp)
-         (only-in "compile.rkt" compile)
+(require "interp.rkt"
+         "compile.rkt"
          "asm/interp.rkt"
-         "syntax.rkt"
          rackunit)
  
 (define (check-compiler e)
-  (let ((e (sexpr->ast e)))
   (check-eqv? (asm-interp (compile e))
               (interp e)
-              e)))
+              e))

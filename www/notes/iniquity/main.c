@@ -14,13 +14,24 @@ void print_char(int64_t);
 void print_string(int64_t);
 void print_string_char(int64_t);
 void print_codepoint(int64_t);
-  
+
+
+int64_t read_byte(void);
+
 int main(int argc, char** argv) {
   void * heap = malloc(heap_size);
   int64_t result = entry(heap);
   print_result(result);
+  // read_byte();
   printf("\n");
   return 0;
+}
+
+int64_t read_byte(void) {
+  int64_t c = (int64_t)getc(stdin);  
+  int64_t r = (c << imm_shift);
+  print_result(r);
+  return r;
 }
 
 void error() {
@@ -34,26 +45,18 @@ void internal_error() {
 }
 
 void print_result(int64_t v) {
-  switch (result_type_mask & v) {
-  case type_imm:
+  switch (imm_type_mask & v) {
+  case imm_type_tag:
     print_immediate(v);
     break;
-  case type_box:
+  case box_type_tag:
     printf("#&");
-    print_result (*((int64_t *)(v ^ type_box)));
+    print_result (*((int64_t *)(v ^ box_type_tag)));
     break;
-  case type_pair:
+  case pair_type_tag:
     printf("(");
     print_pair(v);
     printf(")");
-    break;
-  case type_string:
-    printf("\"");
-    print_string(v);
-    printf("\"");
-    break;
-  case type_proc:
-    printf("procedure");
     break;
   default:
     internal_error();
@@ -61,31 +64,41 @@ void print_result(int64_t v) {
 }
 
 void print_immediate(int64_t v) {
-  switch (imm_type_mask & v) {
-  case imm_type_int:
-    printf("%" PRId64, v >> imm_shift);
-    break;
-  case imm_type_bool:
-    printf("#%c", v >> imm_shift ? 't' : 'f');
-    break;
-  case imm_type_empty:
-    printf("()");
-    break;
-  case imm_type_char:
-    print_char(v);
+  switch (int_type_mask & v) {
+  case int_type_tag:
+    printf("%" PRId64, v >> int_shift);
+    break;    
   default:
-    break;
-    internal_error();
+    switch (char_type_mask & v) {
+    case char_type_tag:
+      print_char(v);
+      break;
+    default:
+      switch (v) {
+      case val_true:
+	printf("#t");
+	break;
+      case val_false:
+	printf("#f");
+	break;
+      case val_empty:
+	printf("()");
+	break;
+      default:
+	internal_error();
+	break;
+      }
+    }
   }
 }
 
 void print_pair(int64_t v) {
-  int64_t car = *((int64_t *)((v + 8) ^ type_pair));
-  int64_t cdr = *((int64_t *)((v + 0) ^ type_pair));
+  int64_t car = *((int64_t *)((v + 8) ^ pair_type_tag));
+  int64_t cdr = *((int64_t *)((v + 0) ^ pair_type_tag));
   print_result(car);
-  if ((imm_type_mask & cdr) == imm_type_empty) {
+  if (cdr == val_empty) {
     // nothing
-  } else if ((result_type_mask & cdr) == type_pair) {
+  } else if ((imm_type_mask & cdr) == pair_type_tag) {
     printf(" ");
     print_pair(cdr);
   } else {
@@ -95,7 +108,7 @@ void print_pair(int64_t v) {
 }
 
 void print_char (int64_t v) {
-  int64_t codepoint = v >> imm_shift;
+  int64_t codepoint = v >> char_shift;
   printf("#\\");
   switch (codepoint) {
   case 0:
@@ -119,13 +132,4 @@ void print_char (int64_t v) {
   default:
     print_codepoint(v);
   }
-}
-
-void print_string(int64_t v) {
-  int64_t* str = (int64_t *)(v ^ type_string);
-  int64_t len = (str[0] >> imm_shift);
-
-  int i;
-  for (i = 0; i < len; i++)
-    print_string_char(str[i+1]);
 }

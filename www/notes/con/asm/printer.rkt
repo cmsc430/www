@@ -1,29 +1,34 @@
 #lang racket
-(provide (all-defined-out))
-
-;; Asm -> String
-(define (asm->string a)
-  (foldr (λ (i s) (string-append (instr->string i) s)) "" a))
+(provide asm-string)
+(require "ast.rkt")
 
 ;; Instruction -> String
 (define (instr->string i)
   (match i
-    [`(mov ,a1 ,a2)
-     (string-append "\tmov " (arg->string a1) ", " (arg->string a2) "\n")]
-    [`(add ,a1 ,a2)
-     (string-append "\tadd " (arg->string a1) ", " (arg->string a2) "\n")]
-    [`(sub ,a1 ,a2)
-     (string-append "\tsub " (arg->string a1) ", " (arg->string a2) "\n")]
-    [`(cmp ,a1 ,a2)
-     (string-append "\tcmp " (arg->string a1) ", " (arg->string a2) "\n")]
-    [`(jmp ,l)
-     (string-append "\tjmp " (label->string l) "\n")]
-    [`(je ,l)
-     (string-append "\tje " (label->string l) "\n")]
-    [`(jne ,l)
-     (string-append "\tjne " (label->string l) "\n")]
-    [`ret "\tret\n"]
-    [l (string-append (label->string l) ":\n")]))
+    [(Ret)       "\tret\n"]
+    [(Label l)   (string-append (label-symbol->string l) ":\n")]
+    [(Mov a1 a2)
+     (string-append "\tmov "
+                    (arg->string a1) ", "
+                    (arg->string a2) "\n")]
+    [(Add a1 a2)
+     (string-append "\tadd "
+                    (arg->string a1) ", "
+                    (arg->string a2) "\n")]
+    [(Sub a1 a2)
+     (string-append "\tsub "
+                    (arg->string a1) ", "
+                    (arg->string a2) "\n")]    
+    [(Cmp a1 a2)
+     (string-append "\tcmp "
+                    (arg->string a1) ", "
+                    (arg->string a2) "\n")]
+    [(Jmp l)
+     (string-append "\tjmp "
+                    (label-symbol->string l) "\n")]
+    [(Je l)
+     (string-append "\tje "
+                    (label-symbol->string l) "\n")]))
 
 ;; Arg -> String
 (define (arg->string a)
@@ -40,19 +45,20 @@
 (define (reg->string r)
   (symbol->string r))
 
-;; Label -> String
+;; Symbol -> String
 ;; prefix with _ for Mac
-(define label->string
+(define label-symbol->string
   (match (system-type 'os)
     ['macosx
      (λ (s) (string-append "_" (symbol->string s)))]
     [_ symbol->string]))
 
-;; Asm -> Void
-(define (asm-display a)
+;; Asm -> String
+(define (asm-string a)
   ;; entry point will be first label
-  (let ((g (findf symbol? a)))
-    (display 
-      (string-append "\tglobal " (label->string g) "\n"
-      		     "\tsection .text\n"
-                     (asm->string a)))))
+  (match (findf Label? a)
+    [(Label g)
+     (string-append
+      "\tglobal " (label-symbol->string g) "\n"
+      "\tsection .text\n"
+      (foldr (λ (i s) (string-append (instr->string i) s)) "" a))]))

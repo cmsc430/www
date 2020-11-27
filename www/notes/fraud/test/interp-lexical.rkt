@@ -1,8 +1,8 @@
 #lang racket
 (require rackunit)
-(require "../interp-lexical.rkt" "../syntax.rkt")
+(require "../interp-lexical.rkt" "../parse.rkt")
 (define (run p)
-  (interp (sexpr->ast p)))
+  (interp (parse p)))
 (check-equal? (run 5) 5)
 (check-equal? (run '(let ((x 0)) x)) 0)
 (check-equal? (run '(let ((x 0)) (let ((y 1)) x))) 0)

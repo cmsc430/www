@@ -1,12 +1,11 @@
 #lang racket
 (require "../interp.rkt"
-         "../syntax.rkt"
+         "../parse.rkt"
          ;(only-in "../semantics.rkt" H 𝑯 convert)
-         rackunit
-         redex/reduction-semantics)
+         rackunit)
 
 (define (run e)
-  (interp (sexpr->prog e)))
+  (interp (parse e)))
 
 (check-equal? (run 7) 7)
 (check-equal? (run -8) -8)
@@ -61,6 +60,14 @@
                              (even? (sub1 x))))
                        (even? 101)))
               #f)
+
+(check-equal? (run
+               '(begin (define (not-empty? xs)
+                         (if (empty? xs)
+                             (cons xs #f)
+                             (cons xs #t)))
+                       (not-empty? '())))
+              '(() . #f))
 
 (check-equal? (run
                '(begin (define (map-add1 xs)
