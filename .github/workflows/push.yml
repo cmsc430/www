@@ -20,8 +20,8 @@ jobs:
         version: '7.9'
     - name: Build and test
       run: |
-        raco make www/main.scrbl
-        raco test www
+        raco make www/main.scrbl     
+        raco test langs
         make -C www main
     - name: Archive www
       uses: actions/upload-artifact@v2
