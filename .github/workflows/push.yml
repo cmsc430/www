@@ -27,4 +27,24 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: www
-        path: www/cmsc430
+        path: www/main
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    steps:
+    - name: Download www
+      uses: actions/download-artifact@v2
+      with:
+        name: www
+        path: cmsc430
+    - name: Deploy to web
+      uses: plum-umd/github-actions-rsync@master
+      with:
+        RSYNC_OPTIONS: -r --delete-after --quiet
+        RSYNC_TARGET: www/tmp/cmsc430/
+        RSYNC_SOURCE: cmsc430/
+      env:
+        SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
+        SSH_USERNAME: ${{secrets.SSH_USERNAME}}
+        SSH_HOSTNAME: ${{secrets.SSH_HOSTNAME}}
