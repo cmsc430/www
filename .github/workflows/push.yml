@@ -7,26 +7,23 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@main
+    - name: Install dependencies
+      run: |
+        sudo apt-get install pandoc
+        sudo apt-get install nasm
     - name: Install Racket
       uses: Bogdanp/setup-racket@v0.10
       with:
         architecture: 'x64'
         distribution: 'full'
         version: '7.9'
-    - name: Run Tests
-      run: raco test .
-  deploy:
-    needs: build-and-test    
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-    - name: Deploy to web
-      uses: plum-umd/github-actions-rsync@master
+    - name: Build and test
+      run: |
+        raco make www/main.scrbl
+	raco test www
+	make -C www main
+    - name: Archive www
+      uses: actions/upload-artifact@v2
       with:
-        RSYNC_OPTIONS: -r --delete-after --quiet
-        RSYNC_TARGET: www/
-        RSYNC_SOURCE: www/
-      env:
-        SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
-        SSH_USERNAME: ${{secrets.SSH_USERNAME}}
-        SSH_HOSTNAME: ${{secrets.SSH_HOSTNAME}}
+        name: www
+        path: www/cmsc430
