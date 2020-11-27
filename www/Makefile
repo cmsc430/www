@@ -17,10 +17,10 @@ $(course):
 		$(course).scrbl
 	mkdir -p $(course)/code/	
 	cd notes ; \
-		tar -c `git ls-files -X .gitignore intro abscond blackmail con dupe extort fraud hustle iniquity jig knock loot mug fp project.pdf` | \
+		tar -c `git ls-files intro abscond blackmail con dupe extort fraud hustle iniquity jig knock loot mug fp project.pdf` | \
 		(cd ../main/code ; tar -x) ; cd ../..
 	cd slides ; \
-		tar -c `git ls-files -X .gitignore ocaml-to-racket.pdf abscond.pdf con.pdf dupe.pdf extort.pdf grift.pdf grift2.pdf hustle.pdf` | \
+		tar -c `git ls-files ocaml-to-racket.pdf abscond.pdf con.pdf dupe.pdf extort.pdf grift.pdf grift2.pdf hustle.pdf` | \
 		(cd ../main/code ; tar -x) ; cd ../..
 
 clean:
