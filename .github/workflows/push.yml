@@ -1,0 +1,50 @@
+on:
+  - push
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@main
+    - name: Install dependencies
+      run: |
+        curl -Ls https://github.com/jgm/pandoc/releases/download/2.11.2/pandoc-2.11.2-1-amd64.deb -o pandoc.deb
+        sudo dpkg -i pandoc.deb
+        sudo apt-get install nasm
+    - name: Install Racket
+      uses: Bogdanp/setup-racket@v0.10
+      with:
+        architecture: 'x64'
+        distribution: 'full'
+        version: '7.9'
+    - name: Build and test
+      run: |
+        raco make www/main.scrbl
+        raco test www
+        make -C www main
+    - name: Archive www
+      uses: actions/upload-artifact@v2
+      with:
+        name: www
+        path: www/main
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    steps:
+    - name: Download www
+      uses: actions/download-artifact@v2
+      with:
+        name: www
+        path: cmsc430
+    - name: Deploy to web
+      uses: plum-umd/github-actions-rsync@master
+      with:
+        RSYNC_OPTIONS: -rvzp
+        RSYNC_TARGET: www/tmp
+        RSYNC_SOURCE: cmsc430
+      env:
+        SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
+        SSH_USERNAME: ${{secrets.SSH_USERNAME}}
+        SSH_HOSTNAME: ${{secrets.SSH_HOSTNAME}}

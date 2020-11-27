@@ -21,4 +21,4 @@
 @include-section{notes/knock.scrbl}
 @include-section{notes/graphviz.scrbl}
 @include-section{notes/loot.scrbl}
-@include-section{notes/mug.scrbl}
+@include-section{notes/shakedown.scrbl}

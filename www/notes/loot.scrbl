@@ -12,7 +12,7 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "loot" f))))))
-	   '("interp.rkt" "compile.rkt" "syntax.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+	   '("interp.rkt" "compile.rkt" "ast.rkt" "syntax.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
 @title[#:tag "Loot"]{Loot: lambda the ultimate}
 
@@ -61,8 +61,8 @@ forms are @racket[λ]s and applications:
 ;; Expr REnv -> Answer
 (define (interp-env e r)
     ;;...
-    [`(λ (,xs ...) ,e)  '...]
-    [`(,e . ,es)        '...])
+    [(lam-e xs e)  '...]
+    [(app-e e es)  '...])
 )
 
 These two parts of the interpreter must fit together: @racket[λ] is
@@ -109,9 +109,9 @@ in what we know so far:
 ;; Expr REnv -> Answer
 (define (interp-env e r)
     ;;...
-    [`(λ (,xs ...) ,e)
+    [(lam-e xs e)
      (λ ??? '...)]
-    [`(,e . ,es)
+    [(app-e e es)
      (let ((f (interp-eval e r))
            (vs (interp-eval* es r)))
        (apply f vs))])
@@ -129,9 +129,9 @@ number of arguments:
 ;; Expr REnv -> Answer
 (define (interp-env e r)
     ;;...
-    [`(λ (,xs ...) ,e)
+    [(lam-e xs e)
      (λ vs '...)]
-    [`(,e . ,es)
+    [(app-e e es)
      (let ((f (interp-eval e r))
            (vs (interp-eval* es r)))
        (apply f vs))])
@@ -148,9 +148,9 @@ Translating that to code, we get:
 ;; Expr REnv -> Answer
 (define (interp-env e r)
     ;;...
-    [`(λ (,xs ...) ,e)
+    [(lam-e  xs e)
      (λ vs (interp-env e (zip xs vs)))]
-    [`(,e . ,es)
+    [(app-e e es)
      (let ((f (interp-eval e r))
            (vs (interp-eval* es r)))
        (apply f vs))])
@@ -193,9 +193,9 @@ in the (Racket) function:
 ;; Expr REnv -> Answer
 (define (interp-env e r)
     ;;...
-    [`(λ (,xs ...) ,e)
+    [(lam-e xs e)
      (λ (vs) (interp-env e (append (zip xs vs) r)))]
-    [`(,e . ,es)
+    [(app-e e es)
      (let ((f (interp-eval e r))
            (vs (interp-eval* es r)))
        (apply f vs))])
@@ -208,12 +208,12 @@ The last remaining issue is we should do some type and arity-checking:
 ;; Expr REnv -> Answer
 (define (interp-env e r)
     ;;...
-    [`(λ (,xs ...) ,e)
+    [(lam-e xs e)
      (λ (vs)
        (if (= (length xs) (length vs))
            (interp-env e (append (zip xs vs) r))
 	   'err))]
-    [`(,e . ,es)
+    [(app-e e es)
      (let ((f (interp-eval e r))
            (vs (interp-eval* es r)))
        (if (procedure? f)
@@ -232,16 +232,16 @@ We can write recursive functions, using only anonymous functions, via
 the Y-combinator:
 
 @ex[
-(interp
+(interp (sexpr->prog
   '(λ (t)
      ((λ (f) (t (λ (z) ((f f) z))))
-      (λ (f) (t (λ (z) ((f f) z)))))))
+      (λ (f) (t (λ (z) ((f f) z))))))))
 ]
 
 For example, computing the triangular function applied to 10:
 
 @ex[
-(interp
+(interp (sexpr->prog
   '(((λ (t)
        ((λ (f) (t (λ (z) ((f f) z))))
         (λ (f) (t (λ (z) ((f f) z))))))
@@ -250,7 +250,7 @@ For example, computing the triangular function applied to 10:
          (if (zero? n)
              1
              (+ n (tri (sub1 n)))))))
-    10))
+    10)))
 ]
 
 One of the niceties of using Racket functions to represent Loot
@@ -259,17 +259,17 @@ Loot functions:
 
 @ex[
 (define Y
-  (interp
+  (interp (sexpr->prog
     '(λ (t)
        ((λ (f) (t (λ (z) ((f f) z))))
-        (λ (f) (t (λ (z) ((f f) z))))))))
+        (λ (f) (t (λ (z) ((f f) z)))))))))
 
 (define tri
-  (interp '(λ (tri)
-             (λ (n)
-               (if (zero? n)
-                   1
-                   (+ n (tri (sub1 n))))))))
+  (interp (sexpr->prog '(λ (tri)
+                         (λ (n)
+                           (if (zero? n)
+                               1
+                               (+ n (tri (sub1 n)))))))))
 ]
 
 And then use them from within Racket:
@@ -281,7 +281,7 @@ And then use them from within Racket:
 We can also ``import'' Racket functions in to Loot:
 
 @ex[
-(interp-env '(expt 2 10)
+(interp-env (sexpr->expr '(expt 2 10))
             `((expt ,expt)))
 ]
 
@@ -347,13 +347,13 @@ to be in the (Racket) function:
 ;; Expr REnv -> Answer
 (define (interp-env e r)
     ;;...
-    [`(λ (,xs ...) ,e)
-     `(closure ,xs ,e ,r)]
-    [`(,e . ,es)
+    [(lam-e xs e)
+     (closure xs e r)]
+    [(app-e e es)
      (let ((f (interp-eval e r))
            (vs (interp-eval* es r)))
        (match f
-         [`(closure ,xs ,e ,r)
+         [(closure xs e r)
 	  (if (= (length vs) (length xs))
               (interp-env e (append (zip xs vs) r))
 	      'err)]
@@ -366,8 +366,8 @@ We can give it a try:
 @(ev `(require (file ,(path->string (build-path notes "loot" "interp-defun.rkt")))))
 
 @ex[
-(interp '(λ (x) x))
-(interp '((λ (x) (λ (y) x)) 8))
+(interp (sexpr->prog '(λ (x) x)))
+(interp (sexpr->prog '((λ (x) (λ (y) x)) 8)))
 ]
 
 Notice in the second example how the closure contains the body of the
@@ -377,7 +377,7 @@ function and the environment mapping the free variable @racket['x] to
 We can also confirm our larger example works:
 
 @ex[
-(interp
+(interp (sexpr->prog
   '(((λ (t)
        ((λ (f) (t (λ (z) ((f f) z))))
         (λ (f) (t (λ (z) ((f f) z))))))
@@ -386,7 +386,7 @@ We can also confirm our larger example works:
          (if (zero? n)
              1
              (+ n (tri (sub1 n)))))))
-    10))
+    10)))
 ]
 
 While can't apply the interpretation of functions in Racket
@@ -395,17 +395,18 @@ interpretation of functions:
 
 @ex[
 (define Y
-  (interp
+  (interp (sexpr->prog
     '(λ (t)
        ((λ (f) (t (λ (z) ((f f) z))))
-        (λ (f) (t (λ (z) ((f f) z))))))))
+        (λ (f) (t (λ (z) ((f f) z)))))))))
 
 (define tri
-  (interp '(λ (tri)
+  (interp (sexpr->prog
+           '(λ (tri)
              (λ (n)
                (if (zero? n)
                    1
-                   (+ n (tri (sub1 n))))))))
+                   (+ n (tri (sub1 n)))))))))
 
 (apply-function (apply-function Y tri) 10)
 ]
@@ -509,17 +510,17 @@ To deal with the first issue, we first make a pass over the program
 inserting computed names for each @racket[λ]-expression.
 
 To accomodate this, we will introduce the following data type for
-``labelled'' expressions:
+``labelled'' expressions, along with the @racket[lam-t] constructor:
 
 @#reader scribble/comment-reader
 (racketblock
 ;; type LExpr =
 ;; ....
-;; | `(λ ,Formals ',Symbol ,Expr)
+;; | `(λ ',Symbol ,Formals ,Expr)
 )
 
 An @tt{LExpr} is just like a @tt{Expr} except that
-@racket[λ]-expressions have the form like @racket[(λ (x) 'fred (+ x
+@racket[λ]-expressions have the form like @racket[(λ 'fred (x) (+ x
 x))].  The symbol @racket['fred] here is used to give a name to the
 @racket[λ]-expression.  The use of @racket[quote] is so that
 @tt{LExprs} are still a valid subset of Racket expressions.
@@ -532,31 +533,23 @@ The first step of the compiler will be to label every
 ;; Expr -> LExpr
 (define (label-λ e)
   (match e
-    [(? symbol? x)         x]
-    [(? imm? i)            i]
-    [`(box ,e0)            `(box ,(label-λ e0))]
-    [`(unbox ,e0)          `(unbox ,(label-λ e0))]
-    [`(cons ,e0 ,e1)       `(cons ,(label-λ e0) ,(label-λ e1))]
-    [`(car ,e0)            `(car ,(label-λ e0))]
-    [`(cdr ,e0)            `(cdr ,(label-λ e0))]
-    [`(add1 ,e0)           `(add1 ,(label-λ e0))]
-    [`(sub1 ,e0)           `(sub1 ,(label-λ e0))]
-    [`(zero? ,e0)          `(zero? ,(label-λ e0))]
-    [`(empty? ,e0)         `(empty? ,(label-λ e0))]
-    [`(if ,e0 ,e1 ,e2)     `(if ,(label-λ e0) ,(label-λ e1) ,(label-λ e2))]
-    [`(+ ,e0 ,e1)          `(+ ,(label-λ e0) ,(label-λ e1))]
-    [`(let ((,x ,e0)) ,e1) `(let ((,x ,(label-λ e0))) ,(label-λ e1))]
-    [`(λ ,xs ,e0)          `(λ ,xs ',(gensym) ,(label-λ e0))]
-    [`(,e . ,es)           `(,(label-λ e) ,@(map label-λ es))]))
+    [(? imm? i)       e]
+    [(var-e v)        e]
+    [(prim-e p es)    (prim-e p (map label-λ es))]
+    [(if-e e0 e1 e2)  (if-e (label-λ e0) (label-λ e1) (label-λ e2))]
+    [(let-e bs body)  (let-e (bindings-map-def label-λ bs) (label-λ body))]
+    [(letr-e bs body) (letr-e (bindings-map-def label-λ bs) (label-λ body))]
+    [(lam-e xs e0)    (lam-t (gensym) xs (label-λ e0))]
+    [(app-e f es)     (app-e (label-λ f) (map label-λ es))]))
 )
 
 Here it is at work:
 
 @ex[
-(label-λ
+(label-λ (sexpr->expr
   '(λ (t)
     ((λ (f) (t (λ (z) ((f f) z))))
-     (λ (f) (t (λ (z) ((f f) z)))))))
+     (λ (f) (t (λ (z) ((f f) z))))))))
 ]
 
 Now turning to the second issue--@racket[λ]-expression may reference
@@ -585,22 +578,16 @@ we do with the following function:
 (define (fvs e)
   (define (fvs e)
     (match e
-      [(? symbol? x)         (list x)]
-      [(? imm? i)            '()]
-      [`(box ,e0)            (fvs e0)]
-      [`(unbox ,e0)          (fvs e0)]
-      [`(cons ,e0 ,e1)       (append (fvs e0) (fvs e1))]
-      [`(car ,e0)            (fvs e0)]
-      [`(cdr ,e0)            (fvs e0)]
-      [`(add1 ,e0)           (fvs e0)]
-      [`(sub1 ,e0)           (fvs e0)]
-      [`(zero? ,e0)          (fvs e0)]
-      [`(empty? ,e0)         (fvs e0)]
-      [`(if ,e0 ,e1 ,e2)     (append (fvs e0) (fvs e1) (fvs e2))]
-      [`(+ ,e0 ,e1)          (append (fvs e0) (fvs e1))]
-      [`(let ((,x ,e0)) ,e1) (append (fvs e0) (remq* (list x) (fvs e1)))]
-      [`(λ ,xs ,l ,e0)       (remq* xs (fvs e0))]
-      [`(,e . ,es)           (append (fvs e) (apply append (map fvs es)))]))          
+      [(? imm? i)       '()]
+      [(var-e v)        (list v)]
+      [(prim-e p es)    (apply append (map fvs es))]
+      [(if-e e0 e1 e2)  (append (fvs e0) (fvs e1) (fvs e2))]
+      [(let-e bs body)  (append (apply append (map fvs (get-defs bs)))
+                                (remq* (get-vars bs) (fvs body)))]
+      [(letr-e bs body) (remq* (get-vars bs) (append (apply append (map fvs (get-defs bs))) (fvs body)))]
+      [(lam-t _ xs e0)  (remq* xs (fvs e0))]
+      [(lam-e xs e0)    (remq* xs (fvs e0))]
+      [(app-e f es)     (append (fvs f) (apply append (map fvs es)))]))
   (remove-duplicates (fvs e)))
 )
 
@@ -612,22 +599,23 @@ We can now write the function that compiles a labelled
 ;; Lambda -> Asm
 (define (compile-λ-definition l)
   (match l
-    [`(λ ,xs ',f ,e0)
+    [(lam-t f xs e0)
      (let ((c0 (compile-tail-e e0 (reverse (append xs (fvs l))))))
        `(,f
          ,@c0
-         ret))]))
+         ret))]
+    [(lam-e _ _) (error "Lambdas need to be labeled before compiling")]))
 )
 
 Here's what's emitted for a @racket[λ]-expression with a free variable:
 @ex[
-(compile-λ-definition '(λ (x) 'f z))
+(compile-λ-definition (lam-t 'f '(x) (var-e 'z)))
 ]
 
 Notice that it's identical to a @racket[λ]-expression with an added
 parameter and no free variables:
 @ex[
-(compile-λ-definition '(λ (x z) 'f z))
+(compile-λ-definition (lam-t 'f '(x z) (var-e 'z)))
 ]
 
 The compiler will need to generate one such function for each
@@ -642,22 +630,16 @@ each of them:
 ;; Extract all the lambda expressions
 (define (λs e)
   (match e
-    [(? symbol? x)         '()]
-    [(? imm? i)            '()]
-    [`(box ,e0)            (λs e0)]
-    [`(unbox ,e0)          (λs e0)]
-    [`(cons ,e0 ,e1)       (append (λs e0) (λs e1))]
-    [`(car ,e0)            (λs e0)]
-    [`(cdr ,e0)            (λs e0)]
-    [`(add1 ,e0)           (λs e0)]
-    [`(sub1 ,e0)           (λs e0)]
-    [`(zero? ,e0)          (λs e0)]
-    [`(empty? ,e0)         (λs e0)]
-    [`(if ,e0 ,e1 ,e2)     (append (λs e0) (λs e1) (λs e2))]
-    [`(+ ,e0 ,e1)          (append (λs e0) (λs e1))]
-    [`(let ((,x ,e0)) ,e1) (append (λs e0) (λs e1))]
-    [`(λ ,xs ,l ,e0)       (cons e (λs e0))]
-    [`(,e . ,es)           (append (λs e) (apply append (map λs es)))]))
+    [(? imm? i)       '()]
+    [(var-e v)        '()]
+    [(prim-e p es)    (apply append (map λs es))]
+    [(if-e e0 e1 e2)  (append (λs e0) (λs e1) (λs e2))]
+    [(let-e (list (binding v def)) body)
+                      (append (λs def) (λs body))]
+    [(letr-e bs body) (append (apply append (map λs (get-defs bs))) (λs body))]
+    [(lam-e xs e0)    (cons e (λs e0))]
+    [(lam-t _ xs e0)  (cons e (λs e0))]
+    [(app-e f es)     (append (λs f) (apply append (map λs es)))]))
 
 ;; (Listof Lambda) -> Asm
 (define (compile-λ-definitions ls)
@@ -670,17 +652,24 @@ compiles all the @racket[λ]-expressions to functions:
 
 @#reader scribble/comment-reader
 (racketblock
+;; Prog -> Asm
+(define (compile p)
+  ; Remove all of the explicit function definitions
+  (match (desugar-prog p)
+    [(prog _ e)
+      (compile-entry (label-λ e))]))
+
+
 ;; Expr -> Asm
-(define (compile e)
-  (let ((le (label-λ e)))
-    `(entry
-      ,@(compile-tail-e le '())
+(define (compile-entry e)
+     `(entry
+      ,@(compile-tail-e e '())
       ret
-      ,@(compile-λ-definitions (λs le))
+      ,@(compile-λ-definitions (λs e))
       err
       (push rbp)
       (call error)
-      ret)))
+      ret))
 )
 
 What remains is the issue of compiling @racket[λ]-expressions to code
@@ -818,9 +807,9 @@ loop over the environment to move values to the stack:
 Let's try it out:
 
 @ex[
-(asm-interp (compile '((let ((x 8)) (λ (y) x)) 2)))
-(asm-interp (compile '(((λ (x) (λ (y) x)) 8) 2)))
-(asm-interp (compile '((λ (f) (f (f 0))) (λ (x) (add1 x)))))
+(asm-interp (compile (sexpr->prog '((let ((x 8)) (λ (y) x)) 2))))
+(asm-interp (compile (sexpr->prog '(((λ (x) (λ (y) x)) 8) 2))))
+(asm-interp (compile (sexpr->prog '((λ (f) (f (f 0))) (λ (x) (add1 x))))))
 ]
 
 @section[#:tag-prefix "loot"]{Recursive Functions}
@@ -919,17 +908,19 @@ which allocates unitialized closures and pushes each on the stack.
   (match ls
     ['() '()]
     [(cons l ls)
-     (let ((cs (compile-letrec-λs ls (cons #f c)))
-           (ys (fvs l)))
-       `((lea rax (offset ,(second (third l)) 0))
-         (mov (offset rdi 0) rax)
-         (mov rax ,(length ys))
-         (mov (offset rdi 1) rax)
-         (mov rax rdi)
-         (or rax ,type-proc)
-         (add rdi ,(* 8 (+ 2 (length ys))))
-         (mov (offset rsp ,(- (add1 (length c)))) rax)
-         ,@cs))]))
+     (match l
+       [(lam-t lab as body)
+         (let ((cs (compile-letrec-λs ls (cons #f c)))
+               (ys (fvs l)))
+           `((lea rax (offset ,lab 0))
+             (mov (offset rdi 0) rax)
+             (mov rax ,(length ys))
+             (mov (offset rdi 1) rax)
+             (mov rax rdi)
+             (or rax ,type-proc)
+             (add rdi ,(* 8 (+ 2 (length ys))))
+             (mov (offset rsp ,(- (add1 (length c)))) rax)
+             ,@cs))])]))
 )
 
 The @racket[compile-letrec-init] goes through each function and
@@ -939,7 +930,6 @@ available.  Finally the body is compiled in an extended environment.
 @#reader scribble/comment-reader
 (racketblock
 ;; (Listof Variable) (Listof Lambda) CEnv -> Asm
-;; Initialize closures bound to each variable in fs
 (define (compile-letrec-init fs ls c)
   (match fs
     ['() '()]
@@ -956,7 +946,8 @@ available.  Finally the body is compiled in an extended environment.
 We can give a spin:
 
 @ex[
-(asm-interp (compile '(letrec ((even?
+(asm-interp (compile (sexpr->prog
+                      '(letrec ((even?
                                 (λ (x)
                                   (if (zero? x)
                                       #t
@@ -966,10 +957,10 @@ We can give a spin:
                                   (if (zero? x)
                                       #f
                                       (even? (sub1 x))))))
-                        (even? 10))))
+                        (even? 10)))))
 
 (asm-interp 
-  (compile
+  (compile (sexpr->prog
     '(letrec ((map (λ (f ls)
                     (letrec ((mapper (λ (ls)
                                        (if (empty? ls)
@@ -979,7 +970,7 @@ We can give a spin:
       (map (λ (f) (f 0))
            (cons (λ (x) (add1 x))
                  (cons (λ (x) (sub1 x))
-                       '()))))))
+                       '())))))))
 ]
 
 
@@ -1004,28 +995,14 @@ _x ...) _e) ... _e0)].  The @racket[desugar] function writes
 ;; Expr+ -> Expr
 (define (desugar e+)
   (match e+
-    [`(begin ,@(list `(define (,fs . ,xss) ,es) ...) ,e)
-     `(letrec ,(map (λ (f xs e) `(,f (λ ,xs ,(desugar e)))) fs xss es)
-        ,(desugar e))]
-    [(? symbol? x)         x]
-    [(? imm? i)            i]
-    [`(box ,e0)            `(box ,(desugar e0))]
-    [`(unbox ,e0)          `(unbox ,(desugar e0))]
-    [`(cons ,e0 ,e1)       `(cons ,(desugar e0) ,(desugar e1))]
-    [`(car ,e0)            `(car ,(desugar e0))]
-    [`(cdr ,e0)            `(cdr ,(desugar e0))]
-    [`(add1 ,e0)           `(add1 ,(desugar e0))]
-    [`(sub1 ,e0)           `(sub1 ,(desugar e0))]
-    [`(zero? ,e0)          `(zero? ,(desugar e0))]
-    [`(empty? ,e0)         `(empty? ,(desugar e0))]
-    [`(if ,e0 ,e1 ,e2)     `(if ,(desugar e0) ,(desugar e1) ,(desugar e2))]
-    [`(+ ,e0 ,e1)          `(+ ,(desugar e0) ,(desugar e1))]
-    [`(let ((,x ,e0)) ,e1) `(let ((,x ,(desugar e0))) ,(desugar e1))]
-    [`(letrec ,bs ,e0)
-     `(letrec ,(map (λ (b) (list (first b) (desugar (second b)))) bs)
-        ,(desugar e0))]
-    [`(λ ,xs ,e0)          `(λ ,xs ,(desugar e0))]    
-    [`(,e . ,es)           `(,(desugar e) ,@(map desugar es))]))    
+    [(? imm? i)       e+]
+    [(var-e v)        e+]
+    [(prim-e p es)    (prim-e p (map desugar es))]
+    [(if-e e0 e1 e2)  (if-e (desugar e0) (desugar e1) (desugar e2))]
+    [(let-e bs body)  (let-e (bindings-map-def desugar bs) (desugar body))]
+    [(letr-e bs body) (letr-e (bindings-map-def desugar bs) (desugar body))]
+    [(lam-e xs e0)    (lam-e xs (desugar e0))]
+    [(app-e f es)     (app-e (desugar f) (map desugar es))]))
 )
 
 The compiler now just desugars before labeling and compiling expressions.
