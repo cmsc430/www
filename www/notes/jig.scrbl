@@ -4,7 +4,6 @@
 @(require redex/pict
 	  racket/runtime-path
 	  scribble/examples
-	  "hustle/semantics.rkt"
 	  "utils.rkt"
 	  "ev.rkt"
 	  "../utils.rkt")

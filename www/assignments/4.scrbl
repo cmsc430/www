@@ -2,7 +2,7 @@
 @title[#:tag "Assignment 4" #:style 'unnumbered]{Assignment 4: Let there be Variables, Characters}
 
 @(require (for-label (except-in racket ...)))
-@(require "../notes/fraud-plus/semantics.rkt")
+@(require "../../langs/fraud-plus/semantics.rkt")
 @(require redex/pict)
 
 @(require "../notes/ev.rkt")

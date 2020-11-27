@@ -4,8 +4,8 @@
 @(require redex/pict
           racket/runtime-path
           scribble/examples
-	  (except-in "fraud/semantics.rkt" ext lookup)
-          (prefix-in sem: (only-in "fraud/semantics.rkt" ext lookup))
+	  (except-in "../../langs/fraud/semantics.rkt" ext lookup)
+          (prefix-in sem: (only-in "../../langs/fraud/semantics.rkt" ext lookup))
           #;(file "/Users/dvanhorn/git/cmsc430-www/www/notes/fraud/interp.rkt")
 	  "utils.rkt"
 	  "ev.rkt"

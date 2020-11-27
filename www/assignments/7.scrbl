@@ -2,8 +2,6 @@
 @title[#:tag "Assignment 7" #:style 'unnumbered]{Assignment 7: Symbols, interning, and gensym}
 
 @(require (for-label (except-in racket ...)))
-@;(require "../notes/fraud-plus/semantics.rkt")
-@;(require redex/pict)
 
 @(require "../notes/ev.rkt")
 

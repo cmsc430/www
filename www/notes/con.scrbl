@@ -8,7 +8,7 @@
 	  #;(prefix-in sem: (only-in "con/semantics.rkt" ext lookup))
 	  "utils.rkt"
 	  "ev.rkt"
-	  "con/semantics.rkt"
+	  "../../langs/con/semantics.rkt"
 	  "../utils.rkt")
 
 

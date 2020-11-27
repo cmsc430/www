@@ -6,9 +6,7 @@
 	  scribble/examples
 	  "utils.rkt"
 	  "ev.rkt"
-          "mug/syntax.rkt"
-          "mug/pat.rkt"
-	  "../utils.rkt")
+          "../utils.rkt")
 
 @(define codeblock-include (make-codeblock-include #'h))
 
