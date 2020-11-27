@@ -9,7 +9,7 @@
 
 @bold{Due: Thursday, December 10th, 11:59PM EST}
 
-@(define repo "")
+@(define repo "https://FIXME")
 
 The goal of this assignment is to (1) implement arity checking in a
 language with functions, (2) to implement the @racket[apply]
