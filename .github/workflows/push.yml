@@ -41,9 +41,9 @@ jobs:
     - name: Deploy to web
       uses: plum-umd/github-actions-rsync@master
       with:
-        RSYNC_OPTIONS: -r --delete-after --quiet
-        RSYNC_TARGET: www/tmp/cmsc430/
-        RSYNC_SOURCE: cmsc430/
+        RSYNC_OPTIONS: -rvzp
+        RSYNC_TARGET: www/tmp
+        RSYNC_SOURCE: cmsc430
       env:
         SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
         SSH_USERNAME: ${{secrets.SSH_USERNAME}}
