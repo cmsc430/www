@@ -1,33 +1,41 @@
 #lang racket
 (provide (all-defined-out))
-(require "ast.rkt")
+(require "ast.rkt"
+         "asm/ast.rkt")
 
 ;; Expr -> Asm
 (define (compile e)
-  `(entry
-    ,@(compile-e e)
-    ret))
+  (seq (Label 'entry)
+       (compile-e e)
+       (Ret)))
 
 ;; Expr -> Asm
 (define (compile-e e)
   (match e
-    [(int-e i) `((mov rax ,i))]
-    [(add1-e e1) (let ((c1 (compile-e e1)))
-                `(,@c1
-                  (add rax 1)))]
-    [(sub1-e e1) (let ((c1 (compile-e e1)))
-                `(,@c1
-                  (sub rax 1)))]
-    [(if-e i t f) (let ((c1 (compile-e i))
-                        (c2 (compile-e t))
-                        (c3 (compile-e f))
-                        (l1 (gensym "if"))
-                        (l2 (gensym "if")))
-                    `(,@c1
-                      (cmp rax 0) ; zero? <result of executing code for i>
-                      (je ,l1)
-                      ,@c3
-                      (jmp ,l2)
-                      ,l1
-                      ,@c2
-                      ,l2))]))
+    [(Int i)           (compile-integer i)]    
+    [(Prim p e)        (compile-prim p e)]
+    [(IfZero e1 e2 e3) (compile-ifzero e1 e2 e3)]))
+
+;; Integer -> Asm
+(define (compile-integer i)
+  (seq (Mov 'rax i)))
+
+;; Op Expr -> Asm
+(define (compile-prim p e)
+  (seq (compile-e e)
+       (match p
+         ['add1 (Add 'rax 1)]
+         ['sub1 (Sub 'rax 1)])))
+
+;; Expr Expr Expr -> Asm
+(define (compile-ifzero e1 e2 e3)
+  (let ((l1 (gensym 'if))
+        (l2 (gensym 'if)))
+    (seq (compile-e e1)
+         (Cmp 'rax 0)
+         (Je l1)
+         (compile-e e3)
+         (Jmp l2)
+         (Label l1)
+         (compile-e e2)
+         (Label l2))))

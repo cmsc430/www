@@ -1,6 +1,5 @@
 #lang racket
-(provide (all-defined-out))
-
+(provide interp interp-env interp-prim1)
 (require "ast.rkt")
 
 ;; type Answer = Value | 'err
@@ -8,61 +7,85 @@
 ;; type Value =
 ;; | Integer
 ;; | Boolean
+;; | Character
+;; | Eof
+;; | Void
 
-;; type REnv = (Listof (List Variable Value))
+;; type REnv = (Listof (List Id Value))
 
 ;; Expr -> Answer
 (define (interp e)
   (interp-env e '()))
 
-
+;; Expr Env -> Answer
 (define (interp-env e r)
   (match e
-    [(var-e v) (lookup r v)]
-    [(int-e i) i]
-    [(bool-e b) b]
-    [(prim-e p e)
-      (if (memq p prims)
-          (interp-prim p e r)
-          'err)]
-    [(if-e p e1 e2)
+    [(Int i) i]
+    [(Bool b) b]
+    [(Char c) c]
+    [(Eof) eof]
+    [(Var x) (lookup r x)]
+    [(Prim0 'read-byte) (read-byte)]
+    [(Prim1 p e)
+     (match (interp-env e r)
+       ['err 'err]
+       [v (interp-prim1 p v)])]
+    [(Prim2 p e1 e2)
+     (match (interp-env e1 r)
+       ['err 'err]
+       [v1 (match (interp-env e2 r)
+             ['err 'err]
+             [v2 (interp-prim2 p v1 v2)])])]
+    [(If p e1 e2)
      (match (interp-env p r)
        ['err 'err]
        [v
         (if v
             (interp-env e1 r)
             (interp-env e2 r))])]
-    [(let-e (list bnd) body)
-       (match bnd
-         [(binding v def)
-              (match (interp-env def r)
-                ['err 'err]
-                [val  (interp-env body (ext r v val))])])]))
+    [(Begin e1 e2)
+     (match (interp-env e1 r)
+       ['err 'err]
+       [v    (interp-env e2 r)])]
+    [(Let x e1 e2)
+     (match (interp-env e1 r)
+       ['err 'err]
+       [v (interp-env e2 (ext r x v))])]))
 
-(define (interp-prim p e r)
-  (match p
-    ['add1
-     (match (interp-env e r)
-       [(? integer? i) (add1 i)]
-       [_ 'err])]
-    ['sub1
-     (match (interp-env e r)
-       [(? integer? i) (sub1 i)]
-       [_ 'err])]
-    ['zero?
-     (match (interp-env e r)
-       [(? integer? i) (zero? i)]
-       [_ 'err])]))
+;; Op1 Value -> Answer
+(define (interp-prim1 p1 v)
+  (match (list p1 v)
+    [(list 'add1 (? integer?)) (add1 v)]
+    [(list 'sub1 (? integer?)) (sub1 v)]
+    [(list 'zero? (? integer?)) (zero? v)]
+    [(list 'char? v) (char? v)]
+    [(list 'char->integer (? char?)) (char->integer v)]
+    [(list 'integer->char (? codepoint?)) (integer->char v)]
+    [(list 'eof-object? v) (eof-object? v)]
+    [(list 'write-byte (? byte?)) (write-byte v)]
+    [_ 'err]))
 
-(define (lookup r v)
-  (lookup-prime r r v))
+;; Op2 Value Value -> Answer
+(define (interp-prim2 p v1 v2)
+  (match (list p v1 v2)
+    [(list '+ (? integer?) (? integer?)) (+ v1 v2)]
+    [(list '- (? integer?) (? integer?)) (- v1 v2)]
+    [_ 'err]))
 
-(define (lookup-prime init r v)
+;; Env Id -> Value
+(define (lookup r x)
   (match r
-    ['() (error (format "~a is not found in the environment. Current env: ~a" v init))]
-    [(cons (list var val) rest) (if (symbol=? v var)
-                                    val
-                                    (lookup-prime init rest v))]))
+    [(cons (list y val) r)
+     (if (symbol=? x y)
+         val
+         (lookup r x))]))
 
+;; Env Id Value -> Env
 (define (ext r v val)
   (cons (list v val) r))
+
+;; Any -> Boolean
+(define (codepoint? v)
+  (and (integer? v)
+       (or (<= 0 v 55295)
+           (<= 57344 v 1114111))))

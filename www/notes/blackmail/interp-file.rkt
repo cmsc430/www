@@ -1,13 +1,13 @@
 #lang racket
-(provide (all-defined-out))
-(require "interp.rkt" "syntax.rkt")
+(provide main)
+(require "parse.rkt" "interp.rkt")
 
 ;; String -> Void
 ;; Parse and interpret contents of given filename,
 ;; print result on stdout
 (define (main fn)
-  (with-input-from-file fn
-    (λ ()
-      (let ((c (read-line)))
-        (let ((p (read)))
-          (writeln (interp (sexpr->ast p))))))))
+  (let ((p (open-input-file fn)))
+    (begin
+      (read-line p) ; ignore #lang racket line
+      (displayln (interp (parse (read p))))
+      (close-input-port p))))

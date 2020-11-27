@@ -16,7 +16,7 @@
 
 @(ev '(require rackunit))
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "extort" f))))))
-	   '("interp.rkt" "ast.rkt" "syntax.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+	   '("interp.rkt" "ast.rkt" "parse.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
 
 @title[#:tag "Extort"]{Extort: when errors exist}
@@ -116,9 +116,9 @@ We can confirm the interpreter computes the right result for the
 examples given earlier:
 
 @ex[
-(interp (add1-e (bool-e #f)))
-(interp (zero?-e (bool-e #t)))
-(interp (if-e (zero?-e (bool-e #f)) (int-e 1) (int-e 2)))
+(interp (Prim1 'add1 (Bool #f)))
+(interp (Prim1 'zero? (Bool #t)))
+(interp (If (Prim1 'zero? (Bool #f)) (Int 1) (Int 2)))
 ]
 
 The statement of correctness stays the same, but now observe that
@@ -142,22 +142,24 @@ The compiler now emits code to check the type of arguments:
 
 Here's the code we generate for @racket['(add1 #f)]:
 @ex[
-(asm-display (compile (add1-e (bool-e #f))))
+(displayln (asm-string (compile (Prim1 'add1 (Bool #f)))))
 ]
 
 Here are some examples running the compiler:
 @ex[
-(asm-interp (compile (sexpr->ast #t)))
-(asm-interp (compile (sexpr->ast #f)))
-(asm-interp (compile (sexpr->ast '(zero? 0))))
-(asm-interp (compile (sexpr->ast '(zero? -7))))
-(asm-interp (compile (sexpr->ast '(if #t 1 2))))
-(asm-interp (compile (sexpr->ast '(if #f 1 2))))
-(asm-interp (compile (sexpr->ast '(if (zero? 0) (if (zero? 0) 8 9) 2))))
-(asm-interp (compile (sexpr->ast '(if (zero? (if (zero? 2) 1 0)) 4 5))))
-(asm-interp (compile (sexpr->ast '(add1 #t))))
-(asm-interp (compile (sexpr->ast '(sub1 (add1 #f)))))
-(asm-interp (compile (sexpr->ast '(if (zero? #t) 1 2))))
+(define (tell e)
+  (asm-interp (compile (parse e))))
+(tell #t)
+(tell #f)
+(tell '(zero? 0))
+(tell '(zero? -7))
+(tell '(if #t 1 2))
+(tell '(if #f 1 2))
+(tell '(if (zero? 0) (if (zero? 0) 8 9) 2))
+(tell '(if (zero? (if (zero? 2) 1 0)) 4 5))
+(tell '(add1 #t))
+(tell '(sub1 (add1 #f)))
+(tell '(if (zero? #t) 1 2))
 ]
 
 Since the interpreter and compiler have well defined specifications
@@ -170,9 +172,7 @@ usual way again:
                 (interp e)
                 e))
 
-(check-correctness (add1-e (int-e 7)))
-(check-correctness (add1-e (bool-e #f)))
+(check-correctness (Prim1 'add1 (Int 7)))
+(check-correctness (Prim1 'add1 (Bool #f)))
 ]
-
-
 

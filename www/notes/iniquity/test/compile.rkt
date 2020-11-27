@@ -1,12 +1,12 @@
 #lang racket
 (require "../compile.rkt"
-         "../syntax.rkt"
+         "../parse.rkt"
          "../asm/interp.rkt"
          rackunit
          redex/reduction-semantics)
 
 (define (run e)
-  (asm-interp (compile (sexpr->prog e))))
+  (asm-interp (compile (parse e))))
 
 (check-equal? (run 7) 7)
 (check-equal? (run -8) -8)

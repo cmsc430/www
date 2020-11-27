@@ -1,23 +1,27 @@
 #lang racket
 (provide (all-defined-out))
-
-(require "ast.rkt")
-(require "primitives.rkt")
+(require "ast.rkt"
+         "asm/ast.rkt")
 
 ;; Expr -> Asm
 (define (compile e)
-  (append '(entry)
-          (compile-e e)
-          '(ret)))
+  (seq (Label 'entry)
+       (compile-e e)
+       (Ret)))
 
 ;; Expr -> Asm
 (define (compile-e e)
   (match e
-    [(int-e i) `((mov rax ,i))]
-    [(add1-e e1) (let ((c1 (compile-e e1))) ; c1 : [ASM]
-                `(,@c1
-                  (add rax 1)))]
-    [(sub1-e e1) (let ((c1 (compile-e e1)))
-                `(,@c1
-                  (sub rax 1)))]
-    [(get-i)  get-int-asm]))
+    [(Prim p e) (compile-prim p e)]
+    [(Int i)    (compile-integer i)]))
+
+;; Op Expr -> Asm
+(define (compile-prim p e)
+  (seq (compile-e e)
+       (match p
+         ['add1 (Add 'rax 1)]
+         ['sub1 (Sub 'rax 1)])))
+
+;; Integer -> Asm
+(define (compile-integer i)
+  (seq (Mov 'rax i)))
