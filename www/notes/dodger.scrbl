@@ -6,8 +6,7 @@
           scribble/examples
           "../fancyverb.rkt"
 	  "utils.rkt"
-	  "ev.rkt"
-	  "dupe/semantics.rkt"
+	  "ev.rkt"	  
 	  "../utils.rkt")
 
 

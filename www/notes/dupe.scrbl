@@ -7,7 +7,7 @@
           "../fancyverb.rkt"
 	  "utils.rkt"
 	  "ev.rkt"
-	  "dupe/semantics.rkt"
+	  "../../langs/dupe/semantics.rkt"
 	  "../utils.rkt")
 
 

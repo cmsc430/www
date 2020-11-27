@@ -7,7 +7,7 @@
           "../fancyverb.rkt"
 	  "utils.rkt"
 	  "ev.rkt"
-	  "extort/semantics.rkt"
+	  "../../langs/extort/semantics.rkt"
 	  "../utils.rkt")
 
 

@@ -5,7 +5,7 @@
           redex/pict
 	  "../fancyverb.rkt"
 	  "../utils.rkt"
-	  "blackmail/semantics.rkt"
+	  "../../langs/blackmail/semantics.rkt"
 	  "utils.rkt"
 	  "ev.rkt")
 
