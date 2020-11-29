@@ -6,6 +6,7 @@
 (define ptr-mask       #b111)
 (define type-box       #b001)
 (define type-cons      #b010)
+(define type-str       #b011)
 (define int-shift  (+ 1 imm-shift))
 (define char-shift (+ 2 imm-shift))
 (define type-int      #b0000)
@@ -56,3 +57,6 @@
 
 (define (box-bits? v)
   (zero? (bitwise-xor (bitwise-and v imm-mask) type-box)))
+
+(define (str-bits? v)
+  (zero? (bitwise-xor (bitwise-and v imm-mask) type-str)))
