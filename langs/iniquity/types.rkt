@@ -1,51 +1,62 @@
 #lang racket
 (provide (all-defined-out))
-;; Bit layout of values
-;;
-;; Values are either:
-;; - Immediates: end in #b000
-;; - Pointers: end in anything else
-(define imm-shift 3)
-(define imm-type-mask (sub1 (arithmetic-shift 1 imm-shift)))
-(define imm-type-tag #b000)
 
-;; Immediates are either:
-;; - Integers: end in #b0 (& immediate tag)
-;; - Non-Integers: end in #b1 (& immediate tag)
-(define int-shift     (add1 imm-shift))
-(define int-type-mask (sub1 (arithmetic-shift 1 int-shift)))
-(define int-type-tag
-  (bitwise-ior (arithmetic-shift 0 (sub1 int-shift)) imm-type-tag))
-(define nonint-type-tag
-  (bitwise-ior (arithmetic-shift 1 (sub1 int-shift)) imm-type-tag))
+(define imm-shift          3)
+(define imm-mask       #b111)
+(define ptr-mask       #b111)
+(define type-box       #b001)
+(define type-cons      #b010)
+(define type-str       #b011)
+(define int-shift  (+ 1 imm-shift))
+(define char-shift (+ 2 imm-shift))
+(define type-int      #b0000)
+(define mask-int      #b1111)
+(define type-char    #b01000)
+(define mask-char    #b11111)
+(define val-true   #b0011000)
+(define val-false  #b0111000)
+(define val-eof    #b1011000)
+(define val-void   #b1111000)
+(define val-empty #b10011000)
 
-;; Pointers are "tagged addresses"
-;; - Boxes:   end in #b001
-;; - Pairs:   end in #b010
-;; - remaining bit patterns are reserved for future pointers     
-;; To recover the address, xor the tag to zero it out
-(define box-type-tag  #b001)
-(define pair-type-tag #b010)
+(define (bits->imm b)
+  (cond [(= type-int (bitwise-and b mask-int))
+         (arithmetic-shift b (- int-shift))]
+        [(= type-char (bitwise-and b mask-char))
+         (integer->char (arithmetic-shift b (- char-shift)))]
+        [(= b val-true)  #t]
+        [(= b val-false) #f]
+        [(= b val-eof)  eof]
+        [(= b val-void) (void)]
+        [(= b val-empty) '()]
+        [else (error "invalid bits")]))
 
-;; Non-Integers are either:
-;; - Characters:     end in #b0 (& non-integer tag), code-point in remaining bits    
-;; - Non-Characters: end in #b1 (& non-integer tag)
-(define char-shift     (add1 int-shift))
-(define char-type-mask (sub1 (arithmetic-shift 1 char-shift)))
-(define char-type-tag
-  (bitwise-ior (arithmetic-shift #b0 (sub1 char-shift)) nonint-type-tag))
-(define nonchar-type-tag
-  (bitwise-ior (arithmetic-shift #b1 (sub1 char-shift)) nonint-type-tag))
+(define (imm->bits v)
+  (cond [(eof-object? v) val-eof]
+        [(integer? v) (arithmetic-shift v int-shift)]
+        [(char? v)
+         (bitwise-ior type-char
+                      (arithmetic-shift (char->integer v) char-shift))]
+        [(eq? v #t) val-true]
+        [(eq? v #f) val-false]
+        [(void? v)  val-void]
+        [(empty? v) val-empty]))
 
-;; Non-Chacters are either:
-;; - True:    #b0 (& non-character tag)
-;; - False:   #b1 (& non-character tag)
-;; - Empty:  #b10
-;; - remaining bit patterns are reserved for future values.
-(define singleton-shift (add1 char-shift))
-(define val-true
-  (bitwise-ior (arithmetic-shift #b00 (sub1 singleton-shift)) nonchar-type-tag))
-(define val-false
-  (bitwise-ior (arithmetic-shift #b01 (sub1 singleton-shift)) nonchar-type-tag))
-(define val-empty
-  (bitwise-ior (arithmetic-shift #b10 (sub1 singleton-shift)) nonchar-type-tag))
+
+(define (imm-bits? v)
+  (zero? (bitwise-and v imm-mask)))
+
+(define (int-bits? v)
+  (zero? (bitwise-and v mask-int)))
+
+(define (char-bits? v)
+  (= type-char (bitwise-and v mask-char)))
+
+(define (cons-bits? v)
+  (zero? (bitwise-xor (bitwise-and v imm-mask) type-cons)))
+
+(define (box-bits? v)
+  (zero? (bitwise-xor (bitwise-and v imm-mask) type-box)))
+
+(define (str-bits? v)
+  (zero? (bitwise-xor (bitwise-and v imm-mask) type-str)))

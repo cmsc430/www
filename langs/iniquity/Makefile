@@ -3,20 +3,24 @@ UNAME := $(shell uname)
 
 ifeq ($(UNAME), Darwin)
   format=macho64
-else ifeq ($(UNAME), Linux)
-  format=elf64
 else
-  format=win64
+  format=elf64
 endif
 
-%.run: %.o main.o char.o
-	gcc main.o char.o $< -o $@
+%.run: %.o main.o char.o byte.o string.o
+	gcc main.o char.o byte.o string.o $< -o $@
 
 main.o: main.c types.h
 	gcc -c main.c -o main.o
 
 char.o: char.c types.h
 	gcc -c char.c -o char.o
+
+byte.o: byte.c types.h
+	gcc -c byte.c -o byte.o
+
+string.o: string.c types.h
+	gcc -c string.c -o string.o
 
 %.o: %.s
 	nasm -f $(format) -o $@ $<

@@ -3,50 +3,32 @@
 
   Values are either:
   - Immediates: end in #b000
-  - Pointers: end in anything else
-*/
-#define imm_shift 3
-#define imm_type_mask ((1 << imm_shift) - 1)
-#define imm_type_tag 0
+  - Pointers
 
-/*
-  Immediates are either:
-  - Integers: end in #b0 (& immediate tag)
-  - Non-Integers: end in #b1 (& immediate tag)
+  Immediates are either
+  - Integers:   end in  #b0 000
+  - Characters: end in #b01 000
+  - True:              #b11 000
+  - False:           #b1 11 000
+  - Eof:            #b10 11 000
+  - Void:           #b11 11 000
+  - Empty:         #b100 11 000
 */
-#define int_shift        (imm_shift + 1)
+#define imm_shift        3
+#define ptr_type_mask    ((1 << imm_shift) - 1)
+#define box_type_tag     1
+#define cons_type_tag    2
+#define str_type_tag     3
+#define int_shift        (1 + imm_shift)
 #define int_type_mask    ((1 << int_shift) - 1)
-#define int_type_tag     ((0 << (int_shift - 1)) | imm_type_tag)
-#define nonint_type_tag  ((1 << (int_shift - 1)) | imm_type_tag)
-
-/*
-  Pointers are "tagged addresses"
-  - Boxes:   end in #b001
-  - Pairs:   end in #b010
-  - remaining bit patterns are reserved for future pointers     
-  To recover the address, xor the tag to zero it out
-*/
-#define box_type_tag  1
-#define pair_type_tag 2
-
-/*
-  Non-Integers are either:
-  - Characters:     end in #b0 (& non-integer tag), code-point in remaining bits    
-  - Non-Characters: end in #b1 (& non-integer tag)
-*/
+#define int_type_tag     (0 << (int_shift - 1))
+#define nonint_type_tag  (1 << (int_shift - 1))
 #define char_shift       (int_shift + 1)
 #define char_type_mask   ((1 << char_shift) - 1)
 #define char_type_tag    ((0 << (char_shift - 1)) | nonint_type_tag)
 #define nonchar_type_tag ((1 << (char_shift - 1)) | nonint_type_tag)
-
-/*
-  Non-Chacters are either:
-  - True:    #b0 (& non-character tag)
-  - False:   #b1 (& non-character tag)
-  - Empty:  #b10
-  - remaining bit patterns are reserved for future values.
-*/
-#define singleton_shift (char_shift + 1)
-#define val_true  ((0 << (singleton_shift - 1)) | nonchar_type_tag)
-#define val_false ((1 << (singleton_shift - 1)) | nonchar_type_tag)
-#define val_empty ((2 << (singleton_shift - 1)) | nonchar_type_tag)
+#define val_true  ((0 << char_shift) | nonchar_type_tag)
+#define val_false ((1 << char_shift) | nonchar_type_tag)
+#define val_eof   ((2 << char_shift) | nonchar_type_tag)
+#define val_void  ((3 << char_shift) | nonchar_type_tag)
+#define val_empty ((4 << char_shift) | nonchar_type_tag)
