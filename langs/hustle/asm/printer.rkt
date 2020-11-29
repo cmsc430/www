@@ -8,8 +8,8 @@
     [(Ret)       "\tret\n"]
     [(Label l)   (string-append (label-symbol->string l) ":\n")]
     [(Mov a1 a2)
-     (string-append "\tmov "
-                    (arg->string a1) ", "
+     (string-append "\tmov  "
+                    (arg->string a1) ",qword "
                     (arg->string a2) "\n")]
     [(Add a1 a2)
      (string-append "\tadd "
@@ -79,7 +79,7 @@
 ;; Any -> Boolean
 (define (reg? x)
   (and (symbol? x)
-       (memq x '(rax rbx rbp rdi rsp))))
+       (memq x '(rax rbx rcx rdx rbp rdi rsp))))
 
 ;; Reg -> String
 (define (reg->string r)

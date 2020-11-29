@@ -17,6 +17,11 @@
     [(? eof-object?) v]
     [(? void?)       v]    
     ['()             '()]        
-    [(list 'box a)  (box (unload-value (heap-ref h a) h))]
-    [(list 'cons a) (cons (unload-value (heap-ref h a) h)
-                          (unload-value (heap-ref h (add1 a)) h))]))
+    [(list 'box a)
+     (box (unload-value (heap-ref h a) h))]
+    [(list 'cons a)
+     (cons (unload-value (heap-ref h a) h)
+           (unload-value (heap-ref h (add1 a)) h))]
+    [(list 'str a)
+     (let ((i (heap-ref h a)))
+       (list->string (reverse (take (take-right h (+ a (add1 i))) i))))]))

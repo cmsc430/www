@@ -8,9 +8,10 @@ void print_result(int64_t);
 
 // in bytes
 #define heap_size 1000000
+int64_t *heap;
 
 int main(int argc, char** argv) {
-  void * heap = malloc(heap_size);
+  heap = malloc(heap_size);
   int64_t result = entry(heap);
   print_result(result);
   if (result != val_void) printf("\n");
@@ -20,6 +21,7 @@ int main(int argc, char** argv) {
 
 void print_char(int64_t);
 void print_cons(int64_t);
+void print_str(int64_t);
 
 void print_result(int64_t result) {
   if (cons_type_tag == (ptr_type_mask & result)) {
@@ -29,6 +31,10 @@ void print_result(int64_t result) {
   } else if (box_type_tag == (ptr_type_mask & result)) {
     printf("#&");
     print_result (*((int64_t *)(result ^ box_type_tag)));
+  } else if (str_type_tag == (ptr_type_mask & result)) {
+    printf("\"");
+    print_str(result);
+    printf("\"");
   } else if (int_type_tag == (int_type_mask & result)) {
     printf("%" PRId64, result >> int_shift);
   } else if (char_type_tag == (char_type_mask & result)) {

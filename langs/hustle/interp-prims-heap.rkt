@@ -1,5 +1,5 @@
 #lang racket
-(provide interp-prim1 interp-prim2)
+(provide interp-prim1 interp-prim2 interp-prim3)
 (require "heap.rkt")
 
 ;; Op1 Value* Heap -> Answer*
@@ -18,6 +18,8 @@
     [(list 'car   (list 'cons i))         (cons h (heap-ref h i))]
     [(list 'cdr   (list 'cons i))         (cons h (heap-ref h (add1 i)))]
     [(list 'empty? v)                     (cons h (empty? v))]
+    [(list 'string? (list 'str s))        (cons h #t)]
+    [(list 'string? v)                    (cons h #f)]
     [_                                    'err]))
 
 ;; Op2 Value* Value* Heap -> Answer*
@@ -26,7 +28,23 @@
     [(list '+ (? integer? i1) (? integer? i2)) (cons h (+ i1 i2))]
     [(list '- (? integer? i1) (? integer? i2)) (cons h (- i1 i2))]
     [(list 'cons v1 v2)                        (alloc-cons v1 v2 h)]
-    [_                                         'err]))
+    [(list 'make-string (? integer? i) (? char? c))
+     (if (<= 0 i)
+         (alloc-str (make-string i c) h)
+         'err)]
+    [(list 'string-ref (list 'str a) (? integer? i))
+     (cons h (heap-ref h (+ a i 1)))]
+    [_ 'err]))
+
+;; Op2 Value* Value* Heap -> Answer*
+(define (interp-prim3 p v1 v2 v3 h)
+  (match (list p v1 v2 v3)
+    [(list 'string-set! (list 'str a) (? integer? i) (? char? c))
+     (if (<= 0 v2 (sub1 (heap-ref h a)))
+         (cons (heap-set h (+ a i 1) c)
+               (void))
+         'err)]
+    [_  'err]))
 
 ;; Any -> Boolean
 (define (codepoint? v)
