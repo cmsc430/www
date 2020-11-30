@@ -101,7 +101,8 @@
   (check-equal? (run '(string-ref "hello" 1)) #\e)
   (check-equal? (run '(string-ref "hello" 4)) #\o)
   (check-equal? (run '(make-string 3 #\a)) "aaa")
-  
+  (check-equal? (run '(string-length "abc")) 3)
+  (check-equal? (run '(string-length (make-string 4 #\a))) 4)
   (check-equal? (run '(let ((x "aaa"))
                         (let ((y "bb"))
                           (string-ref y 0))))
