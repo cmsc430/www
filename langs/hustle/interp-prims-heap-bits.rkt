@@ -20,6 +20,7 @@
     [(list 'cdr   (? cons-bits? i))       (cons h (heap-ref h (+ i (arithmetic-shift 1 imm-shift))))]
     [(list 'empty? v)                     (cons h (if (= (imm->bits '()) v) val-true val-false))]
     [(list 'string? v)                    (cons h (if (str-bits? v) val-true val-false))]
+    [(list 'string-length (? str-bits? i)) (cons h (heap-ref h i))]
     [_                                    'err]))
 
 ;; Op2 Value* Value* Heap -> Answer*
@@ -27,6 +28,7 @@
   (match (list p v1 v2)
     [(list '+ (? int-bits? i1) (? int-bits? i2)) (cons h (+ i1 i2))]
     [(list '- (? int-bits? i1) (? int-bits? i2)) (cons h (- i1 i2))]
+    [(list 'eq? v1 v2)                           (cons h (= v1 v2))]
     [(list 'cons v1 v2)                          (alloc-cons v1 v2 h)]
     [(list 'make-string (? int-bits? i) (? char-bits? c))
      (if (<= 0 i)

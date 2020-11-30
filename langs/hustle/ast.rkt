@@ -20,10 +20,10 @@
 ;;           | 'char? | 'integer->char | 'char->integer
 ;;           | 'write-byte | 'eof-object?
 ;;           | 'box | 'car | 'cdr | 'unbox
-;;           | 'empty? | string?
-;; type Op2  = '+ | '-
+;;           | 'empty? | string? | 'string-length
+;; type Op2  = '+ | '- | 'eq?
 ;;           | 'cons | 'make-string | 'string-ref
-;; 
+;; type Op3  = 'string-set!
 (struct Eof   ()           #:prefab)
 (struct Empty ()           #:prefab)
 (struct Int   (i)          #:prefab)
