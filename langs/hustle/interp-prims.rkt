@@ -19,6 +19,7 @@
     [(list 'cdr (? pair?))                (cdr v)]
     [(list 'empty? v)                     (empty? v)]
     [(list 'string? v)                    (string? v)]
+    [(list 'string-length (? string?))    (string-length v)]
     [_                                    'err]))
 
 ;; Op2 Value Value -> Answer
@@ -26,6 +27,7 @@
   (match (list p v1 v2)
     [(list '+ (? integer?) (? integer?))  (+ v1 v2)]
     [(list '- (? integer?) (? integer?))  (- v1 v2)]
+    [(list 'eq? v1 v2)                    (eqv? v1 v2)]
     [(list 'cons v1 v2)                   (cons v1 v2)]
     [(list 'string-ref (? string?) (? integer?))
      (if (<= 0 v2 (sub1 (string-length v1)))

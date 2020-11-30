@@ -20,6 +20,7 @@
     [(list 'empty? v)                     (cons h (empty? v))]
     [(list 'string? (list 'str s))        (cons h #t)]
     [(list 'string? v)                    (cons h #f)]
+    [(list 'string-length (list 'str a))  (cons h (heap-ref h a))]
     [_                                    'err]))
 
 ;; Op2 Value* Value* Heap -> Answer*
@@ -27,6 +28,10 @@
   (match (list p v1 v2)
     [(list '+ (? integer? i1) (? integer? i2)) (cons h (+ i1 i2))]
     [(list '- (? integer? i1) (? integer? i2)) (cons h (- i1 i2))]
+    [(list 'eq? v1 v2)
+     (match (list v1 v2)
+       [(list (list t1 a1)  (list t2 a2)) (cons h (and (eq? t1 t2) (= a1 a2)))]
+       [_                                 (cons h (eqv? v1 v2))])]
     [(list 'cons v1 v2)                        (alloc-cons v1 v2 h)]
     [(list 'make-string (? integer? i) (? char? c))
      (if (<= 0 i)
