@@ -44,9 +44,9 @@
 (define op1
   '(add1 sub1 zero? char? write-byte eof-object?
          integer->char char->integer box unbox empty? car cdr
-         string?))
+         string? string-length))
 (define op2
-  '(+ - cons string-ref make-string))
+  '(+ - eq? cons string-ref make-string))
 (define op3
   '(string-set!))
 

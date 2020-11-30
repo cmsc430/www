@@ -46,7 +46,7 @@
     [(Char c)           (compile-value c)]
     [(Eof)              (compile-value eof)]
     [(Empty)            (compile-value '())]
-    [(Str s)            (compile-string s)]    
+    [(Str s)            (compile-string s)]
     [(Var x)            (compile-variable x c)]
     [(App f es)         (compile-app f es c)]
     [(Prim0 p)          (compile-prim0 p c)]
@@ -195,7 +195,11 @@
                (Mov 'rax (Offset 'rax 0)))]
          ['empty? (eq-imm val-empty)]
          ['string?
-          (type-pred ptr-mask type-str)])))
+          (type-pred ptr-mask type-str)]
+         ['string-length
+          (seq (assert-str 'rax)
+               (Xor 'rax type-str)
+               (Mov 'rax (Offset 'rax 0)))])))
 
 ;; Op2 Expr Expr CEnv -> Asm
 (define (compile-prim2 p e1 e2 c)
@@ -213,6 +217,13 @@
                  (assert-integer 'rax)   
                  (Sub (Offset 'rsp i) 'rax)
                  (Mov 'rax (Offset 'rsp i)))]
+           ['eq?
+            (let ((l (gensym)))
+              (seq (Cmp 'rax (Offset 'rsp i))
+                   (Mov 'rax val-true)
+                   (Je l)
+                   (Mov 'rax val-false)
+                   (Label l)))]
            ['cons
             (seq (Mov (Offset 'rdi 0) 'rax)
                  (Mov 'rax (Offset 'rsp i))
