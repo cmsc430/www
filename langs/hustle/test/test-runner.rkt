@@ -128,7 +128,11 @@
                         (let ((y (make-string 2 #\b)))
                           (begin (string-set! y 0 #\!)
                                  y))))
-                "!b"))
+                "!b")
+  (check-equal? (run '(let ((o (make-string 3 #\a)))
+                        (begin (string-set! o 0 (string-ref "def" 0))
+                               o)))
+                "daa"))
 
 (define (test-runner-io run)
   ;; Evildoer examples

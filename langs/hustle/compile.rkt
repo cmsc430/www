@@ -233,9 +233,9 @@
         (j (next (cons #f c))))        
     (seq (compile-e e1 c)
          (Mov (Offset 'rsp i) 'rax)
-         (compile-e e2 c)
+         (compile-e e2 (cons #f c))
          (Mov (Offset 'rsp j) 'rax)
-         (compile-e e3 c)
+         (compile-e e3 (cons #f (cons #f c)))
          (match p
            ['string-set!
             (seq (Mov 'rcx (Offset 'rsp i))
