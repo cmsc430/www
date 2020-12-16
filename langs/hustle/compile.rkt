@@ -71,6 +71,7 @@
 ;; Op0 CEnv -> Asm
 (define (compile-prim0 p c)
   (match p
+    ['void (seq (Mov 'rax val-void))]
     ['read-byte
      (let ((l (stack-adjust c)))
        (seq (Sub 'rsp l)
@@ -248,7 +249,7 @@
                  (Sar 'rdx (- int-shift 3))                 
                  (Add 'rcx 'rdx)
                  (Mov (Offset 'rcx 8) 'rax)
-                 (Mov 'rax val-void))]))))                          
+                 (Mov 'rax val-void))]))))
 
 ;; Imm -> Asm
 (define (eq-imm imm)
