@@ -22,7 +22,7 @@
 ;;           | (Var Id)
 ;;           | (App Id (Listof Expr))
 ;; type Id   = Symbol
-;; type Op0  = 'read-byte
+;; type Op0  = 'read-byte | 'void | 'collect-garbage
 ;; type Op1  = 'add1 | 'sub1 | 'zero?
 ;;           | 'char? | 'integer->char | 'char->integer
 ;;           | 'write-byte | 'eof-object?

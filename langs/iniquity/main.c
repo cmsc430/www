@@ -1,21 +1,42 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include <stdlib.h>
+#include <string.h>
 #include "types.h"
+#include "heap.h"
 
-int64_t entry(void *);
+int64_t entry(void *, int64_t *);
 void print_result(int64_t);
+void print_mem(int64_t *, int64_t *);
+void collect_garbage(int64_t *, int64_t *, int64_t *);
 
-// in bytes
-#define heap_size 1000000
-int64_t *heap;
+// allocate 2x heap space; copy collector will copy objects
+// between the two halves
+int64_t heap[heap_size * 2];
+char type[heap_size]; // queue of pointer type tags for GC
+int from_side = -1;
+// sign indicates in which direction of
+// the midpoint is the current heap (or "from" space)
+
+int const true = 1;
+int const false = 0;
 
 int main(int argc, char** argv) {
-  heap = malloc(heap_size);
-  int64_t result = entry(heap);
+  int show_heap = false;
+  if (argc == 2) {
+    if (strcmp(argv[1], "--show-heap") == 0) {
+      show_heap = true;
+    }
+  }
+  
+  int64_t end_of_heap = 0;
+  int64_t result = entry(heap, &end_of_heap);
   print_result(result);
   if (result != val_void) printf("\n");
-  free(heap);
+  if (show_heap) {
+      printf("HEAP:\n");
+      print_mem(heap, (int64_t*)end_of_heap);
+  }
   return 0;
 }
 
