@@ -181,8 +181,6 @@ char * ptr_type_to_string(int64_t tag) {
     return "cons";
   case str_type_tag:
     return "str";
-  case fwd_type_tag:
-    return "fwd";
   default:
     return "unknown";
   } 
