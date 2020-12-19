@@ -66,7 +66,9 @@
                     (arg->string a) "\n")]
     [(Pop r)
      (string-append "\tpop "
-                    (reg->string r) "\n")]))
+                    (reg->string r) "\n")]
+    [(Extern s)
+     (string-append "\textern " (label-symbol->string s) "\n")]))
 
 ;; Arg -> String
 (define (arg->string a)
@@ -79,7 +81,7 @@
 ;; Any -> Boolean
 (define (reg? x)
   (and (symbol? x)
-       (memq x '(rax rbx rcx rdx rbp rdi rsp))))
+       (memq x '(rax rbx rcx rdx rbp rdi rsp rsi))))
 
 ;; Reg -> String
 (define (reg->string r)
