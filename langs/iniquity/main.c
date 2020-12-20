@@ -5,7 +5,12 @@
 #include "types.h"
 #include "heap.h"
 
-int64_t entry(void *, int64_t *);
+struct Ret {
+  int64_t result;
+  int64_t * hp;
+};
+
+struct Ret entry(int64_t *);
 void print_result(int64_t);
 void print_mem(int64_t *, int64_t *);
 void collect_garbage(int64_t *, int64_t *, int64_t *);
@@ -15,27 +20,20 @@ void collect_garbage(int64_t *, int64_t *, int64_t *);
 int64_t heap[heap_size * 2];
 char type[heap_size]; // queue of pointer type tags for GC
 int from_side = -1;
-// sign indicates in which direction of
-// the midpoint is the current heap (or "from" space)
+// sign indicates in which direction of the midpoint is the current heap
 
 int const true = 1;
 int const false = 0;
 
 int main(int argc, char** argv) {
-  int show_heap = false;
-  if (argc == 2) {
-    if (strcmp(argv[1], "--show-heap") == 0) {
-      show_heap = true;
-    }
-  }
-  
-  int64_t end_of_heap = 0;
-  int64_t result = entry(heap, &end_of_heap);
-  print_result(result);
-  if (result != val_void) printf("\n");
+  int show_heap = (argc == 2) && (strcmp(argv[1], "--show-heap") == 0);
+ 
+  struct Ret r = entry(heap);
+  print_result(r.result);
+  if (r.result != val_void) printf("\n");
   if (show_heap) {
       printf("HEAP:\n");
-      print_mem(heap, (int64_t*)end_of_heap);
+      print_mem(from_side < 0 ? heap : heap + heap_size, r.hp);
   }
   return 0;
 }

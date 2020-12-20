@@ -5,5 +5,5 @@ extern int from_side;
 
 extern char type[];
 
-// in bytes
+// in words
 #define heap_size 1001
