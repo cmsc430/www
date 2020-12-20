@@ -23,9 +23,7 @@
        (compile-e e '())
        (Pop 'rsi)
        (Pop 'rbp)
-       ;; second parameter is in 'rsi
-       (Mov (Offset 'rsi 0) 'rdi)
-       
+       (Mov 'rdx 'rdi) ; return heap pointer in second return register
        (Ret)
        (Label 'err)
        (Push 'rbp)
@@ -137,7 +135,6 @@
             (Pop 'rbp)
             (Add 'rsp l)))]
     ['collect-garbage
-     (eprintf "~a\n" (length c))
      (let ((l (stack-adjust c)))
        (seq (Mov 'rax 'rsp)
             (Mov 'rbx 'rbp)
@@ -160,6 +157,7 @@
             (Pop 'rsp)
             (Pop 'rbp)
             (Add 'rsp l)
+            (Mov 'rdi 'rax) ; install heap pointer from GC call
             (Mov 'rax val-void)))]))
 
 ;; Op1 Expr CEnv -> Asm

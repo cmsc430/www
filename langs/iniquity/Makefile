@@ -22,6 +22,9 @@ byte.o: byte.c types.h
 string.o: string.c types.h
 	gcc -c string.c -o string.o
 
+gc.o: gc.c types.h heap.h
+	gcc -c gc.c -o gc.o
+
 %.o: %.s
 	nasm -f $(format) -o $@ $<
 
