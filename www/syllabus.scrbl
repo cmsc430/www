@@ -162,19 +162,16 @@ before the due date.
 
 @section{Computing Resources}
 
-Programming projects can be developed on the
-@link["http://www.grace.umd.edu/"]{GRACE} cluster.
-
-If you have access to another system you are welcome to do your
-development there instead, but all project submissions @bold{must}
-work correctly on the GRACE cluster, and your projects will be graded
-solely based on their results on the cluster. Because language and
+Programming projects can be developed on your own system and subitted
+via Gradescope, which will provide virtual machines suitably
+configured for running your code.  All project submissions @bold{must}
+work correctly on the Gradescope VMs, and your projects will be graded
+solely based on their results on those machines. Because language and
 library versions may vary with the installation, in unfortunate
 circumstances a program might work perfectly on your system but not
-work at all on the cluster. Thus we strongly recommend that if you
-develop any project on another system, you should complete it
-@bold{several days early} to have time to address any compatibility
-problems.
+work at all on the VMs. Thus we strongly recommend that as you develop
+any project, you should run it @bold{several days early} on Gradescope
+to have time to address any compatibility problems.
 
 
 @section{Outside-of-class communication with course staff}
