@@ -31,9 +31,7 @@ Racket, Ruby, Scheme, SML, Visual Basic.
 
 @section[#:style 'unnumbered]{What to turn in}
 
-For this assignment we will not use Github classroom, instead just email me at
-@tt{jmct@"@"jmct.cc} with the following subject: @tt{[Assignment 1]}
-
+Submit this assignment via Gradescope.
 
 @;{We will be using GitHub Classroom.  This means you will work with git
 repositories and turning in your work consists of pushing the
