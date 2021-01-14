@@ -20,6 +20,7 @@
 ;; | (Sar Arg Arg)
 ;; | (Push Arg)
 ;; | (Pop Arg)
+;; | (Extern Symbol)
 ;; type Arg =
 ;; | 'rax
 ;; | Number
@@ -43,6 +44,7 @@
 (struct Sar   (a1 a2) #:prefab)
 (struct Push  (a1)    #:prefab)
 (struct Pop   (a1)    #:prefab)
+(struct Extern (s)    #:prefab)
 
 (struct Offset (r i)  #:prefab)
 

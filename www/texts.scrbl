@@ -57,6 +57,7 @@ referring to a @emph{C-style} function or function call.
 
 }
 
+
 @item{
 @image[#:style float-right #:scale 1/8]{img/incr-compile.png}
 
@@ -98,6 +99,14 @@ Intended for those new to Racket, i.e. @emph{you!}}
 
 The definitive, comprehensive manual for Racket.}
 
+@item{@link["https://www.uclibc.org/docs/psABI-x86_64.pdf"]{System V Application Binary Interface}
+
+}
+
+@item{@link["https://www.agner.org/optimize/calling_conventions.pdf"]{Optimization manuals}
+
+"This series of five manuals describes everything you need to know
+about optimizing code for x86 and x86-64 family microprocessors."}
 
 ]
 
