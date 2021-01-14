@@ -5,9 +5,9 @@
 (require (for-label racket))
 
 (begin-for-syntax
-  (define-runtime-path notes "."))
+  (define-runtime-path notes "../../langs/"))
 
-(define-runtime-path notes ".")
+(define-runtime-path notes "../../langs")
 
 (define-syntax (filebox-include stx)
   (syntax-case stx ()

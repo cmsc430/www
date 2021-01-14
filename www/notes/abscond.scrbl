@@ -15,7 +15,7 @@
 
 @(ev '(require rackunit))
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "abscond" f))))))
-	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+	   '("interp.rkt" "ast.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
 @(define (shellbox . s)
    (parameterize ([current-directory (build-path notes "abscond")])
@@ -31,7 +31,7 @@
 	       #'(void)))]))
 
 @;{ Have to compile 42.s (at expand time) before listing it }
-@(shell-expand "echo '#lang racket\n42' > 42.rkt" "racket -t compile-file.rkt -m 42.rkt > 42.s")
+@(shell-expand "racket -t compile-file.rkt -m 42.rkt > 42.s")
 
 
 @title[#:tag "Abscond"]{Abscond: a language of numbers}
@@ -50,16 +50,10 @@ The specification of a programming language consists of two parts: the
 syntax, which specifies the @bold{form} of programs, and semantics,
 which specifies the @bold{meaning} of programs.
 
-We will simplify matters of syntax by using the Lisp notation of
-s-expression for program phrases.  The job of a @emph{parser} is to
-construct an abstract syntax tree from the textual representation of a
-program.  For us, we will rely on the @racket[read] function to take
-care of parsing and essentially gloss over this (well understood,
-arguably boring) topic.  We will focus on the abstract syntax by
-defining BNF grammars.
-
-The heart of a programming language is its semantics and we will spend
-more time concerned this aspect.
+Syntax, while important, is a fairly superficial aspect of
+programming languages. The real heart of a programming
+language is its semantics and we will spend more time
+concerned this aspect.
 
 There are a few common ways a language's meaning is specified:
 
@@ -92,30 +86,88 @@ To begin, let's start with a dead simple programming language called
 literals.  Running an abscond program just produces that integer.
 (Told you it was simple.)
 
-@section{Abstract syntax for Abscond}
+@section{Concrete syntax for Abscond}
 
-An Abscond program consists of a single expression, and the 
-grammar of expressions is very simple:
+We will simplify matters of syntax by using the Lisp
+notation of s-expression for the @bold{concrete} form of
+program phrases. The job of a @emph{parser} is to construct
+an abstract syntax tree from the textual representation of a
+program. We will consider parsing in two phases:
+
+@itemlist[
+ @item{the first converts a stream of textual input into an
+  s-expression, and}
+ @item{the second converts an s-expression into an instance
+       of a datatype for representing expressions called an @bold{AST}.}
+ ]
+
+For the first phase, we rely on the @racket[read] function
+to take care of converting strings to s-expressions. In
+order to parse s-expressions into ASTs, we will write fairly
+straightforward functions that convert between the
+representations.
+
+Abscond, like the other languages studied in this course, is
+designed to be a subset of Racket. This has two primary benefits:
+
+@itemlist[
+ @item{the Racket interpreter and compiler can be used as a reference implementation of the languages we build, and}
+ @item{there are built-in facilities for reading and writing
+  data in the parenthezised form that Racket uses, which we can borrow to make parsing easy.}
+ ]
+
+The concrete form of an Abscond program will consist of, like Racket, the line of text:
+
+@verbatim{#lang racket}
+
+followed by a (concrete) expression.  The grammar of expressions is
+very simple:
 
 @(define-language A
-  (e ::= i)
-  (i ::= integer))
+  (e ::= integer))
 
 @centered{@render-language[A]}
 
-So, @racket[0], @racket[120], @racket[-42], etc. are Abscond programs.
+So, @racket[0], @racket[120], @racket[-42], etc. are
+concrete Abscond expressions and a complete Abscond program
+looks like this:
+
+@codeblock-include["abscond/42.rkt"]
+
+Reading Abscond programs from ports, files, strings,
+etc. consists of reading (and ignoring) the
+@tt{#lang racket}
+line and then using the @racket[read] function to
+parse the concrete expression as an s-expression.
+
+
+@section{Abstract syntax for Abscond}
+
+While not terribly useful for a language as overly simplistic as Abscond, we use
+an AST datatype for representing expressions and another syntactic categories.
+For each category, we will have an appropriate constructor.  In the case of Abscond
+all expressions are integers, so we have a single constructor, @racket[Int].
+
+@(define-language A-concrete
+  (e ::= (Int i))
+  (i ::= integer))
+
+@centered{@render-language[A-concrete]}
 
 A datatype for representing expressions can be defined as:
 
-@#reader scribble/comment-reader
-(racketblock
-;; type Expr = Integer
-)
+@codeblock-include["abscond/ast.rkt"]
+
+
+The parser for Abscond checks that a given s-expression is
+an integer and constructs an instance of the AST datatype if
+it is, otherwise it signals an error:
+@codeblock-include["abscond/parse.rkt"]
 
 @section{Meaning of Abscond programs}
 
 The meaning of an Abscond program is simply the number itself.  So
-@racket[42] evaluates to @racket[42].
+@racket[(Int 42)] evaluates to @racket[42].
 
 We can write an ``interpreter'' that consumes an expression and
 produces it's meaning:
@@ -124,8 +176,8 @@ produces it's meaning:
 
 @#reader scribble/comment-reader
 (examples #:eval ev
-(interp 42)
-(interp -8)
+(interp (Int 42))
+(interp (Int -8))
 )
 
 We can add a command line wrapper program for interpreting Abscond
@@ -139,8 +191,8 @@ file given on the command line.  If it's an integer, i.e. a
 well-formed Abscond program, then it runs the intepreter and displays
 the result.
 
-For example:
-@shellbox["echo '#lang racket\\n42' > 42.rkt" "racket -t interp-file.rkt -m 42.rkt"]
+For example, interpreting the program @tt{42.rkt} shown above:
+@shellbox["racket -t interp-file.rkt -m 42.rkt"]
 
 Even though the semantics is obvious, we can provide a formal
 definition of Abscond using @bold{operational semantics}.
@@ -157,14 +209,15 @@ language, just a single inference rule suffices:
   #:mode (𝑨 I O)
   #:contract (𝑨 e i)
   [----------
-   (𝑨 i i)])
+   (𝑨 (Int i) i)])
 
 @(centered (render-judgment-form 𝑨))
 
-Here, we are defining a binary relation, called @render-term[A 𝑨],
-and saying every integer paired with itself is in the relation.  So
-@math{(2,2)} is in @render-term[A 𝑨], @math{(5,5)} is in
-@render-term[A 𝑨], and so on.
+Here, we are defining a binary relation, called
+@render-term[A 𝑨], and saying every integer literal
+expression is paired with the integer itself in the
+relation. So @math{((Int 2),2)} is in @render-term[A 𝑨],
+@math{((Int 5),5)} is in @render-term[A 𝑨], and so on.
 
 The inference rules define the binary relation by defining the
 @emph{evidence} for being in the relation.  The rule makes use of
@@ -338,31 +391,14 @@ Where @tt{Asm} is a data type for representing assembly programs,
 i.e. it will be the AST of x86-64 assembly.  This datatype will evolve
 as we see more X86 instructions, but for now it is very simple:
 
-@#reader scribble/comment-reader
-(racketblock
-;; type Asm = [Listof Instruction]
-
-;; type Instruction =
-;; | `ret
-;; | `(mov ,Arg ,Arg)
-;; | Label
-
-;; type Label = Symbol
-
-;; type Arg =
-;; | Reg
-;; | Integer
-
-;; type Reg =
-;; | `rax
-)
+@codeblock-include["abscond/asm/ast.rkt"]
 
 So the AST representation of our example is:
 
 @racketblock[
-'(entry
-  (mov rax 42)
-  ret)
+(list (Label 'entry)
+      (Mov 'rax 42)
+      (Ret))
 ]
 
 Writing the @racket[compile] function is easy:
@@ -371,11 +407,9 @@ Writing the @racket[compile] function is easy:
 
 @#reader scribble/comment-reader
 (examples #:eval ev 
-(compile 42)
-(compile 38)
+(compile (Int 42))
+(compile (Int 38))
 )
-
-
 
 To convert back to the concrete NASM syntax, we can write a (few)
 function(s), which we'll place in its own module:
@@ -388,7 +422,7 @@ appropriately.}
 
 @#reader scribble/comment-reader
 (examples #:eval ev
-(asm-display (compile 42)))
+(displayln (asm-string (compile (Int 42)))))
                    
 Putting it all together, we can write a command line compiler much
 like the command line interpreter before, except now we emit assembly
@@ -478,14 +512,14 @@ So, in this setting, means we have the following equivaluence:
 (interp e) @emph{equals} (asm-interp (compile e))
 }
 
-But we don't actually have @racket[interpret-asm], a function that
+But we don't actually have @racket[asm-interp], a function that
 interprets the Asm code we generate.  Instead we printed the code and
 had @tt{gcc} assembly and link it into an executable, which the OS
 could run.  But this is a minor distinction.  We can write
 @racket[asm-interp] to interact with the OS to do all of these steps.
 
 Here's such a definition.  (Again: the details here are not important
-and we won't ask you to write or understand this code, but roughly,q
+and we won't ask you to write or understand this code, but roughly,
 all it's doing is emitting assembly (to a temporary file) and
 calling @tt{make} to build the executable, then running it and parsing
 the result.)
@@ -495,18 +529,19 @@ the result.)
 This is actually a handy tool to have for experimenting with
 compilation within Racket:
 
+
 @examples[#:eval ev
-(asm-interp (compile 42))
-(asm-interp (compile 37))
-(asm-interp (compile -8))
+(asm-interp (compile (Int 42)))
+(asm-interp (compile (Int 37)))
+(asm-interp (compile (Int -8)))
 ]
 
 This of course agrees with what we will get from the interpreter:
 
 @examples[#:eval ev
-(interp 42)
-(interp 37)
-(interp -8)
+(interp (Int 42))
+(interp (Int 37))
+(interp (Int -8))
 ]
 
 We can turn this in a @bold{property-based test}, i.e. a function that
@@ -517,9 +552,9 @@ correctness claim:
   (check-eqv? (interp e)
               (asm-interp (compile e))))
 
-(check-compiler 42)
-(check-compiler 37)
-(check-compiler -8)
+(check-compiler (Int 42))
+(check-compiler (Int 37))
+(check-compiler (Int -8))
 ]
 
 This is a powerful testing technique when combined with random
@@ -528,11 +563,11 @@ Abscond programs, we can randomly generate @emph{any} Abscond program
 and check that it holds.
 
 @examples[#:eval ev
-(check-compiler (random 100))
+(check-compiler (Int (random 100)))
 
 ; test 10 random programs
 (for ([i (in-range 10)])
-  (check-compiler (random 10000)))
+  (check-compiler (Int (random 10000))))
 ]
 
 The last expression is taking 10 samples from the space of Abscond
@@ -556,4 +591,5 @@ of a valid input (i.e. some integer) that might refute the correctness
 claim?
 
 Think on it.  In the meantime, let's move on.
-}
+
+

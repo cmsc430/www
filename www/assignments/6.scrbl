@@ -2,7 +2,6 @@
 @title[#:tag "Assignment 6" #:style 'unnumbered]{Assignment 6: Apply, arity checking, and variable arity functions}
 
 @(require (for-label (except-in racket ...)))
-@(require "../notes/fraud-plus/semantics.rkt")
 @(require redex/pict)
 
 @(require "../notes/ev.rkt")

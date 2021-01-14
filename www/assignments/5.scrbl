@@ -2,7 +2,6 @@
 @title[#:tag "Assignment 5" #:style 'unnumbered]{Assignment 5: A Heap of Characters}
 
 @(require (for-label (except-in racket ...)))
-@(require "../notes/fraud-plus/semantics.rkt")
 @(require redex/pict)
 
 @(require "../notes/ev.rkt")
