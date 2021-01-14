@@ -7,7 +7,7 @@
           "../fancyverb.rkt"
 	  "utils.rkt"
 	  "ev.rkt"
-	  "dupe/semantics.rkt"
+	  "../../langs/dupe/semantics.rkt"
 	  "../utils.rkt")
 
 
@@ -16,7 +16,7 @@
 
 @(ev '(require rackunit))
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "dupe" f))))))
-	   '("interp.rkt" "compile.rkt" "ast.rkt" "syntax.rkt" "random.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "random.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
 
 @title[#:tag "Dupe"]{Dupe: a duplicity of types}
@@ -36,25 +36,30 @@ We'll call it @bold{Dupe}.
 
 We will use the following syntax, which relaxes the syntax of Con to
 make @racket['(zero? _e)] its own expression form and conditionals can
-now have arbitrary expressions in test position: @racket['(if _e0 _e1
-_e2)] instead of just @racket['(if (zero? _e0) _e1 _e2)].  We also add
+now have arbitrary expressions in test position: @racket[(if _e0 _e1
+_e2)] instead of just @racket[(if (zero? _e0) _e1 _e2)].  We also add
 syntax for boolean literals.
 
-Together this leads to the following grammar for Dupe.  One thing to
-take note of is the new nonterminal @math{v} which ranges over
-@bold{values}, which are integers and booleans:
+Together this leads to the following grammar for concrete Dupe. 
+
+@centered{@render-language[D-concrete]}
+
+And abstract Dupe:
 
 @centered{@render-language[D]}
 
-Which can be modeled with the following definitions:
+
+One thing to take note of is the new nonterminal @math{v}
+which ranges over @bold{values}, which are integers and
+booleans.
+
+Abstract syntax is modelled with the following datatype definition:
 
 @codeblock-include["dupe/ast.rkt"]
 
-We also have a predicate for well-formed Dupe expressions, as well as our
-helper function @racket[sexpr->ast] for automating the creation of an AST from
-a well-formed s-expression that conforms to our language:
+The s-expression parser is defined as follows:
 
-@codeblock-include["dupe/syntax.rkt"]
+@codeblock-include["dupe/parse.rkt"]
 
 @section{Meaning of Dupe programs}
 
@@ -149,15 +154,16 @@ Notice that here we are following the semantics of Racket, which says
 that anything that is not @racket[#f] counts as @emph{true} in a
 conditional.
 
-Returning to the issue of type mismatches, what does the semantics say
-about @racket[(add1 #f)]?  What about @racket[(if 7 #t -2)]?
+Returning to the issue of type mismatches, what does the
+semantics say about @racket[(Prim 'add1 (Bool #f))]? What about
+@racket[(If (Int 7) (Bool #t) (Int -2))]?
 
 What it says is: nothing.  These programs are simply not in the
 semantic relation for this language. There's only one rule for giving
-meaning to an @racket[(add1 _e0)] expression and it's premise is that
+meaning to an @racket[(Prim 'add1 _e0)] expression and it's premise is that
 @racket[_e] means some @emph{integer} @racket[_i0].  But
-@math{(@racket[#f], i) ∉ 𝑫} for any @math{i}.  So there's no value
-@math{v} such that @math{(@racket[(add1 #f)], v) ∈ 𝑫}.  This
+@math{(@racket[(Bool #f)], i) ∉ 𝑫} for any @math{i}.  So there's no value
+@math{v} such that @math{(@racket[(Prim 'add1 (Bool #f))], v) ∈ 𝑫}.  This
 expression is @bold{undefined} according to the semantics.
 
 
@@ -170,13 +176,13 @@ We can confirm the interpreter computes the right result for the
 examples given earlier:
 
 @ex[
-(interp (bool-e #t))
-(interp (bool-e #f))
-(interp (sexpr->ast '(if #f 1 2)))
-(interp (sexpr->ast '(if #t 1 2)))
-(interp (sexpr->ast '(if 0 1 2)))
-(interp (sexpr->ast '(if 7 1 2)))
-(interp (sexpr->ast '(if (zero? 7) 1 2)))
+(interp (Bool #t))
+(interp (Bool #f))
+(interp (If (Bool #f) (Int 1) (Int 2)))
+(interp (If (Bool #t) (Int 1) (Int 2)))
+(interp (If (Int 0) (Int 1) (Int 2)))
+(interp (If (Int 7) (Int 1) (Int 2)))
+(interp (If (Prim 'zero? (Int 7)) (Int 1) (Int 2)))
 ]
 
 Correctness follows the same pattern as before, although it is worth
@@ -198,7 +204,7 @@ which results in the @racket[interp] program crashing and Racket
 signalling an error:
 
 @ex[
-(eval:error (interp (add1-e (bool-e #f))))
+(eval:error (interp (Prim 'add1 (Bool #f))))
 ]
 
 This isn't a concern for correctness, because the interpreter is free
@@ -382,7 +388,7 @@ succeeds):
 
 (define es
   (for/list ([i 100])
-    (sexpr->ast (random-expr))))
+    (random-expr)))
 
 (for-each interp-bits-correct es)
 ]
@@ -401,15 +407,15 @@ Now let us inline the defintion of @racket[interp]:
 (define (interp-bits e)
   (value->bits
    (match e
-     [(int-e i) i]
-     [(bool-e b) b]
-     [(add1-e e0)
+     [(Int i) i]
+     [(Bool b) b]
+     [(Prim 'add1 e0)
       (add1 (interp e0))]
-     [(sub1-e e0)
+     [(Prim 'sub1 e0)
       (sub1 (interp e0))]
-     [(zero?-e e0)
+     [(Prim 'zero? e0)
       (zero? (interp e0))]
-     [(if-e e0 e1 e2)
+     [(If e0 e1 e2)
       (if (interp e0)
           (interp e1)
           (interp e2))])))
@@ -431,18 +437,18 @@ So we get:
 ;; Expr -> Bits
 (define (interp-bits e)
   (match e
-    [(int-e i) (value->bits i)]
-    [(bool-e b) (value->bits b)]
-    [(add1-e e0)
+    [(Int i) (value->bits i)]
+    [(Bool b) (value->bits b)]
+    [(Prim 'add1 e0)
      (value->bits (add1 (interp- e0)))]
-    [(sub1-e e0)
+    [(Prim 'sub1 e0)
      (value->bits (sub1 (interp e0)))]
-    [(zero?-e e0)
+    [(Prim 'zero? e0)
      (value->bits (zero? (interp e0)))]
-    [(if-e e0 e1 e2) (value->bits
-      (if (interp e0)
-          (interp e1)
-          (interp e2)))]))
+    [(If e0 e1 e2) (value->bits
+     (if (interp e0)
+         (interp e1)
+         (interp e2)))]))
 )
 
 
@@ -460,15 +466,15 @@ rewrite the code as:
 ;; Expr -> Bits
  (define (interp-bits e)
    (match e
-     [(int-e i) (* 2 i)]
-     [(bool-e b) (if b 3 1)]
-     [(add1-e e0)
+     [(Int i) (* 2 i)]
+     [(Bool b) (if b 3 1)]
+     [(Prim 'add1 e0)
       (value->bits (add1 (interp e0)))]
-     [(sub1-e e0)
+     [(Prim 'sub1 e0)
       (value->bits (sub1 (interp e0)))]
-     [(zero?-e e0)
+     [(Prim 'zero? e0)
       (value->bits (zero? (interp e0)))]
-     [(if-e e0 e1 e2)
+     [(If e0 e1 e2)
       (value->bits
        (if (interp e0)
            (interp e1)
@@ -490,15 +496,15 @@ We can rewrite the last case by the following equation:
 ;; Expr -> Bits
  (define (interp-bits e)
    (match e
-     [(int-e i) (* 2 i)]
-     [(bool-e b) (if b 3 1)]
-     [(add1-e e0)
+     [(Int i) (* 2 i)]
+     [(Bool b) (if b 3 1)]
+     [(Prim 'add1 e0)
       (value->bits (add1 (interp e0)))]
-     [(sub1-e e0)
+     [(Prim 'sub1 e0)
       (value->bits (sub1 (interp e0)))]
-     [(zero?-e e0)
+     [(Prim 'zero? e0)
       (value->bits (zero? (interp e0)))]
-     [(if-e e0 e1 e2)      
+     [(If e0 e1 e2)      
       (if (interp e0)
           (value->bits (interp e1))
           (value->bits (interp e2)))]))
@@ -525,15 +531,15 @@ to get:
 ;; Expr -> Bits
  (define (interp-bits e)
    (match e
-     [(int-e i) (* 2 i)]
-     [(bool-e b) (if b 3 1)]
-     [(add1-e e0)
+     [(Int i) (* 2 i)]
+     [(Bool b) (if b 3 1)]
+     [(Prim 'add1 e0)
       (+ (value->bits (interp e0)) (value->bits 1))]
-     [(sub1-e e0)
+     [(Prim 'sub1 e0)
       (- (value->bits (interp e0)) (value->bits 1))]
-     [(zero?-e e0)
+     [(Prim 'zero? e0)
       (value->bits (zero? (interp e0)))]
-     [(if-e e0 e1 e2)      
+     [(If e0 e1 e2)      
       (if (interp e0)
           (value->bits (interp e1))
           (value->bits (interp e2)))]))
@@ -553,18 +559,18 @@ We can now rewrite by the equation of our specification:
 
 @#reader scribble/comment-reader
 (ex #:no-prompt
-;; Expr -> Bits
+ ;; Expr -> Bits
  (define (interp-bits e)
    (match e
-     [(int-e i) (* 2 i)]
-     [(bool-e b) (if b 3 1)]
-     [(add1-e e0)
+     [(Int i) (* 2 i)]
+     [(Bool b) (if b 3 1)]
+     [(Prim 'add1 e0)
       (+ (interp-bits e0) 2)]
-     [(sub1-e e0)
+     [(Prim 'sub1 e0)
       (- (interp-bits e0) 2)]
-     [(zero?-e e0)
+     [(Prim 'zero? e0)
       (value->bits (zero? (interp e0)))]
-     [(if-e e0 e1 e2)      
+     [(If e0 e1 e2)      
       (if (interp e0)
           (interp-bits e1)
           (interp-bits e2))]))
@@ -580,20 +586,20 @@ and inline @racket[value->bits] specialized to a boolean argument:
 
 @#reader scribble/comment-reader
 (ex #:no-prompt
-;; Expr -> Bits
+ ;; Expr -> Bits
  (define (interp-bits e)
    (match e
-     [(int-e i) (* 2 i)]
-     [(bool-e b) (if b 3 1)]
-     [(add1-e e0)
+     [(Int i) (* 2 i)]
+     [(Bool b) (if b 3 1)]
+     [(Prim 'add1 e0)
       (+ (interp-bits e0) 2)]
-     [(sub1-e e0)
+     [(Prim 'sub1 e0)
       (- (interp-bits e0) 2)]
-     [(zero?-e e0)
+     [(Prim 'zero? e0)
       (match (zero? (interp-bits e0))
         [#t #b11]
         [#f #b01])]
-     [(if-e e0 e1 e2)
+     [(If e0 e1 e2)
       (if (interp e0)
           (interp-bits e1)
           (interp-bits e2))]))
@@ -611,20 +617,20 @@ produces the representation of @racket[#f] (@code[#:lang
 
 @#reader scribble/comment-reader
 (ex #:no-prompt
-;; Expr -> Bits
+ ;; Expr -> Bits
  (define (interp-bits e)
    (match e
-     [(int-e i) (* 2 i)]
-     [(bool-e b) (if b 3 1)]
-     [(add1-e e0)
+     [(Int i) (* 2 i)]
+     [(Bool b) (if b 3 1)]
+     [(Prim 'add1 e0)
       (+ (interp-bits e0) 2)]
-     [(sub1-e e0)
+     [(Prim 'sub1 e0)
       (- (interp-bits e0) 2)]
-     [(zero?-e e0)
+     [(Prim 'zero? e0)
       (match (zero? (interp-bits e0))
         [#t #b11]
         [#f #b01])]
-     [(if-e e0 e1 e2)
+     [(If e0 e1 e2)
       (match (interp-bits e0)
         [#b01 (interp-bits e2)]
         [_ (interp-bits e1)])]))
@@ -657,23 +663,22 @@ interpreter in a final conversion:
 (define (interp.v2 e)
   (bits->value (interp-bits e)))
 
-(interp.v2 (bool-e #t))
-(interp.v2 (bool-e #f))
-(interp.v2 (sexpr->ast '(if #f 1 2)))
-(interp.v2 (sexpr->ast '(if #t 1 2)))
-(interp.v2 (sexpr->ast '(if 0 1 2)))
-(interp.v2 (sexpr->ast '(if 7 1 2)))
-(interp.v2 (sexpr->ast '(if (zero? 7) 1 2)))
-(interp.v2 (sexpr->ast '(add1 #f)))
-(eval:error (interp.v2 (sexpr->ast '(add1 #t))))
+(interp.v2 (Bool #t))
+(interp.v2 (Bool #f))
+(interp.v2 (parse '(if #f 1 2)))
+(interp.v2 (parse '(if #t 1 2)))
+(interp.v2 (parse '(if 0 1 2)))
+(interp.v2 (parse '(if 7 1 2)))
+(interp.v2 (parse '(if (zero? 7) 1 2)))
+(interp.v2 (parse '(add1 #f)))
+(eval:error (interp.v2 (parse '(add1 #t))))
 )
 
 Notice the last two examples.  What's going on?
 
 The @racket[interp.v2] function is also a correct interpreter for
-Dupe, and importantly, it sheds like how to implement the compiler
+Dupe, and importantly, it sheds light on how to implement the compiler
 since it uses the same representation of values.
-
 
 @section{An Example of Dupe compilation}
 
@@ -688,11 +693,11 @@ Let's consider some simple examples:
 
 @item{@racket[42]: this should compile just like integer literals
 before, but needs to use the new representation, i.e. the compiler
-should produce @racket['(mov rax 84)], which is @racket[(* 42 2)].}
+should produce @racket[(Mov 'rax 84)], which is @racket[(* 42 2)].}
 
-@item{@racket[#f]: this should produce @racket['(mov rax 1)].}
+@item{@racket[#f]: this should produce @racket[(Mov 'rax 1)].}
 
-@item{@racket[#t]: this should produce @racket['(mov rax 3)].}
+@item{@racket[#t]: this should produce @racket[(Mov 'rax 3)].}
 
 @item{@racket[(add1 _e)]: this should produce the instructions for
 @racket[_e] followed by an instruction to add @racket[2], which is
@@ -715,12 +720,12 @@ they are equal.}
 ]
 
 @ex[
-(compile-e (int-e 42))
-(compile-e (bool-e #t))
-(compile-e (bool-e #f))
-(compile-e (sexpr->ast '(zero? 0)))
-(compile-e (sexpr->ast '(if #t 1 2)))
-(compile-e (sexpr->ast '(if #f 1 2)))
+(compile-e (Int 42))
+(compile-e (Bool #t))
+(compile-e (Bool #f))
+(compile-e (parse '(zero? 0)))
+(compile-e (parse '(if #t 1 2)))
+(compile-e (parse '(if #f 1 2)))
 ]
 
 
@@ -750,14 +755,14 @@ two possible results: 0 for false and 1 for true:
 
 
 @ex[
-(asm-interp (compile (bool-e #t)))
-(asm-interp (compile (bool-e #f)))
-(asm-interp (compile (sexpr->ast '(zero? 0))))
-(asm-interp (compile (sexpr->ast '(zero? -7))))
-(asm-interp (compile (sexpr->ast '(if #t 1 2))))
-(asm-interp (compile (sexpr->ast '(if #f 1 2))))
-(asm-interp (compile (sexpr->ast '(if (zero? 0) (if (zero? 0) 8 9) 2))))
-(asm-interp (compile (sexpr->ast '(if (zero? (if (zero? 2) 1 0)) 4 5))))
+(asm-interp (compile (Bool #t)))
+(asm-interp (compile (Bool #f)))
+(asm-interp (compile (parse '(zero? 0))))
+(asm-interp (compile (parse '(zero? -7))))
+(asm-interp (compile (parse '(if #t 1 2))))
+(asm-interp (compile (parse '(if #f 1 2))))
+(asm-interp (compile (parse '(if (zero? 0) (if (zero? 0) 8 9) 2))))
+(asm-interp (compile (parse '(if (zero? (if (zero? 2) 1 0)) 4 5))))
 ]
 
 
@@ -780,15 +785,15 @@ When interpreting programs with type errors, we get @emph{Racket}
 errors, i.e. the Racket functions used in the implementation of the
 interpreter will signal an error:
 @ex[
-(eval:error (interp (sexpr->ast '(add1 #f))))
-(eval:error (interp (sexpr->ast '(if (zero? #t) 7 8))))
+(eval:error (interp (parse '(add1 #f))))
+(eval:error (interp (parse '(if (zero? #t) 7 8))))
 ]
 
 On the hand, the compiler will simply do something by misinterpreting the meaning
 of the bits:
 @ex[
-(asm-interp (compile (sexpr->ast '(add1 #f))))
-(asm-interp (compile (sexpr->ast '(if (zero? #t) 7 8))))
+(asm-interp (compile (parse '(add1 #f))))
+(asm-interp (compile (parse '(if (zero? #t) 7 8))))
 ]
 
 @;codeblock-include["dupe/correct.rkt"]
@@ -796,14 +801,13 @@ of the bits:
 This complicates testing the correctness of the compiler.  Consider
 our usual appraoch:
 @ex[
-(define (check-correctness s)
-  (let ((e (sexpr->ast s)))
-    (check-equal? (asm-interp (compile e))
-                  (interp e)
-  		e)))
+(define (check-correctness e)
+  (check-equal? (asm-interp (compile e))
+                (interp e)
+                e))
 
-(check-correctness '(add1 7))
-(eval:error (check-correctness '(add1 #f)))
+(check-correctness (parse '(add1 7)))
+(eval:error (check-correctness (parse '(add1 #f))))
 ]
 
 This isn't a counter-example to correctness because @racket['(add1
@@ -816,17 +820,15 @@ to interpret a meaningless expression, we can write an alternate
 produces void, effectively ignoring the test:
 
 @ex[
-(define (check-correctness s)
-  (let ((e (sexpr->ast s)))
-    (with-handlers ([exn:fail? void])
-      (check-equal? (asm-interp (compile e))
-                    (interp e)
-                    e))))
+(define (check-correctness e)
+  (with-handlers ([exn:fail? void])
+    (check-equal? (asm-interp (compile e))
+                  (interp e)
+                  e)))
 
-(check-correctness '(add1 7))
-(check-correctness '(add1 #f))
+(check-correctness (parse '(add1 7)))
+(check-correctness (parse '(add1 #f)))
 ]
 
 Using this approach, we check the equivalence of the results only when
 the interpreter runs without causing an error.
-

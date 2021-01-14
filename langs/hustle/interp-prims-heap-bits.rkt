@@ -1,0 +1,66 @@
+#lang racket
+(provide interp-prim1 interp-prim2 interp-prim3)
+(require "types.rkt"
+         "heap-bits.rkt")
+
+;; Op1 Value* Heap -> Answer*
+(define (interp-prim1 p v h)
+  (match (list p v)
+    [(list 'add1  (? int-bits? i))        (cons h (+ i (imm->bits 1)))]
+    [(list 'sub1  (? int-bits? i))        (cons h (- i (imm->bits 1)))]
+    [(list 'zero? (? int-bits? i))        (cons h (imm->bits (zero? i)))]
+    [(list 'char? v)                      (cons h (imm->bits (char-bits? v)))]
+    [(list 'char->integer (? char-bits?)) (cons h (imm->bits (char->integer (bits->imm v))))]
+    [(list 'integer->char (? cp-bits?))   (cons h (imm->bits (integer->char (bits->imm v))))]
+    [(list 'eof-object? v)                (cons h (if (= v (imm->bits eof)) val-true val-false))]
+    [(list 'write-byte (? byte-bits?))    (cons h (begin (write-byte (bits->imm v)) val-void))]
+    [(list 'box v)                        (alloc-box v h)]
+    [(list 'unbox (? box-bits?  i))       (cons h (heap-ref h i))]
+    [(list 'car   (? cons-bits? i))       (cons h (heap-ref h i))]
+    [(list 'cdr   (? cons-bits? i))       (cons h (heap-ref h (+ i (arithmetic-shift 1 imm-shift))))]
+    [(list 'empty? v)                     (cons h (if (= (imm->bits '()) v) val-true val-false))]
+    [(list 'string? v)                    (cons h (if (str-bits? v) val-true val-false))]
+    [(list 'string-length (? str-bits? i)) (cons h (heap-ref h i))]
+    [_                                    'err]))
+
+;; Op2 Value* Value* Heap -> Answer*
+(define (interp-prim2 p v1 v2 h)
+  (match (list p v1 v2)
+    [(list '+ (? int-bits? i1) (? int-bits? i2)) (cons h (+ i1 i2))]
+    [(list '- (? int-bits? i1) (? int-bits? i2)) (cons h (- i1 i2))]
+    [(list 'eq? v1 v2)                           (cons h (= v1 v2))]
+    [(list 'cons v1 v2)                          (alloc-cons v1 v2 h)]
+    [(list 'make-string (? int-bits? i) (? char-bits? c))
+     (if (<= 0 i)
+         (alloc-str (make-string (bits->imm i) (bits->imm c)) h)
+         'err)]
+    [(list 'string-ref (? str-bits?) (? int-bits? i))
+     ;; should probably untag v1 before dereference, but it works out
+     (let ((i (bits->imm i)))
+       (if (<= 0 i (sub1 (heap-ref h v1)))
+           (cons h (heap-ref h (+ v1
+                                  (arithmetic-shift (add1 i) imm-shift))))                                  
+           'err))]     
+    [_  'err]))
+
+;; Op2 Value* Value* Heap -> Answer*
+(define (interp-prim3 p v1 v2 v3 h)
+  (match (list p v1 v2 v3)
+    [(list 'string-set! (? str-bits? a) (? int-bits? i) (? char-bits? c))
+     (let ((i (bits->imm i)))
+       ;(if (<= 0 v2 (sub1 (heap-ref h a)))
+       (cons (heap-set h (+ a (arithmetic-shift (add1 i) imm-shift)) c)
+             (void)))]
+      ;   'err)]
+    [_  'err]))
+
+;; Bits -> Boolean
+(define (byte-bits? i)
+  (and (int-bits? i)
+       (<= (imm->bits 0) i (imm->bits 255))))
+
+;; Bits -> Boolean
+(define (cp-bits? v)
+  (and (int-bits? v)
+       (or (<= (imm->bits 0) v (imm->bits 55295))
+           (<= (imm->bits 57344) v (imm->bits 1114111)))))

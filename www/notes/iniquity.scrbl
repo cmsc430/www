@@ -4,7 +4,6 @@
 @(require redex/pict
 	  racket/runtime-path
 	  scribble/examples
-	  "hustle/semantics.rkt"
 	  "utils.rkt"
 	  "ev.rkt"
 	  "../utils.rkt")
@@ -12,7 +11,7 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "iniquity" f))))))
-	   '("interp.rkt" "ast.rkt" "syntax.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+	   '("interp.rkt" "ast.rkt" "parse.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
 @title[#:tag "Iniquity"]{Iniquity: function definitions and calls}
 
@@ -20,16 +19,38 @@
 
 @section[#:tag-prefix "iniquity"]{Functions}
 
-Our programming languages so far have been impoverished in the
-following sense: in order to process arbitrarily large data, the
-programs themselves must be proportionally as large.  Want to compute
-something over a billion element list?  You'll need a billion
-expressions.  Consequently, the expressiveness of our language is
-severely restricted.
+With @secref{Hustle}, we removed a major computational
+shortcoming by adding the ability to use inductively defined
+data. Doing so gives programmers the ability to represent
+arbitrarily large pieces of information.
 
-Let's now remove that restriction by incorporating @bold{functions},
-and in particular, @bold{recursive functions}, which will allow us to
-compute over arbitrarily large data with finite-sized programs.
+And yet, the language remains hamstrung. It has no mechanism
+to @emph{compute} with such data. Sure, a programmer could
+compute the sum of the first @emph{n} elements of a list,
+for some fixed @emph{n}. But the size of this program would
+be proportional to the size of @emph{n}. Want to compute the
+sum of a billion element list? You'll need (at least) a
+billion expressions. Want to compute the sum of a larger
+list? Write a longer program! But if you want to compute the
+sum of @emph{any} list, regardless of its size? You'll need
+an arbitrarily long program. Of course programs are always
+of some fixed size, since after all, you have to write them
+down and at some point you have to stop writing. This means
+the expressiveness of our language is @emph{still} severely
+restricted.
+
+The solution is to bring in the computational analog of
+inductive data. When you have arbitrarily large data, you
+need arbitrarily long running computations to process them.
+Crucially, these arbitrarily long running computations need
+to be described by finite sized programs. The analog of
+inductive data are @bold{recursive functions}.
+
+
+So let's now remove the computational shackles by
+incorporating @bold{ functions}, and in particular,
+@bold{recursive functions}, which will allow us to compute over
+arbitrarily large data with finite-sized programs.
 
 Let's call it @bold{Iniquity}.
 
@@ -93,34 +114,34 @@ have significantly increased the expressivity of our language.}
 We can try it out:
 
 @ex[
-(interp (sexpr->prog '(begin (define (double x) (+ x x))
-		(double 5))))
+(interp (parse '(begin (define (double x) (+ x x))
+                       (double 5))))
 ]
 
 We can see it works with recursive functions, too. Here's a recursive
 function for computing triangular numbers:
 
 @ex[
-(interp (sexpr->prog '(begin (define (tri x)
-		  (if (zero? x)
-		      0
-		      (+ x (tri (sub1 x)))))
-		(tri 9))))
+(interp (parse '(begin (define (tri x)
+                         (if (zero? x)
+                             0
+                             (+ x (tri (sub1 x)))))
+                       (tri 9))))
 ]
 
 We can even define mutually recursive functions such as @racket[even?]
 and @racket[odd?]:
 
 @ex[
-(interp (sexpr->prog '(begin (define (even? x)
-		  (if (zero? x)
-		      #t
-		      (odd? (sub1 x))))
-		(define (odd? x)
-		  (if (zero? x)
-		      #f
-		      (even? (sub1 x))))
-		(even? 101))))
+(interp (parse '(begin (define (even? x)
+                         (if (zero? x)
+                             #t
+                             (odd? (sub1 x))))
+                       (define (odd? x)
+                         (if (zero? x)
+                             #f
+                             (even? (sub1 x))))
+                       (even? 101))))
 ]
 
 @section[#:tag-prefix "iniquity"]{Compiling a Call}
@@ -136,22 +157,22 @@ convention, we will pass all arguments to a function on the stack.
 So here is @tt{Asm} representing a single function named @tt{double}
 
 @racketblock[
-'(double
-  (mov rax (offset rsp -1))
-  (add rax rax)
-  ret)
+(seq (Label 'double)
+     (Mov 'rax (Offset 'rsp -1))
+     (Add 'rax 'rax)
+     (Ret))
 ]
 
 This function takes one argument from the stack, adds it to itself,
 leaving the result in @racket['rax] when it returns.
 
-The @racket['ret] instruction works in concert with the @racket['call]
+The @racket[Ret] instruction works in concert with the @racket[Call]
 instruction, which can be given a label, designating which function to
 call.
 
 So if we wanted to call @racket[double] with an argument of 5, we'd
 first need to write 5 in to the approrpriate spot in the stack, then
-issue the @racket['(call double)] instruction.
+issue the @racket[(Call 'double)] instruction.
 
 Since the @tt{double} code is reading from offset -1 from
 @racket['rsp], it is tempting to assume this is where you should write
@@ -159,25 +180,25 @@ the argument:
 
 @#reader scribble/comment-reader
 (racketblock
-'((mov (offset rsp -1) 5)
-  (call double)
-  (add rax 1)) ; rax now holds 11
+(seq (Mov (Offset rsp -1) 5)
+     (Call 'double)
+     (Add 'rax 1)) ; rax now holds 11
 )
 
-The problem is here is that the @racket['call] instruction works by
+The problem is here is that the @racket[Call] instruction works by
 modifying the @racket['rsp] register.
 
 Remember how @racket['rsp] points to an ``occupied'' memory location
 and we said we just leave whatever is there alone?  We can now explain
 what's going on.
 
-The @racket['call] instruction advances @racket['rsp] to the next word
+The @racket[Call] instruction advances @racket['rsp] to the next word
 of memory and writes the location of the instruction that occurs after
-the @racket['call] instruction.  This is a @bold{return pointer}.  It
+the @racket[Call] instruction.  This is a @bold{return pointer}.  It
 then jumps to the beginning of the instruction sequence after the
-label that is the argument of @racket['call].  Those instruction
-execute and when we get to @racket['ret], the return instruction reads
-that address stored in @racket['(offset rsp 0)], moves @racket['rsp]
+label that is the argument of @racket[Call].  Those instruction
+execute and when we get to @racket[Ret], the return instruction reads
+that address stored in @racket[(Offset 'rsp 0)], moves @racket['rsp]
 back one word, and jumps to the instruction pointed to by the return
 pointer.
 
@@ -190,9 +211,9 @@ So calls and returns in assembly are really just shorthand for:
 ]
 
 The problem with the function call we wrote above is that we put the
-argument in @racket['(offset rsp -1)], but then the @racket['call]
+argument in @racket[(Offset 'rsp -1)], but then the @racket[Call]
 advances (by decrementing) the @racket['rsp] register and writes the
-return point in @racket['(offset rsp 0)], but that's exactly where we
+return point in @racket[(Offset 'rsp 0)], but that's exactly where we
 had put the argument!
 
 The solution then, is to put the argument at index -2 from the
@@ -201,9 +222,9 @@ from the function's perspective:
 
 @#reader scribble/comment-reader
 (racketblock
-'((mov (offset rsp -2) 5)
-  (call double)
-  (add rax 1)) ; rax now holds 11
+(seq (Mov (Offset 'rsp -2) 5)
+     (Call 'double)
+     (Add 'rax 1)) ; rax now holds 11
 )
 
 Now that we have seen how to make a call and return in assembly, we
@@ -212,11 +233,10 @@ our language.
 
 @racketblock[
 ;; Expr CEnv -> Asm
-(define (compile-call-double e0 c)
-  (let ((c0 (compile-e e0 c)))
-    `(,@c0
-      (mov (offset rsp -2) rax) ; place result of e0 in stack
-      (call double))))
+(define (compile-call-double e0 c) 
+  (seq (compile-e e0 c)
+       (Mov (Offset 'rsp -2) 'rax) ; place result of e0 in stack
+       (Call 'double)))
 ]
 
 This will work if the program consists only of a call to
@@ -226,7 +246,7 @@ To see the problem, notice how the call code always uses the index -2
 for the first argument and index -1 will hold the return pointer when
 the call is made.  But what if those spots are occuppied on the
 stack!?  The problem is that we've always calculated stack offsets
-statically and never mutated @racket['rsp].  But @racket['call]
+statically and never mutated @racket['rsp].  But @racket[Call]
 expects @racket['rsp] to be pointing to the top of the stack.
 
 The solution is to emit code that will adjust @racket['rsp] to the top
@@ -242,13 +262,12 @@ The code is:
 (racketblock
 ;; Expr CEnv -> Asm
 (define (compile-call-double e0 c)
-  (let ((c0 (compile-e e0 c))
-	(h  (* 8 (length c))))
-    `(,@c0
-      (sub rsp ,h)
-      (mov (offset rsp -2) rax) ; place result of e0 in stack
-      (call double)
-      (add rsp ,h))))
+  (let ((h  (* 8 (length c))))
+    (seq (compile-e e0 c)
+         (Sub 'rsp h)
+         (Mov (Offset 'rsp -2) rax) ; place result of e0 in stack
+         (Call 'double)
+         (Add 'rsp h))))
 )
 
 This makes calls work in any stack context.
@@ -257,15 +276,14 @@ It's easy to generalize this code to call any given function name:
 
 @#reader scribble/comment-reader
 (racketblock
-;; Variable Expr CEnv -> Asm
+;; Id Expr CEnv -> Asm
 (define (compile-call f e0 c)
-  (let ((c0 (compile-e e0 c))
-	(h  (* 8 (length c))))
-    `(,@c0
-      (sub rsp ,h)
-      (mov (offset rsp -2) rax)
-      (call ,f)
-      (add rsp ,h))))
+  (let ((h  (* 8 (length c))))
+    (seq (compile-e e0 c)
+         (Sub 'rsp h)
+         (Mov (Offset 'rsp -2) 'rax)
+         (Call f)
+         (Add 'rsp h))))
 )
 
 If we want accept any number of arguments, we have to do a little more
@@ -274,6 +292,7 @@ work.
 We rely on the following helpful function for compiling a list of
 expressions and saving the results on the stack:
 
+
 @#reader scribble/comment-reader
 (racketblock
 ;; (Listof Expr) CEnv -> Asm
@@ -281,25 +300,22 @@ expressions and saving the results on the stack:
   (match es
     ['() '()]
     [(cons e es)
-     (let ((c0 (compile-e e c))
-	   (cs (compile-es es (cons #f c))))
-       `(,@c0
-	 (mov (offset rsp ,(- (add1 (length c)))) rax)
-	 ,@cs))]))
+     (seq (compile-e e c)
+          (Mov (Offset 'rsp (- (add1 (length c)))) 'rax)
+          (compile-es es (cons #f c)))]))     
 )
 
 So to compile a call with any number of arguments:
 
 @#reader scribble/comment-reader
 (racketblock
-;; Variable (Listof Expr) CEnv -> Asm
+;; Id (Listof Expr) CEnv -> Asm
 (define (compile-call f es c)
-  (let ((cs (compile-es es (cons #f c)))
-	(h  (* 8 (length c))))
-    `(,@cs
-      (sub rsp ,h)
-      (call ,f)
-      (add rsp ,h))))
+  (let ((h  (* 8 (length c))))
+    (seq (compile-es es (cons #f c))	
+         (Sub 'rsp h)
+         (Call f)
+         (Add 'rsp h))))
 )
 
 Notice that we call @racket[compile-es] in an extended static
@@ -327,19 +343,18 @@ that it resolves this variable to the first position on the stack,
 which, thanks to the code we emit for calls, will hold the argument
 value.
 
-After the instructions for the body, a @racket['ret] instruction is
+After the instructions for the body, a @racket[(Ret)] instruction is
 emitted so that control transfers back to the caller.
 
 So the code for compiling a function definition is:
 
 @#reader scribble/comment-reader
 (racketblock
-;; Variable Variable Expr -> Asm
+;; Id Id Expr -> Asm
 (define (compile-define f x e0)
-  (let ((c0 (compile-e e0 (list x))))
-    `(,f
-      ,@c0
-      ret)))
+  (seq (Label f)
+       (compile-e e0 (list x))      
+       (Ret)))
 )
 
 What about functions that take zero or more arguments?  That's easy,
@@ -347,12 +362,11 @@ just compile the body in an appropriate static environment.
 
 @#reader scribble/comment-reader
 (racketblock
-;; Variable (Listof Variable) Expr -> Asm
+;; Id (Listof Id) Expr -> Asm
 (define (compile-define f xs e0)
-  (let ((c0 (compile-e e0 (reverse xs))))
-    `(,f
-      ,@c0
-      ret)))
+  (seq (Label f)
+       (compile-e e0 (reverse xs))
+       (Ret)))
 )
 
 (Note that we reverse the parameter list due to the order in which
@@ -377,25 +391,25 @@ We solve this problem by using a function that maps arbitrary Racket
 symbols to valid Nasm labels (represented as symbols).  The function
 has the property distinct symbols always map to distinct labels.
 
+@ex[(symbol->label '^weird%)]
+
 Using this function, we can touch up our code:
 
 @#reader scribble/comment-reader
 (racketblock
-;; Variable (Listof Expr) CEnv -> Asm
+;; Id (Listof Expr) CEnv -> Asm
 (define (compile-call f es c)
-  (let ((cs (compile-es es (cons #f c)))
-	(h  (* 8 (length c))))
-    `(,@cs
-      (sub rsp ,h)
-      (call ,(symbol->label f))
-      (add rsp ,h))))
+  (let ((h  (* 8 (length c))))
+    (seq (compile-es es (cons #f c))
+         (Sub 'rsp h)
+         (Call (symbol->label f))
+         (Add 'rsp h))))
 
-;; Variable (Listof Variable) Expr -> Asm
+;; Id (Listof Id) Expr -> Asm
 (define (compile-define f xs e0)
-  (let ((c0 (compile-e e0 (reverse xs))))
-    `(,(symbol->label f)
-      ,@c0
-      ret)))
+  (seq (Label (symbol->label f))
+       (compile-e e0 (reverse xs))
+       (Ret)))
 )
 
 
@@ -409,12 +423,9 @@ complete program:
 ;; Prog -> Asm
 (define (compile p)
   (match p
-    [(list 'begin `(define (,fs . ,xss) ,es) ... e0)
-     (let ((ds (compile-defines fs xss es))
-	   (c0 (compile-l e0)))
-       `(,@c0
-	 ,@ds))]
-    [e (compile-l e)]))
+    [(Prog ds e)
+     (seq (compile-entry e)
+          (compile-defines ds))]))
 )
 
 It relies on a helper @racket[compile-defines] for compiling each
@@ -423,40 +434,50 @@ single list:
 
 @#reader scribble/comment-reader
 (racketblock
-;; (Listof Variable) (Listof (Listof Variable)) (Listof Expr) -> Asm
-(define (compile-defines fs xss es)
-  (append-map compile-define fs xss es))
+;; [Listof Defn] -> Asm
+(define (compile-defines ds)
+  (match ds
+    ['() (seq)]
+    [(cons d ds)
+     (seq (compile-define d)
+          (compile-defines ds))]))
 )
 
 
 Here's an example of the code this compiler emits:
 
 @ex[
-(asm-display (compile (sexpr->prog '(begin (define (double x) (+ x x)) (double 5)))))
+(displayln
+ (asm-string
+  (compile
+   (parse '(begin (define (double x) (+ x x)) (double 5))))))
 ]
 
 And we can confirm running the code produces results consistent with
 the interpreter:
 
 @ex[
-(asm-interp (compile (sexpr->prog '(begin (define (double x) (+ x x))
-			     (double 5)))))
+(define (run e)
+  (asm-interp (compile (parse e))))
 
-(asm-interp (compile (sexpr->prog '(begin (define (tri x)
-			      (if (zero? x)
-				  0
-				  (+ x (tri (sub1 x)))))
-			    (tri 9)))))
+(run '(begin (define (double x) (+ x x))
+             (double 5)))
 
-(asm-interp (compile (sexpr->prog '(begin (define (even? x)
-			       (if (zero? x)
-				   #t
-				   (odd? (sub1 x))))
-			     (define (odd? x)
-			       (if (zero? x)
-				   #f
-				   (even? (sub1 x))))
-			     (even? 101)))))
+(run '(begin (define (tri x)
+               (if (zero? x)
+                   0
+                   (+ x (tri (sub1 x)))))
+             (tri 9)))
+
+(run '(begin (define (even? x)
+               (if (zero? x)
+                   #t
+                   (odd? (sub1 x))))
+             (define (odd? x)
+               (if (zero? x)
+                   #f
+                   (even? (sub1 x))))
+             (even? 101)))
 ]
 
 

@@ -2,7 +2,7 @@
 @title[#:tag "Assignment 3" #:style 'unnumbered]{Assignment 3: Conditional forms and parsing}
 
 @(require (for-label (except-in racket ...)))
-@(require "../notes/con-plus/semantics.rkt")
+@(require "../../langs/con-plus/semantics.rkt")
 @(require redex/pict)
 
 @bold{Due: Tues, Sept 29, 11:59PM}
