@@ -6,9 +6,9 @@
 
 @(require "../notes/ev.rkt")
 
-@bold{Due: Thursday, December 10th, 11:59PM EST}
+@bold{Due: Saturday, December 19th, 11:59PM EST}
 
-@(define repo "https://FIXME")
+@(define repo "https://classroom.github.com/a/B_5JCtgA")
 
 The goal of this assignment is to (1) implement arity checking in a
 language with functions, (2) to implement the @racket[apply]
@@ -327,16 +327,34 @@ is an arity error.)  So like @racket[apply], you'll need a loop, but
 instead of copy from a list to a stack, you'll need to copy from the
 stack to a list.
 
-@section[#:tag-prefix "a6-" #:style 'unnumbered]{Bonus}
+@section[#:tag-prefix "a6-" #:style 'unnumbered]{Program Optimization}
 
-Should you find yourself having completed the assignment with time to
-spare, you could try adding proper tail calls to the compiler.  You
-will have to make it work with arity checking and calling
-@racket[apply] in tail position should make a tail call to the
-function.
+Choose one of the following compiler optimizations (you will want to read up on
+them a bit before you pick one):
 
-This isn't worth any credit, but you might learn something.
 
+@itemlist[
+
+@item{Common sub-expression elimination}
+
+@item{Constant folding/propagation}
+
+@item{Dead store elimination (in our languages a `dead store' would be creating
+a box that is then never used).}
+
+]
+
+In your repos there is a file @tt{optimization.txt}. For the optimization you
+have chosen write approximately 500-1000 words explaining how you might
+implement your chosen optimization in Shakedown in that file. Make sure you
+consider that Shakedown has the ability to perform arbitrary side-effects
+(printing to the screen, for example), and therefore your explanation should
+discuss how that might affect where the optimization might apply.
+
+The wordcount is meant to be a ballpark, wordcounts below 500 @emph{might} be
+okay, but it would probably be difficult to describe the important
+considerations. You @emph{can} show code in your answer, but it will not count
+towards your word count.
 
 @section[#:tag-prefix "a6-" #:style 'unnumbered]{Testing}
 
@@ -359,17 +377,6 @@ You can test your code in several ways:
 
 Note that only a small number of tests are given to you, so you should
 write additional test cases.
-
-@bold{There is separate a repository for tests!} When you push your
-code, Travis will automatically run your code against the tests.  If
-you would like to run the tests locally, clone the following
-repository into the directory that contains your compiler and run
-@tt{raco test .} to test everything:
-
-@centered{@tt{https://github.com/cmsc430/assign06-test.git}}
-
-This repository will evolve as the week goes on, but any time there's
-a significant update it will be announced on Piazza.
 
 @section[#:tag-prefix "a6-" #:style 'unnumbered]{Submitting}
 
