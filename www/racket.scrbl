@@ -6,6 +6,8 @@
 
 @(require scribble/examples racket/sandbox)
 
+@(require "defns.rkt")
+
 @(define core-racket
   (parameterize ([sandbox-output 'string]
                  [sandbox-error-output 'string]
@@ -49,27 +51,7 @@ Racket is available for all major operating systems from:
 
 @centered{@link["https://racket-lang.org/"]{@tt{https://racket-lang.org/}}}
 
-Racket is also available on the
-@link["http://www.grace.umd.edu/"]{GRACE} computing cluster at UMD.
-The executables are located in
-
-@centered{
-@tt{/afs/glue/class/fall2019/cmsc/430/0101/public/racket-7.4/bin/}
-}
-
-For convenience, you can add the following line to your
-@tt{.cshrc.mine} file so that this directory will be added to your
-@tt{PATH} environment variable:
-
-@tt{setenv PATH ${PATH}:"/afs/glue/class/fall2019/cmsc/430/0101/public/racket-7.4/bin/"}
-
-The next time you log in, you should be able to run @tt{racket} or
-@tt{drracket} from the command line without typing out the directory.
-(Note: you will need
-@link["http://www.cs.umd.edu/~nelson/classes/utilities/xforwarding.shtml"]{X11
-forwarding} to use DrRacket or other GUI applications.)
-
-We will be using Racket 7.4, but any version from the past several
+We will be using Racket @racket-version, but any version from the past several
 years should work fine.
 
 There are two essential references:
@@ -138,6 +120,10 @@ should cover the necessary installations for this course.}
 
 Regardless of the IDE used, you can now run your tests from your Linux 
 subsystem by entering the project directory and using the raco command.
+
+
+@; DVH: I'm not sure this is useful.  The OCaml to Racket notes are better.
+@;{
 
 @section{Grammar}
 
@@ -233,5 +219,5 @@ Here are some examples of writing various functions in our subset of Racket.
 (rev '(1 2 3 4 5))
 )
 
-
+}
 
