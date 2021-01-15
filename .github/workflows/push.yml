@@ -31,7 +31,7 @@ jobs:
   deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main'
     steps:
     - name: Download www
       uses: actions/download-artifact@v2
@@ -42,7 +42,7 @@ jobs:
       uses: plum-umd/github-actions-rsync@master
       with:
         RSYNC_OPTIONS: -rvzp
-        RSYNC_TARGET: www/tmp
+        RSYNC_TARGET: /fs/www/class/spring2021/cmsc430/
         RSYNC_SOURCE: cmsc430
       env:
         SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
