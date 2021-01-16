@@ -21,7 +21,7 @@
 (define racket-version "7.9")
 
 (define staff
-  (list (list "José Manuel Calderón Trilla" "jmct@umd.edu" "-")
+  (list (list (link "http://jmct.cc/" "José Manuel Calderón Trilla") "jmct@umd.edu" "-")
         (list "Deena Postol" "dpostol@umd.edu" "TBA")
         (list "Tasnim Kabir" "tkabir1@cs.umd.edu" "TBA")        
         (list "Temur Saidkhodjaev" "temurson@terpmail.umd.edu" "TBA")
