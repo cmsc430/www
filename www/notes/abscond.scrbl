@@ -207,10 +207,6 @@ a set of pairs of expressions and integers.  This relation will be
 defined inductively using @emph{inference rules}.  For such a simple
 language, just a single inference rule suffices:
 
-
-@; dealing with unicode capable font issues
-@(metafunction-style "STIX Two Math")
-
 @(define-judgment-form A
   #:mode (𝑨 I O)
   #:contract (𝑨 e i)
