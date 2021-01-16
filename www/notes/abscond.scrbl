@@ -124,9 +124,8 @@ followed by a (concrete) expression.  The grammar of expressions is
 very simple:
 
 @; dealing with unicode capable font issues
-@(match (system-type 'os)
-  ['unix (metafunction-style "Ubuntu")]
-  [_ (void)])
+@(when (eq? (system-type 'os) 'unix)
+   (metafunction-style "Ubuntu"))
 
 @(define-language A
   (e ::= integer))
