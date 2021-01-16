@@ -1,7 +1,8 @@
 
 #lang racket
 (provide exercise float-right panopto-vid shell)
-(require scribble/base scribble/core scribble/html-properties)
+(require scribble/base scribble/core scribble/html-properties
+         redex/pict)
 
 (define exercise-body-style
   (make-style "ExerciseBody" null))
@@ -56,3 +57,6 @@
      (string-append "> " c "\n"
                     (with-output-to-string/err (λ () (system #:set-pwd? #t c)))
                     (apply shell cs))]))
+
+; dealing with unicode capable font issues
+(metafunction-style "STIX Two Math")
