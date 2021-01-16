@@ -16,9 +16,9 @@ $(course):
 		--redirect-main http://docs.racket-lang.org/ \
 		$(course).scrbl
 	mkdir -p $(course)/code/	
-	cd notes ; \
-		tar -c `git ls-files intro ../langs/a86 ../langs/abscond ../langs/blackmail ../langs/con ../langs/dupe ../langs/extort ../langs/fraud ../langs/hustle ../langs/iniquity ../langs/jig ../langs/knock ../langs/loot ../langs/mug ../langs/fp project.pdf` | \
-		(cd ../main/code ; tar -x) ; cd ../..
+	cd ../langs ; \
+		tar -c `git ls-files intro a86 abscond blackmail con dupe extort fraud hustle iniquity jig .knock loot mug fp project.pdf` | \
+		(cd ../www/main/code ; tar -x) ; cd ../..
 	cd slides ; \
 		tar -c `git ls-files ocaml-to-racket.pdf abscond.pdf con.pdf dupe.pdf extort.pdf grift.pdf grift2.pdf hustle.pdf` | \
 		(cd ../main/code ; tar -x) ; cd ../..
