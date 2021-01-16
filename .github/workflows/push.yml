@@ -12,7 +12,6 @@ jobs:
         curl -Ls https://github.com/jgm/pandoc/releases/download/2.11.2/pandoc-2.11.2-1-amd64.deb -o pandoc.deb
         sudo dpkg -i pandoc.deb
         sudo apt-get install nasm
-        sudo apt-get install xfonts-unifont ttf-unifont
     - name: Install Racket
       uses: Bogdanp/setup-racket@v0.10
       with:
