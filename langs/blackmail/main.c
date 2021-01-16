@@ -8,9 +8,3 @@ int main(int argc, char** argv) {
   printf("%" PRId64 "\n", result);
   return 0;
 }
-
-int64_t get_int() {
-  int64_t x;
-  scanf("%lld", &x);
-  return x;
-} 
