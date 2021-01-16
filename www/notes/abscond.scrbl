@@ -123,8 +123,7 @@ The concrete form of an Abscond program will consist of, like Racket, the line o
 followed by a (concrete) expression.  The grammar of expressions is
 very simple:
 
-@; dealing with unicode capable font issues
-@(metafunction-style "Ubuntu")
+
 
 @(define-language A
   (e ::= integer))
@@ -207,6 +206,10 @@ meanings.  So in the setting of Abscond, this binary relation will be
 a set of pairs of expressions and integers.  This relation will be
 defined inductively using @emph{inference rules}.  For such a simple
 language, just a single inference rule suffices:
+
+
+@; dealing with unicode capable font issues
+@(metafunction-style "STIX Two Math")
 
 @(define-judgment-form A
   #:mode (𝑨 I O)
