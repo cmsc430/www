@@ -34,10 +34,12 @@
         (begin (apply shell (syntax->datum #'(s ...)))
 	       #'(void)))]))
 
-
-@(void
-  (ev
-   '(define (tri n)
+@; compile time generation of tri.s so that it can be listed
+@(begin-for-syntax
+   (require racket/system)
+   (require "../../langs/a86/ast.rkt"
+            "../../langs/a86/printer.rkt")
+   (define (tri n)
       (list (Label 'entry)
             (Mov 'rbx n)
             (Label 'tri)
@@ -51,14 +53,11 @@
             (Ret)
             (Label 'done)
             (Mov 'rax 0)
-            (Ret))))
-  (ev
-   '(with-output-to-file "tri.s"
+            (Ret)))
+   (parameterize ([current-directory (build-path notes "a86")])
+     (with-output-to-file "tri.s"
       (λ () (display (asm-string (tri 36))))
-      #:exists 'replace)
-   
-   ;(system "nasm -f macho64 -o tri.o tri.s")
-   ))
+      #:exists 'replace)))
 
 
 @title[#:tag "a86"]{a86: a Little Assembly Language}
