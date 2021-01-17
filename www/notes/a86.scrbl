@@ -26,15 +26,8 @@
      (filebox (emph "shell")
               (fancyverbatim "fish" (apply shell s)))))
 
-@(require (for-syntax "../utils.rkt" racket/base "utils.rkt"))
-@(define-syntax (shell-expand stx)
-   (syntax-case stx ()
-     [(_ s ...)
-      (parameterize ([current-directory (build-path notes "a86")])
-        (begin (apply shell (syntax->datum #'(s ...)))
-	       #'(void)))]))
-
 @; compile time generation of tri.s so that it can be listed
+@(require (for-syntax racket/base "utils.rkt"))
 @(begin-for-syntax
    (require racket/system)
    (require "../../langs/a86/ast.rkt"
@@ -394,6 +387,226 @@ interactively exploring the a86 language (you can write
 assembly in a REPL), but also an important tool when it
 comes time to test the compilers we write.
 
+@section{Stacks: pushing, popping, calling, returning}
+
+The a86 execution model includes access to memory that can
+be used as a stack data structure. There are operations that
+manipulate the stack, such as @racket[Push], @racket[Pop],
+@racket[Call], and @racket[Ret], and the stack register
+pointer @racket['rsp] is dedicated to the stack. Stack
+memory is allocated in ``low'' address space and grows
+downward. So pushing an element on to the stack @emph{
+ decrements} @racket['rsp].
+
+The stack is useful as a way to save away values that may be
+needed later. For example, let's say you have two
+(assembly-level) functions and you want to produce the sum
+of their results. By convention, functions return their
+result in @racket['rax], so doing something like this
+won't work:
+
+@racketblock[
+(seq (Call 'f)
+     (Call 'g)
+     (Add 'rax ...))
+]
+
+The problem is the return value of @racket['f] gets
+clobbered by @racket['g]. You might be tempted to fix the
+problem by moving the result to another register:
+
+@racketblock[
+(seq (Call 'f)
+     (Mov 'rbx 'rax)
+     (Call 'g)
+     (Add 'rax 'rbx))
+]
+
+This works only so long as @racket['g] doesn't clobber
+@racket['rbx]. In general, it might not be possible to avoid
+that situation.  So the solution is to use the stack to save
+the return value of @racket['f] while the call to @racket['g]
+proceeds:
+
+@racketblock[
+(seq (Call 'f)
+     (Push 'rax)
+     (Call 'g)
+     (Pop 'rbx)
+     (Add 'rax 'rbx))
+]
+
+This code pushes the value in @racket['rax] on to the stack
+and then pops it off and into @racket['rbx] after
+@racket['g] returns. Everything works out so long as
+@racket['g] maintains a stack-discipline, i.e. the stack
+should be in the same state when @racket['g] returns as when
+it was called.
+
+We can make a complete example to confirm that this works as
+expected. First let's set up a little function for letting
+us try out examples:
+
+@#reader scribble/comment-reader
+(ex
+(define (eg asm)
+  (asm-interp
+   (progn
+    (Label 'entry)
+    asm  ; the example code we want to try out
+    (Ret)
+
+    (Label 'f)      ; calling 'f returns 36
+    (Mov 'rax 36)
+    (Ret)
+
+    (Label 'g)      ; calling 'g returns 6, but
+    (Mov 'rbx 4)    ; it clobbers 'rbx just for the lulz
+    (Mov 'rax 6)
+    (Ret))))
+)
+
+Now let's try it, using the stack to confirm it does the
+right thing:
+
+@#reader scribble/comment-reader
+(ex
+(eg (seq (Call 'f)
+         (Push 'rax)
+         (Call 'g)
+         (Pop 'rbx)
+         (Add 'rax 'rbx)))
+)
+
+Compare that with the first version that used a register to
+save the result of @racket['f]:
+
+@#reader scribble/comment-reader
+(ex
+(eg (seq (Call 'f)
+         (Mov 'rbx 'rax)
+         (Call 'g)         
+         (Add 'rax 'rbx)))
+)
+
+
+The @racket[Push] and @racket[Pop] instructions offer a
+useful illusion, but of course, there's not really any data
+structure abstraction here; there's just raw memory and
+registers. But so long as code abides by conventions, the
+illusion turns out to be the true state of affairs.
+
+What's really go on under the hood of @racket[Push] and
+@racket[Pop] is that the @racket['rsp] register is
+decremented and the value is written to the memory location
+pointed to by the value of @racket['rsp].
+
+The following code is equivalent to what we wrote above:
+
+@#reader scribble/comment-reader
+(ex
+(eg (seq (Call 'f)
+         (Sub 'rsp 8)                ; "allocate" a word on the stack
+         (Mov (Offset 'rsp 0) 'rax)  ; write 'rax to top frame
+         (Call 'g)
+         (Mov 'rbx (Offset 'rsp 0))  ; load top frame into 'rbx
+         (Add 'rsp 8)                ; "deallocate" word on the stack
+         (Add 'rax 'rbx)))
+)
+
+As you can see from this code, it would be easy to violate
+the usual invariants of stack data structure to, for
+example, access elements beyond the top of the stack. The
+value of @racket[Push] and @racket[Pop] is they make clear
+that you are using things in a stack-like way and they keep
+you from screwing up the accesses, offsets, and adjustments
+to @racket['rsp].
+
+Just as @racket[Push] and @racket[Pop] are useful illusions,
+so too are @racket[Call] and @racket[Ret]. They give the
+impression that there is a notion of a procedure and
+procedure call mechanism in assembly, but actually there's
+no such thing.
+
+Think for a moment about what it means to "call" @racket['f]
+in the examples above. When executing @racket[(Call 'f)],
+control jumps to the instruction following
+@racket[(Label 'f)]. When we then get to @racket[(Ret)],
+somehow the CPU knows to jump @emph{back} to the instruction
+following the @racket[(Call 'f)] that we started with.
+
+What's really going on is that @racket[(Call 'f)] is pushing
+the address of subsequent instruction on to the stack and
+then jumping to the label @racket['f]. This works in concert
+with @racket[Ret], which pops the return address off the
+stack and jumping to it.
+
+Just as we could write equivalent code without @racket[Push]
+and @racket[Pop], we can write the same code without
+@racket[Call] and @racket[Ret].
+
+We do new one new trick, which is the @racket[Lea]
+instruction, which loads an effective address. You can think
+of it like @racket[Mov] except that it loads the address of
+something rather than what is pointed to by an address.  For our
+purposes, it is useful for loading the address of a label:
+
+@racketblock[
+ (Lea 'rax 'f)
+ ]
+
+This instruction puts @emph{the address} of label
+@racket['f] into @racket[rax]. You can think of this as
+loading a @emph{function pointer} into @racket['rax]. With
+this new instruction, we can illuminate what is really going
+on with @racket[Call] and @racket[Ret]:
+
+@#reader scribble/comment-reader
+(ex
+(eg (seq (Lea 'rax 'fret)  ; load address of 'fret label into 'rax
+         (Push 'rax)       ; push the return pointer on to stack
+         (Jmp 'f)          ; jump to 'f
+         (Label 'fret)     ; <-- return point for "call" to 'f
+         (Push 'rax)       ; save result (like before)
+         (Lea 'rax 'gret)  ; load address of 'gret label into 'rax
+         (Push 'rax)       ; push the return pointer on to stack
+         (Jmp 'g)          ; jump to 'g
+         (Label 'gret)     ; <-- return point for "call" to 'g
+         (Pop 'rbx)        ; pop saved result from callling 'f
+         (Add 'rax 'rbx)))
+)
+
+@;{
+Or to avoid the use of register to temporarily hold the
+address to jump to, we could've also written it as:
+
+@#reader scribble/comment-reader
+(ex
+(eg (seq (Sub 'rsp 8)      ; allocate a frame on the stack
+                           ; load address of 'fret label into top of stack
+         (Lea (Offset 'rsp 0) 'fret)           
+         (Jmp 'f)          ; jump to 'f
+         (Label 'fret)     ; <-- return point for "call" to 'f
+         (Push 'rax)       ; save result (like before)
+         (Sub 'rsp 8)      ; allocate a frame on the stack
+                           ; load address of 'gret label into top of stack
+         (Lea (Offset 'rsp 0) 'gret)         
+         (Jmp 'g)          ; jump to 'g
+         (Label 'gret)     ; <-- return point for "call" to 'g
+         (Pop 'rbx)        ; pop saved result from callling 'f
+         (Add 'rax 'rbx)))
+)
+}
+
+The above shows how to encode @racket[Call] as @racket[Lea],
+@racket[Push], and @racket[Jmp].  The encoding of @racket[Ret] is just:
+
+@racketblock[
+ (seq (Pop 'rbx)    ; pop the return pointer
+      (Jmp 'rbx))   ; jump to it
+ ]
+
+
 
 @section{Instruction set}
 
@@ -420,6 +633,18 @@ the current location of the stack.
 
 @defproc[#:link-target? #f (register? [x any/c]) boolean?]{
  A predicate for registers.
+}
+
+@defproc[#:link-target? #f (label? [x any/c]) boolean?]{
+ A predicate for label @emph{names}, i.e. symbols which are not register names.
+}
+
+@defproc[#:link-target? #f (instruction? [x any/c]) boolean?]{
+ A predicate for instructions.
+}
+
+@defproc[#:link-target? #f (offset? [x any/c]) boolean?]{
+ A predicate for offsets.
 }
 
 @defproc[#:link-target? #f (seq [x (or/c instruction? (listof instruction?))] ...) (listof instruction?)]{
@@ -484,265 +709,295 @@ the current location of the stack.
 
 
 @defstruct*[#:link-target? #f
- Label ([x symbol?])]{
+ Label ([x label?])]{
 
  Creates a label from the given symbol. Each label in a
- program must be unique.
+ program must be unique.  Register names cannot be used
+ as label names.
 
  @ex[
  (Label 'fred)
  (eval:error (Label "fred"))
+ (eval:error (Label 'rax))
  ]
 
 }
 
 @defstruct*[#:link-target? #f
- Call  ([x symbol?])]{
+ Call  ([x (or/c label? register?)])]{
 
  A call instruction.
 
+ @ex[
+ (asm-interp
+  (progn
+   (Label 'entry)
+   (Call 'f)
+   (Add 'rax 1)
+   (Ret)
+   (Label 'f)
+   (Mov 'rax 41)
+   (Ret)))
+ ]
 }
 
 @defstruct*[#:link-target? #f
- Ret   ()]{
+ Ret ()]{
 
  A return instruction.
 
- @examples[
- #:eval ev
- (asm-interp (list (Label 'entry)
-                   (Mov 'rax 42)
-                   (Ret)))
+ @ex[
+ (asm-interp
+  (progn
+   (Label 'entry)
+   (Mov 'rax 42)
+   (Ret)))
  ]
 
 }
 
 @defstruct*[#:link-target? #f
- Mov ([a1 arg?] [a2 arg?])]{
+ Mov ([dst (or/c register? offset?)] [src (or/c register? offset? exact-integer?)])]{
                               
- A move instruction. Moves @racket[a2] to @racket[a1].
+ A move instruction. Moves @racket[src] to @racket[dst].
 
- @#reader scribble/comment-reader
- (examples
- #:eval ev
- (asm-interp (list (Label 'entry)                   
-                   (Mov 'rbx 42)
-                   (Mov 'rax 'rbx)
-                   (Ret)))
- )
+ Either @racket[dst] or @racket[src] may be offsets, but not both.
 
-}
-
-@defstruct*[#:link-target? #f
- Add ([a1 arg?] [a2 arg?])]{
-
- An addition instruction. Adds @racket[a1] to @racket[a2]
- and writes the result to @racket[a1].
-
- @#reader scribble/comment-reader
- (examples
- #:eval ev
- (asm-interp (list (Label 'entry)                   
-                   (Mov 'rax 32)
-                   (Add 'rax 10)
-                   (Ret)))
- (asm-interp (list (Label 'entry)                   
-                   (Mov 'rax 32)
-                   (Mov 'rbx 10)
-                   (Add 'rax 'rbx)
-                   (Ret)))
- )
-
-}
-
-@defstruct*[#:link-target? #f
- Sub ([a1 arg?] [a2 arg?])]{
-
- A subtraction instruction. Subtracts @racket[a2] from
- @racket[a1] and writes the result to @racket[a1].
-
-  @examples[
- #:eval ev
- (asm-interp (list (Label 'entry)                   
-                   (Mov 'rax 32)
-                   (Sub 'rax 10)
-                   (Ret)))
+ @ex[
+ (asm-interp
+  (progn
+   (Label 'entry)                   
+   (Mov 'rbx 42)
+   (Mov 'rax 'rbx)
+   (Ret)))
+ (eval:error (Mov (Offset 'rax 0) (Offset 'rbx 0)))
  ]
- 
+
 }
 
 @defstruct*[#:link-target? #f
- Cmp ([a1 arg?] [a2 arg?])]{
+ Add ([dst register?] [src (or/c register? offset? exact-integer?)])]{
+
+ An addition instruction. Adds @racket[src] to @racket[dst]
+ and writes the result to @racket[dst].
+ 
+ @ex[
+ (asm-interp
+  (progn
+   (Label 'entry)                   
+   (Mov 'rax 32)
+   (Add 'rax 10)
+   (Ret)))
+ ]
+}
+
+@defstruct*[#:link-target? #f
+ Sub ([dst register?] [src (or/c register? offset? exact-integer?)])]{
+
+ A subtraction instruction. Subtracts @racket[src] frrom
+ @racket[dst] and writes the result to @racket[dst].
+
+ @ex[
+ (asm-interp
+  (progn
+   (Label 'entry)                   
+   (Mov 'rax 32)
+   (Sub 'rax 10)
+   (Ret)))
+ ]
+}
+
+@defstruct*[#:link-target? #f
+ Cmp ([a1 (or/c register? offset?)] [a2 (or/c register? offset? exact-integer?)])]{ 
  Compare @racket[a1] to @racket[a2].  Doing a comparison
  sets the status flags that affect the conditional instructions like @racket[Je], @racket[Jl], etc.
 
-  @examples[
- #:eval ev
- (asm-interp (list (Label 'entry)
-                   (Mov 'rax 42)
-                   (Cmp 'rax 2)
-                   (Jg 'l1)
-                   (Mov 'rax 0)
-                   (Label 'l1)                   
-                   (Ret)))
- ]
- 
+ @ex[
+ (asm-interp
+  (progn
+   (Label 'entry)
+   (Mov 'rax 42)
+   (Cmp 'rax 2)
+   (Jg 'l1)
+   (Mov 'rax 0)
+   (Label 'l1)                   
+   (Ret)))
+ ] 
 }
 
 @defstruct*[#:link-target? #f
- Jmp   ([x symbol?])]{
+ Jmp ([x (or/c label? register?)])]{
  Jump to label @racket[x].
                
-  @examples[
- #:eval ev
- (asm-interp (list (Label 'entry)
-                   (Mov 'rax 42)
-                   (Jmp 'l1)
-                   (Mov 'rax 0)
-                   (Label 'l1)
-                   (Ret)))
+ @ex[
+ (asm-interp
+  (progn
+   (Label 'entry)
+   (Mov 'rax 42)
+   (Jmp 'l1)
+   (Mov 'rax 0)
+   (Label 'l1)
+   (Ret)))
+
+ (asm-interp
+  (progn
+   (Label 'entry)
+   (Mov 'rax 42)
+   (Pop 'rbx)   
+   (Jmp 'rbx)))
  ]
  
 }
 
 @defstruct*[#:link-target? #f
- Je   ([x symbol?])]{
+ Je ([x (or/c label? register?)])]{
  Jump to label @racket[x] if the conditional flag is set to ``equal.''
                
-  @examples[
- #:eval ev
- (asm-interp (list (Label 'entry)
-                   (Mov 'rax 42)
-                   (Cmp 'rax 2)
-                   (Je 'l1)
-                   (Mov 'rax 0)
-                   (Label 'l1)                   
-                   (Ret)))
+ @ex[
+ (asm-interp
+  (progn
+   (Label 'entry)
+   (Mov 'rax 42)
+   (Cmp 'rax 2)
+   (Je 'l1)
+   (Mov 'rax 0)
+   (Label 'l1)                   
+   (Ret)))
  ]
 }
 
 @defstruct*[#:link-target? #f
- Jne   ([x symbol?])]{
+ Jne ([x (or/c label? register?)])]{
  Jump to label @racket[x] if the conditional flag is set to ``not equal.''
                
-  @examples[
- #:eval ev
- (asm-interp (list (Label 'entry)
-                   (Mov 'rax 42)
-                   (Cmp 'rax 2)
-                   (Jne 'l1)
-                   (Mov 'rax 0)
-                   (Label 'l1)                   
-                   (Ret)))
+ @ex[
+ (asm-interp
+  (progn
+   (Label 'entry)
+   (Mov 'rax 42)
+   (Cmp 'rax 2)
+   (Jne 'l1)
+   (Mov 'rax 0)
+   (Label 'l1)                   
+   (Ret)))
  ]
 }
 
 @defstruct*[#:link-target? #f
- Jl   ([x symbol?])]{
+ Jl ([x (or/c label? register?)])]{
  Jump to label @racket[x] if the conditional flag is set to ``less than.''
                
-  @examples[
- #:eval ev
- (asm-interp (list (Label 'entry)
-                   (Mov 'rax 42)
-                   (Cmp 'rax 2)
-                   (Jl 'l1)
-                   (Mov 'rax 0)
-                   (Label 'l1)                   
-                   (Ret)))
+ @ex[
+ (asm-interp
+  (progn
+   (Label 'entry)
+   (Mov 'rax 42)
+   (Cmp 'rax 2)
+   (Jl 'l1)
+   (Mov 'rax 0)
+   (Label 'l1)                   
+   (Ret)))
  ]
 }
 
 @defstruct*[#:link-target? #f
- Jg   ([x symbol?])]{
+ Jg ([x (or/c label? register?)])]{
  Jump to label @racket[x] if the conditional flag is set to ``greater than.''
                
-  @examples[
- #:eval ev
- (asm-interp (list (Label 'entry)
-                   (Mov 'rax 42)
-                   (Cmp 'rax 2)
-                   (Jg 'l1)
-                   (Mov 'rax 0)
-                   (Label 'l1)                   
-                   (Ret)))
+ @ex[
+ (asm-interp
+  (progn
+   (Label 'entry)
+   (Mov 'rax 42)
+   (Cmp 'rax 2)
+   (Jg 'l1)
+   (Mov 'rax 0)
+   (Label 'l1)                   
+   (Ret)))
  ]
 }
 
 @defstruct*[#:link-target? #f
- And   ([a1 arg?] [a2 arg?])]{
- Compute logical ``and'' of @racket[a1] and @racket[a2] and put result in @racket[a1].
+ And ([dst (or/c register? offset?)] [src (or/c register? offset? exact-integer?)])]{
+ Compute logical ``and'' of @racket[dst] and @racket[src] and put result in @racket[dst].
 
  @#reader scribble/comment-reader
- (examples 
- #:eval ev
- (asm-interp (list (Label 'entry)
-                   (Mov 'rax #b1011) ; #b1011 = 11
-                   (And 'rax #b1110) ; #b1110 = 14
-                   (Ret)))           ; #b1010 = 10
+ (ex
+ (asm-interp
+  (progn
+   (Label 'entry)
+   (Mov 'rax #b1011) ; #b1011 = 11
+   (And 'rax #b1110) ; #b1110 = 14
+   (Ret)))           ; #b1010 = 10
  )
 }
 
 @defstruct*[#:link-target? #f
- Or   ([a1 arg?] [a2 arg?])]{
- Compute logical ``or'' of @racket[a1] and @racket[a2] and put result in @racket[a1].
+ Or ([dst (or/c register? offset?)] [src (or/c register? offset? exact-integer?)])]{
+ Compute logical ``or'' of @racket[dst] and @racket[src] and put result in @racket[dst].
 
  @#reader scribble/comment-reader
- (examples 
- #:eval ev
- (asm-interp (list (Label 'entry)
-                   (Mov 'rax #b1011) ; #b1011 = 11
-                   (Or 'rax #b1110)  ; #b1110 = 14
-                   (Ret)))           ; #b1111 = 15
+ (ex
+ (asm-interp
+  (progn
+   (Label 'entry)
+   (Mov 'rax #b1011) ; #b1011 = 11
+   (Or 'rax #b1110)  ; #b1110 = 14
+   (Ret)))           ; #b1111 = 15
  )
 }
 
 @defstruct*[#:link-target? #f
- Xor   ([a1 arg?] [a2 arg?])]{
- Compute logical ``exclusive or'' of @racket[a1] and @racket[a2] and put result in @racket[a1].
+ Xor ([dst (or/c register? offset?)] [src (or/c register? offset? exact-integer?)])]{
+ Compute logical ``exclusive or'' of @racket[dst] and @racket[src] and put result in @racket[dst].
 
  @#reader scribble/comment-reader
- (examples 
- #:eval ev
- (asm-interp (list (Label 'entry)
-                   (Mov 'rax #b1011) ; #b1011 = 11
-                   (Xor 'rax #b1110) ; #b1110 = 14
-                   (Ret)))           ; #b0101 = 5
+ (ex
+ (asm-interp
+  (progn
+   (Label 'entry)
+   (Mov 'rax #b1011) ; #b1011 = 11
+   (Xor 'rax #b1110) ; #b1110 = 14
+   (Ret)))           ; #b0101 = 5
  )
 }
 
 @defstruct*[#:link-target? #f
- Sal   ([a1 arg?] [a2 arg?])]{
- Shift @racket[a1] to the left @racket[a2] bits and put result in @racket[a1].
+ Sal ([dst register?] [i (integer-in 0 63)])]{
+ Shift @racket[dst] to the left @racket[i] bits and put result in @racket[dst].
  The leftmost bits are discarded.
 
  @#reader scribble/comment-reader
- (examples 
- #:eval ev
- (asm-interp (list (Label 'entry)
-                   (Mov 'rax #b100) ; #b100 = 4 = 2^2
-                   (Sal 'rax 6)
-                   (Ret)))          ; #b100000000 = 256
+ (ex
+ (asm-interp
+  (progn
+   (Label 'entry)
+   (Mov 'rax #b100) ; #b100 = 4 = 2^2
+   (Sal 'rax 6)
+   (Ret)))          ; #b100000000 = 256
  )
 }
 
 @defstruct*[#:link-target? #f
- Sar   ([a1 arg?] [a2 arg?])]{
- Shift @racket[a1] to the right @racket[a2] bits and put result in @racket[a1].
+ Sar ([dst register?] [i (integer-in 0 63)])]{
+ Shift @racket[dst] to the right @racket[i] bits and put result in @racket[dst].
  The rightmost bits are discarded.
 
  @#reader scribble/comment-reader
- (examples 
- #:eval ev
- (asm-interp (list (Label 'entry)
-                   (Mov 'rax #b100000000) ; #b100000000 = 256
-                   (Sar 'rax 6)
-                   (Ret)))        ; #b100 = 4
+ (ex
+ (asm-interp
+  (progn
+   (Label 'entry)
+   (Mov 'rax #b100000000) ; #b100000000 = 256
+   (Sar 'rax 6)
+   (Ret)))        ; #b100 = 4
 
- (asm-interp (list (Label 'entry)
-                   (Mov 'rax #b100001101) ; #b100001101 = 269
-                   (Sar 'rax 6)
-                   (Ret)))        ; #b100 = 4
+ (asm-interp
+  (progn
+   (Label 'entry)
+   (Mov 'rax #b100001101) ; #b100001101 = 269
+   (Sar 'rax 6)
+   (Ret)))        ; #b100 = 4
  )
 }
 
@@ -752,37 +1007,53 @@ the current location of the stack.
  Decrements the stack pointer and then stores the source
  operand on the top of the stack.
  
- @#reader scribble/comment-reader
- (examples 
- #:eval ev
- (asm-interp (list (Label 'entry)
-                   (Mov 'rax 42) 
-                   (Push 'rax)
-                   (Mov 'rax 0)
-                   (Pop 'rax)
-                   (Ret)))
- )
+ @ex[
+ (asm-interp
+  (progn
+   (Label 'entry)
+   (Mov 'rax 42) 
+   (Push 'rax)
+   (Mov 'rax 0)
+   (Pop 'rax)
+   (Ret)))
+ ]
 }
 
 @defstruct*[#:link-target? #f
  Pop   ([a1 register?])]{
  Loads the value from the top of the stack to the destination operand and then increments the stack pointer.
  
- @#reader scribble/comment-reader
- (examples 
- #:eval ev
- (asm-interp (list (Label 'entry)
-                   (Mov 'rax 42) 
-                   (Push 'rax)
-                   (Mov 'rax 0)
-                   (Pop 'rax)
-                   (Ret)))
- )
+ @ex[
+ (asm-interp
+  (progn
+   (Label 'entry)
+   (Mov 'rax 42) 
+   (Push 'rax)
+   (Mov 'rax 0)
+   (Pop 'rax)
+   (Ret)))
+ ]
 }
 
+@defstruct*[#:link-target? #f
+ Lea   ([dst (or/c register? offset?)] [x label?])]{
+ Loads the address of the given label into @racket[dst].
+ 
+ @ex[
+ (asm-interp
+  (progn
+   (Label 'entry)
+   (Lea 'rbx 'done)
+   (Mov 'rax 42)
+   (Jmp 'rbx)
+   (Mov 'rax 0)
+   (Label 'done)
+   (Ret)))
+ ]
+}
 
 @;{
 (struct Extern (s)    #:prefab)
-(struct Lea    (s)    #:prefab)
+
 }
 

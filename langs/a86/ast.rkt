@@ -1,16 +1,22 @@
 #lang racket
-(provide (all-defined-out))
-
-(define (register? x)
-  (and (memq x '(rax rbx rcx rdx rbp rsp rsi rdi r8 r9 r10 r11 r12 r13 r14 r15)) #t))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Guards
 
-(define check:symbol
+;; These are used to guard the instruction constructors to reject bad inputs
+;; with decent error messages.
+
+(define check:label-symbol
   (λ (x n)
+    (when (register? x)
+      (error n "cannot use register as label name; given ~v" x))
     (unless (symbol? x)
+      (error n "expects symbol; given ~v" x))
+    x))
+
+(define check:target
+  (λ (x n)
+    (unless (symbol? x) ; either register or label
       (error n "expects symbol; given ~v" x))
     x))
 
@@ -38,10 +44,41 @@
       (error n "cannot use two memory locations; given ~v, ~v" a1 a2))
     (values a1 a2)))
 
+(define check:shift
+  (λ (a1 a2 n)
+    (unless (register? a1)
+      (error n "expects register; given ~v" a1))
+    (unless (and (exact-integer? a2) (<= 0 a2 63))
+      (error n "expects exact integer in [0,63]; given ~v" a2))
+    (values a1 a2)))      
+
+(define check:offset
+  (λ (r i n)
+    (unless (register? r)
+      (error n "expects register as first argument; given ~v" r))
+    (unless (exact-integer? i)
+      (error n "expects exact integer as second argument; given ~v" i))
+    (values r i)))
+
+(define check:push
+  (λ (a1 n)
+    (unless (or (exact-integer? a1) (register? a1))
+      (error n "expects exact integer or register; given ~v" a1))
+    a1))
+
+(define check:lea
+  (λ (dst x n)
+    (unless (or (register? dst) (offset? dst))
+      (error n "expects register or offset; given ~v" dst))
+    (unless (label? x)
+      (error n "expects label; given ~v" x))
+    (values dst x)))
+
 (define check:none
   (λ (n) (values)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Instructions
 
 (define-syntax-rule
   (instruct Name (x ...) guard)
@@ -50,50 +87,72 @@
            #:transparent
            #:guard guard)))
 
+(instruct Label  (x)       check:label-symbol)
+(instruct Call   (x)       check:target)
+(instruct Ret    ()        check:none)
+(instruct Mov    (dst src) check:src-dest)
+(instruct Add    (dst src) check:arith)
+(instruct Sub    (dst src) check:arith)
+(instruct Cmp    (a1 a2)   check:src-dest)
+(instruct Jmp    (x)       check:target)
+(instruct Je     (x)       check:target)
+(instruct Jne    (x)       check:target)
+(instruct Jl     (x)       check:target)
+(instruct Jg     (x)       check:target)
+(instruct And    (dst src) check:src-dest)
+(instruct Or     (dst src) check:src-dest)
+(instruct Xor    (dst src) check:src-dest)
+(instruct Sal    (dst i)   check:shift)
+(instruct Sar    (dst i)   check:shift)
+(instruct Push   (a1)      check:push)
+(instruct Pop    (a1)      check:register)
+(instruct Lea    (dst x)   check:lea)
 
-(instruct Label (x)     check:symbol)
-(instruct Call  (x)     check:symbol)
-(instruct Ret   ()      check:none)
-(instruct Mov   (a1 a2) check:src-dest)
-(instruct Add   (a1 a2) check:arith)
-(instruct Sub   (a1 a2) check:arith)
+(instruct Offset (r i)     check:offset)
 
-;; FIXME
-(provide (struct-out Cmp))
-(struct Cmp (a1 a2) #:prefab)
 
-(instruct Jmp (x)     check:symbol)
-(instruct Je  (x)     check:symbol)
-(instruct Jne (x)     check:symbol)
-(instruct Jl  (x)     check:symbol)
-(instruct Jg  (x)     check:symbol)
-(instruct And (a1 a2) check:src-dest)
-(instruct Or  (a1 a2) check:src-dest)
-(instruct Xor (a1 a2) check:src-dest)
-
-;; FIXME
-(struct Sal (a1 a2) #:prefab)
-(struct Sar (a1 a2) #:prefab)
-
-(instruct Push (a1)
-          (λ (a1 n)
-            (unless (or (exact-integer? a1) (register? a1))
-              (error n "expects exact integer or register; given ~v" a1))
-            a1))
-
-(instruct Pop (a1)  check:register)
-
-(instruct Offset (r i)
-          (λ (r i n)
-            (unless (register? r)
-              (error n "expects register as first argument; given ~v" r))
-            (unless (exact-integer? i)
-              (error n "expects exact integer as second argument; given ~v" i))
-            (values r i)))
+(provide offset? register? instruction? label?)
 
 (define offset? Offset?)
 
+(define (register? x)
+  (and (memq x '(rax rbx rcx rdx rbp rsp rsi rdi r8 r9 r10 r11 r12 r13 r14 r15))
+       #t))
+
+(define (label? x)
+  (and (symbol? x)
+       (not (register? x))))
+
+(define (instruction? x)
+  (or (Label? x)
+      (Call? x)
+      (Ret? x)
+      (Mov? x)
+      (Add? x)
+      (Sub? x)
+      (Cmp? x)
+      (Jmp? x)
+      (Je? x)
+      (Jne? x)
+      (Jl? x)
+      (Jg? x)
+      (And? x)
+      (Or? x)
+      (Xor? x)
+      (Sal? x)
+      (Sar? x)
+      (Push? x)
+      (Pop? x)
+      (Lea? x)))
+          
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Instruction sequencing and program error checking
+
+(provide/contract
+ [seq   (-> (or/c instruction? (listof instruction?)) ...
+            (listof instruction?))]
+ [progn (-> (or/c instruction? (listof instruction?)) ...
+            (listof instruction?))])
 
 ;; (U Instruction Asm) ... -> Asm
 ;; Convenient for sequencing instructions or groups of instructions
@@ -113,7 +172,7 @@
     (check-unique-label-decls xs)
     (check-label-targets-declared xs)
     ;; anything else?
-    xs))
+    p))
 
 ;; Asm -> Void
 (define (check-unique-label-decls xs)
@@ -131,22 +190,28 @@
     [(cons _ asm)
      (label-decls asm)]))
 
+(define (label-symbol? x)
+  (and (symbol? x)
+       (not (register? x))))
+
 ;; Asm -> (Listof Symbol)
 ;; Compute all uses of label names
 (define (label-uses asm)
   (match asm
     ['() '()]
-    [(cons (Jmp (? symbol? s)) asm)
+    [(cons (Jmp (? label-symbol? s)) asm)
      (cons s (label-uses asm))]
-    [(cons (Je (? symbol? s)) asm)
+    [(cons (Je (? label-symbol? s)) asm)
      (cons s (label-uses asm))]
-    [(cons (Jne (? symbol? s)) asm)
+    [(cons (Jne (? label-symbol? s)) asm)
      (cons s (label-uses asm))]
-    [(cons (Jg (? symbol? s)) asm)
+    [(cons (Jg (? label-symbol? s)) asm)
      (cons s (label-uses asm))]
-    [(cons (Jl (? symbol? s)) asm)
+    [(cons (Jl (? label-symbol? s)) asm)
      (cons s (label-uses asm))]
-    [(cons (Call (? symbol? s)) asm)
+    [(cons (Call (? label-symbol? s)) asm)
+     (cons s (label-uses asm))]
+    [(cons (Lea _ (? label-symbol? s)) asm)
      (cons s (label-uses asm))]
     [(cons _ asm)
      (label-uses asm)]))
