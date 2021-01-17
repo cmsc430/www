@@ -2,15 +2,17 @@ DVH rewrite Fall 2020
 
 Goals:
 
-- Make self-hosting by end
+- Make self-hosting by end <-- This likely won't happen this semester
 - Eliminate quasiqote, unquote usage.
 - Eliminate s-expr-based data types.
 - Eliminate lexing and parsing; use read from start.
 - Add I/O, read-byte, write-byte.  Build from there.
 - Add symbols w/ symbol table.
 - Add GC.
-- Add Bignums.
-- Rewrite assignments.
+- Add Bignums. <-- Likely won't happen
+- Rewrite assignments. <-- Leaving up to LL and JC
+- More static checking & better error messages for a86 before generating nasm.
+  Should be impossible to generate code that nasm rejects.
 
 Possible assignment ideas:
 
