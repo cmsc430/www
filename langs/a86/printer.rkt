@@ -45,28 +45,33 @@
                     (arg->string a2) "\n")]
     [(Jmp l)
      (string-append "\tjmp "
-                    (label-symbol->string l) "\n")]
+                    (jump-target->string l) "\n")]
     [(Je l)
      (string-append "\tje "
-                    (label-symbol->string l) "\n")]
+                    (jump-target->string l) "\n")]
     [(Jne l)
      (string-append "\tjne "
-                    (label-symbol->string l) "\n")]
+                    (jump-target->string l) "\n")]
     [(Jl l)
      (string-append "\tjl "
-                    (label-symbol->string l) "\n")]
+                    (jump-target->string l) "\n")]
     [(Jg l)
      (string-append "\tjg "
-                    (label-symbol->string l) "\n")]
+                    (jump-target->string l) "\n")]
     [(Call l)
      (string-append "\tcall "
-                    (label-symbol->string l) "\n")]
+                    (jump-target->string l) "\n")]
     [(Push a)
      (string-append "\tpush "
                     (arg->string a) "\n")]
     [(Pop r)
      (string-append "\tpop "
-                    (reg->string r) "\n")]))
+                    (reg->string r) "\n")]
+
+    [(Lea d x)
+     (string-append "\tlea "
+                    (arg->string d) ", [rel "
+                    (label-symbol->string x) "]\n")]))
 
 ;; Arg -> String
 (define (arg->string a)
@@ -84,6 +89,12 @@
 ;; Reg -> String
 (define (reg->string r)
   (symbol->string r))
+
+;; (U Label Reg) -> String
+(define (jump-target->string t)
+  (match t
+    [(? reg?) (reg->string t)]
+    [_ (label-symbol->string t)]))
 
 ;; Label -> String
 ;; prefix with _ for Mac
