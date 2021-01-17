@@ -68,9 +68,6 @@
 
 @section[#:tag "a86-Overview"]{Overview}
 
-[NOTE: this chapter is currently under revision, incomplete,
-and subject to significant changes. 1/16/2020.]
-
 x86 is an instruction set architecture (ISA), which is a
 fancy way of saying a programming language whose interpreter
 is implemented in hardware. Really, x86 is a family of
@@ -400,11 +397,102 @@ comes time to test the compilers we write.
 
 @section{Instruction set}
 
+
+@margin-note{The a86 language may evolve some over the
+ course of the semester, but we will aim to document any
+ changes by updating this section. Each language has it's own
+ version of x86 which only contains the instructions it
+ needs. Also, because the run-time system changes for each
+ language, you may see some differences with what
+ @racket[asm-interp] produces.}
+
+This section describes the instruction set of a86.
+
+There are 16 registers: @racket['rax], @racket['rbx],
+@racket['rcx], @racket['rdx], @racket['rbp], @racket['rsp],
+@racket['rsi], @racket['rdi], @racket['r8], @racket['r9],
+@racket['r10], @racket['r11], @racket['r12], @racket['r13],
+@racket['r14], and @racket['r15]. These registers are
+64-bits wide. There is no analog to the x86 register
+suffixes for accessing low-order bits. Each register plays
+the same role as in x86, so for example @racket['rsp] holds
+the current location of the stack.
+
+@defproc[#:link-target? #f (register? [x any/c]) boolean?]{
+ A predicate for registers.
+}
+
+@defproc[#:link-target? #f (seq [x (or/c instruction? (listof instruction?))] ...) (listof instruction?)]{
+ A convenience function for splicing togeter instructions and lists of instructions.
+
+  @ex[
+ (seq)
+ (seq (Label 'foo))
+ (seq (list (Label 'foo)))
+ (seq (list (Label 'foo)
+            (Mov 'rax 0))
+      (Mov 'rdx 'rax)
+      (list (Call 'bar)
+            (Ret)))
+ ]
+}
+
+@defproc[#:link-target? #f (progn [x (or/c instruction? (listof instruction?))] ...) (listof instruction?)]{
+
+ Like @racket[seq], but also checks that the instructions
+ are well-formed in the following sense:
+
+ @itemlist[
+
+ @item{All label declarations are unique.}
+ @item{All label targets are declared.}
+ @item{... other properties may be added in the future.}
+
+ ]
+
+ This function is useful to do some early error checking
+ over whole programs and can help avoid confusing NASM
+ errors. Unlike @racket[seq] it should be called at the
+ outermost level of a function that produces a86 code and not
+ nested.
+
+ @ex[
+ (progn)
+ (progn (Label 'foo))
+ (progn (list (Label 'foo)))
+ (eval:error (progn (Label 'foo)
+                    (Label 'foo)))
+ (eval:error (progn (Jmp 'foo)))
+ (progn (Label 'foo)
+        (Jmp 'foo))                                  
+ ]
+}
+
+@defstruct*[#:link-target? #f
+ Offset ([r register?] [i exact-integer?])]{
+
+ Creates an memory offset from a register. Offsets are used
+ as arguments to instructions to indicate memory locations.
+ An error is signalled when given invalid inputs.
+
+ @ex[
+ (Offset 'rax 0)
+ (eval:error (Offset 'r16 4))
+ (eval:error (Offset 'rax 4.1))
+ ]
+}
+
+
 @defstruct*[#:link-target? #f
  Label ([x symbol?])]{
 
  Creates a label from the given symbol. Each label in a
  program must be unique.
+
+ @ex[
+ (Label 'fred)
+ (eval:error (Label "fred"))
+ ]
 
 }
 
@@ -658,10 +746,42 @@ comes time to test the compilers we write.
  )
 }
 
+@defstruct*[#:link-target? #f
+ Push   ([a1 (or/c exact-integer? register?)])]{
+
+ Decrements the stack pointer and then stores the source
+ operand on the top of the stack.
+ 
+ @#reader scribble/comment-reader
+ (examples 
+ #:eval ev
+ (asm-interp (list (Label 'entry)
+                   (Mov 'rax 42) 
+                   (Push 'rax)
+                   (Mov 'rax 0)
+                   (Pop 'rax)
+                   (Ret)))
+ )
+}
+
+@defstruct*[#:link-target? #f
+ Pop   ([a1 register?])]{
+ Loads the value from the top of the stack to the destination operand and then increments the stack pointer.
+ 
+ @#reader scribble/comment-reader
+ (examples 
+ #:eval ev
+ (asm-interp (list (Label 'entry)
+                   (Mov 'rax 42) 
+                   (Push 'rax)
+                   (Mov 'rax 0)
+                   (Pop 'rax)
+                   (Ret)))
+ )
+}
+
 
 @;{
-(struct Push  (a1)    #:prefab)
-(struct Pop   (a1)    #:prefab)
 (struct Extern (s)    #:prefab)
 (struct Lea    (s)    #:prefab)
 }
