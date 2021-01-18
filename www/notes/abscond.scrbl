@@ -13,9 +13,9 @@
 
 @(define codeblock-include (make-codeblock-include #'here))
 
-@(ev '(require rackunit))
+@(ev '(require rackunit a86))
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "abscond" f))))))
-	   '("interp.rkt" "ast.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+	   '("interp.rkt" "ast.rkt" "compile.rkt"))
 
 @(define (shellbox . s)
    (parameterize ([current-directory (build-path notes "abscond")])
@@ -390,10 +390,7 @@ will be a function with the following signature:
 )
 
 Where @tt{Asm} is a data type for representing assembly programs,
-i.e. it will be the AST of x86-64 assembly.  This datatype will evolve
-as we see more X86 instructions, but for now it is very simple:
-
-@codeblock-include["abscond/asm/ast.rkt"]
+i.e. it will be the AST of x86-64 assembly.  
 
 So the AST representation of our example is:
 
@@ -413,10 +410,8 @@ Writing the @racket[compile] function is easy:
 (compile (Int 38))
 )
 
-To convert back to the concrete NASM syntax, we can write a (few)
-function(s), which we'll place in its own module:
-
-@codeblock-include["abscond/asm/printer.rkt"]
+To convert back to the concrete NASM syntax, we use
+@racket[asm-string].
 
 @margin-note{Note: the printer takes care of the macOS vs Linux label
 convention by detecting the underlying system and printing
@@ -517,16 +512,8 @@ So, in this setting, means we have the following equivaluence:
 But we don't actually have @racket[asm-interp], a function that
 interprets the Asm code we generate.  Instead we printed the code and
 had @tt{gcc} assembly and link it into an executable, which the OS
-could run.  But this is a minor distinction.  We can write
+could run.  But this is a minor distinction.  We can use
 @racket[asm-interp] to interact with the OS to do all of these steps.
-
-Here's such a definition.  (Again: the details here are not important
-and we won't ask you to write or understand this code, but roughly,
-all it's doing is emitting assembly (to a temporary file) and
-calling @tt{make} to build the executable, then running it and parsing
-the result.)
-
-@codeblock-include["abscond/asm/interp.rkt"]
 
 This is actually a handy tool to have for experimenting with
 compilation within Racket:
