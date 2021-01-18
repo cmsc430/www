@@ -11,9 +11,9 @@
 
 @(define codeblock-include (make-codeblock-include #'here))
 
-@(ev '(require rackunit))
+@(ev '(require rackunit a86))
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "blackmail" f))))))
-	   '("interp.rkt" "compile.rkt" "random.rkt"  "asm/ast.rkt" "asm/interp.rkt" "asm/printer.rkt" "ast.rkt"))
+	   '("interp.rkt" "compile.rkt" "random.rkt" "ast.rkt"))
 
 @(define (shellbox . s)
    (parameterize ([current-directory (build-path notes "blackmail")])
@@ -214,33 +214,8 @@ The runtime stays exactly the same as before.
 
 @section{A Compiler for Blackmail}
 
-To represent these new instructions, we extend the Asm AST data type:
-
-@filebox-include-fake[codeblock "blackmail/asm/ast.rkt"]{
-#lang racket
-;; type Instruction =
-;; ...
-;; | (Add ,Arg ,Arg)
-;; | (Sub ,Arg ,Arg)
-(struct Add (a1 a2) #:prefab)
-(struct Sub (a1 a2) #:prefab)
-}
-
-And correspondingly update the printer:
-
-@filebox-include-fake[codeblock "blackmail/asm/printer.rkt"]{
-#lang racket
-;; Instruction -> String
-(define (instr->string i)
-  (match i
-    ...
-    [(Add a1 a2)
-     (string-append "\tadd " (arg->string a1) ", " (arg->string a2) "\n")]
-    [(Sub a1 a2)
-     (string-append "\tsub " (arg->string a1) ", " (arg->string a2) "\n")]))
-}
-
-We can now print the assembly of our example from an AST:
+To compile Blackmail, we make use of two more a86
+instructions, @racket[Add] and @racket[Sub]:
 
 @ex[
 (displayln
@@ -283,9 +258,9 @@ single command:
 @void[(shellbox "touch add1-add1-40.rkt")]
 @shellbox["make add1-add1-40.run" "./add1-add1-40.run"]
 
-Likewise, to test the compiler from within Racket, we use the same
-@link["code/blackmail/asm/interp.rkt"]{@tt{asm/interp.rkt}} code to
-encapsulate running assembly code:
+Likewise, to test the compiler from within Racket, we use
+the same @racket[asm-interp] function to encapsulate running
+assembly code:
 
 @ex[
 (asm-interp (compile (Prim 'add1 (Prim 'add1 (Int 40)))))
