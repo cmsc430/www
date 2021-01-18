@@ -1,27 +1,26 @@
 #lang racket
 (provide interp interp-bits)
-(require "ast.rkt")
+(require "ast.rkt" "types.rkt")
 
 ;; type Value =
 ;; | Integer
 ;; | Boolean
 
-(define int-shift    1)
-(define type-int   #b0)
-(define val-true  #b01)
-(define val-false #b11)
-
 ;; type Bits = Integer
+
+;; Expr -> Value
+(define (interp e)
+  (bits->value (interp-bits e)))
 
 ;; Expr -> Bits
 (define (interp-bits e)
   (match e
-    [(Int i)  (arithmetic-shift i int-shift)]
-    [(Bool b) (if b val-true val-false)]    
+    [(Int i)  (value->bits i)]
+    [(Bool b) (value->bits b)]
     [(Prim 'add1 e0)
-     (+ (interp-bits e0) (arithmetic-shift 1 int-shift))]
+     (+ (interp-bits e0) (value->bits 1))]
     [(Prim 'sub1 e0)
-     (- (interp-bits e0) (arithmetic-shift 1 int-shift))]
+     (- (interp-bits e0) (value->bits 1))]
     [(Prim 'zero? e)
      (if (zero? (interp-bits e))
          val-true
@@ -31,12 +30,3 @@
          (interp-bits e3)
          (interp-bits e2))]))
 
-(define (interp e)
-  (bits->value (interp-bits e)))
-
-(define (bits->value b)
-  (cond [(= type-int (bitwise-and b #b1))
-         (arithmetic-shift b (- int-shift))]     
-        [(= b val-true)  #t]
-        [(= b val-false) #f]
-        [else (error "invalid bits")]))

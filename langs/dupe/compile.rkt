@@ -1,9 +1,6 @@
 #lang racket
 (provide (all-defined-out))
-(require "ast.rkt"
-         "asm/ast.rkt")
-
-(define imm-shift 1) ; lsb = 0 indicates integerness
+(require "ast.rkt" "types.rkt" a86/ast)
 
 ;; Expr -> Asm
 (define (compile e)
@@ -21,24 +18,24 @@
 
 ;; Integer -> Asm
 (define (compile-integer i)
-  (seq (Mov 'rax (arithmetic-shift i imm-shift))))
+  (seq (Mov 'rax (value->bits i))))
 
 ;; Boolean -> Asm
 (define (compile-boolean b)
-  (seq (Mov 'rax (if b #b11 #b01))))
+  (seq (Mov 'rax (value->bits b))))
 
 ;; Op Expr -> Asm
 (define (compile-prim p e)
   (seq (compile-e e)
        (match p
-         ['add1 (Add 'rax (arithmetic-shift 1 imm-shift))]
-         ['sub1 (Sub 'rax (arithmetic-shift 1 imm-shift))]
+         ['add1 (Add 'rax (value->bits 1))]
+         ['sub1 (Sub 'rax (value->bits 1))]
          ['zero?
           (let ((l1 (gensym 'nzero)))
             (seq (Cmp 'rax 0)
-                 (Mov 'rax #b11)
+                 (Mov 'rax val-true)
                  (Je l1)
-                 (Mov 'rax #b01)
+                 (Mov 'rax val-false)
                  (Label l1)))]))) 
 
 ;; Expr Expr Expr -> Asm
@@ -46,7 +43,7 @@
   (let ((l1 (gensym 'if))
         (l2 (gensym 'if)))
     (seq (compile-e e1)
-         (Cmp 'rax #b01)
+         (Cmp 'rax val-false)
          (Je l1)
          (compile-e e2)
          (Jmp l2)
