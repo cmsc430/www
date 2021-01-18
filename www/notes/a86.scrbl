@@ -22,7 +22,7 @@
      (filebox (emph "shell")
               (fancyverbatim "fish" (apply shell s)))))
 
-@; compile time generation of tri.s so that it can be listed
+@; compile time generation of tri.s and main.c so they can be listed
 @(require (for-syntax racket/base "utils.rkt"))
 @(begin-for-syntax
    (require racket/system a86/ast a86/printer)
@@ -41,9 +41,27 @@
             (Label 'done)
             (Mov 'rax 0)
             (Ret)))
+
+   (define main.c
+     #<<HERE
+#include <stdio.h>
+#include <inttypes.h>
+
+int64_t entry();
+
+int main(int argc, char** argv) {
+  int64_t result = entry();
+  printf("%" PRId64 "\n", result);
+  return 0;
+}
+HERE
+     )
    (parameterize ([current-directory (build-path notes "a86")])
      (with-output-to-file "tri.s"
       (λ () (display (asm-string (tri 36))))
+      #:exists 'replace)
+     (with-output-to-file "main.c"
+      (λ () (display main.c))
       #:exists 'replace)))
 
 
