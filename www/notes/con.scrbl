@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label (except-in racket compile ...)))
+@(require (for-label (except-in racket compile ...) a86))
 @(require redex/pict
           racket/runtime-path
           scribble/examples
@@ -16,9 +16,9 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 
-@(ev '(require rackunit))
+@(ev '(require rackunit a86))
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "con" f))))))
-	   '("interp.rkt" "compile.rkt" "parse.rkt" "ast.rkt" "asm/interp.rkt" "asm/printer.rkt" "random.rkt"))
+	   '("interp.rkt" "compile.rkt" "parse.rkt" "ast.rkt" "random.rkt"))
 
 
 @title[#:tag "Con"]{Con: branching with conditionals}
@@ -248,14 +248,9 @@ this, we arrive at the following code for the compiler:
 ]
 
 
-This will require extending our representation of x86 instructions; in
+This will require extending our use of a86 instructions; in
 particular, we add @racket[Jmp], @racket[Je], and @racket[Cmp]
-instructions:
-
-@codeblock-include["con/asm/ast.rkt"]
-
-We omit the printer code, which is mundane.  See
-@link["con/asm/printer.rkt"]{@tt{asm/printer.rkt}} for details.
+instructions.
 
 The complete compiler code is:
 
