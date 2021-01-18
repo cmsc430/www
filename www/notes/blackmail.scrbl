@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label (except-in racket compile ...)))
+@(require (for-label (except-in racket compile ...) a86))
 @(require scribble/examples
           redex/pict
 	  "../fancyverb.rkt"

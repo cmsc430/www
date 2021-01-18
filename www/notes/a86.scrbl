@@ -1,8 +1,7 @@
 #lang scribble/manual
 
 @(require (for-label (except-in racket compile)
-                     a86
-                     #;"../../langs/a86/ast.rkt"))
+                     a86))
           
 @(require scribble/examples
 	  redex/reduction-semantics	  
@@ -14,11 +13,7 @@
 	  "utils.rkt"
 	  "ev.rkt")
 
-@(define codeblock-include (make-codeblock-include #'here))
-
-@(ev '(require rackunit))
-@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "a86" f))))))
-	   '("interp.rkt" "ast.rkt" "printer.rkt"))
+@(ev '(require rackunit a86))
 
 @(ev `(current-directory ,(path->string (build-path notes "a86"))))
 
@@ -30,9 +25,7 @@
 @; compile time generation of tri.s so that it can be listed
 @(require (for-syntax racket/base "utils.rkt"))
 @(begin-for-syntax
-   (require racket/system)
-   (require "../../langs/a86/ast.rkt"
-            "../../langs/a86/printer.rkt")
+   (require racket/system a86/ast a86/printer)
    (define (tri n)
       (list (Label 'entry)
             (Mov 'rbx n)
@@ -388,7 +381,7 @@ interactively exploring the a86 language (you can write
 assembly in a REPL), but also an important tool when it
 comes time to test the compilers we write.
 
-@section{Stacks: pushing, popping, calling, returning}
+@section[#:tag "stacks"]{Stacks: pushing, popping, calling, returning}
 
 The a86 execution model includes access to memory that can
 be used as a stack data structure. There are operations that
@@ -612,6 +605,7 @@ The above shows how to encode @racket[Call] as @racket[Lea],
 @section{Instruction set}
 
 @defmodule[a86]
+@;declare-exporting[ a86]
 
 @margin-note{The a86 language may evolve some over the
  course of the semester, but we will aim to document any
