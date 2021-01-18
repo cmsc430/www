@@ -1,5 +1,5 @@
 #lang racket
-(require "../compile.rkt" "../asm/interp.rkt" "../parse.rkt" rackunit)
+(require "../compile.rkt" "../parse.rkt" a86/interp rackunit)
 
 (define (run e)
   (asm-interp (compile (parse e))))
