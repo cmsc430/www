@@ -18,7 +18,7 @@ $(course):
 	mkdir -p $(course)/code/	
 	cd ../langs ; \
 		tar -c `git ls-files intro a86 abscond blackmail con dupe extort fraud hustle iniquity jig .knock loot mug fp project.pdf` \
-			a86/main.c a86/tri.s | \
+			a86/main.c a86/tri.s abscond/42.s | \
 		(cd ../www/main/code ; tar -x) ; cd ../..
 	cd slides ; \
 		tar -c `git ls-files ocaml-to-racket.pdf abscond.pdf con.pdf dupe.pdf extort.pdf grift.pdf grift2.pdf hustle.pdf` | \
