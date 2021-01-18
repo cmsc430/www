@@ -1,9 +1,10 @@
 #lang racket
 (require "../compile.rkt"
          "../interp.rkt"
-         "../asm/interp.rkt"
          "../parse.rkt"
+         "../types.rkt"
          (prefix-in bit: "../interp-bits.rkt")
+         a86/interp
          rackunit)
 
 (define (test-runner run)
@@ -51,6 +52,6 @@
 
 (test-runner (λ (e) (bit:interp (parse e))))
 (test-runner (λ (e) (interp (parse e))))
-(test-runner (λ (e) (asm-interp (compile (parse e)))))
+(test-runner (λ (e) (bits->value (asm-interp (compile (parse e))))))
 
 

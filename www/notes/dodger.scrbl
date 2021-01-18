@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label (except-in racket ... compile)))
+@(require (for-label (except-in racket ... compile) a86))
 @(require redex/pict
           racket/runtime-path
           scribble/examples
@@ -13,9 +13,9 @@
 
 @(define codeblock-include (make-codeblock-include #'h))
 
-@(ev '(require rackunit))
+@(ev '(require rackunit a86))
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "dodger" f))))))
-	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
 
 @title[#:tag "Dodger"]{Dodger: addressing a lack of character}
@@ -186,7 +186,7 @@ Will these peices in place, we can try out some examples:
 
 @ex[
  (define (run e)
-   (asm-interp (compile (parse e))))
+   (bits->value (asm-interp (compile (parse e)))))
  (run '#\a)
  (run '(integer->char (add1 (char->integer #\a))))
  (run '(integer->char 955))
