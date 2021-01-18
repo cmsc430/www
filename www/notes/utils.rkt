@@ -2,7 +2,7 @@
 (provide (all-defined-out))
 (require (for-syntax racket/runtime-path racket/base racket/file))
 (require scribble/manual racket/runtime-path)
-(require (for-label racket))
+(require (for-label (except-in racket compile) a86))
 
 (begin-for-syntax
   (define-runtime-path notes "../../langs/"))
