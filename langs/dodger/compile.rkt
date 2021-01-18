@@ -2,7 +2,7 @@
 (provide (all-defined-out))
 (require "ast.rkt"
          "types.rkt"
-         "asm/ast.rkt")
+         a86/ast)
 
 ;; Expr -> Asm
 (define (compile e)
