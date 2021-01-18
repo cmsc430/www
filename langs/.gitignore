@@ -4,3 +4,4 @@
 compiled/
 a86/main.c
 a86/tri.s
+abscond/42.s
