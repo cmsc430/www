@@ -21,7 +21,8 @@ jobs:
         version: '7.9'
     - name: Build and test
       run: |
-        raco make www/main.scrbl     
+        raco pkg install langs/
+        raco make www/main.scrbl
         raco test langs
         make -C www main
     - name: Archive www

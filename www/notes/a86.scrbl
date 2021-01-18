@@ -1,6 +1,7 @@
 #lang scribble/manual
 
 @(require (for-label (except-in racket compile)
+                     a86
                      #;"../../langs/a86/ast.rkt"))
           
 @(require scribble/examples
@@ -610,6 +611,7 @@ The above shows how to encode @racket[Call] as @racket[Lea],
 
 @section{Instruction set}
 
+@defmodule[a86]
 
 @margin-note{The a86 language may evolve some over the
  course of the semester, but we will aim to document any
@@ -631,23 +633,23 @@ suffixes for accessing low-order bits. Each register plays
 the same role as in x86, so for example @racket['rsp] holds
 the current location of the stack.
 
-@defproc[#:link-target? #f (register? [x any/c]) boolean?]{
+@defproc[(register? [x any/c]) boolean?]{
  A predicate for registers.
 }
 
-@defproc[#:link-target? #f (label? [x any/c]) boolean?]{
+@defproc[(label? [x any/c]) boolean?]{
  A predicate for label @emph{names}, i.e. symbols which are not register names.
 }
 
-@defproc[#:link-target? #f (instruction? [x any/c]) boolean?]{
+@defproc[(instruction? [x any/c]) boolean?]{
  A predicate for instructions.
 }
 
-@defproc[#:link-target? #f (offset? [x any/c]) boolean?]{
+@defproc[(offset? [x any/c]) boolean?]{
  A predicate for offsets.
 }
 
-@defproc[#:link-target? #f (seq [x (or/c instruction? (listof instruction?))] ...) (listof instruction?)]{
+@defproc[(seq [x (or/c instruction? (listof instruction?))] ...) (listof instruction?)]{
  A convenience function for splicing togeter instructions and lists of instructions.
 
   @ex[
@@ -662,7 +664,7 @@ the current location of the stack.
  ]
 }
 
-@defproc[#:link-target? #f (progn [x (or/c instruction? (listof instruction?))] ...) (listof instruction?)]{
+@defproc[(progn [x (or/c instruction? (listof instruction?))] ...) (listof instruction?)]{
 
  Like @racket[seq], but also checks that the instructions
  are well-formed in the following sense:
@@ -693,8 +695,32 @@ the current location of the stack.
  ]
 }
 
-@defstruct*[#:link-target? #f
- Offset ([r register?] [i exact-integer?])]{
+@defproc[(asm-string [is (listof instruction?)]) string?]{
+
+ Converts an a86 program to a string in nasm syntax.
+
+ @ex[
+ (asm-string (progn (Label 'entry)
+                    (Mov 'rax 42)
+                    (Ret)))
+ ]
+                                                          
+}
+
+@defproc[(asm-interp [is (listof instruction?)]) integer?]{
+
+ Assemble, link, and execute an a86 program.
+
+ @ex[
+ (asm-interp (progn (Label 'entry)
+                    (Mov 'rax 42)
+                    (Ret)))
+ ]
+                                                          
+}
+
+
+@defstruct*[Offset ([r register?] [i exact-integer?])]{
 
  Creates an memory offset from a register. Offsets are used
  as arguments to instructions to indicate memory locations.
@@ -708,8 +734,7 @@ the current location of the stack.
 }
 
 
-@defstruct*[#:link-target? #f
- Label ([x label?])]{
+@defstruct*[Label ([x label?])]{
 
  Creates a label from the given symbol. Each label in a
  program must be unique.  Register names cannot be used
@@ -723,8 +748,7 @@ the current location of the stack.
 
 }
 
-@defstruct*[#:link-target? #f
- Call  ([x (or/c label? register?)])]{
+@defstruct*[Call  ([x (or/c label? register?)])]{
 
  A call instruction.
 
@@ -741,8 +765,7 @@ the current location of the stack.
  ]
 }
 
-@defstruct*[#:link-target? #f
- Ret ()]{
+@defstruct*[Ret ()]{
 
  A return instruction.
 
@@ -756,8 +779,7 @@ the current location of the stack.
 
 }
 
-@defstruct*[#:link-target? #f
- Mov ([dst (or/c register? offset?)] [src (or/c register? offset? exact-integer?)])]{
+@defstruct*[Mov ([dst (or/c register? offset?)] [src (or/c register? offset? exact-integer?)])]{
                               
  A move instruction. Moves @racket[src] to @racket[dst].
 
@@ -775,8 +797,7 @@ the current location of the stack.
 
 }
 
-@defstruct*[#:link-target? #f
- Add ([dst register?] [src (or/c register? offset? exact-integer?)])]{
+@defstruct*[Add ([dst register?] [src (or/c register? offset? exact-integer?)])]{
 
  An addition instruction. Adds @racket[src] to @racket[dst]
  and writes the result to @racket[dst].
@@ -791,8 +812,7 @@ the current location of the stack.
  ]
 }
 
-@defstruct*[#:link-target? #f
- Sub ([dst register?] [src (or/c register? offset? exact-integer?)])]{
+@defstruct*[Sub ([dst register?] [src (or/c register? offset? exact-integer?)])]{
 
  A subtraction instruction. Subtracts @racket[src] frrom
  @racket[dst] and writes the result to @racket[dst].
@@ -807,8 +827,7 @@ the current location of the stack.
  ]
 }
 
-@defstruct*[#:link-target? #f
- Cmp ([a1 (or/c register? offset?)] [a2 (or/c register? offset? exact-integer?)])]{ 
+@defstruct*[Cmp ([a1 (or/c register? offset?)] [a2 (or/c register? offset? exact-integer?)])]{ 
  Compare @racket[a1] to @racket[a2].  Doing a comparison
  sets the status flags that affect the conditional instructions like @racket[Je], @racket[Jl], etc.
 
@@ -825,8 +844,7 @@ the current location of the stack.
  ] 
 }
 
-@defstruct*[#:link-target? #f
- Jmp ([x (or/c label? register?)])]{
+@defstruct*[Jmp ([x (or/c label? register?)])]{
  Jump to label @racket[x].
                
  @ex[
@@ -849,8 +867,7 @@ the current location of the stack.
  
 }
 
-@defstruct*[#:link-target? #f
- Je ([x (or/c label? register?)])]{
+@defstruct*[Je ([x (or/c label? register?)])]{
  Jump to label @racket[x] if the conditional flag is set to ``equal.''
                
  @ex[
@@ -866,8 +883,7 @@ the current location of the stack.
  ]
 }
 
-@defstruct*[#:link-target? #f
- Jne ([x (or/c label? register?)])]{
+@defstruct*[Jne ([x (or/c label? register?)])]{
  Jump to label @racket[x] if the conditional flag is set to ``not equal.''
                
  @ex[
@@ -883,8 +899,7 @@ the current location of the stack.
  ]
 }
 
-@defstruct*[#:link-target? #f
- Jl ([x (or/c label? register?)])]{
+@defstruct*[Jl ([x (or/c label? register?)])]{
  Jump to label @racket[x] if the conditional flag is set to ``less than.''
                
  @ex[
@@ -900,8 +915,7 @@ the current location of the stack.
  ]
 }
 
-@defstruct*[#:link-target? #f
- Jg ([x (or/c label? register?)])]{
+@defstruct*[Jg ([x (or/c label? register?)])]{
  Jump to label @racket[x] if the conditional flag is set to ``greater than.''
                
  @ex[
@@ -917,8 +931,7 @@ the current location of the stack.
  ]
 }
 
-@defstruct*[#:link-target? #f
- And ([dst (or/c register? offset?)] [src (or/c register? offset? exact-integer?)])]{
+@defstruct*[And ([dst (or/c register? offset?)] [src (or/c register? offset? exact-integer?)])]{
  Compute logical ``and'' of @racket[dst] and @racket[src] and put result in @racket[dst].
 
  @#reader scribble/comment-reader
@@ -932,8 +945,7 @@ the current location of the stack.
  )
 }
 
-@defstruct*[#:link-target? #f
- Or ([dst (or/c register? offset?)] [src (or/c register? offset? exact-integer?)])]{
+@defstruct*[Or ([dst (or/c register? offset?)] [src (or/c register? offset? exact-integer?)])]{
  Compute logical ``or'' of @racket[dst] and @racket[src] and put result in @racket[dst].
 
  @#reader scribble/comment-reader
@@ -947,8 +959,7 @@ the current location of the stack.
  )
 }
 
-@defstruct*[#:link-target? #f
- Xor ([dst (or/c register? offset?)] [src (or/c register? offset? exact-integer?)])]{
+@defstruct*[Xor ([dst (or/c register? offset?)] [src (or/c register? offset? exact-integer?)])]{
  Compute logical ``exclusive or'' of @racket[dst] and @racket[src] and put result in @racket[dst].
 
  @#reader scribble/comment-reader
@@ -962,8 +973,7 @@ the current location of the stack.
  )
 }
 
-@defstruct*[#:link-target? #f
- Sal ([dst register?] [i (integer-in 0 63)])]{
+@defstruct*[Sal ([dst register?] [i (integer-in 0 63)])]{
  Shift @racket[dst] to the left @racket[i] bits and put result in @racket[dst].
  The leftmost bits are discarded.
 
@@ -978,8 +988,7 @@ the current location of the stack.
  )
 }
 
-@defstruct*[#:link-target? #f
- Sar ([dst register?] [i (integer-in 0 63)])]{
+@defstruct*[Sar ([dst register?] [i (integer-in 0 63)])]{
  Shift @racket[dst] to the right @racket[i] bits and put result in @racket[dst].
  The rightmost bits are discarded.
 
@@ -1001,8 +1010,7 @@ the current location of the stack.
  )
 }
 
-@defstruct*[#:link-target? #f
- Push   ([a1 (or/c exact-integer? register?)])]{
+@defstruct*[Push ([a1 (or/c exact-integer? register?)])]{
 
  Decrements the stack pointer and then stores the source
  operand on the top of the stack.
@@ -1019,8 +1027,7 @@ the current location of the stack.
  ]
 }
 
-@defstruct*[#:link-target? #f
- Pop   ([a1 register?])]{
+@defstruct*[Pop ([a1 register?])]{
  Loads the value from the top of the stack to the destination operand and then increments the stack pointer.
  
  @ex[
@@ -1035,8 +1042,7 @@ the current location of the stack.
  ]
 }
 
-@defstruct*[#:link-target? #f
- Lea   ([dst (or/c register? offset?)] [x label?])]{
+@defstruct*[Lea ([dst (or/c register? offset?)] [x label?])]{
  Loads the address of the given label into @racket[dst].
  
  @ex[
