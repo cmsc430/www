@@ -1,7 +1,7 @@
 #lang racket
 (provide compile)
 (require "ast.rkt"
-         "asm/ast.rkt")
+         a86/ast)
 
 ;; Expr -> Asm
 (define (compile e)
