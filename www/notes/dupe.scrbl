@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label (except-in racket ... compile)))
+@(require (for-label (except-in racket ... compile) a86))
 @(require redex/pict
           racket/runtime-path
           scribble/examples
@@ -14,9 +14,9 @@
 
 @(define codeblock-include (make-codeblock-include #'h))
 
-@(ev '(require rackunit))
+@(ev '(require rackunit a86))
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "dupe" f))))))
-	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "random.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "random.rkt" "types.rkt"))
 
 
 @title[#:tag "Dupe"]{Dupe: a duplicity of types}
@@ -286,16 +286,10 @@ the number is even or odd.  Odd numbers end in the bit (@code[#:lang
 represent integers.  Here are some functions to check our
 understanding of the encoding:
 
+@codeblock-include["dupe/types.rkt"]
+
 @#reader scribble/comment-reader
 (ex 
-
-;; Bits -> Value
-(define (bits->value bs)
-  (match (even? bs)
-    [#t (/ bs 2)]
-    [_ (match bs
-         [#b01 #f]
-         [#b11 #t])]))
 
 (bits->value #b000)
 (bits->value #b001)
@@ -735,6 +729,43 @@ Based on the examples, we can write the compiler:
 
 @codeblock-include["dupe/compile.rkt"]
 
+We can try out the compiler with the help of @racket[asm-interp],
+but you'll notice the results are a bit surprising:
+
+@ex[
+(asm-interp (compile (Bool #t)))
+(asm-interp (compile (Bool #f)))
+(asm-interp (compile (parse '(zero? 0))))
+(asm-interp (compile (parse '(zero? -7))))
+(asm-interp (compile (parse '(if #t 1 2))))
+(asm-interp (compile (parse '(if #f 1 2))))
+(asm-interp (compile (parse '(if (zero? 0) (if (zero? 0) 8 9) 2))))
+(asm-interp (compile (parse '(if (zero? (if (zero? 2) 1 0)) 4 5))))
+]
+
+The reason for this is @racket[asm-interp] doesn't do any
+interpretation of the bits it gets back; it is simply
+producing the integer that lives in @racket['rax] when the
+assembly code finishes. This suggests adding a call to
+@racket[bits->value] can be added to interpret the bits as
+values:
+
+@ex[
+(define (interp-compile e)
+  (bits->value (asm-interp (compile e))))
+
+(interp-compile (Bool #t))
+(interp-compile (Bool #f))
+(interp-compile (parse '(zero? 0)))
+(interp-compile (parse '(zero? -7)))
+(interp-compile (parse '(if #t 1 2)))
+(interp-compile (parse '(if #f 1 2)))
+(interp-compile (parse '(if (zero? 0) (if (zero? 0) 8 9) 2)))
+(interp-compile (parse '(if (zero? (if (zero? 2) 1 0)) 4 5)))
+]
+
+
+
 The one last peice of the puzzle is updating the run-time system to
 incorporate the new representation.  The run-time system is
 essentially playing the role of @racket[bits->value]: it determines
@@ -752,19 +783,6 @@ bit.  Likewise with a boolean, if we shift right by 1 bit there are
 two possible results: 0 for false and 1 for true:
 
 @filebox-include[fancy-c "dupe/main.c"]
-
-
-@ex[
-(asm-interp (compile (Bool #t)))
-(asm-interp (compile (Bool #f)))
-(asm-interp (compile (parse '(zero? 0))))
-(asm-interp (compile (parse '(zero? -7))))
-(asm-interp (compile (parse '(if #t 1 2))))
-(asm-interp (compile (parse '(if #f 1 2))))
-(asm-interp (compile (parse '(if (zero? 0) (if (zero? 0) 8 9) 2))))
-(asm-interp (compile (parse '(if (zero? (if (zero? 2) 1 0)) 4 5))))
-]
-
 
 @section{Correctness and testing}
 
@@ -789,11 +807,12 @@ interpreter will signal an error:
 (eval:error (interp (parse '(if (zero? #t) 7 8))))
 ]
 
-On the hand, the compiler will simply do something by misinterpreting the meaning
-of the bits:
+On the hand, the compiler may produce bits that are illegal
+or, even worse, simply do something by misinterpreting the
+meaning of the bits:
 @ex[
-(asm-interp (compile (parse '(add1 #f))))
-(asm-interp (compile (parse '(if (zero? #t) 7 8))))
+(eval:error (interp-compile (parse '(add1 #f))))
+(interp-compile (parse '(if (zero? #t) 7 8)))
 ]
 
 @;codeblock-include["dupe/correct.rkt"]
@@ -802,7 +821,7 @@ This complicates testing the correctness of the compiler.  Consider
 our usual appraoch:
 @ex[
 (define (check-correctness e)
-  (check-equal? (asm-interp (compile e))
+  (check-equal? (interp-compile e)
                 (interp e)
                 e))
 
@@ -822,7 +841,7 @@ produces void, effectively ignoring the test:
 @ex[
 (define (check-correctness e)
   (with-handlers ([exn:fail? void])
-    (check-equal? (asm-interp (compile e))
+    (check-equal? (interp-compile e)
                   (interp e)
                   e)))
 

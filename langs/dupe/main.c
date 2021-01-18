@@ -1,23 +1,24 @@
 #include <stdio.h>
 #include <inttypes.h>
-
-#define typeof_mask 1 
-#define val_shift   1 
-#define type_fixnum 0 
-#define type_bool   1 
-
+#include "types.h"
 
 int64_t entry();
+void print_result(int64_t);
 
 int main(int argc, char** argv) {
-  int64_t result = entry();
-  switch (typeof_mask & result) {
-  case type_fixnum:
-    printf("%" PRId64 "\n", result >> val_shift);
-    break;
-  case type_bool:
-    printf("#%c\n", (result >> val_shift) ? 't' : 'f');
-    break;
-  }
+  print_result(entry());
   return 0;
+}
+
+void print_result(int64_t result) {
+  if (int_type_tag == (int_type_mask & result)) {
+    printf("%" PRId64 "\n", result >> int_shift);
+  } else {
+    switch (result) {
+    case val_true:
+      printf("#t\n"); break;
+    case val_false:
+      printf("#f\n"); break;
+    }
+  }
 }

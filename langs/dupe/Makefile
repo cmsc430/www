@@ -10,7 +10,7 @@ endif
 %.run: %.o main.o
 	gcc main.o $< -o $@
 
-main.o: main.c
+main.o: main.c types.h
 	gcc -c main.c -o main.o
 
 %.o: %.s
@@ -22,5 +22,5 @@ main.o: main.c
 clean:
 	rm *.o *.s *.run
 
-test: 42.run
-	@test "$(shell ./42.run)" = "42"
+test: example.run
+	@test "$(shell ./example.run)" = "$(shell racket example.rkt)"
