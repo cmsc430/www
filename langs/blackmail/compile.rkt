@@ -4,9 +4,9 @@
 
 ;; Expr -> Asm
 (define (compile e)
-  (seq (Label 'entry)
-       (compile-e e)
-       (Ret)))
+  (prog (Label 'entry)
+        (compile-e e)
+        (Ret)))
 
 ;; Expr -> Asm
 (define (compile-e e)

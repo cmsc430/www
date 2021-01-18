@@ -1,13 +1,12 @@
 #lang racket
 (provide compile)
-(require "ast.rkt"
-         a86/ast)
+(require "ast.rkt" a86/ast)
 
 ;; Expr -> Asm
 (define (compile e)
-  (seq (Label 'entry)
-       (compile-e e)
-       (Ret)))
+  (prog (Label 'entry)
+        (compile-e e)
+        (Ret)))
 
 ;; Expr -> Asm
 (define (compile-e e)

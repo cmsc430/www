@@ -151,8 +151,8 @@
 (provide/contract
  [seq   (-> (or/c instruction? (listof instruction?)) ...
             (listof instruction?))]
- [progn (-> (or/c instruction? (listof instruction?)) ...
-            (listof instruction?))])
+ [prog (-> (or/c instruction? (listof instruction?)) ...
+           (listof instruction?))])
 
 ;; (U Instruction Asm) ... -> Asm
 ;; Convenient for sequencing instructions or groups of instructions
@@ -167,7 +167,7 @@
 ;; (U Instruction Asm) ... -> Asm
 ;; Construct a "program", does some global well-formedness checking to help
 ;; prevent confusing error messages as the nasm level
-(define (progn . xs)
+(define (prog . xs)
   (let ((p (apply seq xs)))
     (check-unique-label-decls xs)
     (check-label-targets-declared xs)
@@ -178,7 +178,7 @@
 (define (check-unique-label-decls xs)
   (let ((r (check-duplicates (label-decls xs))))
     (when r
-      (error 'progn "duplicate label declaration found: ~v" r))))
+      (error 'prog "duplicate label declaration found: ~v" r))))
 
 ;; Asm -> (Listof Symbol)
 ;; Compute all declared label names
@@ -224,4 +224,4 @@
 
     (let ((undeclared (set-subtract us ds)))
       (unless (set-empty? undeclared)
-        (error 'progn "undeclared labels found: ~v" (set->list undeclared))))))
+        (error 'prog "undeclared labels found: ~v" (set->list undeclared))))))

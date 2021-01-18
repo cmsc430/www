@@ -463,7 +463,7 @@ us try out examples:
 (ex
 (define (eg asm)
   (asm-interp
-   (progn
+   (prog
     (Label 'entry)
     asm  ; the example code we want to try out
     (Ret)
@@ -676,7 +676,7 @@ the current location of the stack.
  ]
 }
 
-@defproc[(progn [x (or/c instruction? (listof instruction?))] ...) (listof instruction?)]{
+@defproc[(prog [x (or/c instruction? (listof instruction?))] ...) (listof instruction?)]{
 
  Like @racket[seq], but also checks that the instructions
  are well-formed in the following sense:
@@ -696,14 +696,14 @@ the current location of the stack.
  nested.
 
  @ex[
- (progn)
- (progn (Label 'foo))
- (progn (list (Label 'foo)))
- (eval:error (progn (Label 'foo)
-                    (Label 'foo)))
- (eval:error (progn (Jmp 'foo)))
- (progn (Label 'foo)
-        (Jmp 'foo))                                  
+ (prog)
+ (prog (Label 'foo))
+ (prog (list (Label 'foo)))
+ (eval:error (prog (Label 'foo)
+                   (Label 'foo)))
+ (eval:error (prog (Jmp 'foo)))
+ (prog (Label 'foo)
+       (Jmp 'foo))
  ]
 }
 
@@ -712,9 +712,9 @@ the current location of the stack.
  Converts an a86 program to a string in nasm syntax.
 
  @ex[
- (asm-string (progn (Label 'entry)
-                    (Mov 'rax 42)
-                    (Ret)))
+ (asm-string (prog (Label 'entry)
+                   (Mov 'rax 42)
+                   (Ret)))
  ]
                                                           
 }
@@ -724,9 +724,9 @@ the current location of the stack.
  Assemble, link, and execute an a86 program.
 
  @ex[
- (asm-interp (progn (Label 'entry)
-                    (Mov 'rax 42)
-                    (Ret)))
+ (asm-interp (prog (Label 'entry)
+                   (Mov 'rax 42)
+                   (Ret)))
  ]
                                                           
 }
@@ -766,7 +766,7 @@ the current location of the stack.
 
  @ex[
  (asm-interp
-  (progn
+  (prog
    (Label 'entry)
    (Call 'f)
    (Add 'rax 1)
@@ -783,7 +783,7 @@ the current location of the stack.
 
  @ex[
  (asm-interp
-  (progn
+  (prog
    (Label 'entry)
    (Mov 'rax 42)
    (Ret)))
@@ -799,7 +799,7 @@ the current location of the stack.
 
  @ex[
  (asm-interp
-  (progn
+  (prog
    (Label 'entry)                   
    (Mov 'rbx 42)
    (Mov 'rax 'rbx)
@@ -816,7 +816,7 @@ the current location of the stack.
  
  @ex[
  (asm-interp
-  (progn
+  (prog
    (Label 'entry)                   
    (Mov 'rax 32)
    (Add 'rax 10)
@@ -831,7 +831,7 @@ the current location of the stack.
 
  @ex[
  (asm-interp
-  (progn
+  (prog
    (Label 'entry)                   
    (Mov 'rax 32)
    (Sub 'rax 10)
@@ -845,7 +845,7 @@ the current location of the stack.
 
  @ex[
  (asm-interp
-  (progn
+  (prog
    (Label 'entry)
    (Mov 'rax 42)
    (Cmp 'rax 2)
@@ -861,7 +861,7 @@ the current location of the stack.
                
  @ex[
  (asm-interp
-  (progn
+  (prog
    (Label 'entry)
    (Mov 'rax 42)
    (Jmp 'l1)
@@ -870,7 +870,7 @@ the current location of the stack.
    (Ret)))
 
  (asm-interp
-  (progn
+  (prog
    (Label 'entry)
    (Mov 'rax 42)
    (Pop 'rbx)   
@@ -884,7 +884,7 @@ the current location of the stack.
                
  @ex[
  (asm-interp
-  (progn
+  (prog
    (Label 'entry)
    (Mov 'rax 42)
    (Cmp 'rax 2)
@@ -900,7 +900,7 @@ the current location of the stack.
                
  @ex[
  (asm-interp
-  (progn
+  (prog
    (Label 'entry)
    (Mov 'rax 42)
    (Cmp 'rax 2)
@@ -916,7 +916,7 @@ the current location of the stack.
                
  @ex[
  (asm-interp
-  (progn
+  (prog
    (Label 'entry)
    (Mov 'rax 42)
    (Cmp 'rax 2)
@@ -932,7 +932,7 @@ the current location of the stack.
                
  @ex[
  (asm-interp
-  (progn
+  (prog
    (Label 'entry)
    (Mov 'rax 42)
    (Cmp 'rax 2)
@@ -949,7 +949,7 @@ the current location of the stack.
  @#reader scribble/comment-reader
  (ex
  (asm-interp
-  (progn
+  (prog
    (Label 'entry)
    (Mov 'rax #b1011) ; #b1011 = 11
    (And 'rax #b1110) ; #b1110 = 14
@@ -963,7 +963,7 @@ the current location of the stack.
  @#reader scribble/comment-reader
  (ex
  (asm-interp
-  (progn
+  (prog
    (Label 'entry)
    (Mov 'rax #b1011) ; #b1011 = 11
    (Or 'rax #b1110)  ; #b1110 = 14
@@ -977,7 +977,7 @@ the current location of the stack.
  @#reader scribble/comment-reader
  (ex
  (asm-interp
-  (progn
+  (prog
    (Label 'entry)
    (Mov 'rax #b1011) ; #b1011 = 11
    (Xor 'rax #b1110) ; #b1110 = 14
@@ -992,7 +992,7 @@ the current location of the stack.
  @#reader scribble/comment-reader
  (ex
  (asm-interp
-  (progn
+  (prog
    (Label 'entry)
    (Mov 'rax #b100) ; #b100 = 4 = 2^2
    (Sal 'rax 6)
@@ -1007,14 +1007,14 @@ the current location of the stack.
  @#reader scribble/comment-reader
  (ex
  (asm-interp
-  (progn
+  (prog
    (Label 'entry)
    (Mov 'rax #b100000000) ; #b100000000 = 256
    (Sar 'rax 6)
    (Ret)))        ; #b100 = 4
 
  (asm-interp
-  (progn
+  (prog
    (Label 'entry)
    (Mov 'rax #b100001101) ; #b100001101 = 269
    (Sar 'rax 6)
@@ -1029,7 +1029,7 @@ the current location of the stack.
  
  @ex[
  (asm-interp
-  (progn
+  (prog
    (Label 'entry)
    (Mov 'rax 42) 
    (Push 'rax)
@@ -1044,7 +1044,7 @@ the current location of the stack.
  
  @ex[
  (asm-interp
-  (progn
+  (prog
    (Label 'entry)
    (Mov 'rax 42) 
    (Push 'rax)
@@ -1059,7 +1059,7 @@ the current location of the stack.
  
  @ex[
  (asm-interp
-  (progn
+  (prog
    (Label 'entry)
    (Lea 'rbx 'done)
    (Mov 'rax 42)
