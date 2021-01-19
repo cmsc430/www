@@ -8,6 +8,8 @@
          rackunit)
 
 ;; link with byte.o for IO operations
+(unless (file-exists? "../byte.o")
+  (system "make -C .. byte.o"))
 (current-objs
  (list (path->string (normalize-path "../byte.o"))))
 
