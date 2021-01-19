@@ -109,7 +109,7 @@
 (instruct Lea    (dst x)   check:lea)
 
 (instruct Offset (r i)     check:offset)
-
+(instruct Extern (x)       check:label-symbol)
 
 (provide offset? register? instruction? label?)
 
@@ -125,6 +125,7 @@
 
 (define (instruction? x)
   (or (Label? x)
+      (Extern? x)
       (Call? x)
       (Ret? x)
       (Mov? x)
@@ -186,6 +187,8 @@
   (match asm
     ['() '()]
     [(cons (Label s) asm)
+     (cons s (label-decls asm))]
+    [(cons (Extern s) asm)
      (cons s (label-decls asm))]
     [(cons _ asm)
      (label-decls asm)]))
