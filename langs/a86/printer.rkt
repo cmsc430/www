@@ -1,5 +1,7 @@
 #lang racket
-(provide asm-string)
+(provide/contract
+ [asm-string (-> (listof instruction?) string?)])
+
 (require "ast.rkt")
 
 ;; Instruction -> String
@@ -7,6 +9,7 @@
   (match i
     [(Ret)       "\tret\n"]
     [(Label l)   (string-append (label-symbol->string l) ":\n")]
+    [(Extern l)  (string-append "\textern " (label-symbol->string l) "\n")]
     [(Mov a1 a2)
      (string-append "\tmov "
                     (arg->string a1) ", "
@@ -67,7 +70,6 @@
     [(Pop r)
      (string-append "\tpop "
                     (reg->string r) "\n")]
-
     [(Lea d x)
      (string-append "\tlea "
                     (arg->string d) ", [rel "

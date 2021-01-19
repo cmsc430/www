@@ -676,6 +676,13 @@ the current location of the stack.
  ]
 }
 
+@defparam[current-objs objs (listof path-string?) #:value '()]{
+
+Parameter that controls object files that will be linked in to
+assembly code when running @racket[asm-interp].
+
+}
+
 @defproc[(prog [x (or/c instruction? (listof instruction?))] ...) (listof instruction?)]{
 
  Like @racket[seq], but also checks that the instructions
@@ -731,6 +738,13 @@ the current location of the stack.
                                                           
 }
 
+@defproc[(asm-interp/io [is (listof instruction?)] [in string?]) (cons integer? string?)]{
+
+ Like @racket[asm-interp], but uses @racket[in] for input and produce the result along
+ with any output as a string.
+                                                          
+}
+
 
 @defstruct*[Offset ([r register?] [i exact-integer?])]{
 
@@ -758,6 +772,12 @@ the current location of the stack.
  (eval:error (Label 'rax))
  ]
 
+}
+
+@defstruct*[Extern ([x label?])]{
+
+ Declares an external label.
+ 
 }
 
 @defstruct*[Call  ([x (or/c label? register?)])]{
