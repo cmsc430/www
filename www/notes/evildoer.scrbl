@@ -17,9 +17,9 @@
 
 @(define codeblock-include (make-codeblock-include #'h))
 
-@(ev '(require rackunit))
+@(ev '(require rackunit a86))
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "evildoer" f))))))
-	   '("interp.rkt" "interp-io.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+	   '("interp.rkt" "interp-io.rkt" "compile.rkt" "ast.rkt" "parse.rkt"))
 
 
 @title[#:tag "Evildoer"]{Evildoer: change the world a couple nibbles at a time}

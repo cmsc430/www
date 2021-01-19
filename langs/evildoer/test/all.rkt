@@ -2,9 +2,14 @@
 (require "../compile.rkt"
          "../interp.rkt"
          "../interp-io.rkt"
-         "../asm/interp.rkt"
          "../parse.rkt"
+         "../types.rkt"
+         a86/interp
          rackunit)
+
+;; link with byte.o for IO operations
+(current-objs
+ (list (path->string (normalize-path "../byte.o"))))
 
 (define (test-runner run)
   ;; Abscond examples
@@ -50,19 +55,23 @@
   (check-equal? (run '(integer->char 955)) #\λ))
 
 (test-runner (λ (e) (interp (parse e))))
-(test-runner (λ (e) (asm-interp (compile (parse e)))))
+(test-runner (λ (e) (bits->value (asm-interp (compile (parse e))))))
 
 (define (test-runner-io run)
   ;; Evildoer examples
-  (check-equal? (run 7 "") "7\n")
-  (check-equal? (run '(write-byte 97) "") "a")
-  (check-equal? (run '(read-byte) "a") "97\n")
-  (check-equal? (run '(begin (write-byte 97) (read-byte)) "b") "a98\n")
-  (check-equal? (run '(read-byte) "") "#<eof>\n")
-  (check-equal? (run '(eof-object? (read-byte)) "") "#t\n")
-  (check-equal? (run '(eof-object? (read-byte)) "a") "#f\n")
-  (check-equal? (run '(begin (write-byte 97) (write-byte 98)) "") "ab"))
-  
+  (check-equal? (run 7 "") (cons 7 ""))
+  (check-equal? (run '(write-byte 97) "") (cons (void) "a"))
+  (check-equal? (run '(read-byte) "a") (cons 97 ""))
+  (check-equal? (run '(begin (write-byte 97) (read-byte)) "b")
+                (cons 98 "a"))
+  (check-equal? (run '(read-byte) "") (cons eof ""))
+  (check-equal? (run '(eof-object? (read-byte)) "") (cons #t ""))
+  (check-equal? (run '(eof-object? (read-byte)) "a") (cons #f ""))
+  (check-equal? (run '(begin (write-byte 97) (write-byte 98)) "")
+                (cons (void) "ab")))
 
 (test-runner-io (λ (e s) (interp/io (parse e) s)))
-(test-runner-io (λ (e s) (asm-interp/io (compile (parse e)) s)))
+(test-runner-io (λ (e s)
+                  (match (asm-interp/io (compile (parse e)) s)
+                    [(cons r o)
+                     (cons (bits->value r) o)])))
