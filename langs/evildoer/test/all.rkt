@@ -81,4 +81,8 @@
                     [(cons r o)
                      (cons (bits->value r) o)])))
 
-;(current-shared? #f)
+(current-shared? #f)
+
+;; run command line compiler and compare against Racket as refernece implementation
+(require rackunit "../../test-programs/get-progs.rkt")
+(for-each test-prog (get-progs "evildoer"))
