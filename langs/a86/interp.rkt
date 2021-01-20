@@ -32,7 +32,7 @@
       (displayln (asm-string a))))
 
   (system
-   (format "nasm -f ~a ~a && gcc -shared ~a ~a -o ~a"
+   (format "nasm -f ~a ~a && gcc -fPIC -shared ~a ~a -o ~a"
            (if (eq? (system-type 'os) 'macosx) 'macho64 'elf64)
            t.s
            t.o
