@@ -113,5 +113,6 @@
     [(Label g)
      (string-append
       "\tglobal " (label-symbol->string g) "\n"
+      "\tdefault rel\n"
       "\tsection .text\n"
       (foldr (λ (i s) (string-append (instr->string i) s)) "" a))]))
