@@ -7,9 +7,12 @@
          a86/interp
          rackunit)
 
+(require (submod a86/printer private))
+(current-shared? #t)
+
 ;; link with byte.o for IO operations
-(unless (file-exists? "../byte.o")
-  (system "make -C .. byte.o"))
+;(unless (file-exists? "../byte.o")
+;  (system "make -C .. byte.so"))
 (current-objs
  (list (path->string (normalize-path "../byte.o"))))
 
@@ -77,3 +80,5 @@
                   (match (asm-interp/io (compile (parse e)) s)
                     [(cons r o)
                      (cons (bits->value r) o)])))
+
+;(current-shared? #f)
