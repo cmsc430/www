@@ -27,6 +27,3 @@ byte.o: byte.c types.h
 
 clean:
 	rm *.o *.s *.run
-
-test: 42.run
-	@test "$(shell ./42.run)" = "42"
