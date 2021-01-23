@@ -647,17 +647,18 @@ function from before, we can do the following:
  upfront about this stuff? I don't want to get too down in
  the weeds on how asm-interp works. (This is needed on
  elf64.)}
-@(void (ev '(system "gcc -fPIC -c double.c -o double.o")))
+@;(void (ev '(system "gcc -fPIC -c double.c -o double.o")))
 
-@;{
+
 @ex[
+ (system "gcc -fPIC -c double.c -o double.o")
  (current-objs '("double.o"))
+ #;
  (asm-interp (prog (Extern 'dbl)
                    (Label 'entry)
                    (Mov 'rdi 21)
                    (Call 'dbl)
                    (Ret)))]
-}
 
 The other issue is bit uglier to deal with. We need to do
 this redirection at the C-level. Our solution is write an
