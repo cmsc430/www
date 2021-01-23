@@ -8,7 +8,6 @@
          rackunit)
 
 (require (submod a86/printer private))
-(current-shared? #t)
 
 ;; link with byte.o for IO operations
 (unless (file-exists? "../byte-shared.o")
@@ -83,8 +82,6 @@
                   (match (asm-interp/io (compile (parse e)) s)
                     [(cons r o)
                      (cons (bits->value r) o)])))
-
-(current-shared? #f)
 
 ;; run command line compiler and compare against Racket as refernece implementation
 (require rackunit "../../test-programs/get-progs.rkt")
