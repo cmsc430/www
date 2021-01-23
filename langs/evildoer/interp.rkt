@@ -18,6 +18,10 @@
     [(Char c) c]
     [(Prim0 'read-byte)
      (read-byte)]
+    [(Prim0 'peek-byte)     
+     (peek-byte)]
+    [(Prim0 'void)
+     (void)]
     [(Prim1 'write-byte e0)     
      (write-byte (interp e0))]
     [(Prim1 'eof-object? e0)     
