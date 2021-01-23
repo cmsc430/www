@@ -647,22 +647,15 @@ function from before, we can do the following:
  upfront about this stuff? I don't want to get too down in
  the weeds on how asm-interp works. (This is needed on
  elf64.)}
-@;(void (ev '(system "gcc -fPIC -c double.c -o double.o")))
+@(void (ev '(system "gcc -fPIC -c double.c -o double.o")))
 
+@;{Also have to set shared? to true. Ugh. Not sure what the
+ best thing to do here is; students will not have the magic
+ incantations to use asm-interp on their own.}
+@(void (ev '(shared? #t)))
 
 @ex[
- (system "gcc -fPIC -c double.c -o double.o")
  (current-objs '("double.o"))
- (define r
-   (prog (Extern 'dbl)
-                   (Label 'entry)
-                   (Mov 'rdi 21)
-                   (Call 'dbl)
-                   (Ret)))
- (displayln (asm-string r))
- (eval:error (asm-interp r))
-   
- #;
  (asm-interp (prog (Extern 'dbl)
                    (Label 'entry)
                    (Mov 'rdi 21)
@@ -685,7 +678,6 @@ interested. Once compiled, it can be used with
 @racket[current-objs] in order to interactively run examples
 involving IO:
 
-@;{
 @ex[
  (current-objs '("byte-shared.o"))
  (asm-interp/io
@@ -698,4 +690,4 @@ involving IO:
          (Mov 'rax 42)
          (Ret))
    "a")]
-}
+
