@@ -649,18 +649,14 @@ function from before, we can do the following:
  elf64.)}
 @(void (ev '(system "gcc -fPIC -c double.c -o double.o")))
 
-@;{Also have to set shared? to true. Ugh. Not sure what the
- best thing to do here is; students will not have the magic
- incantations to use asm-interp on their own.}
-@(void (ev '(shared? #t)))
-
 @ex[
  (current-objs '("double.o"))
- (asm-interp (prog (Extern 'dbl)
-                   (Label 'entry)
-                   (Mov 'rdi 21)
-                   (Call 'dbl)
-                   (Ret)))]
+ (asm-interp
+  (prog (Extern 'dbl)
+        (Label 'entry)
+        (Mov 'rdi 21)
+        (Call 'dbl)
+        (Ret)))]
 
 The other issue is bit uglier to deal with. We need to do
 this redirection at the C-level. Our solution is write an

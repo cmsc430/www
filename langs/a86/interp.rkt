@@ -5,6 +5,7 @@
  [asm-interp/io (-> (listof instruction?) string? any/c)])
 
 (require "printer.rkt" "ast.rkt" (rename-in ffi/unsafe [-> _->]))
+(require (submod "printer.rkt" private))
 
 ;; Assembly code is linked with object files in this parameter
 (define current-objs
@@ -29,7 +30,8 @@
   (with-output-to-file t.s
     #:exists 'truncate
     (λ ()
-      (displayln (asm-string a))))
+      (parameterize ((current-shared? #t))
+        (displayln (asm-string a)))))
 
   (system
    (format "nasm -f ~a ~a && gcc -fPIC -shared ~a ~a -o ~a"
