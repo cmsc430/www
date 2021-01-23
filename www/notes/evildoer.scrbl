@@ -666,6 +666,7 @@ interested. Once compiled, it can be used with
 @racket[current-objs] in order to interactively run examples
 involving IO:
 
+@;{
 @ex[
  (current-objs '("byte-shared.o"))
  (asm-interp/io
@@ -678,4 +679,4 @@ involving IO:
          (Mov 'rax 42)
          (Ret))
    "a")]
-
+}
