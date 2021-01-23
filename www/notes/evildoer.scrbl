@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label (except-in racket ... compile)))
+@(require (for-label (except-in racket ... compile) a86))
 @(require redex/pict
           racket/runtime-path
           scribble/examples
@@ -22,7 +22,7 @@
 	   '("interp.rkt" "interp-io.rkt" "compile.rkt" "ast.rkt" "parse.rkt"))
 
 @(ev `(current-directory ,(path->string (build-path notes "evildoer"))))
-@(void (ev '(system "make byte-shared.o")))
+@(void (ev '(with-output-to-string (thunk (system "make byte-shared.o")))))
 
 @title[#:tag "Evildoer"]{Evildoer: change the world a couple nibbles at a time}
 
@@ -95,7 +95,7 @@ In order to recognize the end-of-file value, we add the following predicate (jus
  @item{@racket[eof-object?] @tt|{: Any -> Boolean}|: determines if argument is the eof value.}
 ]
 
-Finally, we add a simple sequencing construct so that first
+Finally, we add a simple sequencing construct to first
 evaluate an expression for effect and then evaluate another
 expression for its result.
 
