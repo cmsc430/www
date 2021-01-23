@@ -642,6 +642,12 @@ object files to be linked against when running examples.
 So for example, to make an example with the @tt{dbl}
 function from before, we can do the following:
 
+
+@;{Sneakily recompile double.o with -fPIC. Should we be more
+ upfront about this stuff? I don't want to get too down in
+ the weeds on how asm-interp works. (This is needed on elf64.}
+@(void (ev '(system "gcc -fPIC -c double.c -o double.o")))
+
 @ex[
  (current-objs '("double.o"))
  (asm-interp (prog (Extern 'dbl)
@@ -666,7 +672,7 @@ interested. Once compiled, it can be used with
 @racket[current-objs] in order to interactively run examples
 involving IO:
 
-@;{
+
 @ex[
  (current-objs '("byte-shared.o"))
  (asm-interp/io
@@ -679,4 +685,3 @@ involving IO:
          (Mov 'rax 42)
          (Ret))
    "a")]
-}
