@@ -22,7 +22,8 @@
 	   '("interp.rkt" "interp-io.rkt" "compile.rkt" "ast.rkt" "parse.rkt"))
 
 @(ev `(current-directory ,(path->string (build-path notes "evildoer"))))
-     
+@(void (ev '(system "make byte-shared.o")))
+
 @title[#:tag "Evildoer"]{Evildoer: change the world a couple nibbles at a time}
 
 @emph{Warning: Side effects may include itching, burning,
