@@ -653,6 +653,15 @@ function from before, we can do the following:
 @ex[
  (system "gcc -fPIC -c double.c -o double.o")
  (current-objs '("double.o"))
+ (define r
+   (prog (Extern 'dbl)
+                   (Label 'entry)
+                   (Mov 'rdi 21)
+                   (Call 'dbl)
+                   (Ret)))
+ (displayln (asm-string r))
+ (eval:error (asm-interp r))
+   
  #;
  (asm-interp (prog (Extern 'dbl)
                    (Label 'entry)
