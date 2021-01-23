@@ -17,7 +17,10 @@ char.o: char.c types.h
 	gcc -c char.c -o char.o
 
 byte.o: byte.c types.h
-	gcc -fPIC -c byte.c -o byte.o
+	gcc -c byte.c -o byte.o
+
+byte-shared.o: byte-shared.c types.h
+	gcc -fPIC -c byte-shared.c -o byte-shared.o
 
 %.o: %.s
 	nasm -f $(format) -o $@ $<

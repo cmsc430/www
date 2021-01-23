@@ -4,8 +4,9 @@
 
 ;; Expr -> Asm
 (define (compile e)
-  (prog (Extern 'write_byte)
+  (prog (Extern 'peek_byte)
         (Extern 'read_byte)
+        (Extern 'write_byte)
         (Label 'entry)
         (compile-e e)
         (Ret)))
@@ -29,9 +30,15 @@
 ;; Op0 -> Asm
 (define (compile-prim0 p)
   (match p
+    ['void
+     (seq (Mov 'rax val-void))]
     ['read-byte
      (seq (Push 'rbp)
           (Call 'read_byte)
+          (Pop 'rbp))]
+    ['peek-byte
+     (seq (Push 'rbp)
+          (Call 'peek_byte)
           (Pop 'rbp))]))
 
 ;; Op1 Expr -> Asm

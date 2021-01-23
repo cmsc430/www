@@ -6,9 +6,7 @@
 ;; Interpret e with given string as input,
 ;; collect output as string (including printed result)
 (define (interp/io e input)
-  (let ((out (open-output-string))
-        (in  (open-input-string input)))
-      (cons (parameterize ((current-output-port out)
-                           (current-input-port in))
-              (interp e))
-            (get-output-string out))))
+  (parameterize ((current-output-port (open-output-string))
+                 (current-input-port  (open-input-string input)))
+      (cons (interp e)
+            (get-output-string (current-output-port)))))
