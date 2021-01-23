@@ -454,11 +454,12 @@ We can compile it to an object file:
 
 This object file will have a single globally visible label
 called @tt{meaning}, just like our previous implementation.
+@;{
 To confirm this, the standard @tt{nm} utility can be used to
 list the defined symbols of an object file:
 
 @shellbox["nm -j life.o"]
-
+}
 We can again link together the pieces and confirm that it
 still produces the same results:
 
