@@ -417,7 +417,39 @@ makes use of that label, but doesn't define it. The
 definition will come from a later phase where the program is
 linked against another that provides the definition.
 
-First, we save each program in its nasm format:
+There is an important invariant that has to be maintained
+once these programs are moved into separate object files
+though. According to the System V ABI, the stack address
+must be aligned to 16-bytes before the call instruction. Not
+maintaining this alignment can result in a segmentation
+fault. Since the @racket[p] program is the one doing the
+calling, it is the one that has to worry about the issue.
+
+Now keep in mind that the @racket[p] program is itself
+called by the C program that prints the result. So when the
+call @emph{to} @racket[p] was made, the stack was aligned.
+In executing the @racket[Push] instruction, a word, which is
+8-byte, was pushed. This means at the point that control
+transfers to @racket['entry], the stack is not aligned to a
+16-byte boundary. To fix the problem, we can push another
+element to the stack, making sure to pop it off before
+returning. We opt to decrement (remember the stack grows
+toward low memory) and increment to make clear we're not
+saving anything; this is just about alignment. The revised
+@racket[p] program is:
+
+@ex[    
+(define p
+  (prog (Extern 'meaning)
+        (Label 'entry)
+        (Sub 'rsp 8)
+        (Call 'meaning)
+        (Add 'rax 1)
+        (Add 'rsp 8)
+        (Ret)))]
+
+
+Now save each program in its nasm format:
 
 @ex[
 (with-output-to-file "p.s"
@@ -549,13 +581,15 @@ pop around the call:
  (define q
    (prog (Extern 'dbl)
          (Label 'entry)
+         (Sub 'rsp 8)
          (Mov 'rdi 1)
          (Push 'rdi)
          (Mov 'rdi 21)
          (Call 'dbl)
          (Pop 'rdi)
          (Add 'rax 'rdi)
-         (Ret)))                           
+         (Add 'rsp 8)
+         (Ret)))
 (with-output-to-file "q.s"
   (λ ()
     (displayln (asm-string q)))
@@ -615,6 +649,12 @@ appropriate C function. In the case of @racket[write-byte],
 we arrange for the byte that we'd like to write to be in
 @racket['rdi] before the call.
 
+Finally, since the emitted code is potentially issuing calls
+to external functions, we make sure to align the stack to
+16-bytes. Rather than do this at each call site, we take
+advantage of the fact that no other stack changes occur and
+adjust the stack just once at the entry and exit of the
+code.
 
 The complete compiler:
 

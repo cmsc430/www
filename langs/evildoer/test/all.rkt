@@ -7,8 +7,6 @@
          a86/interp
          rackunit)
 
-(require (submod a86/printer private))
-
 ;; link with byte.o for IO operations
 (unless (file-exists? "../byte-shared.o")
   (system "make -C .. byte-shared.o"))
