@@ -7,11 +7,11 @@
          a86/interp
          rackunit)
 
-;; link with byte.o for IO operations
-(unless (file-exists? "../byte-shared.o")
-  (system "make -C .. byte-shared.o"))
+;; link with runtime for IO operations
+(unless (file-exists? "../runtime.o")
+  (system "make -C .. runtime.o"))
 (current-objs
- (list (path->string (normalize-path "../byte-shared.o"))))
+ (list (path->string (normalize-path "../runtime.o"))))
 
 (define (test-runner run)
   ;; Abscond examples

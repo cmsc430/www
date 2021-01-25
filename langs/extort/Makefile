@@ -19,6 +19,9 @@ char.o: char.c types.h
 byte.o: byte.c types.h
 	gcc -c byte.c -o byte.o
 
+byte-shared.o: byte-shared.c types.h
+	gcc -fPIC -c byte-shared.c -o byte-shared.o
+
 %.o: %.s
 	nasm -f $(format) -o $@ $<
 
@@ -27,6 +30,3 @@ byte.o: byte.c types.h
 
 clean:
 	rm *.o *.s *.run
-
-test: 42.run
-	@test "$(shell ./42.run)" = "42"
