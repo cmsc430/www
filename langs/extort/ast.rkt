@@ -10,7 +10,7 @@
 ;; | (Prim1 Op1 Expr)
 ;; | (If Expr Expr Expr)
 ;; | (Begin Expr Expr)
-;; type Op0 = 'read-byte
+;; type Op0 = 'read-byte | 'peek-byte | 'void
 ;; type Op1 = 'add1 | 'sub1 | 'zero?
 ;;          | 'char? | 'integer->char | 'char->integer
 ;;          | 'write-byte | 'eof-object?
