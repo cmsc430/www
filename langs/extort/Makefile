@@ -11,19 +11,19 @@ endif
 	gcc runtime.o $< -o $@
 
 runtime.o: main.o char.o io.o io_set.o
-	gcc -r main.o char.o io.o io_set.o -o runtime.o
+	ld -r main.o char.o io.o io_set.o -o runtime.o
 
 main.o: main.c types.h
-	gcc -c main.c -o main.o
+	gcc -fPIC -c main.c -o main.o
 
 char.o: char.c types.h
-	gcc -c char.c -o char.o
+	gcc -fPIC -c char.c -o char.o
 
 io.o: io.c io.h
-	gcc -c io.c -o io.o
+	gcc -fPIC -c io.c -o io.o
 
 io_set.o: io_set.c io.h
-	gcc -c io_set.c -o io_set.o
+	gcc -fPIC -c io_set.c -o io_set.o
 
 %.o: %.s
 	nasm -f $(format) -o $@ $<
