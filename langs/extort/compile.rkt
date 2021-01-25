@@ -1,20 +1,17 @@
 #lang racket
 (provide (all-defined-out))
-(require "ast.rkt" "types.rkt" a86/ast)
+(require "ast.rkt"
+         "types.rkt"
+         "asm/ast.rkt")
 
 ;; Expr -> Asm
 (define (compile e)
-  (prog (Extern 'peek_byte)
-        (Extern 'read_byte)
-        (Extern 'write_byte)
-        (Label 'entry)
-        (Sub 'rsp 8)
-        (compile-e e)
-        (Add 'rsp 8)
-        (Ret)
-        (Label 'err)
-        (Add 'rsp 8)
-        (Call 'error)))
+  (seq (Label 'entry)
+       (compile-e e)
+       (Ret)
+       (Label 'err)
+       (Push 'rbp)
+       (Call 'error)))
 
 ;; Expr -> Asm
 (define (compile-e e)
@@ -35,9 +32,10 @@
 ;; Op0 -> Asm
 (define (compile-prim0 p)
   (match p
-    ['void      (seq (Mov 'rax val-void))]
-    ['read-byte (seq (Call 'read_byte))]
-    ['peek-byte (seq (Call 'peek_byte))]))
+    ['read-byte
+     (seq (Push 'rbp)
+          (Call 'read_byte)
+          (Pop 'rbp))]))
 
 ;; Op1 Expr -> Asm
 (define (compile-prim1 p e)

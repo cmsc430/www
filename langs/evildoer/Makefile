@@ -7,11 +7,8 @@ else
   format=elf64
 endif
 
-%.run: %.o runtime.o
-	gcc runtime.o $< -o $@
-
-runtime.o: main.o char.o io.o io_set.o
-	gcc -r main.o char.o io.o io_set.o -o runtime.o
+%.run: %.o main.o char.o byte.o
+	gcc main.o char.o byte.o $< -o $@
 
 main.o: main.c types.h
 	gcc -c main.c -o main.o
@@ -19,11 +16,11 @@ main.o: main.c types.h
 char.o: char.c types.h
 	gcc -c char.c -o char.o
 
-io.o: io.c io.h
-	gcc -c io.c -o io.o
+byte.o: byte.c types.h
+	gcc -c byte.c -o byte.o
 
-io_set.o: io_set.c io.h
-	gcc -c io_set.c -o io_set.o
+byte-shared.o: byte-shared.c types.h
+	gcc -fPIC -c byte-shared.c -o byte-shared.o
 
 %.o: %.s
 	nasm -f $(format) -o $@ $<
