@@ -1,2 +1,0 @@
-FILE* in;
-FILE* out;
