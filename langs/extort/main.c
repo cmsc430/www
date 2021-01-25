@@ -7,7 +7,22 @@ int64_t entry();
 void print_result(int64_t);
 void print_char(int64_t);
 
+void error_handler() {
+  printf("err\n");
+  exit(1);
+  printf("got here\n");
+}
+
+void (*error)(void);
+
+void init() {
+  printf("initing\n");
+  error = &error_handler;
+}
+
 int main(int argc, char** argv) {
+  error = &error_handler;
+  //  error();
   print_result(entry());
   return 0;
 }
@@ -32,7 +47,3 @@ void print_result(int64_t result) {
   }  
 }
 
-void error() {
-  printf("err\n");
-  exit(1);
-}

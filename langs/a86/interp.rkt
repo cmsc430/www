@@ -43,6 +43,14 @@
 
   (define libt.so (ffi-lib t.so))
   (define entry (get-ffi-obj "entry" libt.so (_fun _-> _int64)))
+
+  ;; install our own `error` procedure to prevent `exit` calls from interpreted code
+  ;; bringing down the parent process.  All of these hooks into the runtime need a better
+  ;; API and documentation, but this is a rough hack to make Extort work for now.
+  (when (ffi-obj-ref "error" t.so (thunk #f))
+    (set-ffi-obj! "error" t.so _pointer
+                  (function-ptr (λ () (raise 'err)) (_fun _-> _void))))
+  
   (delete-file t.s)
   (delete-file t.o)
   (delete-file t.so)
@@ -55,13 +63,16 @@
         (with-output-to-file t.in #:exists 'truncate
           (thunk (display input)))
         (set-io! t.in t.out)
-        (define result (entry))
+        (define result
+          (with-handlers ((symbol? identity))
+            (entry)))
         (close-io!)
         (define output (file->string t.out))
         (delete-file t.in)
         (delete-file t.out)
         (cons result output))
-      (entry)))
+      (with-handlers ((symbol? identity))
+        (entry))))
 
 
 (define (string-splice xs)
