@@ -1,0 +1,2 @@
+FILE* in;
+FILE* out;
