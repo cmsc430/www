@@ -14,10 +14,12 @@
 
 @(define codeblock-include (make-codeblock-include #'h))
 
-@(ev '(require rackunit))
+@(ev '(require rackunit a86))
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "extort" f))))))
-	   '("interp.rkt" "ast.rkt" "parse.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+	   '("interp.rkt" "ast.rkt" "parse.rkt" "compile.rkt" "types.rkt"))
 
+@(ev `(current-directory ,(path->string (build-path notes "extort"))))
+@(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 
 @title[#:tag "Extort"]{Extort: when errors exist}
 
@@ -145,10 +147,14 @@ Here's the code we generate for @racket['(add1 #f)]:
 (displayln (asm-string (compile (Prim1 'add1 (Bool #f)))))
 ]
 
+@(void (ev '(current-objs '("runtime.o"))))
+
 Here are some examples running the compiler:
 @ex[
 (define (tell e)
-  (asm-interp (compile (parse e))))
+  (match (asm-interp (compile (parse e)))
+    ['err 'err]
+    [b (bits->value b)]))
 (tell #t)
 (tell #f)
 (tell '(zero? 0))
@@ -168,7 +174,9 @@ usual way again:
 
 @ex[
 (define (check-correctness e)
-  (check-equal? (asm-interp (compile e))
+  (check-equal? (match (asm-interp (compile e))
+                  ['err 'err]
+                  [b (bits->value b)])
                 (interp e)
                 e))
 

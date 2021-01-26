@@ -22,7 +22,7 @@
 	   '("interp.rkt" "interp-io.rkt" "compile.rkt" "ast.rkt" "parse.rkt"))
 
 @(ev `(current-directory ,(path->string (build-path notes "evildoer"))))
-@(void (ev '(with-output-to-string (thunk (system "make byte-shared.o")))))
+@(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 
 @title[#:tag "Evildoer"]{Evildoer: change the world a couple nibbles at a time}
 
@@ -691,7 +691,7 @@ function from before, we can do the following:
         (Call 'dbl)
         (Ret)))]
 
-@;{
+
 The other issue is bit uglier to deal with. We need to do
 this redirection at the C-level. Our solution is write an
 alternative version of @tt{byte.o} that has functions for
@@ -702,14 +702,16 @@ library that implements these functions and will use them to
 set up temporary files and redirect input and output there.
 It's a hack, but a useful one.
 
+@;{
 You can see the alternative implementation of @tt{io.c} in
 @link["code/evildoer/byte-shared.c"]{@tt{byte-shared.c}} if
 interested. Once compiled, it can be used with
 @racket[current-objs] in order to interactively run examples
 involving IO:
+}
 
 @ex[
- (current-objs '("byte-shared.o"))
+ (current-objs '("runtime.o"))
  (asm-interp/io
    (prog (Extern 'read_byte)
          (Extern 'write_byte)
@@ -720,4 +722,3 @@ involving IO:
          (Mov 'rax 42)
          (Ret))
    "a")]
-}
