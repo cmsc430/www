@@ -131,4 +131,6 @@
       "\tglobal " (label-symbol->string g) "\n"
       "\tdefault rel\n"
       "\tsection .text\n"
-      (foldl (λ (i s) (string-append s (instr->string i))) "" a))]))
+      (foldl (λ (i s) (string-append s (instr->string i))) "" a))]
+    [_
+     (error "program does not have an initial label")]))
