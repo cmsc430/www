@@ -170,9 +170,9 @@
 ;; prevent confusing error messages as the nasm level
 (define (prog . xs)
   (let ((p (apply seq xs)))
-    (check-unique-label-decls xs)
-    (check-label-targets-declared xs)
-    (check-has-initial-label xs)
+    (check-unique-label-decls p)
+    (check-label-targets-declared p)
+    (check-has-initial-label p)
     ;; anything else?
     p))
 
