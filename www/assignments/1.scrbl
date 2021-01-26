@@ -1,7 +1,7 @@
 #lang scribble/manual
 @title[#:tag "Assignment 1" #:style 'unnumbered]{Assignment 1: Learning about Programming Languages}
 
-@bold{Due: Thurs, September 10, 11:59PM}
+@bold{Due: Thurs, January 28, 11:59PM}
 
 Find a single programming language that is new to you, and answer the following questions:
 
@@ -26,7 +26,7 @@ anything?}
 
 
 You should exclude the following languages from your search: C, C++,
-C#, Haskell, Java, Javascript, FORTRAN, LISP, OCaml, Pascal, Perl, Python,
+C#, Java, Javascript, FORTRAN, LISP, OCaml, Pascal, Perl, Python,
 Racket, Ruby, Scheme, SML, Visual Basic.
 
 @section[#:style 'unnumbered]{What to turn in}
