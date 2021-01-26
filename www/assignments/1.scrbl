@@ -3,7 +3,7 @@
 
 @bold{Due: Tuesday, February 2, 11:59PM}
 
-Find a single programming language that is new to you, and answer the following questions:
+Find two programming languages that are new to you, and answer the following questions:
 
 @itemlist[#:style 'ordered
 
