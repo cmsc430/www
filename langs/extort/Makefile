@@ -10,20 +10,17 @@ endif
 %.run: %.o runtime.o
 	gcc runtime.o $< -o $@
 
-runtime.o: main.o char.o io.o io_set.o
-	ld -r main.o char.o io.o io_set.o -o runtime.o
+runtime.o: main.o char.o io.o
+	ld -r main.o char.o io.o -o runtime.o
 
-main.o: main.c types.h
+main.o: main.c types.h runtime.h
 	gcc -fPIC -c main.c -o main.o
 
 char.o: char.c types.h
 	gcc -fPIC -c char.c -o char.o
 
-io.o: io.c io.h
+io.o: io.c runtime.h
 	gcc -fPIC -c io.c -o io.o
-
-io_set.o: io_set.c io.h
-	gcc -fPIC -c io_set.c -o io_set.o
 
 %.o: %.s
 	nasm -f $(format) -o $@ $<
