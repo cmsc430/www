@@ -51,7 +51,14 @@
            t.so))
 
   (define libt.so (ffi-lib t.so))
-  (define entry (get-ffi-obj "entry" libt.so (_fun _-> _int64)))
+
+  (define init-label
+    (match (findf Label? a)
+      [(Label l) l]
+      [_ (error "no initial label found")]))
+
+  (define entry
+    (get-ffi-obj init-label libt.so (_fun _-> _int64)))
 
   ;; install our own `error_handler` procedure to prevent `exit` calls
   ;; from interpreted code bringing down the parent process.  All of
