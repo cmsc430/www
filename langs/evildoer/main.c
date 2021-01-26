@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include "types.h"
+#include "runtime.h"
 
-int64_t entry();
 void print_result(int64_t);
 void print_char(int64_t);
 
 int main(int argc, char** argv) {
+  in = stdin;
+  out = stdout;
   print_result(entry());
   return 0;
 }
