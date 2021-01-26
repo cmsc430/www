@@ -19,6 +19,8 @@
     [(Char c) c]
     [(Eof) eof]
     [(Prim0 'read-byte) (read-byte)]
+    [(Prim0 'peek-byte) (peek-byte)]
+    [(Prim0 'void) (void)]
     [(Prim1 p e0)
      (match (interp e0)       
        ['err 'err]
