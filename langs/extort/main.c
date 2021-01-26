@@ -2,8 +2,8 @@
 #include <inttypes.h>
 #include <stdlib.h>
 #include "types.h"
+#include "runtime.h"
 
-int64_t entry();
 void print_result(int64_t);
 void print_char(int64_t);
 
@@ -12,15 +12,12 @@ void error_exit() {
   exit(1);
 }
 
-void (*error_handler)() = error_exit;
-
 void raise_error() {
   return error_handler();
 }
 
 int main(int argc, char** argv) {
   error_handler = &error_exit;
-
   print_result(entry());
   return 0;
 }

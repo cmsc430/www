@@ -17,6 +17,15 @@
 (define (asm-interp a)
   (asm-interp/io a #f))
 
+(define fopen
+  (get-ffi-obj "fopen" (ffi-lib #f) (_fun _path _string/utf-8 _-> _pointer)))
+
+(define fflush
+  (get-ffi-obj "fflush" (ffi-lib #f) (_fun _pointer _-> _void)))
+
+(define fclose
+  (get-ffi-obj "fclose" (ffi-lib #f) (_fun _pointer _-> _void)))
+
 ;; Asm String -> (cons Value String)
 ;; Like asm-interp, but uses given string for input and returns
 ;; result with string output
@@ -57,17 +66,29 @@
   (delete-file t.so)
   (if input
       (let ()
-        (define set-io!
-          (get-ffi-obj "set_io" libt.so (_fun _path _path _-> _void)))
-        (define close-io!
-          (get-ffi-obj "close_io" libt.so (_fun _-> _void)))
+        (unless (and (ffi-obj-ref "in" libt.so (thunk #f))
+                     (ffi-obj-ref "out" libt.so (thunk #f)))
+          (error "asm-interp/io: running in IO mode without IO linkage"))
+
         (with-output-to-file t.in #:exists 'truncate
           (thunk (display input)))
-        (set-io! t.in t.out)
+
+        (define current-in
+          (make-c-parameter "in" libt.so _pointer))
+        (define current-out
+          (make-c-parameter "out" libt.so _pointer))
+
+        (current-in  (fopen t.in "r"))
+        (current-out (fopen t.out "w"))
+
         (define result
           (with-handlers ((symbol? identity))
             (entry)))
-        (close-io!)
+
+        (fflush (current-out))
+        (fclose (current-in))
+        (fclose (current-out))
+
         (define output (file->string t.out))
         (delete-file t.in)
         (delete-file t.out)
