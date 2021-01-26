@@ -34,7 +34,7 @@
         (displayln (asm-string a)))))
 
   (system
-   (format "nasm -f ~a ~a && gcc -fPIC -shared ~a ~a -o ~a"
+   (format "nasm -f ~a ~a && gcc -shared ~a ~a -o ~a"
            (if (eq? (system-type 'os) 'macosx) 'macho64 'elf64)
            t.s
            t.o
@@ -44,11 +44,12 @@
   (define libt.so (ffi-lib t.so))
   (define entry (get-ffi-obj "entry" libt.so (_fun _-> _int64)))
 
-  ;; install our own `error` procedure to prevent `exit` calls from interpreted code
-  ;; bringing down the parent process.  All of these hooks into the runtime need a better
-  ;; API and documentation, but this is a rough hack to make Extort work for now.
-  (when (ffi-obj-ref "error" t.so (thunk #f))
-    (set-ffi-obj! "error" t.so _pointer
+  ;; install our own `error_handler` procedure to prevent `exit` calls
+  ;; from interpreted code bringing down the parent process.  All of
+  ;; these hooks into the runtime need a better API and documentation,
+  ;; but this is a rough hack to make Extort work for now.
+  (when (ffi-obj-ref "error_handler" libt.so (thunk #f))
+    (set-ffi-obj! "error_handler" libt.so _pointer
                   (function-ptr (λ () (raise 'err)) (_fun _-> _void))))
   
   (delete-file t.s)

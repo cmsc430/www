@@ -7,7 +7,7 @@
   (prog (Extern 'peek_byte)
         (Extern 'read_byte)
         (Extern 'write_byte)
-        (Extern 'error)
+        (Extern 'raise_error)
         (Label 'entry)
         (Sub 'rsp 8)
         (compile-e e)
@@ -15,8 +15,7 @@
         (Ret)
         ;; Error handler
         (Label 'err)
-        (Lea 'rax 'error)
-        (Mov 'rax (Offset 'rax 0))
+	(Lea 'rax 'raise_error)
         (Call 'rax)
         (Add 'rsp 8)
         (Ret)))
