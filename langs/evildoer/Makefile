@@ -11,7 +11,7 @@ endif
 	gcc runtime.o $< -o $@
 
 runtime.o: main.o char.o io.o io_set.o
-	gcc -r main.o char.o io.o io_set.o -o runtime.o
+	ld -r main.o char.o io.o io_set.o -o runtime.o
 
 main.o: main.c types.h
 	gcc -c main.c -o main.o
