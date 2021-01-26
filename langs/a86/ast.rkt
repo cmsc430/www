@@ -170,8 +170,9 @@
 ;; prevent confusing error messages as the nasm level
 (define (prog . xs)
   (let ((p (apply seq xs)))
-    (check-unique-label-decls xs)
-    (check-label-targets-declared xs)
+    (check-unique-label-decls p)
+    (check-label-targets-declared p)
+    (check-has-initial-label p)
     ;; anything else?
     p))
 
@@ -228,3 +229,8 @@
     (let ((undeclared (set-subtract us ds)))
       (unless (set-empty? undeclared)
         (error 'prog "undeclared labels found: ~v" (set->list undeclared))))))
+
+;; Asm -> Void
+(define (check-has-initial-label asm)
+  (unless (findf Label? asm)
+    (error 'prog "no initial label found")))
