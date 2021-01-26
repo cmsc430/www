@@ -690,6 +690,7 @@ assembly code when running @racket[asm-interp].
 
  @itemlist[
 
+ @item{Programs have at least one label; the first label is used as the entry point.}
  @item{All label declarations are unique.}
  @item{All label targets are declared.}
  @item{... other properties may be added in the future.}
@@ -702,10 +703,10 @@ assembly code when running @racket[asm-interp].
  outermost level of a function that produces a86 code and not
  nested.
 
- @ex[
- (prog)
+ @ex[ 
  (prog (Label 'foo))
  (prog (list (Label 'foo)))
+ (eval:error (prog (Mov 'rax 32)))
  (eval:error (prog (Label 'foo)
                    (Label 'foo)))
  (eval:error (prog (Jmp 'foo)))
