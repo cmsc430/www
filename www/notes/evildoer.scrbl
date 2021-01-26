@@ -22,7 +22,7 @@
 	   '("interp.rkt" "interp-io.rkt" "compile.rkt" "ast.rkt" "parse.rkt"))
 
 @(ev `(current-directory ,(path->string (build-path notes "evildoer"))))
-@(void (ev '(with-output-to-string (thunk (system "make byte-shared.o")))))
+@(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 
 @title[#:tag "Evildoer"]{Evildoer: change the world a couple nibbles at a time}
 
@@ -342,7 +342,7 @@ will be new functions that implement @racket[read-byte],
 functions called @racket[read_byte], @racket[peek_byte] and
 @racket[write_byte]:
 
-@filebox-include[fancy-c "evildoer/byte.c"]
+@filebox-include[fancy-c "evildoer/io.c"]
 
 The main novely of the @emph{compiler} will be that emits code
 to make calls to these C functions.
@@ -666,7 +666,7 @@ to deal with.
 
 The first is that the @racket[asm-interp] utility doesn't
 know anything about the Evildoer run-time. Hence we need to
-tell @racket[asm-interp] to link in @tt{byte.o} when running
+tell @racket[asm-interp] to link it in when running
 an example; otherwise labels like @tt{byte_write} will be
 undefined.
 
@@ -682,13 +682,6 @@ object files to be linked against when running examples.
 So for example, to make an example with the @tt{dbl}
 function from before, we can do the following:
 
-
-@;{Sneakily recompile double.o with -fPIC. Should we be more
- upfront about this stuff? I don't want to get too down in
- the weeds on how asm-interp works. (This is needed on
- elf64.)}
-@(void (ev '(system "gcc -fPIC -c double.c -o double.o")))
-
 @ex[
  (current-objs '("double.o"))
  (asm-interp
@@ -697,6 +690,7 @@ function from before, we can do the following:
         (Mov 'rdi 21)
         (Call 'dbl)
         (Ret)))]
+
 
 The other issue is bit uglier to deal with. We need to do
 this redirection at the C-level. Our solution is write an
@@ -708,14 +702,16 @@ library that implements these functions and will use them to
 set up temporary files and redirect input and output there.
 It's a hack, but a useful one.
 
-You can see the alternative implementation of @tt{byte.c} in
+@;{
+You can see the alternative implementation of @tt{io.c} in
 @link["code/evildoer/byte-shared.c"]{@tt{byte-shared.c}} if
 interested. Once compiled, it can be used with
 @racket[current-objs] in order to interactively run examples
 involving IO:
+}
 
 @ex[
- (current-objs '("byte-shared.o"))
+ (current-objs '("runtime.o"))
  (asm-interp/io
    (prog (Extern 'read_byte)
          (Extern 'write_byte)
@@ -726,4 +722,3 @@ involving IO:
          (Mov 'rax 42)
          (Ret))
    "a")]
-
