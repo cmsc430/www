@@ -15,10 +15,7 @@
         (Ret)
         ;; Error handler
         (Label 'err)
-	(Lea 'rax 'raise_error)
-        (Call 'rax)
-        (Add 'rsp 8)
-        (Ret)))
+        (Call 'raise_error)))
 
 ;; Expr -> Asm
 (define (compile-e e)
