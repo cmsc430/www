@@ -17,6 +17,8 @@ void raise_error() {
 }
 
 int main(int argc, char** argv) {
+  in = stdin;
+  out = stdout;
   error_handler = &error_exit;
   print_result(entry());
   return 0;
