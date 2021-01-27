@@ -57,13 +57,6 @@
                      (Call 'peek_byte)
                      (move-env Add c))]))
 
-;; Op0 -> Asm
-#;
-(define (compile-prim0 p)
-  (match p
-    ['read-byte
-     (seq (Call 'read_byte))]))
-
 ;; Op1 Expr CEnv -> Asm
 (define (compile-prim1 p e c)
   (seq (compile-e e c)
