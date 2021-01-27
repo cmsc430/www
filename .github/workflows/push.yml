@@ -18,6 +18,7 @@ jobs:
       with:
         architecture: 'x64'
         distribution: 'full'
+	variant: 'CS'
         version: '7.9'
     - name: Build and test
       run: |
