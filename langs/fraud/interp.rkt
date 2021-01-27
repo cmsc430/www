@@ -23,9 +23,11 @@
     [(Int i) i]
     [(Bool b) b]
     [(Char c) c]
-    [(Eof) eof]
+    [(Eof) eof]       
     [(Var x) (lookup r x)]
     [(Prim0 'read-byte) (read-byte)]
+    [(Prim0 'peek-byte) (peek-byte)]
+    [(Prim0 'void) (void)]
     [(Prim1 p e)
      (match (interp-env e r)
        ['err 'err]

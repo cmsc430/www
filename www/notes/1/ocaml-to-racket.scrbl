@@ -438,7 +438,7 @@ the value, and the right-hand side expression is evaluated.  If the
 value doesn't match, the next pattern is tried, and so on.  It's an
 error if none of the patterns match.
 
-So for example, we can write a functiion that recognize even digits as:
+So for example, we can write a function that recognize even digits as:
 
 @ocaml-repl{
 # let even_digit n =

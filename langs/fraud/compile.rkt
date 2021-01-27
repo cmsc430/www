@@ -1,19 +1,26 @@
 #lang racket
 (provide (all-defined-out))
-(require "ast.rkt"
-         "types.rkt"
-         "asm/ast.rkt")
+(require "ast.rkt" "types.rkt" a86)
 
 ;; type CEnv = [Listof Variable]
 
 ;; Expr -> Asm
 (define (compile e)
-  (seq (Label 'entry)
-       (compile-e e '())
-       (Ret)
-       (Label 'err)
-       (Push 'rbp)
-       (Call 'error)))
+  (prog (Extern 'peek_byte)
+        (Extern 'read_byte)
+        (Extern 'write_byte)
+        (Extern 'raise_error)
+        (Label 'entry)
+        (Sub 'rsp 8)
+        (compile-e e '())
+        (Add 'rsp 8)
+        (Ret)
+        ;; Error handler
+        (Label 'err)
+	(Lea 'rax 'raise_error)
+        (Call 'rax)
+        (Add 'rsp 8)
+        (Ret)))
 
 ;; Expr CEnv -> Asm
 (define (compile-e e c)
@@ -23,7 +30,7 @@
     [(Char c)        (compile-value c)]
     [(Eof)           (compile-value eof)]
     [(Var x)         (compile-variable x c)]
-    [(Prim0 p)       (compile-prim0 p)]
+    [(Prim0 p)       (compile-prim0 p c)]
     [(Prim1 p e)     (compile-prim1 p e c)]
     [(Prim2 p e1 e2) (compile-prim2 p e1 e2 c)]
     [(If e1 e2 e3)   (compile-if e1 e2 e3 c)]
@@ -38,14 +45,17 @@
 (define (compile-variable x c)
   (let ((i (lookup x c)))       
     (seq (Mov 'rax (Offset 'rsp i)))))
-    
-;; Op0 -> Asm
-(define (compile-prim0 p)
+
+;; Op0 CEnv -> Asm
+(define (compile-prim0 p c)
   (match p
-    ['read-byte
-     (seq (Push 'rbp)
-          (Call 'read_byte)
-          (Pop 'rbp))]))
+    ['void      (seq (Mov 'rax val-void))]
+    ['read-byte (seq (move-env Sub c)
+                     (Call 'read_byte)
+                     (move-env Add c))]
+    ['peek-byte (seq (move-env Sub c)
+                     (Call 'peek_byte)
+                     (move-env Add c))]))
 
 ;; Op1 Expr CEnv -> Asm
 (define (compile-prim1 p e c)
@@ -92,10 +102,10 @@
                  (Label l1)))]
          ['write-byte
           (seq assert-byte
-               (Push 'rbp)
+               (move-env Sub c)
                (Mov 'rdi 'rax)
                (Call 'write_byte)
-               (Pop 'rbp)
+               (move-env Add c)
                (Mov 'rax val-void))])))
 
 ;; Op2 Expr Expr CEnv -> Asm
@@ -106,14 +116,16 @@
          (compile-e e2 (cons #f c))       
          (match p
            ['+
-            (seq (assert-integer (Offset 'rsp i))
-                 (assert-integer 'rax)   
-                 (Add 'rax (Offset 'rsp i)))]
+            (seq (Mov 'r8 (Offset 'rsp i))
+                 (assert-integer 'r8)
+                 (assert-integer 'rax)
+                 (Add 'rax 'r8))]
            ['-
-            (seq (assert-integer (Offset 'rsp i))
-                 (assert-integer 'rax)   
-                 (Sub (Offset 'rsp i) 'rax)
-                 (Mov 'rax (Offset 'rsp i)))]))))
+            (seq (Mov 'r8 (Offset 'rsp i))
+                 (assert-integer 'r8)
+                 (assert-integer 'rax)
+                 (Sub 'r8 'rax)
+                 (Mov 'rax 'r8))]))))
 
 ;; Expr Expr Expr CEnv -> Asm
 (define (compile-if e1 e2 e3 c)
@@ -142,6 +154,15 @@
 ;; CEnv -> Integer
 (define (next c)
   (- (* 8 (add1 (length c)))))
+
+;; CEnv -> Asm
+;; Adjust 'rsp to save/restore current environment
+;; dir is either Sub (to save) or Add (to restore)
+(define (move-env dir c)
+  (let ((l (length c)))
+    (cond [(zero? l) (seq)] ; special case
+          [(even? l) (seq (dir 'rsp (* 8 l)))]
+          [(odd? l)  (seq (dir 'rsp (* 8 (add1 l))))])))
 
 ;; Id CEnv -> Integer
 (define (lookup x cenv)
