@@ -131,3 +131,7 @@
                     [(cons 'err o) (cons 'err o)]
                     [(cons r o)
                      (cons (bits->value r) o)])))
+
+;; run command line compiler and compare against Racket as refernece implementation
+(require rackunit "../../test-programs/get-progs.rkt")
+(for-each test-prog (get-progs "fraud"))
