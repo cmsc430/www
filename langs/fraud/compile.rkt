@@ -1,19 +1,26 @@
 #lang racket
 (provide (all-defined-out))
-(require "ast.rkt"
-         "types.rkt"
-         "asm/ast.rkt")
+(require "ast.rkt" "types.rkt" a86)
 
 ;; type CEnv = [Listof Variable]
 
 ;; Expr -> Asm
 (define (compile e)
-  (seq (Label 'entry)
-       (compile-e e '())
-       (Ret)
-       (Label 'err)
-       (Push 'rbp)
-       (Call 'error)))
+  (prog (Extern 'peek_byte)
+        (Extern 'read_byte)
+        (Extern 'write_byte)
+        (Extern 'raise_error)
+        (Label 'entry)
+        (Sub 'rsp 8)
+        (compile-e e '())
+        (Add 'rsp 8)
+        (Ret)
+        ;; Error handler
+        (Label 'err)
+	(Lea 'rax 'raise_error)
+        (Call 'rax)
+        (Add 'rsp 8)
+        (Ret)))
 
 ;; Expr CEnv -> Asm
 (define (compile-e e c)
@@ -38,8 +45,16 @@
 (define (compile-variable x c)
   (let ((i (lookup x c)))       
     (seq (Mov 'rax (Offset 'rsp i)))))
-    
+
 ;; Op0 -> Asm
+(define (compile-prim0 p)
+  (match p
+    ['void      (seq (Mov 'rax val-void))]
+    ['read-byte (seq (Call 'read_byte))]
+    ['peek-byte (seq (Call 'peek_byte))]))
+
+;; Op0 -> Asm
+#;
 (define (compile-prim0 p)
   (match p
     ['read-byte
@@ -92,10 +107,8 @@
                  (Label l1)))]
          ['write-byte
           (seq assert-byte
-               (Push 'rbp)
                (Mov 'rdi 'rax)
                (Call 'write_byte)
-               (Pop 'rbp)
                (Mov 'rax val-void))])))
 
 ;; Op2 Expr Expr CEnv -> Asm
@@ -106,14 +119,16 @@
          (compile-e e2 (cons #f c))       
          (match p
            ['+
-            (seq (assert-integer (Offset 'rsp i))
-                 (assert-integer 'rax)   
-                 (Add 'rax (Offset 'rsp i)))]
+            (seq (Mov 'r8 (Offset 'rsp i))
+                 (assert-integer 'r8)
+                 (assert-integer 'rax)
+                 (Add 'rax 'r8))]
            ['-
-            (seq (assert-integer (Offset 'rsp i))
-                 (assert-integer 'rax)   
-                 (Sub (Offset 'rsp i) 'rax)
-                 (Mov 'rax (Offset 'rsp i)))]))))
+            (seq (Mov 'r8 (Offset 'rsp i))
+                 (assert-integer 'r8)
+                 (assert-integer 'rax)
+                 (Sub 'r8 'rax)
+                 (Mov 'rax 'r8))]))))
 
 ;; Expr Expr Expr CEnv -> Asm
 (define (compile-if e1 e2 e3 c)
