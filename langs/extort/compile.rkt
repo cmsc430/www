@@ -88,10 +88,8 @@
                  (Label l1)))]
          ['write-byte
           (seq assert-byte
-               (Push 'rbp)
                (Mov 'rdi 'rax)
                (Call 'write_byte)
-               (Pop 'rbp)
                (Mov 'rax val-void))])))
 
 ;; Expr Expr Expr -> Asm

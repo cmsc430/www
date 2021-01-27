@@ -1,10 +1,17 @@
 #lang racket
 (require "../compile.rkt"
          "../interp.rkt"
-         "../interp-io.rkt"
-         "../asm/interp.rkt"
+         "../interp-io.rkt"         
          "../parse.rkt"
+         "../types.rkt"
+         a86
          rackunit)
+
+;; link with runtime for IO operations
+(unless (file-exists? "../runtime.o")
+  (system "make -C .. runtime.o"))
+(current-objs
+ (list (path->string (normalize-path "../runtime.o"))))
 
 (define (test-runner run)
   
@@ -83,19 +90,44 @@
                 7))
 
 (test-runner (λ (e) (interp (parse e))))
-(test-runner (λ (e) (asm-interp (compile (parse e)))))
+(test-runner (λ (e) (match (asm-interp (compile (parse e)))
+                      ['err 'err]
+                      [bs (bits->value bs)])))
 
 (define (test-runner-io run)
   ;; Evildoer examples
-  (check-equal? (run 7 "") "7\n")
-  (check-equal? (run '(write-byte 97) "") "a")
-  (check-equal? (run '(read-byte) "a") "97\n")
-  (check-equal? (run '(begin (write-byte 97) (read-byte)) "b") "a98\n")
-  (check-equal? (run '(read-byte) "") "#<eof>\n")
-  (check-equal? (run '(eof-object? (read-byte)) "") "#t\n")
-  (check-equal? (run '(eof-object? (read-byte)) "a") "#f\n")
-  (check-equal? (run '(begin (write-byte 97) (write-byte 98)) "") "ab"))
+  (check-equal? (run 7 "") (cons 7 ""))
+  (check-equal? (run '(write-byte 97) "") (cons (void) "a"))
+  (check-equal? (run '(read-byte) "a") (cons 97 ""))
+  (check-equal? (run '(begin (write-byte 97) (read-byte)) "b")
+                (cons 98 "a"))
+  (check-equal? (run '(read-byte) "") (cons eof ""))
+  (check-equal? (run '(eof-object? (read-byte)) "") (cons #t ""))
+  (check-equal? (run '(eof-object? (read-byte)) "a") (cons #f ""))
+  (check-equal? (run '(begin (write-byte 97) (write-byte 98)) "")
+                (cons (void) "ab"))
+
+  (check-equal? (run '(peek-byte) "ab") (cons 97 ""))
+  (check-equal? (run '(begin (peek-byte) (read-byte)) "ab") (cons 97 ""))
+  ;; Extort examples
+  (check-equal? (run '(write-byte #t) "") (cons 'err ""))
+
+  ;; Fraud examples
+  (check-equal? (run '(let ((x 97)) (write-byte x)) "") (cons (void) "a"))
+  (check-equal? (run '(let ((x 97))
+                        (begin (write-byte x)
+                               x))
+                     "")
+                (cons 97 "a"))
+  (check-equal? (run '(let ((x 97)) (begin (read-byte) x)) "b")
+                (cons 97 ""))
+  (check-equal? (run '(let ((x 97)) (begin (peek-byte) x)) "b")
+                (cons 97 "")))
   
 
 (test-runner-io (λ (e s) (interp/io (parse e) s)))
-(test-runner-io (λ (e s) (asm-interp/io (compile (parse e)) s)))
+(test-runner-io (λ (e s)
+                  (match (asm-interp/io (compile (parse e)) s)
+                    [(cons 'err o) (cons 'err o)]
+                    [(cons r o)
+                     (cons (bits->value r) o)])))
