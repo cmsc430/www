@@ -2,6 +2,12 @@
 (provide (all-defined-out))
 (require "ast.rkt" "types.rkt" a86/ast)
 
+;; Registers used
+(define rax 'rax)
+(define rbx 'rbx)
+(define rsp 'rsp)
+(define rdi 'rdi)
+
 ;; Expr -> Asm
 (define (compile e)
   (prog (Extern 'peek_byte)
@@ -9,16 +15,13 @@
         (Extern 'write_byte)
         (Extern 'raise_error)
         (Label 'entry)
-        (Sub 'rsp 8)
+        (Sub rsp 8)
         (compile-e e)
-        (Add 'rsp 8)
+        (Add rsp 8)
         (Ret)
         ;; Error handler
         (Label 'err)
-	(Lea 'rax 'raise_error)
-        (Call 'rax)
-        (Add 'rsp 8)
-        (Ret)))
+        (Call 'raise_error)))
 
 ;; Expr -> Asm
 (define (compile-e e)
@@ -34,12 +37,12 @@
 
 ;; Value -> Asm
 (define (compile-value v)
-  (seq (Mov 'rax (value->bits v))))
+  (seq (Mov rax (value->bits v))))
 
 ;; Op0 -> Asm
 (define (compile-prim0 p)
   (match p
-    ['void      (seq (Mov 'rax val-void))]
+    ['void      (seq (Mov rax val-void))]
     ['read-byte (seq (Call 'read_byte))]
     ['peek-byte (seq (Call 'peek_byte))]))
 
@@ -49,55 +52,55 @@
        (match p
          ['add1
           (seq assert-integer
-               (Add 'rax (value->bits 1)))]
+               (Add rax (value->bits 1)))]
          ['sub1
           (seq assert-integer
-               (Sub 'rax (value->bits 1)))]         
+               (Sub rax (value->bits 1)))]         
          ['zero?
           (let ((l1 (gensym)))
             (seq assert-integer
-                 (Cmp 'rax 0)
-                 (Mov 'rax val-true)
+                 (Cmp rax 0)
+                 (Mov rax val-true)
                  (Je l1)
-                 (Mov 'rax val-false)
+                 (Mov rax val-false)
                  (Label l1)))]
          ['char?
           (let ((l1 (gensym)))
-            (seq (And 'rax mask-char)
-                 (Xor 'rax type-char)
-                 (Cmp 'rax 0)
-                 (Mov 'rax val-true)
+            (seq (And rax mask-char)
+                 (Xor rax type-char)
+                 (Cmp rax 0)
+                 (Mov rax val-true)
                  (Je l1)
-                 (Mov 'rax val-false)
+                 (Mov rax val-false)
                  (Label l1)))]
          ['char->integer
           (seq assert-char
-               (Sar 'rax char-shift)
-               (Sal 'rax int-shift))]
+               (Sar rax char-shift)
+               (Sal rax int-shift))]
          ['integer->char
           (seq assert-codepoint
-               (Sar 'rax int-shift)
-               (Sal 'rax char-shift)
-               (Xor 'rax type-char))]
+               (Sar rax int-shift)
+               (Sal rax char-shift)
+               (Xor rax type-char))]
          ['eof-object?
           (let ((l1 (gensym)))
-            (seq (Cmp 'rax val-eof)
-                 (Mov 'rax val-true)
+            (seq (Cmp rax val-eof)
+                 (Mov rax val-true)
                  (Je l1)
-                 (Mov 'rax val-false)
+                 (Mov rax val-false)
                  (Label l1)))]
          ['write-byte
           (seq assert-byte
-               (Mov 'rdi 'rax)
+               (Mov rdi rax)
                (Call 'write_byte)
-               (Mov 'rax val-void))])))
+               (Mov rax val-void))])))
 
 ;; Expr Expr Expr -> Asm
 (define (compile-if e1 e2 e3)
   (let ((l1 (gensym 'if))
         (l2 (gensym 'if)))
     (seq (compile-e e1)
-         (Cmp 'rax val-false)
+         (Cmp rax val-false)
          (Je l1)
          (compile-e e2)
          (Jmp l2)
@@ -111,9 +114,9 @@
        (compile-e e2)))
 
 (define (assert-type mask type)
-  (seq (Mov 'rbx 'rax)
-       (And 'rbx mask)
-       (Cmp 'rbx type)
+  (seq (Mov rbx rax)
+       (And rbx mask)
+       (Cmp rbx type)
        (Jne 'err)))
 
 (define assert-integer
@@ -124,21 +127,21 @@
 (define assert-codepoint
   (let ((ok (gensym)))
     (seq assert-integer
-         (Cmp 'rax (value->bits 0))
+         (Cmp rax (value->bits 0))
          (Jl 'err)
-         (Cmp 'rax (value->bits 1114111))
+         (Cmp rax (value->bits 1114111))
          (Jg 'err)
-         (Cmp 'rax (value->bits 55295))
+         (Cmp rax (value->bits 55295))
          (Jl ok)
-         (Cmp 'rax (value->bits 57344))
+         (Cmp rax (value->bits 57344))
          (Jg ok)
          (Jmp 'err)
          (Label ok))))
        
 (define assert-byte
   (seq assert-integer
-       (Cmp 'rax (value->bits 0))
+       (Cmp rax (value->bits 0))
        (Jl 'err)
-       (Cmp 'rax (value->bits 255))
+       (Cmp rax (value->bits 255))
        (Jg 'err)))
        
