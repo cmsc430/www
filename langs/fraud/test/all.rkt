@@ -110,7 +110,19 @@
   (check-equal? (run '(peek-byte) "ab") (cons 97 ""))
   (check-equal? (run '(begin (peek-byte) (read-byte)) "ab") (cons 97 ""))
   ;; Extort examples
-  (check-equal? (run '(write-byte #t) "") (cons 'err "")))
+  (check-equal? (run '(write-byte #t) "") (cons 'err ""))
+
+  ;; Fraud examples
+  (check-equal? (run '(let ((x 97)) (write-byte x)) "") (cons (void) "a"))
+  (check-equal? (run '(let ((x 97))
+                        (begin (write-byte x)
+                               x))
+                     "")
+                (cons 97 "a"))
+  (check-equal? (run '(let ((x 97)) (begin (read-byte) x)) "b")
+                (cons 97 ""))
+  (check-equal? (run '(let ((x 97)) (begin (peek-byte) x)) "b")
+                (cons 97 "")))
   
 
 (test-runner-io (λ (e s) (interp/io (parse e) s)))
