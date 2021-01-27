@@ -15,8 +15,12 @@
 
 @(define codeblock-include (make-codeblock-include #'h))
 
-@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "fraud" f))))))
-	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt" "ast.rkt" "parse.rkt"))
+@(ev '(require rackunit a86))
+@(ev `(current-directory ,(path->string (build-path notes "fraud"))))
+@(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
+@(for-each (λ (f) (ev `(require (file ,f))))
+	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
+
 
 @title[#:tag "Fraud"]{Fraud: local binding, variables, and binary operations}
 
@@ -26,7 +30,8 @@
 
 @verbatim|{
 TODO:
-* Update the "fake" ASM AST defn given
+* Write about stack adjust around C calls
+* Push/pop etc. discussed in a86; update writing here
 * Note that semantics is for (pure) subset
 * Update random testing for full language
 * Smooth out combination with Grift
@@ -533,19 +538,6 @@ we push every time we enter a let and pop every time we leave, the
 number of bindings between an occurrence and its binder is exactly the
 offset from the top of the stack we need use.
 
-@filebox-include-fake[codeblock "fraud/asm/ast.rkt"]{
-#lang racket
-;; type Arg =
-;; ...
-;; | `(offset ,Reg ,Integer)
- 
-;; type Reg =
-;; ...
-;; | `rsp
-}
-
-@;codeblock-include["fraud/asm/printer.rkt"]
-
 @codeblock-include["fraud/compile.rkt"]
 
 
@@ -563,10 +555,14 @@ offset from the top of the stack we need use.
 (show '(let ((x 7)) (let ((x (add1 x))) x)))
 ]
 
+@(void (ev '(current-objs '("runtime.o"))))
+
 And running the examples:
 @ex[
 (define (tell e)
-  (asm-interp (compile (parse e))))
+  (match (asm-interp (compile (parse e)))
+    ['err 'err]
+    [b (bits->value b)]))
 (eval:error (tell 'x))
 (tell '(let ((x 7)) x))
 (tell '(let ((x 7)) 2))
