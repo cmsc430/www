@@ -508,7 +508,7 @@ structure abstraction here; there's just raw memory and
 registers. But so long as code abides by conventions, the
 illusion turns out to be the true state of affairs.
 
-What's really go on under the hood of @racket[Push] and
+What's really going on under the hood of @racket[Push] and
 @racket[Pop] is that the @racket['rsp] register is
 decremented and the value is written to the memory location
 pointed to by the value of @racket['rsp].
@@ -540,7 +540,7 @@ impression that there is a notion of a procedure and
 procedure call mechanism in assembly, but actually there's
 no such thing.
 
-Think for a moment about what it means to "call" @racket['f]
+Think for a moment about what it means to ``call'' @racket['f]
 in the examples above. When executing @racket[(Call 'f)],
 control jumps to the instruction following
 @racket[(Label 'f)]. When we then get to @racket[(Ret)],
@@ -557,7 +557,7 @@ Just as we could write equivalent code without @racket[Push]
 and @racket[Pop], we can write the same code without
 @racket[Call] and @racket[Ret].
 
-We do new one new trick, which is the @racket[Lea]
+We do need one new trick, which is the @racket[Lea]
 instruction, which loads an effective address. You can think
 of it like @racket[Mov] except that it loads the address of
 something rather than what is pointed to by an address.  For our
@@ -627,11 +627,10 @@ The above shows how to encode @racket[Call] as @racket[Lea],
 
 @margin-note{The a86 language may evolve some over the
  course of the semester, but we will aim to document any
- changes by updating this section. Each language has it's own
- version of x86 which only contains the instructions it
- needs. Also, because the run-time system changes for each
- language, you may see some differences with what
- @racket[asm-interp] produces.}
+ changes by updating this section. Also, because the run-time
+ system changes for each language, you may need to do some
+ work to have @racket[asm-interp] cooperate with your
+ run-time system.}
 
 This section describes the instruction set of a86.
 
