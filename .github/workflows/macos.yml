@@ -1,0 +1,26 @@
+on:
+  - push
+
+jobs:
+  build-and-test:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@main
+    - name: Install dependencies
+      run: |
+        brew install pandoc
+        brew install nasm
+    - name: Install Racket
+      uses: Bogdanp/setup-racket@v0.10
+      with:
+        architecture: 'x64'
+        distribution: 'full'
+	variant: 'CS'
+        version: '7.9'
+    - name: Build and test
+      run: |
+        raco pkg install langs/
+        raco make www/main.scrbl
+        raco test langs
+        make -C www main
