@@ -8,7 +8,7 @@ test: clean
 	raco test .
 
 $(course):
-	scribble --htmls \
+	raco scribble --htmls \
 		++style css/extra.css \
 		++style css/fancyverb.css \
 		++extra js/accessibility.js \
