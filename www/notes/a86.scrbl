@@ -56,13 +56,22 @@ int main(int argc, char** argv) {
 }
 HERE
      )
+
+   (define gcd.c
+     #<<HERE
+int gcd(int n1, int n2) {
+    return (n2 == 0) ? n1 : gcd(n2, n1 % n2);
+}
+HERE
+     )
+
+   (define (save-file f s)
+     (with-output-to-file f (λ () (display s)) #:exists 'replace))
+      
    (parameterize ([current-directory (build-path notes "a86")])
-     (with-output-to-file "tri.s"
-      (λ () (display (asm-string (tri 36))))
-      #:exists 'replace)
-     (with-output-to-file "main.c"
-      (λ () (display main.c))
-      #:exists 'replace)))
+     (save-file "tri.s" (asm-string (tri 36)))
+     (save-file "main.c" main.c)
+     (save-file "gcd.c" gcd.c)))
 
 
 @title[#:tag "a86"]{a86: a Little Assembly Language}
@@ -619,11 +628,9 @@ The above shows how to encode @racket[Call] as @racket[Lea],
  ]
 
 
+@section{a86 Reference}
 
-@section{Instruction set}
-
-@defmodule[a86]
-@;declare-exporting[ a86]
+@defmodule[a86 #:no-declare]
 
 @margin-note{The a86 language may evolve some over the
  course of the semester, but we will aim to document any
@@ -631,6 +638,14 @@ The above shows how to encode @racket[Call] as @racket[Lea],
  system changes for each language, you may need to do some
  work to have @racket[asm-interp] cooperate with your
  run-time system.}
+
+This module provides all of the bindings from
+@racketmodname[a86/ast],@racketmodname[a86/printer],
+and @racketmodname[a86/interp], described below
+
+@section{Instruction set}
+
+@defmodule[a86/ast]
 
 This section describes the instruction set of a86.
 
@@ -675,13 +690,6 @@ the current location of the stack.
  ]
 }
 
-@defparam[current-objs objs (listof path-string?) #:value '()]{
-
-Parameter that controls object files that will be linked in to
-assembly code when running @racket[asm-interp].
-
-}
-
 @defproc[(prog [x (or/c instruction? (listof instruction?))] ...) (listof instruction?)]{
 
  Like @racket[seq], but also checks that the instructions
@@ -713,38 +721,6 @@ assembly code when running @racket[asm-interp].
        (Jmp 'foo))
  ]
 }
-
-@defproc[(asm-string [is (listof instruction?)]) string?]{
-
- Converts an a86 program to a string in nasm syntax.
-
- @ex[
- (asm-string (prog (Label 'entry)
-                   (Mov 'rax 42)
-                   (Ret)))
- ]
-                                                          
-}
-
-@defproc[(asm-interp [is (listof instruction?)]) integer?]{
-
- Assemble, link, and execute an a86 program.
-
- @ex[
- (asm-interp (prog (Label 'entry)
-                   (Mov 'rax 42)
-                   (Ret)))
- ]
-                                                          
-}
-
-@defproc[(asm-interp/io [is (listof instruction?)] [in string?]) (cons integer? string?)]{
-
- Like @racket[asm-interp], but uses @racket[in] for input and produce the result along
- with any output as a string.
-                                                          
-}
-
 
 @defstruct*[Offset ([r register?] [i exact-integer?])]{
 
@@ -1090,8 +1066,141 @@ assembly code when running @racket[asm-interp].
  ]
 }
 
-@;{
-(struct Extern (s)    #:prefab)
+@section{From a86 to x86}
+
+@defmodule[a86/printer]
+
+@defproc[(asm-string [is (listof instruction?)]) string?]{
+
+ Converts an a86 program to a string in nasm syntax. This is
+ useful in concert with Racket functions for IO in order to
+ write programs using concrete syntax that can be passed to
+ @tt{nasm}.
+
+ @ex[
+ (asm-string (prog (Label 'entry)
+                   (Mov 'rax 42)
+                   (Ret)))
+
+ (display
+  (asm-string (prog (Label 'entry)
+                    (Mov 'rax 42)
+                    (Ret))))
+ ]
+                                                          
+}
+
+@section{An Interpreter for a86}
+
+@defmodule[a86/interp]
+
+As you've seen throughout this chapter, @racketmodname[a86]
+is equiped with an interpreter, which enables you to run
+assembly programs from within Racket. This won't be directly
+useful in building a compiler, but it will be very handy for
+interactively exploring assembly programs and making examples
+and test cases for your compiler.
+
+The simplest form of interpreting an a86 program is to use
+@racket[asm-interp].
+
+@defproc[(asm-interp [is (listof instruction?)]) integer?]{
+
+ Assemble, link, and execute an a86 program.
+
+ @ex[
+ (asm-interp (prog (Label 'entry)
+                   (Mov 'rax 42)
+                   (Ret)))
+ ]
+
+ Programs do not have to start with @racket['entry]. The
+ interpreter will jump to whatever the first label in the
+ program is:
+
+@ex[
+ (asm-interp (prog (Label 'f)
+                   (Mov 'rax 42)
+                   (Ret)))
+ ]
+
+ The argument of @racket[asm-interp] should be a complete,
+ well-formed a86 program. For best results, always use
+ @racket[prog] to construct the program so that error
+ checking is done early. If you use @racket[prog] and
+ @racket[asm-interp] and you get a NASM syntax error message,
+ please report it to the course staff as this is a bug in the
+ interpreter.
+
+ While we try to make syntax errors impossible, it is
+ possible---quite easy, in fact---to write well-formed, but
+ erroneous assembly programs. For example, this program tries
+ to jump to null, which causes a segmentation fault:
+
+ @ex[
+ (eval:error (asm-interp (prog (Label 'crash)
+                               (Mov 'rax 0)
+                               (Jmp 'rax))))
+ ]
+ 
+}
+
+It is often the case that we want our assembly programs to
+interact with the oustide or to use functionality
+implemented in other programming languages. For that reason,
+it is possible to link in object files to the running of an
+a86 program.
+
+The mechanism for controlling which objects should be linked
+in is a parameter called @racket[current-objs], which
+contains a list of paths to object files which are linked to
+the assembly code when it is interpreted.
+
+@defparam[current-objs objs (listof path-string?) #:value '()]{
+
+Parameter that controls object files that will be linked in to
+assembly code when running @racket[asm-interp].
 
 }
+
+For example, let's implement a GCD function in C:
+
+@filebox-include[fancy-c "a86/gcd.c"]
+
+First, compile the program to an object file:
+
+@shellbox["gcc -fPIC -c gcd.c -o gcd.o"]
+
+The option @tt{-fPIC} is important; it causes the C compiler
+to emit ``position independent code,'' which is what enables
+Racket to dynamically load and run the code.
+
+Once the object file exists, using the @racket[current-objs]
+parameter, we can run code that uses things defined in the C
+code:
+
+@ex[
+(parameterize ((current-objs '("gcd.o")))
+  (asm-interp (prog (Extern 'gcd)
+                    (Label 'f)
+                    (Mov 'rdi 11571)
+                    (Mov 'rsi 1767)
+                    (Sub 'rsp 8)
+                    (Call 'gcd)
+                    (Add 'rsp 8)
+                    (Ret))))]               
+
+
+This will be particularly relevant for writing a compiler
+where emitted code will make use of functionality defined in
+a runtime system.
+
+@defproc[(asm-interp/io [is (listof instruction?)] [in string?]) (cons integer? string?)]{
+
+ Like @racket[asm-interp], but uses @racket[in] for input and produce the result along
+ with any output as a string.
+                                                          
+}
+
+
 
