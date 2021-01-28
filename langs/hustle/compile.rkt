@@ -1,19 +1,37 @@
 #lang racket
 (provide (all-defined-out))
-(require "ast.rkt"
-         "types.rkt"
-         "asm/ast.rkt")
+(require "ast.rkt" "types.rkt" a86/ast)
+
+;; Registers used
+(define rax 'rax) ; return
+(define rbx 'rbx) ; heap
+(define r8  'r8)  ; scratch in make-string, string-set!, string-ref, +, -
+(define r9  'r9)  ; scratch in make-string, string-set!
+(define r10 'r10) ; scratch in assert-type
+(define rsp 'rsp) ; stack
+(define rdi 'rdi) ; arg
+
+;; need runtime hook
+;; Ops on memory
+;; clobbering callee saved registers
 
 ;; type CEnv = [Listof Variable]
 
 ;; Expr -> Asm
 (define (compile e)
-  (seq (Label 'entry)
-       (compile-e e '())
-       (Ret)
-       (Label 'err)
-       (Push 'rbp)
-       (Call 'error)))
+  (prog (Extern 'peek_byte)
+        (Extern 'read_byte)
+        (Extern 'write_byte)
+        (Extern 'raise_error)
+        (Label 'entry)
+        (Push rbx)
+        (Mov rbx rdi) ; recv heap pointer
+        (compile-e e '())
+        (Pop rbx)
+        (Ret)
+        ;; Error handler
+        (Label 'err)
+        (Call 'raise_error)))
 
 ;; Expr CEnv -> Asm
 (define (compile-e e c)
@@ -35,196 +53,178 @@
 
 ;; Value -> Asm
 (define (compile-value v)
-  (seq (Mov 'rax (imm->bits v))))
+  (seq (Mov rax (imm->bits v))))
 
 ;; String -> Asm
 (define (compile-string s)
   (let ((len (string-length s)))
-    (seq (Mov 'rax (imm->bits len))
-         (Mov (Offset 'rdi 0) 'rax)
+    (seq (Mov rax (imm->bits len))
+         (Mov (Offset rbx 0) rax)
          (compile-string-chars (string->list s) 1)
-         (Mov 'rax 'rdi)
-         (Or 'rax type-str)
-         (Add 'rdi (* 8 (add1 len))))))
+         (Mov rax rbx)
+         (Or rax type-str)
+         (Add rbx (* 8 (add1 len))))))
 
 ;; [Listof Char] Nat -> Asm
 (define (compile-string-chars cs i)
   (match cs
     ['() '()]
     [(cons c cs)
-     (seq (Mov 'rax (imm->bits c))
-          (Mov (Offset 'rdi (* i 8)) 'rax)
+     (seq (Mov rax (imm->bits c))
+          (Mov (Offset rbx (* i 8)) rax)
           (compile-string-chars cs (add1 i)))]))
 
 ;; Id CEnv -> Asm
 (define (compile-variable x c)
   (let ((i (lookup x c)))       
-    (seq (Mov 'rax (Offset 'rsp i)))))
-
-;; adjust in 16-byte alignments
-(define (stack-adjust c)
-  (let ((l (length c)))
-    (if (even? l)
-        (* 8 l)
-        (* 8 (add1 l)))))
+    (seq (Mov rax (Offset rsp i)))))
 
 ;; Op0 CEnv -> Asm
 (define (compile-prim0 p c)
   (match p
-    ['void (seq (Mov 'rax val-void))]
-    ['read-byte
-     (let ((l (stack-adjust c)))
-       (seq (Sub 'rsp l)
-            (Push 'rbp)
-            (Push 'rsp)
-            (Push 'rdi) ; save heap loc
-            (Mov 'rdi 'rax)
-            (Call 'read_byte)
-            (Pop 'rdi)
-            (Pop 'rsp)
-            (Pop 'rbp)
-            (Add 'rsp l)))]))
+    ['void      (seq (Mov rax val-void))]
+    ['read-byte (seq (move-env Sub c)
+                     (Call 'read_byte)
+                     (move-env Add c))]
+    ['peek-byte (seq (move-env Sub c)
+                     (Call 'peek_byte)
+                     (move-env Add c))]))
 
 ;; Op1 Expr CEnv -> Asm
 (define (compile-prim1 p e c)
   (seq (compile-e e c)
        (match p
          ['add1
-          (seq (assert-integer 'rax)
-               (Add 'rax (imm->bits 1)))]
+          (seq (assert-integer rax)
+               (Add rax (imm->bits 1)))]
          ['sub1
-          (seq (assert-integer 'rax)
-               (Sub 'rax (imm->bits 1)))]         
+          (seq (assert-integer rax)
+               (Sub rax (imm->bits 1)))]         
          ['zero?
           (let ((l1 (gensym)))
-            (seq (assert-integer 'rax)
-                 (Cmp 'rax 0)
-                 (Mov 'rax val-true)
+            (seq (assert-integer rax)
+                 (Cmp rax 0)
+                 (Mov rax val-true)
                  (Je l1)
-                 (Mov 'rax val-false)
+                 (Mov rax val-false)
                  (Label l1)))]
          ['char?
           (let ((l1 (gensym)))
-            (seq (And 'rax mask-char)
-                 (Xor 'rax type-char)
-                 (Cmp 'rax 0)
-                 (Mov 'rax val-true)
+            (seq (And rax mask-char)
+                 (Xor rax type-char)
+                 (Cmp rax 0)
+                 (Mov rax val-true)
                  (Je l1)
-                 (Mov 'rax val-false)
+                 (Mov rax val-false)
                  (Label l1)))]
          ['char->integer
-          (seq (assert-char 'rax)
-               (Sar 'rax char-shift)
-               (Sal 'rax int-shift))]
+          (seq (assert-char rax)
+               (Sar rax char-shift)
+               (Sal rax int-shift))]
          ['integer->char
           (seq assert-codepoint
-               (Sar 'rax int-shift)
-               (Sal 'rax char-shift)
-               (Xor 'rax type-char))]
+               (Sar rax int-shift)
+               (Sal rax char-shift)
+               (Xor rax type-char))]
          ['eof-object? (eq-imm val-eof)]
          ['write-byte
-          (let ((l (stack-adjust c)))
-            (seq assert-byte
-                 (Sub 'rsp l)
-                 (Push 'rbp)
-                 (Push 'rsp)
-                 (Push 'rdi) ; save heap loc
-                 (Mov 'rdi 'rax)
-                 (Call 'write_byte)
-                 (Pop 'rdi) ; restore
-                 (Pop 'rsp)
-                 (Pop 'rbp)
-                 (Add 'rsp l)
-                 (Mov 'rax val-void)))]
+          (seq assert-byte
+               (move-env Sub c)
+               (Mov rdi rax)
+               (Call 'write_byte)
+               (move-env Add c)
+               (Mov rax val-void))]
          ['box
-          (seq (Mov (Offset 'rdi 0) 'rax)
-               (Mov 'rax 'rdi)
-               (Or 'rax type-box)
-               (Add 'rdi 8))]
+          (seq (Mov (Offset rbx 0) rax)
+               (Mov rax rbx)
+               (Or rax type-box)
+               (Add rbx 8))]
          ['unbox
-          (seq (assert-box 'rax)
-               (Xor 'rax type-box)
-               (Mov 'rax (Offset 'rax 0)))]
+          (seq (assert-box rax)
+               (Xor rax type-box)
+               (Mov rax (Offset rax 0)))]
          ['car
-          (seq (assert-cons 'rax)
-               (Xor 'rax type-cons)
-               (Mov 'rax (Offset 'rax 8)))]
+          (seq (assert-cons rax)
+               (Xor rax type-cons)
+               (Mov rax (Offset rax 8)))]
          ['cdr
-          (seq (assert-cons 'rax)
-               (Xor 'rax type-cons)
-               (Mov 'rax (Offset 'rax 0)))]
+          (seq (assert-cons rax)
+               (Xor rax type-cons)
+               (Mov rax (Offset rax 0)))]
          ['empty? (eq-imm val-empty)]
          ['string?
           (type-pred ptr-mask type-str)]
          ['string-length
-          (seq (assert-str 'rax)
-               (Xor 'rax type-str)
-               (Mov 'rax (Offset 'rax 0)))])))
+          (seq (assert-str rax)
+               (Xor rax type-str)
+               (Mov rax (Offset rax 0)))])))
 
 ;; Op2 Expr Expr CEnv -> Asm
 (define (compile-prim2 p e1 e2 c)
   (let ((i (next c)))
     (seq (compile-e e1 c)
-         (Mov (Offset 'rsp i) 'rax)
+         (Mov (Offset rsp i) rax)
          (compile-e e2 (cons #f c))       
          (match p
            ['+
-            (seq (assert-integer (Offset 'rsp i))
-                 (assert-integer 'rax)   
-                 (Add 'rax (Offset 'rsp i)))]
+            (seq (Mov r8 (Offset rsp i))
+                 (assert-integer r8)
+                 (assert-integer rax)
+                 (Add rax r8))]
            ['-
-            (seq (assert-integer (Offset 'rsp i))
-                 (assert-integer 'rax)   
-                 (Sub (Offset 'rsp i) 'rax)
-                 (Mov 'rax (Offset 'rsp i)))]
+            (seq (Mov r8 (Offset rsp i))
+                 (assert-integer r8)
+                 (assert-integer rax)
+                 (Sub r8 rax)
+                 (Mov rax r8))]
            ['eq?
             (let ((l (gensym)))
-              (seq (Cmp 'rax (Offset 'rsp i))
-                   (Mov 'rax val-true)
+              (seq (Cmp rax (Offset rsp i))
+                   (Mov rax val-true)
                    (Je l)
-                   (Mov 'rax val-false)
+                   (Mov rax val-false)
                    (Label l)))]
            ['cons
-            (seq (Mov (Offset 'rdi 0) 'rax)
-                 (Mov 'rax (Offset 'rsp i))
-                 (Mov (Offset 'rdi 8) 'rax)
-                 (Mov 'rax 'rdi)
-                 (Or 'rax type-cons)
-                 (Add 'rdi 16))]
+            (seq (Mov (Offset rbx 0) rax)
+                 (Mov rax (Offset rsp i))
+                 (Mov (Offset rbx 8) rax)
+                 (Mov rax rbx)
+                 (Or rax type-cons)
+                 (Add rbx 16))]
            ;; This stuff makes assumptions about integers being tagged with #b0000          
            ['string-ref
-            (seq (Mov 'rcx (Offset 'rsp i))
-                 (assert-str 'rcx)
-                 (assert-integer 'rax)
-                 (Xor 'rcx type-str)
-                 ;(assert-bound 'rax 'rcx)
-                 (Sar 'rax 1)
-                 (Add 'rcx 'rax)
-                 (Mov 'rax (Offset 'rcx 8)))]
+            (seq (Mov r8 (Offset rsp i))
+                 (assert-str r8)
+                 (assert-integer rax)
+                 (Xor r8 type-str)
+                 ;assert-bound
+                 (Sar rax 1)
+                 (Add r8 rax)
+                 (Mov rax (Offset r8 8)))]
            ['make-string
             (let ((done (gensym))
                   (loop (gensym)))
-              (seq (assert-char 'rax)
-                   (assert-integer (Offset 'rsp i))
-                   (Mov 'rbx (Offset 'rsp i))
-                   ; assert-nat 'rsp[i]
-                   (Mov (Offset 'rdi 0) 'rbx) ; Write length
-                   (Mov 'rcx 'rbx)            ; Save length
-                   (Mov 'rbx 'rax)            ; Save char
+              (seq (assert-char rax)
+                   (assert-integer (Offset rsp i))
+                   (Mov r8 (Offset rsp i))
+                   ; assert-nat rsp[i]
+                   (Mov (Offset rbx 0) r8) ; Write length
+                   (Mov r9 r8)            ; Save length
+                   (Mov r8 rax)            ; Save char
                    
-                   (Mov 'rax 'rdi)            ; Put str addr in rax 
-                   (Or 'rax type-str)         ; Tag                   
-                   (Add 'rdi 8)               ; Allocate cell for length
-                   ;; DVH: I don't understand why not shifting 'rcx
+                   (Mov rax rbx)            ; Put str addr in rax 
+                   (Or rax type-str)         ; Tag                   
+                   (Add rbx 8)               ; Allocate cell for length
+                   ;; DVH: I don't understand why not shifting rcx
                    ;; and decrementing by (imm->bits 1) doesn't work
-                   (Sar 'rcx int-shift)
+                   (Sar r9 int-shift)
                    (Label loop)               ; Initialize string
-                   (Cmp 'rcx 0)
+                   (Cmp r9 0)
                    (Je done)
-                   ;(Mov 'rbx (imm->bits #\a))
-                   (Mov (Offset 'rdi 0) 'rbx)
-                   (Add 'rdi 8)
-                   (Sub 'rcx 1)
+                   ;(Mov rbx (imm->bits #\a))
+                   (Mov (Offset rbx 0) r8)
+                   (Add rbx 8)
+                   (Sub r9 1)
                    (Jmp loop)
                    (Label done)))]))))
 
@@ -233,31 +233,31 @@
   (let ((i (next c))
         (j (next (cons #f c))))        
     (seq (compile-e e1 c)
-         (Mov (Offset 'rsp i) 'rax)
+         (Mov (Offset rsp i) rax)
          (compile-e e2 (cons #f c))
-         (Mov (Offset 'rsp j) 'rax)
+         (Mov (Offset rsp j) rax)
          (compile-e e3 (cons #f (cons #f c)))
          (match p
            ['string-set!
-            (seq (Mov 'rcx (Offset 'rsp i))
-                 (Mov 'rdx (Offset 'rsp j))                 
-                 (assert-str 'rcx)
-                 (assert-integer 'rdx)
-                 (assert-char 'rax)
+            (seq (Mov r9 (Offset rsp i))
+                 (Mov r8 (Offset rsp j))                 
+                 (assert-str r9)
+                 (assert-integer r8)
+                 (assert-char rax)
                  ; assert-bounds j i
-                 (Xor 'rcx type-str)
-                 (Sar 'rdx (- int-shift 3))                 
-                 (Add 'rcx 'rdx)
-                 (Mov (Offset 'rcx 8) 'rax)
-                 (Mov 'rax val-void))]))))
+                 (Xor r9 type-str)
+                 (Sar r8 (- int-shift 3))                 
+                 (Add r9 r8)
+                 (Mov (Offset r9 8) rax)
+                 (Mov rax val-void))]))))
 
 ;; Imm -> Asm
 (define (eq-imm imm)
   (let ((l1 (gensym)))
-    (seq (Cmp 'rax imm)
-         (Mov 'rax val-true)
+    (seq (Cmp rax imm)
+         (Mov rax val-true)
          (Je l1)
-         (Mov 'rax val-false)
+         (Mov rax val-false)
          (Label l1))))
 
 ;; Expr Expr Expr CEnv -> Asm
@@ -265,7 +265,7 @@
   (let ((l1 (gensym 'if))
         (l2 (gensym 'if)))
     (seq (compile-e e1 c)
-         (Cmp 'rax val-false)
+         (Cmp rax val-false)
          (Je l1)
          (compile-e e2 c)
          (Jmp l2)
@@ -281,12 +281,21 @@
 ;; Id Expr Expr CEnv -> Asm
 (define (compile-let x e1 e2 c)
   (seq (compile-e e1 c)
-       (Mov (Offset 'rsp (next c)) 'rax)
+       (Mov (Offset rsp (next c)) rax)
        (compile-e e2 (cons x c))))
 
 ;; CEnv -> Integer
 (define (next c)
   (- (* 8 (add1 (length c)))))
+
+;; CEnv -> Asm
+;; Adjust 'rsp to save/restore current environment
+;; dir is either Sub (to save) or Add (to restore)
+(define (move-env dir c)
+  (let ((l (length c)))
+    (cond [(zero? l) (seq)] ; special case
+          [(even? l) (seq (dir rsp (* 8 l)))]
+          [(odd? l)  (seq (dir rsp (* 8 (add1 l))))])))
 
 ;; Id CEnv -> Integer
 (define (lookup x cenv)
@@ -299,18 +308,18 @@
 
 (define (assert-type mask type)
   (λ (arg)
-    (seq (Mov 'rbx arg)
-         (And 'rbx mask)
-         (Cmp 'rbx type)
+    (seq (Mov r10 arg)
+         (And r10 mask)
+         (Cmp r10 type)
          (Jne 'err))))
 
 (define (type-pred mask type)
   (let ((l (gensym)))
-    (seq (And 'rax mask)
-         (Cmp 'rax type)
-         (Mov 'rax (imm->bits #t))
+    (seq (And rax mask)
+         (Cmp rax type)
+         (Mov rax (imm->bits #t))
          (Je l)
-         (Mov 'rax (imm->bits #f))
+         (Mov rax (imm->bits #f))
          (Label l))))
          
 (define assert-integer
@@ -326,22 +335,22 @@
 
 (define assert-codepoint
   (let ((ok (gensym)))
-    (seq (assert-integer 'rax)
-         (Cmp 'rax (imm->bits 0))
+    (seq (assert-integer rax)
+         (Cmp rax (imm->bits 0))
          (Jl 'err)
-         (Cmp 'rax (imm->bits 1114111))
+         (Cmp rax (imm->bits 1114111))
          (Jg 'err)
-         (Cmp 'rax (imm->bits 55295))
+         (Cmp rax (imm->bits 55295))
          (Jl ok)
-         (Cmp 'rax (imm->bits 57344))
+         (Cmp rax (imm->bits 57344))
          (Jg ok)
          (Jmp 'err)
          (Label ok))))
        
 (define assert-byte
-  (seq (assert-integer 'rax)
-       (Cmp 'rax (imm->bits 0))
+  (seq (assert-integer rax)
+       (Cmp rax (imm->bits 0))
        (Jl 'err)
-       (Cmp 'rax (imm->bits 255))
+       (Cmp rax (imm->bits 255))
        (Jg 'err)))
        

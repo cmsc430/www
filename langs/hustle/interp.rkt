@@ -33,7 +33,9 @@
     [(Eof)    eof]
     [(Empty)  '()]
     [(Var x)  (lookup r x)]
+    [(Prim0 'void) (void)]
     [(Prim0 'read-byte) (read-byte)]
+    [(Prim0 'peek-byte) (peek-byte)]
     [(Prim1 p e)
      (match (interp-env e r)
        ['err 'err]

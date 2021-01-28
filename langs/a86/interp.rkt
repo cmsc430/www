@@ -42,13 +42,15 @@
       (parameterize ((current-shared? #t))
         (displayln (asm-string a)))))
 
-  (system
-   (format "nasm -f ~a ~a && gcc -shared ~a ~a -o ~a"
-           (if (eq? (system-type 'os) 'macosx) 'macho64 'elf64)
-           t.s
-           t.o
-           (string-splice (current-objs))
-           t.so))
+  (with-handlers ((exn:fail? (λ (e)
+                               (error "error linking program"))))
+    (system
+     (format "nasm -f ~a ~a && gcc -shared ~a ~a -o ~a"
+             (if (eq? (system-type 'os) 'macosx) 'macho64 'elf64)
+             t.s
+             t.o
+             (string-splice (current-objs))
+             t.so)))
 
   (define libt.so (ffi-lib t.so))
 
@@ -58,7 +60,7 @@
       [_ (error "no initial label found")]))
 
   (define entry
-    (get-ffi-obj init-label libt.so (_fun _-> _int64)))
+    (get-ffi-obj init-label libt.so (_fun _pointer _-> _int64)))
 
   ;; install our own `error_handler` procedure to prevent `exit` calls
   ;; from interpreted code bringing down the parent process.  All of
@@ -67,6 +69,15 @@
   (when (ffi-obj-ref "error_handler" libt.so (thunk #f))
     (set-ffi-obj! "error_handler" libt.so _pointer
                   (function-ptr (λ () (raise 'err)) (_fun _-> _void))))
+
+
+  (define current-heap #f)  
+  ;; allocate a heap
+  (when (ffi-obj-ref "heap" libt.so (thunk #f))
+    (set! current-heap (make-c-parameter "heap" libt.so _pointer))
+    (current-heap
+     ; IMPROVE ME: hard-coded heap size
+     (malloc _int64 10000 'raw 'failok)))
   
   (delete-file t.s)
   (delete-file t.o)
@@ -89,8 +100,14 @@
         (current-out (fopen t.out "w"))
 
         (define result
-          (with-handlers ((symbol? identity))
-            (entry)))
+          (begin0           
+            (with-handlers ((symbol? identity))
+              (if current-heap
+                  (cons (current-heap) (entry (current-heap)))
+                  (entry #f)))
+            #;
+            (when current-heap
+              (free (current-heap)))))
 
         (fflush (current-out))
         (fclose (current-in))
@@ -100,8 +117,15 @@
         (delete-file t.in)
         (delete-file t.out)
         (cons result output))
-      (with-handlers ((symbol? identity))
-        (entry))))
+      
+      (begin0
+        (with-handlers ((symbol? identity))
+          (if current-heap
+              (cons (current-heap) (entry (current-heap)))
+              (entry #f)))
+        #;
+        (when current-heap
+          (free (current-heap))))))
 
 
 (define (string-splice xs)

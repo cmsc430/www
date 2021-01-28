@@ -25,7 +25,9 @@
     [(Eof)    (cons h (imm->bits eof))]
     [(Empty)  (cons h (imm->bits '()))]
     [(Var x)  (cons h (lookup r x))]
+    [(Prim0 'void) (cons h (imm->bits (void)))]
     [(Prim0 'read-byte) (cons h (imm->bits (read-byte)))]
+    [(Prim0 'peek-byte) (cons h (imm->bits (peek-byte)))]
     [(Prim1 p e)
      (match (interp-env-heap e r h)
        ['err 'err]
