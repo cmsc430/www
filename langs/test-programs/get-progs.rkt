@@ -11,7 +11,8 @@
     "dupe"
     "dodger"
     "evildoer"
-    "extort"))
+    "extort"
+    "fraud"))
 
 ;; String -> (listof Path)
 (define (get-progs lang)
@@ -50,11 +51,21 @@
 (define (system/s cmd)
   (with-output-to-string (thunk (system cmd))))
 
+;; these are a little kludgey and could be done better
+
 (define (racket p)
-  (system/s (string-append "racket " (path->string p))))
+  (parameterize ((current-error-port (open-output-string)))
+    (let ((r (system/s (string-append "racket " (path->string p)))))
+      (if (string=? "" (get-output-string (current-error-port)))
+          r
+          (string-append r "err\n")))))
 
 (define (racket/io p in)
-  (system/s (string-append "cat " (path->string in) " | racket " (path->string p))))
+  (parameterize ((current-error-port (open-output-string)))
+    (let ((r (system/s (string-append "cat " (path->string in) " | racket " (path->string p)))))
+      (if (string=? "" (get-output-string (current-error-port)))
+          r
+          (string-append r "err\n")))))
 
 (define (run p)
   (system/s (path->string p)))

@@ -136,32 +136,50 @@
 
 (define (test-runner-io run)
   ;; Evildoer examples
-  (check-equal? (run 7 "") "7\n")
-  (check-equal? (run '(write-byte 97) "") "a")
-  (check-equal? (run '(read-byte) "a") "97\n")
-  (check-equal? (run '(begin (write-byte 97) (read-byte)) "b") "a98\n")
-  (check-equal? (run '(read-byte) "") "#<eof>\n")
-  (check-equal? (run '(eof-object? (read-byte)) "") "#t\n")
-  (check-equal? (run '(eof-object? (read-byte)) "a") "#f\n")
-  (check-equal? (run '(begin (write-byte 97) (write-byte 98)) "") "ab")
+  (check-equal? (run 7 "") (cons 7 ""))
+  (check-equal? (run '(write-byte 97) "") (cons (void) "a"))
+  (check-equal? (run '(read-byte) "a") (cons 97 ""))
+  (check-equal? (run '(begin (write-byte 97) (read-byte)) "b")
+                (cons 98 "a"))
+  (check-equal? (run '(read-byte) "") (cons eof ""))
+  (check-equal? (run '(eof-object? (read-byte)) "") (cons #t ""))
+  (check-equal? (run '(eof-object? (read-byte)) "a") (cons #f ""))
+  (check-equal? (run '(begin (write-byte 97) (write-byte 98)) "")
+                (cons (void) "ab"))
+
+  (check-equal? (run '(peek-byte) "ab") (cons 97 ""))
+  (check-equal? (run '(begin (peek-byte) (read-byte)) "ab") (cons 97 ""))
+  ;; Extort examples
+  (check-equal? (run '(write-byte #t) "") (cons 'err ""))
+
+  ;; Fraud examples
+  (check-equal? (run '(let ((x 97)) (write-byte x)) "") (cons (void) "a"))
+  (check-equal? (run '(let ((x 97))
+                        (begin (write-byte x)
+                               x))
+                     "")
+                (cons 97 "a"))
+  (check-equal? (run '(let ((x 97)) (begin (read-byte) x)) "b")
+                (cons 97 ""))
+  (check-equal? (run '(let ((x 97)) (begin (peek-byte) x)) "b")
+                (cons 97 ""))
+
   ;; Hustle examples
   (check-equal? (run '(let ((x 1))
                         (begin (write-byte 97)
                                1))
                      "")
-                "a1\n")
+                (cons 1 "a"))
 
   (check-equal? (run '(let ((x 1))
                         (let ((y 2))
                           (begin (write-byte 97)
                                  1)))
                      "")
-                "a1\n")
+                (cons 1 "a"))
 
-  ;; corrupts rdi if you don't save it... but how do you observe the problem...
-  ;; just starts allocating in some random spot in memory
   (check-equal? (run '(let ((x (cons 1 2)))
                         (begin (write-byte 97)
                                (car x)))
                      "")
-                "a1\n"))
+                (cons 1 "a")))

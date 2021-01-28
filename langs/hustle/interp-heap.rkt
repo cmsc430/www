@@ -38,6 +38,8 @@
     [(Eof)    (cons h eof)]
     [(Empty)  (cons h '())]
     [(Var x)  (cons h (lookup r x))]
+    [(Prim0 'void) (cons h (void))]
+    [(Prim0 'peek-byte) (cons h (peek-byte))]
     [(Prim0 'read-byte) (cons h (read-byte))]
     [(Prim1 p e)
      (match (interp-env-heap e r h)
