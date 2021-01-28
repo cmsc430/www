@@ -2,16 +2,24 @@
 #include <inttypes.h>
 #include <stdlib.h>
 #include "types.h"
+#include "runtime.h"
 
-int64_t entry(void *);
 void print_result(int64_t);
 
-// in bytes
-#define heap_size 1000000
-int64_t *heap;
+void error_exit() {
+  printf("err\n");
+  exit(1);
+}
+
+void raise_error() {
+  return error_handler();
+}
 
 int main(int argc, char** argv) {
-  heap = malloc(heap_size);
+  in = stdin;
+  out = stdout;
+  error_handler = &error_exit;
+  heap = malloc(8 * heap_size);
   int64_t result = entry(heap);
   print_result(result);
   if (result != val_void) printf("\n");
@@ -68,9 +76,4 @@ void print_cons(int64_t a) {
     printf(" . ");
     print_result(cdr);
   }
-}
-
-void error() {
-  printf("err\n");
-  exit(1);
 }
