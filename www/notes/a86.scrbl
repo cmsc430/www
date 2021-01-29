@@ -28,19 +28,21 @@
    (require racket/system a86/ast a86/printer)
    (define (tri n)
       (list (Label 'entry)
-            (Mov 'rbx n)
-            (Label 'tri)
-            (Cmp 'rbx 0)
-            (Je 'done)
-            (Push 'rbx)         
-            (Sub 'rbx 1)
-            (Call 'tri)
-            (Pop 'rbx)         
-            (Add 'rax 'rbx)
-            (Ret)
-            (Label 'done)
-            (Mov 'rax 0)
-            (Ret)))
+         (Mov 'rbx 36)     (% "the \"input\"")
+         (%%% "tri: a recursive function for computing nth")
+         (%%% "triangular number, where n is given in rbx.")
+         (Label 'tri)
+         (Cmp 'rbx 0)      (% "if rbx = 0, done")
+         (Je 'done)
+         (Push 'rbx)       (% "save rbx")
+         (Sub 'rbx 1)
+         (Call 'tri)       (% "compute tri(rbx-1) in rax")
+         (Pop 'rbx)        (% "restore rbx")
+         (Add 'rax 'rbx)   (% "result is rbx+tri(rbx-1)")
+         (Ret)
+         (Label 'done)     (% "jump here for base case")
+         (Mov 'rax 0)      (% "return 0")
+         (Ret)))
 
    (define main.c
      #<<HERE
@@ -309,23 +311,28 @@ following section.
 
 Here's the triangular number example:
 
+@margin-note{@racket[%], @racket[%%], and @racket[%%%] are
+ constructors for assembly comments.}
+
 @#reader scribble/comment-reader
  (ex
  ; a86 code that computes the 36th triangular number
  (define tri-36
    (list (Label 'entry)
-         (Mov 'rbx 36)
+         (Mov 'rbx 36)     (% "the \"input\"")
+         (%%% "tri: a recursive function for computing nth")
+         (%%% "triangular number, where n is given in rbx.")
          (Label 'tri)
-         (Cmp 'rbx 0)
+         (Cmp 'rbx 0)      (% "if rbx = 0, done")
          (Je 'done)
-         (Push 'rbx)         
+         (Push 'rbx)       (% "save rbx")
          (Sub 'rbx 1)
-         (Call 'tri)
-         (Pop 'rbx)         
-         (Add 'rax 'rbx)
+         (Call 'tri)       (% "compute tri(rbx-1) in rax")
+         (Pop 'rbx)        (% "restore rbx")
+         (Add 'rax 'rbx)   (% "result is rbx+tri(rbx-1)")
          (Ret)
-         (Label 'done)
-         (Mov 'rax 0)
+         (Label 'done)     (% "jump here for base case")
+         (Mov 'rax 0)      (% "return 0")
          (Ret)))
 )
 
@@ -354,15 +361,17 @@ number.  Easy-peasy:
  ; Computes a86 code that computes the @math{n}th triangular number
  (define (tri n)
    (list (Label 'entry)
-         (Mov 'rbx n)
+         (Mov 'rbx 36)     (% "the \"input\"")
+         (%%% "tri: a recursive function for computing nth")
+         (%%% "triangular number, where n is given in rbx.")
          (Label 'tri)
-         (Cmp 'rbx 0)
+         (Cmp 'rbx 0)      (% "if rbx = 0, done")
          (Je 'done)
-         (Push 'rbx)         
+         (Push 'rbx)       (% "save rbx")
          (Sub 'rbx 1)
-         (Call 'tri)
-         (Pop 'rbx)         
-         (Add 'rax 'rbx)
+         (Call 'tri)       (% "compute tri(rbx-1) in rax")
+         (Pop 'rbx)        (% "restore rbx")
+         (Add 'rax 'rbx)   (% "result is rbx+tri(rbx-1)")
          (Ret)
          (Label 'done)
          (Mov 'rax 0)
@@ -722,6 +731,31 @@ the current location of the stack.
  ]
 }
 
+@deftogether[(@defstruct*[% ([s string?])]
+               @defstruct*[%% ([s string?])]
+               @defstruct*[%%% ([s string?])])]{
+
+ Creates a comment in the assembly code. The @racket[%]
+ constructor adds a comment toward the right side of the
+ current line; @racket[%%] creates a comment on its own line
+ 1 tab over; @racket[%%%] creates a comment on its own line
+ aligned to the left.
+
+ @#reader scribble/comment-reader
+ (ex
+ (display
+  (asm-string
+   (prog (%%% "Start of foo")
+         (Label 'foo)
+         ; Racket comments won't appear
+         (%% "Inputs one argument in rdi")
+         (Mov 'rax 'rdi)
+         (Add 'rax 'rax)    (% "double it")
+         (Sub 'rax 1)       (% "subtract one")
+         (%% "we're done!")
+         (Ret)))))
+}
+               
 @defstruct*[Offset ([r register?] [i exact-integer?])]{
 
  Creates an memory offset from a register. Offsets are used
