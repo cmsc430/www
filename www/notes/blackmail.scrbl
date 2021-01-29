@@ -77,8 +77,8 @@ The grammar of abstract Backmail expressions is:
 
 So, @racket[(Int 0)], @racket[(Int 120)], and
 @racket[(Int -42)] are Blackmail AST expressions, but so are
-@racket[(Prim 'add1 (Int 0))], @racket[(Sub1 (Int 120))],
-@racket[(Prim 'add1 (Prim 'add1 (Prim 'add1 (Int -42))))].
+@racket[(Prim1 'add1 (Int 0))], @racket[(Sub1 (Int 120))],
+@racket[(Prim1 'add1 (Prim1 'add1 (Prim1 'add1 (Int -42))))].
 
 A datatype for representing expressions can be defined as:
 
@@ -157,9 +157,9 @@ interpreter, one for each form of expression:
 @examples[#:eval ev
 (interp (Int 42))
 (interp (Int -7))
-(interp (Prim 'add1 (Int 42)))
-(interp (Prim 'sub1 (Int 8)))
-(interp (Prim 'add1 (Prim 'add1 (Prim 'add1 (Int 8)))))
+(interp (Prim1 'add1 (Int 42)))
+(interp (Prim1 'sub1 (Int 8)))
+(interp (Prim1 'add1 (Prim1 'add1 (Prim1 'add1 (Int 8)))))
 ]
 
 Here's how to connect the dots between the semantics and interpreter:
@@ -173,12 +173,12 @@ expression, which determines which rule of the semantics applies.
 @item{if @math{e} is an integer @math{(Int i)}, then we're done: this is the
 right-hand-side of the pair @math{(e,i)} in @render-term[B 𝑩].}
 
-@item{if @math{e} is an expression @RACKET[(Prim 'add1 (UNSYNTAX
+@item{if @math{e} is an expression @RACKET[(Prim1 'add1 (UNSYNTAX
 @math{e_0}))], then we recursively use the interpreter to compute
 @math{i_0} such that @math{(e_0,i_0)} is in @render-term[B 𝑩].  But
 now we can compute the right-hand-side by adding 1 to @math{i_0}.}
 
-@item{if @math{e} is an expression @RACKET[(Prim 'sub1 (UNSYNTAX
+@item{if @math{e} is an expression @RACKET[(Prim1 'sub1 (UNSYNTAX
 @math{e_0}))], then we recursively use the interpreter to compute
 @math{i_0} such that @math{(e_0,i_0)} is in @render-term[B 𝑩].  But
 now we can compute the right-hand-side by substracting 1 from @math{i_0}.}
@@ -240,9 +240,9 @@ recursion, much like the interpreter.
 We can now try out a few examples:
 
 @ex[
-(compile (Prim 'add1 (Prim 'add1 (Int 40))))
-(compile (Prim 'sub1 (Int 8)))
-(compile (Prim 'add1 (Prim 'add1 (Prim 'sub1 (Prim 'add1 (Int -8))))))
+(compile (Prim1 'add1 (Prim1 'add1 (Int 40))))
+(compile (Prim1 'sub1 (Int 8)))
+(compile (Prim1 'add1 (Prim1 'add1 (Prim1 'sub1 (Prim1 'add1 (Int -8))))))
 ]
 
 And give a command line wrapper for parsing, checking, and compiling
@@ -263,9 +263,9 @@ the same @racket[asm-interp] function to encapsulate running
 assembly code:
 
 @ex[
-(asm-interp (compile (Prim 'add1 (Prim 'add1 (Int 40)))))
-(asm-interp (compile (Prim 'sub1 (Int 8))))
-(asm-interp (compile (Prim 'add1 (Prim 'add1 (Prim 'add1 (Prim 'add1 (Int -8)))))))
+(asm-interp (compile (Prim1 'add1 (Prim1 'add1 (Int 40)))))
+(asm-interp (compile (Prim1 'sub1 (Int 8))))
+(asm-interp (compile (Prim1 'add1 (Prim1 'add1 (Prim1 'add1 (Prim1 'add1 (Int -8)))))))
 ]
 
 @section{Correctness and random testing}
@@ -330,9 +330,9 @@ x86 does.  Let's see:
 (define max-int (sub1 (expt 2 63)))
 (define min-int (- (expt 2 63)))
 (asm-interp (compile (Int max-int)))
-(asm-interp (compile (Prim 'add1 (Int max-int))))
+(asm-interp (compile (Prim1 'add1 (Int max-int))))
 (asm-interp (compile (Int min-int)))
-(asm-interp (compile (Prim 'sub1 (Int min-int))))]
+(asm-interp (compile (Prim1 'sub1 (Int min-int))))]
 
 Now there's a fact you didn't learn in grade school: in the
 first example, adding 1 to a number made it smaller; in the
@@ -342,17 +342,17 @@ This problem doesn't exist in the interpreter:
 
 @ex[
 (interp (Int max-int))
-(interp (Prim 'add1 (Int max-int)))
+(interp (Prim1 'add1 (Int max-int)))
 (interp (Int min-int))
-(interp (Prim 'sub1 (Int min-int)))
+(interp (Prim1 'sub1 (Int min-int)))
 ]
 
 So we have found a counter-example to the claim of compiler
 correctness:
 
 @ex[
-(check-compiler (Prim 'add1 (Int max-int)))
-(check-compiler (Prim 'sub1 (Int min-int)))
+(check-compiler (Prim1 'add1 (Int max-int)))
+(check-compiler (Prim1 'sub1 (Int min-int)))
 ]
 
 What can we do? This is the basic problem of a program not
