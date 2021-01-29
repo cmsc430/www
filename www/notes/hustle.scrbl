@@ -27,6 +27,10 @@ makes an inundation.}
 @verbatim|{
 TODO:
 * Add section introducing '()
+* Describe new use of 'rbx for heap pointer
+  - picked a callee-saved register, therefore
+    save once on entry, restore once on exit (use empty stack-alignment word)
+    no need to do anything at C prim calls
 }|
 
 @section{Inductive data}
