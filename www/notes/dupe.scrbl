@@ -154,16 +154,28 @@ Notice that here we are following the semantics of Racket, which says
 that anything that is not @racket[#f] counts as @emph{true} in a
 conditional.
 
+This semantics has also been refactored slightly so that
+there is a single rule for the @racket[Prim1] case. The new
+rule essentially defers the work to a new metafunction,
+@racket[𝑫-𝒑𝒓𝒊𝒎]:
+
+@(centered
+  (with-compound-rewriters (['+ (rewrite '+)]
+                            ['- (rewrite '–)]
+                            ['= (rewrite '=)]
+                            ['!= (rewrite '≠)])
+    (render-metafunction 𝑫-𝒑𝒓𝒊𝒎 #:contract? #t)))
+
 Returning to the issue of type mismatches, what does the
-semantics say about @racket[(Prim 'add1 (Bool #f))]? What about
+semantics say about @racket[(Prim1 'add1 (Bool #f))]? What about
 @racket[(If (Int 7) (Bool #t) (Int -2))]?
 
 What it says is: nothing.  These programs are simply not in the
 semantic relation for this language. There's only one rule for giving
-meaning to an @racket[(Prim 'add1 _e0)] expression and it's premise is that
+meaning to an @racket[(Prim1 'add1 _e0)] expression and it's premise is that
 @racket[_e] means some @emph{integer} @racket[_i0].  But
 @math{(@racket[(Bool #f)], i) ∉ 𝑫} for any @math{i}.  So there's no value
-@math{v} such that @math{(@racket[(Prim 'add1 (Bool #f))], v) ∈ 𝑫}.  This
+@math{v} such that @math{(@racket[(Prim1 'add1 (Bool #f))], v) ∈ 𝑫}.  This
 expression is @bold{undefined} according to the semantics.
 
 
