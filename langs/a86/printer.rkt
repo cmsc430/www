@@ -52,85 +52,108 @@
       [(? reg?) (reg->string t)]
       [_ (label-symbol->string t)]))
 
+  (define tab (make-string 8 #\space))
+  
   ;; Instruction -> String
   (define (instr->string i)
     (match i
-      [(Ret)       "\tret\n"]
-      [(Label l)   (string-append (label-symbol->string l) ":\n")]
-      [(Extern l)  (begin0 (string-append "\textern " (label-symbol->string l) "\n")
+      [(Ret)       (string-append tab "ret")]
+      [(Label l)   (string-append (label-symbol->string l) ":")]
+      [(Extern l)  (begin0 (string-append tab "extern " (label-symbol->string l))
                            (set! external-labels (cons l external-labels)))]
       [(Mov a1 a2)
-       (string-append "\tmov "
+       (string-append tab "mov "
                       (arg->string a1) ", "
-                      (arg->string a2) "\n")]
+                      (arg->string a2))]
       [(Add a1 a2)
-       (string-append "\tadd "
+       (string-append tab "add "
                       (arg->string a1) ", "
-                      (arg->string a2) "\n")]
+                      (arg->string a2))]
       [(Sub a1 a2)
-       (string-append "\tsub "
+       (string-append tab "sub "
                       (arg->string a1) ", "
-                      (arg->string a2) "\n")]    
+                      (arg->string a2))]    
       [(Cmp a1 a2)
-       (string-append "\tcmp "
+       (string-append tab "cmp "
                       (arg->string a1) ", "
-                      (arg->string a2) "\n")]
+                      (arg->string a2))]
       [(Sal a1 a2)
-       (string-append "\tsal "
+       (string-append tab "sal "
                       (arg->string a1) ", "
-                      (arg->string a2) "\n")]
+                      (arg->string a2))]
       [(Sar a1 a2)
-       (string-append "\tsar "
+       (string-append tab "sar "
                       (arg->string a1) ", "
-                      (arg->string a2) "\n")]
+                      (arg->string a2))]
       [(And a1 a2)
-       (string-append "\tand "
+       (string-append tab "and "
                       (arg->string a1) ", "
-                      (arg->string a2) "\n")]
+                      (arg->string a2))]
       [(Or a1 a2)
-       (string-append "\tor "
+       (string-append tab "or "
                       (arg->string a1) ", "
-                      (arg->string a2) "\n")]    
+                      (arg->string a2))]    
       [(Xor a1 a2)
-       (string-append "\txor "
+       (string-append tab "xor "
                       (arg->string a1) ", "
-                      (arg->string a2) "\n")]
+                      (arg->string a2))]
       [(Jmp l)
-       (string-append "\tjmp "
-                      (jump-target->string l) "\n")]
+       (string-append tab "jmp "
+                      (jump-target->string l))]
       [(Je l)
-       (string-append "\tje "
-                      (jump-target->string l) "\n")]
+       (string-append tab "je "
+                      (jump-target->string l))]
       [(Jne l)
-       (string-append "\tjne "
-                      (jump-target->string l) "\n")]
+       (string-append tab "jne "
+                      (jump-target->string l))]
       [(Jl l)
-       (string-append "\tjl "
-                      (jump-target->string l) "\n")]
+       (string-append tab "jl "
+                      (jump-target->string l))]
       [(Jg l)
-       (string-append "\tjg "
-                      (jump-target->string l) "\n")]
+       (string-append tab "jg "
+                      (jump-target->string l))]
       [(Call l)
-       (string-append "\tcall "
-                      (jump-target->string l) "\n")]
+       (string-append tab "call "
+                      (jump-target->string l))]
       [(Push a)
-       (string-append "\tpush "
-                      (arg->string a) "\n")]
+       (string-append tab "push "
+                      (arg->string a))]
       [(Pop r)
-       (string-append "\tpop "
-                      (reg->string r) "\n")]
+       (string-append tab "pop "
+                      (reg->string r))]
       [(Lea d x)
-       (string-append "\tlea "
+       (string-append tab "lea "
                       (arg->string d) ", [rel "
-                      (label-symbol->string x) "]\n")]))
+                      (label-symbol->string x) "]")]))
 
+  (define (comment->string c)
+    (match c
+      [(% s)   (string-append (make-string 32 #\space) "; " s)]
+      [(%% s)  (string-append tab ";; " s)]
+      [(%%% s) (string-append ";;; " s)]))
+
+  (define (line-comment i s)
+    (let ((i-str (instr->string i)))
+      (let ((pad (make-string (max 1 (- 32 (string-length i-str))) #\space)))
+        (string-append i-str pad "; " s))))
+  
+  (define (instrs->string a)
+    (match a
+      ['() ""]
+      [(cons (? Comment? c) a)
+       (string-append (comment->string c) "\n" (instrs->string a))]
+      [(cons i (cons (% s) a))
+       (string-append (line-comment i s) "\n" (instrs->string a))]
+      [(cons i a)
+       (string-append (instr->string i) "\n" (instrs->string a))]))
+  
   ;; entry point will be first label
   (match (findf Label? a)
     [(Label g)
      (string-append
-      "\tglobal " (label-symbol->string g) "\n"
-      "\tdefault rel\n"
-      "\tsection .text\n"
-      (foldl (λ (i s) (string-append s (instr->string i))) "" a))]
+      tab "global " (label-symbol->string g) "\n"
+      tab "default rel\n"
+      tab "section .text\n"
+      (instrs->string a))]
     [_
      (error "program does not have an initial label")]))
