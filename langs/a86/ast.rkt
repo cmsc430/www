@@ -78,6 +78,26 @@
   (λ (n) (values)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Comments
+
+(provide (struct-out %)
+         (struct-out %%)
+         (struct-out %%%)
+         Comment?)
+
+(struct Comment (str)
+  #:transparent
+  #:guard
+  (λ (s n)
+    (unless (string? s)
+      (error n "expects string; given ~v" s))
+    s))
+
+(struct %   Comment () #:transparent)
+(struct %%  Comment () #:transparent)
+(struct %%% Comment () #:transparent)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Instructions
 
 (define-syntax-rule
@@ -144,8 +164,9 @@
       (Sar? x)
       (Push? x)
       (Pop? x)
-      (Lea? x)))
-          
+      (Lea? x)
+      (Comment? x)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Instruction sequencing and program error checking
 
@@ -190,7 +211,7 @@
     [(cons (Label s) asm)
      (cons s (label-decls asm))]
     [(cons (Extern s) asm)
-     (cons s (label-decls asm))]
+     (cons s (label-decls asm))]    
     [(cons _ asm)
      (label-decls asm)]))
 
@@ -216,7 +237,7 @@
     [(cons (Call (? label-symbol? s)) asm)
      (cons s (label-uses asm))]
     [(cons (Lea _ (? label-symbol? s)) asm)
-     (cons s (label-uses asm))]
+     (cons s (label-uses asm))]    
     [(cons _ asm)
      (label-uses asm)]))
 
