@@ -6,7 +6,6 @@
           scribble/examples
 	  (except-in "../../langs/fraud/semantics.rkt" ext lookup)
           (prefix-in sem: (only-in "../../langs/fraud/semantics.rkt" ext lookup))
-          #;(file "/Users/dvanhorn/git/cmsc430-www/www/notes/fraud/interp.rkt")
 	  "utils.rkt"
 	  "ev.rkt"
 	  "../utils.rkt")
@@ -22,7 +21,9 @@
 	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
 
-@title[#:tag "Fraud"]{Fraud: local binding, variables, and binary operations}
+@(define this-lang "Fraud")
+
+@title[#:tag this-lang]{@|this-lang|: local binding, variables, and binary operations}
 
 @emph{To be is to be the value of a variable.}
 
@@ -39,16 +40,12 @@ TODO:
 
 @section{Binding, variables, and binary operations}
 
-@;defmodule[(file "/Users/dvanhorn/git/cmsc430-www/www/notes/fraud/interp.rkt")]
-@;declare-exporting[(file "/Users/dvanhorn/git/cmsc430-www/www/notes/fraud/interp.rkt")]
-@;defidform/inline[interp]
-
 Let's now consider add a notion of @bold{local binding} and
-the ability to use binary operations to our target language
-a
+the ability to use @bold{binary operations} to our target
+language.
 
 
-We'll call it @bold{Fraud}.
+We'll call it @bold{@this-lang}.
 
 First, let's deal with the issue of variables and variable bindings.
 
@@ -59,7 +56,7 @@ We will use the following syntax to bind local variables:
   _e)
 ]
 
-This form binds the identifier @racket[_i0] to value of @racket[_e0]
+This form binds the identifier @racket[_id0] to value of @racket[_e0]
 within the scope of @racket[_e].
 
 This is a specialization of Racket's own local binding form, which
@@ -71,13 +68,13 @@ allows for any number of bindings to be made with @racket[let]:
 ]
 
 We adopt this specialization of Racket's @racket[let] syntax so that
-you can always take a Fraud program and run it in Racket to confirm
+you can always take a @this-lang program and run it in Racket to confirm
 what it should produce.
 
 Adding a notion of variable binding also means we need to add
 variables to the syntax of expressions.
 
-Together this leads to the following grammar for Fraud:
+Together this leads to the following grammar for @|this-lang|:
 
 @centered{@render-language[F-pre]}
 
@@ -94,8 +91,6 @@ Which can be modeled with the following data type definition:
 (struct Let (x e1 e2) #:prefab)
 (struct Var (x) #:prefab)
 }
-We will also need a predicate for well-formed Fraud expressions, but
-let's return to this after considering the semantics and interpreter.
 
 
 Now for binary operations...
@@ -107,7 +102,7 @@ result of a single subexpression. For example,
 @racket[(add1 _e)] depends upon the result of @racket[_e],
 @racket[(zero? _e)] depends upon @racket[_e], and so on.
 Even expressions that involve multiple subexpressions such
-as @racket[(if _e0 _e1 _e2)] really only depends on
+as @racket[(if _e0 _e1 _e2)] really only depend on
 @racket[_e0] to determine which of @racket[_e1] or
 @racket[_e2] to evaluate. And in the case of
 @racket[(begin _e0 _e1)], first we determine the value of
@@ -128,7 +123,7 @@ What's new are the following @emph{binary} operations:
 (- _e0 _e1)
 ]
 
-This leads to the following grammar for Grift:
+This leads to the following revised grammar for @|this-lang|:
 
 @centered[(render-language G)]
 
@@ -145,9 +140,9 @@ We can model it as a datatype as usual:
 }
 
 
-@section{Meaning of Fraud programs}
+@section{Meaning of @this-lang programs}
 
-The meaning of Fraud programs depends on the form of the expression and
+The meaning of @this-lang programs depends on the form of the expression and
 in the case of integers, increments, and decrements, the meaning is
 the same as in the prior languages.
 
@@ -225,20 +220,27 @@ of a sub-expression is not determined by the form of that expression
 alone.  For example, @tt{x} could mean 7, or it could mean 8, or it
 could be meaningless, or it could mean 22, etc.  It depends on the
 context in which it occurs.  So in formulating the meaning of an
-expression, we will have to have take this context into account.
+expression, this context must be taken into account.
 
-Thinking more about what information we need to keep track of reveals
-that when considering the meaning of a let's body, we need to know
-that the variable it's binding means the value of the right hand
-expression.  Since a program potentially consists of nested let
-expressions, we will need to keep track of some number of pairs of
-variables and their meaning.  We will refer to this contextual
-information as an @bold{environment}.
+Thinking more about what information we need to keep track
+of reveals that when considering the meaning of a
+@racket[let]'s body, we need to know that the variable it's
+binding means the value of the right-hand expression. Since
+a program potentially consists of nested @racket[let]
+expressions, we will need to keep track of some number of
+pairs of variables and their meaning. We will refer to this
+contextual information as an @bold{environment}.
 
-The meaning of a variable is resolved by looking up its meaning in the
-environment.  The meaning of a let will depend on the meaning of its
-body with an extended environment that associates its variable binding
-to the value of the right hand side.
+@margin-note{To keep things simple, we omit the treatment of
+ IO in the semantics, but it's easy enough to incorporate
+ back in if desired following the template of @secref{
+  Evildoer}.}
+
+The meaning of a variable is resolved by looking up its
+meaning in the environment. The meaning of a @racket[let]
+will depend on the meaning of its body with an extended
+environment that associates its variable binding to the
+value of the right hand side.
 
 The heart of the semantics is an auxiliary relation, @render-term[F
 𝑭-𝒆𝒏𝒗], which relates an expression and an environement to the integer
@@ -291,17 +293,21 @@ And rules for propagating errors through let:
 
 
 
-The operational semantics for Fraud is then defined as a binary relation
+The operational semantics for @this-lang is then defined as a binary relation
 @render-term[F 𝑭], which says that @math{(e,i)} in @render-term[F 𝑭],
 only when @math{e} evaluates to @math{i} in the empty environment
 according to @render-term[F 𝑭-𝒆𝒏𝒗]:
 
 @(show-judgment 𝑭 '("mt-env"))
 
-The meaning of Grift programs is pretty straightforward.  For
-@racket[(+ _e0 _e1)], the meaning is the sum of the meanings of
-@racket[_e0] and @racket[_e1], when they mean integers, otherwise the
-meaning is an error.
+
+
+With the semantics of @racket[let] and variables out of the
+way, extending the @this-lang semantics to hand binary
+operations is pretty straightforward. For
+@racket[(+ _e0 _e1)], the meaning is the sum of the meanings
+of @racket[_e0] and @racket[_e1], when they mean integers,
+otherwise the meaning is an error.
 
 
 The handling of primitives occurs in the following rule:
@@ -311,7 +317,14 @@ The handling of primitives occurs in the following rule:
 It makes use of an auxiliary judgment for interpreting primitives:
 
 @centered[
-   (with-unquote-rewriter
+
+ (with-compound-rewriters (['+ (rewrite '+)]
+                           ['- (rewrite '–)]
+                           ['= (rewrite '=)]
+                           ['!= (rewrite '≠)])
+   (render-metafunction 𝑭-𝒑𝒓𝒊𝒎 #:contract? #t))
+ 
+   #;(with-unquote-rewriter
       (lambda (lw)
         (build-lw (lw-e lw) (lw-line lw) (lw-line-span lw) (lw-column lw) (lw-column-span lw)))
       (render-metafunction 𝑮-𝒑𝒓𝒊𝒎 #:contract? #t))]
@@ -353,7 +366,7 @@ We can see that it works as expected:
 ]
 
 
-@bold{Interpreter Correctness}: @emph{For all Fraud expressions
+@bold{Interpreter Correctness}: @emph{For all @this-lang expressions
 @racket[e] and values @racket[v], if (@racket[e],@racket[v]) in
 @render-term[F 𝑭], then @racket[(interp e)] equals
 @racket[v].}
@@ -503,7 +516,7 @@ Try to convince yourself that the two version of @racket[interp]
 compute the same function.
 
 
-@section{An Example of Fraud compilation}
+@section{An Example of @this-lang compilation}
 
 Suppose we want to compile @racket[(let ((x 7)) (add1 x))].  There
 are two new forms we need to compile: the @racket[(let ((x ...))
