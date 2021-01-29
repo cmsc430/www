@@ -131,12 +131,12 @@ We can understand these rules as saying the following:
 
 @item{For expressions @math{e_0} and all integers @math{i_0} and
 @math{i_1}, if @math{(e_0,i_0)} is in @render-term[B 𝑩] and @math{i_1
-= i_0 + 1}, then @math{(@RACKET[(Add1 (UNSYNTAX @math{e_0}))], i_1)}
+= i_0 + 1}, then @math{(@RACKET[(Prim1 'add1 (UNSYNTAX @math{e_0}))], i_1)}
 is in @render-term[B 𝑩].}
 
 @item{For expressions @math{e_0} and all integers @math{i_0} and
 @math{i_1}, if @math{(e_0,i_0)} is in @render-term[B 𝑩] and @math{i_1
-= i_0 - 1}, then @math{(@RACKET[(Sub1 (UNSYNTAX @math{e_0}))], i_1)}
+= i_0 - 1}, then @math{(@RACKET[(Prim1 'sub1 (UNSYNTAX @math{e_0}))], i_1)}
 is in @render-term[B 𝑩].}
 ]
 
@@ -173,12 +173,12 @@ expression, which determines which rule of the semantics applies.
 @item{if @math{e} is an integer @math{(Int i)}, then we're done: this is the
 right-hand-side of the pair @math{(e,i)} in @render-term[B 𝑩].}
 
-@item{if @math{e} is an expression @RACKET[(Add1 (UNSYNTAX
+@item{if @math{e} is an expression @RACKET[(Prim 'add1 (UNSYNTAX
 @math{e_0}))], then we recursively use the interpreter to compute
 @math{i_0} such that @math{(e_0,i_0)} is in @render-term[B 𝑩].  But
 now we can compute the right-hand-side by adding 1 to @math{i_0}.}
 
-@item{if @math{e} is an expression @RACKET[(Sub1 (UNSYNTAX
+@item{if @math{e} is an expression @RACKET[(Prim 'sub1 (UNSYNTAX
 @math{e_0}))], then we recursively use the interpreter to compute
 @math{i_0} such that @math{(e_0,i_0)} is in @render-term[B 𝑩].  But
 now we can compute the right-hand-side by substracting 1 from @math{i_0}.}
