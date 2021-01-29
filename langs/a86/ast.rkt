@@ -93,9 +93,9 @@
       (error n "expects string; given ~v" s))
     s))
 
-(struct %   Comment ())
-(struct %%  Comment ())
-(struct %%% Comment ())
+(struct %   Comment () #:transparent)
+(struct %%  Comment () #:transparent)
+(struct %%% Comment () #:transparent)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Instructions
