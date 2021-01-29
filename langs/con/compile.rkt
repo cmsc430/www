@@ -12,7 +12,7 @@
 (define (compile-e e)
   (match e
     [(Int i)           (compile-integer i)]    
-    [(Prim p e)        (compile-prim p e)]
+    [(Prim1 p e)       (compile-prim1 p e)]
     [(IfZero e1 e2 e3) (compile-ifzero e1 e2 e3)]))
 
 ;; Integer -> Asm
@@ -20,7 +20,7 @@
   (seq (Mov 'rax i)))
 
 ;; Op Expr -> Asm
-(define (compile-prim p e)
+(define (compile-prim1 p e)
   (seq (compile-e e)
        (match p
          ['add1 (Add 'rax 1)]
