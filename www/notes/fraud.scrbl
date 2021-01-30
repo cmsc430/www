@@ -33,7 +33,6 @@
 TODO:
 * Write about stack adjust around C calls
 * Push/pop etc. discussed in a86; update writing here
-* Note that semantics is for (pure) subset
 * Update random testing for full language
 * Smooth out combination with Grift
 }|
@@ -480,7 +479,7 @@ And:
 into:
 
 @racketblock[
-(Let '_ (Int 7) (Let "y" (Int 9) (Var 1)))
+(Let '_ (Int 7) (Let '_ (Int 9) (Var 1)))
 ]
 
 
@@ -551,8 +550,27 @@ we push every time we enter a let and pop every time we leave, the
 number of bindings between an occurrence and its binder is exactly the
 offset from the top of the stack we need use.
 
-@codeblock-include["fraud/compile.rkt"]
+Here are the relevant parts of the compiler:
 
+@filebox-include-fake[codeblock "fraud/ast.rkt"]{
+;; Expr CEnv -> Asm
+(define (compile-e e c)
+  (match e
+    ; ...
+    [(Var x)         (compile-variable x c)]
+    [(Let x e1 e2)   (compile-let x e1 e2 c)]))
+
+;; Id CEnv -> Asm
+(define (compile-variable x c)
+  (let ((i (lookup x c)))
+    (seq (Mov rax (Offset rsp i)))))
+
+;; Id Expr Expr CEnv -> Asm
+(define (compile-let x e1 e2 c)
+  (seq (compile-e e1 c)
+       (Mov (Offset rsp (next c)) rax)
+       (compile-e e2 (cons x c))))
+}
 
 @ex[
 (define (show e)
@@ -600,9 +618,9 @@ ignoring type errors for the moment):
 (racketblock
 ;; Expr Expr CEnv -> Asm
 (define (compile-+ e0 e1 c)
-  (append (compile-e e0 c)
-          (compile-e e1 c)
-          (list (Add 'rax _????))))
+  (seq (compile-e e0 c)
+       (compile-e e1 c)
+       (Add 'rax _????)))
 )
 
 The problem here is that executing @racket[c0] places its result in
@@ -616,10 +634,10 @@ the first subexpression:
 (racketblock
 ;; Expr Expr CEnv -> Asm
 (define (compile-+ e0 e1 c)
-  (append (compile-e e0 c)
-          (list (Mov 'rbx 'rax))
-          (compile-e e1 c)
-          (list (Add 'rax 'rbx))))
+  (seq (compile-e e0 c)
+       (Mov 'rbx 'rax)
+       (compile-e e1 c)
+       (Add 'rax 'rbx)))
 )
 
 Can you think of how this could go wrong?
@@ -639,15 +657,15 @@ could emit working code.  For example:
 ;; Integer Expr CEnv -> Asm
 ;; A special case for compiling (+ i0 e1)
 (define (compile-+-int i0 e1 c)
-  (append (compile-e e1 c)
-          (list (Add 'rax (arithmetic-shift i0 imm-shift)))))
+  (seq (compile-e e1 c)
+       (Add 'rax (arithmetic-shift i0 imm-shift))))
 
 ;; Id Expr CEnv -> Asm
 ;; A special case for compiling (+ x0 e1)
 (define (compile-+-var x0 e1)
   (let ((i (lookup x0 c)))
-    (append (compile-e e1 c)   
-            (list (Add 'rax (Offset 'rsp (- (add1 i))))))))
+    (seq (compile-e e1 c)
+         (Add 'rax (Offset 'rsp (- (add1 i)))))))
 )
 
 The latter suggests a general solution could be to transform binary
@@ -682,10 +700,10 @@ Here is a first cut:
 ;; Expr Expr CEnv -> Asm
 (define (compile-+ e0 e1 c)
   (let ((x (gensym))) ; generate a fresh variable
-    (append (compile-e e0 c)
-            (list (Mov (Offset 'rsp (add1 (- (length c)))) 'rax))
-            (compile-e e1 (cons x c))
-            (list (Add 'rax (Offset 'rsp (- (add1 (lookup x (cons x c))))))))))
+    (seq (compile-e e0 c)
+         (Mov (Offset 'rsp (add1 (- (length c)))) 'rax)
+         (compile-e e1 (cons x c))
+         (Add 'rax (Offset 'rsp (- (add1 (lookup x (cons x c)))))))))
 )
 
 There are a couple things to notice.  First: the @racket[(lookup x
@@ -703,8 +721,43 @@ the same thing by sticking in something that no variable is equal to:
 (racketblock
 ;; Expr Expr CEnv -> Asm
 (define (compile-+ e0 e1 c)
-  (append (compile-e e0 c)
-          (list (Mov (Offset 'rsp (add1 (- (length c)))) 'rax))
-          (compile-e e1 (cons #f c))
-          (list (Add 'rax (Offset 'rsp (- (add1 (length c))))))))
+  (seq (compile-e e0 c)
+       (Mov (Offset 'rsp (add1 (- (length c)))) 'rax)
+       (compile-e e1 (cons #f c))
+       (Add 'rax (Offset 'rsp (- (add1 (length c)))))))
 )
+
+The relevant bits of the compiler are:
+
+@filebox-include-fake[codeblock "fraud/ast.rkt"]{
+#lang racket
+;...
+;; Expr CEnv -> Asm
+(define (compile-e e c)
+  (match e
+    ; ...
+    [(Prim2 p e1 e2) (compile-prim2 p e1 e2 c)]))
+
+;; Op2 Expr Expr CEnv -> Asm
+(define (compile-prim2 p e1 e2 c)
+  (let ((i (next c)))
+    (seq (compile-e e1 c)
+         (Mov (Offset rsp i) rax)
+         (compile-e e2 (cons #f c))
+         (match p
+           ['+
+            (seq (Mov r8 (Offset rsp i))
+                 (assert-integer r8)
+                 (assert-integer rax)
+                 (Add rax r8))]
+           ['-
+            (seq (Mov r8 (Offset rsp i))
+                 (assert-integer r8)
+                 (assert-integer rax)
+                 (Sub r8 rax)
+                 (Mov rax r8))]))))
+}
+
+The complete code for the compiler:
+
+@codeblock-include["fraud/compile.rkt"]
