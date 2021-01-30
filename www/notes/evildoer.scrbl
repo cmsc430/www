@@ -24,6 +24,43 @@
 @(ev `(current-directory ,(path->string (build-path notes "evildoer"))))
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 
+@(require (for-syntax racket/base))
+@(begin-for-syntax
+   (require "utils.rkt")
+   (parameterize ([current-directory (build-path notes "evildoer")])
+     (save-file "print.c"
+#<<HERE
+#include <stdio.h>
+#include <inttypes.h>
+
+int64_t entry();
+
+int main(int argc, char** argv) {
+  printf("%" PRId64 "\n", entry());
+  return 0;
+}
+HERE
+)
+     (save-file "life.c"
+#<<HERE
+#include <inttypes.h>
+
+int64_t meaning(void) {
+  return 42;
+}
+HERE
+)
+     (save-file "double.c"
+#<<HERE
+#include <inttypes.h>
+
+int64_t dbl(int64_t x) {
+  return x + x;
+}
+HERE
+)))
+
+
 @title[#:tag "Evildoer"]{Evildoer: change the world a couple nibbles at a time}
 
 @emph{Warning: Side effects may include itching, burning,

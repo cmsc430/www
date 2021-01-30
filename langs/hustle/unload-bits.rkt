@@ -17,8 +17,4 @@
      (box  (unload-value (heap-ref h i) h))]
     [(? cons-bits? i)
      (cons (unload-value (heap-ref h i) h)
-           (unload-value (heap-ref h (+ i (arithmetic-shift 1 imm-shift))) h))]
-    [(? str-bits? a)
-     (let ((i (bits->imm (heap-ref h a)))
-           (a (arithmetic-shift a (- imm-shift))))
-       (list->string (map bits->imm (reverse (take (take-right h (+ a (add1 i))) i)))))]))
+           (unload-value (heap-ref h (+ i (arithmetic-shift 1 imm-shift))) h))]))

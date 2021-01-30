@@ -10,7 +10,6 @@
 ;; | Integer
 ;; | Boolean
 ;; | Character
-;; | String
 ;; | Eof
 ;; | Void
 ;; | '()
@@ -29,7 +28,6 @@
     [(Int i)  i]
     [(Bool b) b]
     [(Char c) c]
-    [(Str s) (string-copy s)]
     [(Eof)    eof]
     [(Empty)  '()]
     [(Var x)  (lookup r x)]
@@ -46,14 +44,6 @@
        [v1 (match (interp-env e2 r)
              ['err 'err]
              [v2 (interp-prim2 p v1 v2)])])]
-    [(Prim3 p e1 e2 e3)
-     (match (interp-env e1 r)
-       ['err 'err]
-       [v1 (match (interp-env e2 r)
-             ['err 'err]
-             [v2 (match (interp-env e3 r)
-                   ['err 'err]
-                   [v3 (interp-prim3 p v1 v2 v3)])])])]       
     [(If p e1 e2)
      (match (interp-env p r)
        ['err 'err]
