@@ -7,8 +7,8 @@ else
   format=elf64
 endif
 
-%.run: %.o main.o char.o byte.o string.o gc.o
-	gcc main.o char.o byte.o string.o gc.o $< -o $@
+%.run: %.o main.o char.o byte.o gc.o
+	gcc main.o char.o byte.o gc.o $< -o $@
 
 main.o: main.c types.h heap.h
 	gcc -c main.c -o main.o
@@ -18,9 +18,6 @@ char.o: char.c types.h
 
 byte.o: byte.c types.h
 	gcc -c byte.c -o byte.o
-
-string.o: string.c types.h
-	gcc -c string.c -o string.o
 
 gc.o: gc.c types.h heap.h
 	gcc -c gc.c -o gc.o
