@@ -20,11 +20,11 @@
   (match e
     [(Int i)  (arithmetic-shift i shift)]
     [(Bool b) (if b val-true val-false)]
-    [(Prim 'add1 e0)
+    [(Prim1 'add1 e0)
      (wrap (add1 (interp-bits-wrap e0)))]
-    [(Prim 'sub1 e0)
+    [(Prim1 'sub1 e0)
      (wrap (sub1 (interp-bits-wrap e0)))]
-    [(Prim 'zero? e)
+    [(Prim1 'zero? e)
      (if (zero? (interp-bits-wrap e))
          val-true
          val-false)]
