@@ -25,3 +25,5 @@
     [(_ form fn . s)
      #`(filebox (link (string-append "code/" fn) (tt fn)) (form . #,(map syntax-e (syntax->list #'s))))]))
 
+(define (save-file f s)
+  (with-output-to-file f (λ () (display s)) #:exists 'replace))
