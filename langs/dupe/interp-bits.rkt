@@ -17,11 +17,11 @@
   (match e
     [(Int i)  (value->bits i)]
     [(Bool b) (value->bits b)]
-    [(Prim 'add1 e0)
+    [(Prim1 'add1 e0)
      (+ (interp-bits e0) (value->bits 1))]
-    [(Prim 'sub1 e0)
+    [(Prim1 'sub1 e0)
      (- (interp-bits e0) (value->bits 1))]
-    [(Prim 'zero? e)
+    [(Prim1 'zero? e)
      (if (zero? (interp-bits e))
          val-true
          val-false)]
