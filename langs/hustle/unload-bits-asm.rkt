@@ -1,11 +1,7 @@
 #lang racket
 (provide unload/free unload-value)
-
-
-
 (require "types.rkt"
-         ffi/unsafe
-         #;"heap-bits.rkt")
+         ffi/unsafe)
 
 ;; Answer* -> Answer
 (define (unload/free a)
@@ -22,20 +18,7 @@
      (box (unload-value (heap-ref i)))]
     [(? cons-bits? i)
      (cons (unload-value (heap-ref (+ i (arithmetic-shift 1 imm-shift))))
-           (unload-value (heap-ref i)))]
-    [(? str-bits? i)
-     
-     (let ((n (bits->imm (heap-ref i))))
-       (list->string
-        (for/list ((j n))
-          (bits->imm (heap-ref (+ i (* 8 (add1 j))))))))]))
-
-
-;       #f
-;       #;
-;       (list->string (map bits->imm (reverse (take (take-right h (+ a (add1 i))) i)))))]))
-
-
+           (unload-value (heap-ref i)))]))
 
 (define (untag i)
   (arithmetic-shift (arithmetic-shift i (- (integer-length ptr-mask)))
