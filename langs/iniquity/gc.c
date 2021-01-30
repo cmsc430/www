@@ -25,8 +25,6 @@ int obj_size(int64_t v) {
     return 1;    
   case cons_type_tag:
     return 2;
-  case str_type_tag:    
-    return (obj[0] >> int_shift) + 1;
   default:
     printf("unkown object type in obj_size");
     exit(1);
@@ -38,8 +36,7 @@ void print_types(type_front, type_rear) {
   printf("TYPES:\n");
   for (j = type_front; j < type_rear; j++) {
     printf("  [%d]: %s\n", j,
-	   ((type[j] == str_type_tag) ? "str" :
-	    (type[j] == box_type_tag) ? "box" :
+	   ((type[j] == box_type_tag) ? "box" :
 	    (type[j] == cons_type_tag) ? "cons" :
 	    "unknown"));
   }
@@ -53,7 +50,6 @@ void move_obj(char ptr_type, int64_t * addr, int64_t ** to_next) {
   int size =
     (ptr_type == box_type_tag)  ? 1 :
     (ptr_type == cons_type_tag) ? 2 :
-    (ptr_type == str_type_tag)  ? 1 + (addr[0] >> int_shift) :
     -1;
     
   int i;  
@@ -181,8 +177,6 @@ int64_t * collect_garbage(int64_t * rdi, int64_t * rbp, int64_t * rsp) {
       scan_word(&curr, &to_next, &type_rear);
       scan_word(&curr, &to_next, &type_rear);
       break;
-    case str_type_tag:
-      curr = &curr[1+(*curr >> int_shift)]; break;
     default:
       printf("unknown type: %d!!!\n", t);
       exit(1);
@@ -213,8 +207,6 @@ const char * ptr_type_to_string(int64_t tag) {
     return "box";
   case cons_type_tag:
     return "cons";
-  case str_type_tag:
-    return "str";
   default:
     return "unknown";
   } 

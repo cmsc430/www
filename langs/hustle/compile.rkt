@@ -41,12 +41,10 @@
     [(Char c)           (compile-value c)]
     [(Eof)              (compile-value eof)]
     [(Empty)            (compile-value '())]
-    [(Str s)            (compile-string s)]    
     [(Var x)            (compile-variable x c)]
     [(Prim0 p)          (compile-prim0 p c)]
     [(Prim1 p e)        (compile-prim1 p e c)]
     [(Prim2 p e1 e2)    (compile-prim2 p e1 e2 c)]
-    [(Prim3 p e1 e2 e3) (compile-prim3 p e1 e2 e3 c)]
     [(If e1 e2 e3)      (compile-if e1 e2 e3 c)]
     [(Begin e1 e2)      (compile-begin e1 e2 c)]
     [(Let x e1 e2)      (compile-let x e1 e2 c)]))
@@ -54,25 +52,6 @@
 ;; Value -> Asm
 (define (compile-value v)
   (seq (Mov rax (imm->bits v))))
-
-;; String -> Asm
-(define (compile-string s)
-  (let ((len (string-length s)))
-    (seq (Mov rax (imm->bits len))
-         (Mov (Offset rbx 0) rax)
-         (compile-string-chars (string->list s) 1)
-         (Mov rax rbx)
-         (Or rax type-str)
-         (Add rbx (* 8 (add1 len))))))
-
-;; [Listof Char] Nat -> Asm
-(define (compile-string-chars cs i)
-  (match cs
-    ['() '()]
-    [(cons c cs)
-     (seq (Mov rax (imm->bits c))
-          (Mov (Offset rbx (* i 8)) rax)
-          (compile-string-chars cs (add1 i)))]))
 
 ;; Id CEnv -> Asm
 (define (compile-variable x c)
@@ -151,13 +130,7 @@
           (seq (assert-cons rax)
                (Xor rax type-cons)
                (Mov rax (Offset rax 0)))]
-         ['empty? (eq-imm val-empty)]
-         ['string?
-          (type-pred ptr-mask type-str)]
-         ['string-length
-          (seq (assert-str rax)
-               (Xor rax type-str)
-               (Mov rax (Offset rax 0)))])))
+         ['empty? (eq-imm val-empty)])))
 
 ;; Op2 Expr Expr CEnv -> Asm
 (define (compile-prim2 p e1 e2 c)
@@ -190,66 +163,7 @@
                  (Mov (Offset rbx 8) rax)
                  (Mov rax rbx)
                  (Or rax type-cons)
-                 (Add rbx 16))]
-           ;; This stuff makes assumptions about integers being tagged with #b0000          
-           ['string-ref
-            (seq (Mov r8 (Offset rsp i))
-                 (assert-str r8)
-                 (assert-integer rax)
-                 (Xor r8 type-str)
-                 ;assert-bound
-                 (Sar rax 1)
-                 (Add r8 rax)
-                 (Mov rax (Offset r8 8)))]
-           ['make-string
-            (let ((done (gensym))
-                  (loop (gensym)))
-              (seq (assert-char rax)
-                   (assert-integer (Offset rsp i))
-                   (Mov r8 (Offset rsp i))
-                   ; assert-nat rsp[i]
-                   (Mov (Offset rbx 0) r8) ; Write length
-                   (Mov r9 r8)            ; Save length
-                   (Mov r8 rax)            ; Save char
-                   
-                   (Mov rax rbx)            ; Put str addr in rax 
-                   (Or rax type-str)         ; Tag                   
-                   (Add rbx 8)               ; Allocate cell for length
-                   ;; DVH: I don't understand why not shifting rcx
-                   ;; and decrementing by (imm->bits 1) doesn't work
-                   (Sar r9 int-shift)
-                   (Label loop)               ; Initialize string
-                   (Cmp r9 0)
-                   (Je done)
-                   ;(Mov rbx (imm->bits #\a))
-                   (Mov (Offset rbx 0) r8)
-                   (Add rbx 8)
-                   (Sub r9 1)
-                   (Jmp loop)
-                   (Label done)))]))))
-
-;; Op2 Expr Expr Expr CEnv -> Asm
-(define (compile-prim3 p e1 e2 e3 c)
-  (let ((i (next c))
-        (j (next (cons #f c))))        
-    (seq (compile-e e1 c)
-         (Mov (Offset rsp i) rax)
-         (compile-e e2 (cons #f c))
-         (Mov (Offset rsp j) rax)
-         (compile-e e3 (cons #f (cons #f c)))
-         (match p
-           ['string-set!
-            (seq (Mov r9 (Offset rsp i))
-                 (Mov r8 (Offset rsp j))                 
-                 (assert-str r9)
-                 (assert-integer r8)
-                 (assert-char rax)
-                 ; assert-bounds j i
-                 (Xor r9 type-str)
-                 (Sar r8 (- int-shift 3))                 
-                 (Add r9 r8)
-                 (Mov (Offset r9 8) rax)
-                 (Mov rax val-void))]))))
+                 (Add rbx 16))]))))
 
 ;; Imm -> Asm
 (define (eq-imm imm)
@@ -330,8 +244,6 @@
   (assert-type ptr-mask type-box))
 (define assert-cons
   (assert-type ptr-mask type-cons))
-(define assert-str
-  (assert-type ptr-mask type-str))
 
 (define assert-codepoint
   (let ((ok (gensym)))

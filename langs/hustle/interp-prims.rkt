@@ -1,6 +1,6 @@
 #lang racket
 (require "ast.rkt")
-(provide interp-prim1 interp-prim2 interp-prim3)
+(provide interp-prim1 interp-prim2)
 
 ;; Op1 Value -> Answer
 (define (interp-prim1 p1 v)
@@ -18,8 +18,6 @@
     [(list 'car (? pair?))                (car v)]
     [(list 'cdr (? pair?))                (cdr v)]
     [(list 'empty? v)                     (empty? v)]
-    [(list 'string? v)                    (string? v)]
-    [(list 'string-length (? string?))    (string-length v)]
     [_                                    'err]))
 
 ;; Op2 Value Value -> Answer
@@ -29,25 +27,7 @@
     [(list '- (? integer?) (? integer?))  (- v1 v2)]
     [(list 'eq? v1 v2)                    (eqv? v1 v2)]
     [(list 'cons v1 v2)                   (cons v1 v2)]
-    [(list 'string-ref (? string?) (? integer?))
-     (if (<= 0 v2 (sub1 (string-length v1)))
-         (string-ref v1 v2)
-         'err)]
-    [(list 'make-string (? integer?) (? char?))
-     (if (<= 0 v1)
-         (make-string v1 v2)
-         'err)]
     [_                                    'err]))
-
-
-;; Op3 Value Value Value -> Answer
-(define (interp-prim3 p v1 v2 v3)
-  (match (list p v1 v2 v3)
-    [(list 'string-set! (? string?) (? integer?) (? char?))
-     (if (<= 0 v2 (sub1 (string-length v1)))
-         (string-set! v1 v2 v3)
-         'err)]
-    [_  'err]))
 
 ;; Any -> Boolean
 (define (codepoint? v)

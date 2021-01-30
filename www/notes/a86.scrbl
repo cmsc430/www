@@ -66,9 +66,6 @@ int gcd(int n1, int n2) {
 }
 HERE
      )
-
-   (define (save-file f s)
-     (with-output-to-file f (λ () (display s)) #:exists 'replace))
       
    (parameterize ([current-directory (build-path notes "a86")])
      (save-file "tri.s" (asm-string (tri 36)))

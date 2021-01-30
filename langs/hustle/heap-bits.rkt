@@ -1,5 +1,5 @@
 #lang racket
-(provide alloc-box alloc-cons alloc-str heap-ref heap-set)
+(provide alloc-box alloc-cons heap-ref heap-set)
 (require "types.rkt")
 
 ;; Value* Heap -> Answer
@@ -13,14 +13,6 @@
   (cons (cons v2 (cons v1 h))
         (bitwise-ior (arithmetic-shift (length h) imm-shift)
                      type-cons)))
-
-;; String Heap -> Answer
-(define (alloc-str s h)
-  (cons (append (reverse (map imm->bits (string->list s)))
-                (list (imm->bits (string-length s)))
-                h)
-        (bitwise-ior (arithmetic-shift (length h) imm-shift)
-                     type-str)))
 
 ;; Heap Address -> Value*
 (define (heap-ref h a)
