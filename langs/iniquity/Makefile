@@ -7,20 +7,20 @@ else
   format=elf64
 endif
 
-%.run: %.o runtime.o
-	gcc runtime.o $< -o $@
+%.run: %.o main.o char.o byte.o gc.o
+	gcc main.o char.o byte.o gc.o $< -o $@
 
-runtime.o: main.o char.o io.o
-	ld -r main.o char.o io.o -o runtime.o
-
-main.o: main.c types.h runtime.h
-	gcc -fPIC -c main.c -o main.o
+main.o: main.c types.h heap.h
+	gcc -c main.c -o main.o
 
 char.o: char.c types.h
-	gcc -fPIC -c char.c -o char.o
+	gcc -c char.c -o char.o
 
-io.o: io.c runtime.h
-	gcc -fPIC -c io.c -o io.o
+byte.o: byte.c types.h
+	gcc -c byte.c -o byte.o
+
+gc.o: gc.c types.h heap.h
+	gcc -c gc.c -o gc.o
 
 %.o: %.s
 	nasm -f $(format) -o $@ $<
@@ -30,3 +30,6 @@ io.o: io.c runtime.h
 
 clean:
 	rm *.o *.s *.run
+
+test: 42.run
+	@test "$(shell ./42.run)" = "42"
