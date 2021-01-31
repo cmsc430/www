@@ -5,15 +5,10 @@
 ;; Registers used
 (define rax 'rax) ; return
 (define rbx 'rbx) ; heap
-(define r8  'r8)  ; scratch in make-string, string-set!, string-ref, +, -
-(define r9  'r9)  ; scratch in make-string, string-set!
-(define r10 'r10) ; scratch in assert-type
+(define r8  'r8)  ; scratch in +, -
+(define r9  'r9)  ; scratch in assert-type
 (define rsp 'rsp) ; stack
 (define rdi 'rdi) ; arg
-
-;; need runtime hook
-;; Ops on memory
-;; clobbering callee saved registers
 
 ;; type CEnv = [Listof Variable]
 
@@ -222,9 +217,9 @@
 
 (define (assert-type mask type)
   (λ (arg)
-    (seq (Mov r10 arg)
-         (And r10 mask)
-         (Cmp r10 type)
+    (seq (Mov r9 arg)
+         (And r9 mask)
+         (Cmp r9 type)
          (Jne 'err))))
 
 (define (type-pred mask type)
