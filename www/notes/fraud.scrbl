@@ -31,7 +31,6 @@
 
 @verbatim|{
 TODO:
-* Fix-up discussion of 'rsp with new stack discipline
 * Write about stack adjust around C calls
 * Push/pop etc. discussed in a86; update writing here
 * Update random testing for full language

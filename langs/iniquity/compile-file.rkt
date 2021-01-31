@@ -1,6 +1,6 @@
 #lang racket
 (provide main)
-(require "parse.rkt" "compile.rkt" a86/printer)
+(require "parse.rkt" "compile.rkt" "asm/printer.rkt")
 
 ;; String -> Void
 ;; Compile contents of given file name,

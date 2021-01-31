@@ -2,7 +2,7 @@
 (provide (all-defined-out))
 (require "ast.rkt"
          "types.rkt"
-         a86/ast)
+         "asm/ast.rkt")
 
 ;; type CEnv = [Listof Variable]
 

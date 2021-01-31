@@ -18,8 +18,13 @@
         (Extern 'write_byte)
         (Extern 'raise_error)
         (Label 'entry)
+        (Sub rsp 8)
         (compile-e e '())
-        (Ret)))
+        (Add rsp 8)
+        (Ret)
+        ;; Error handler
+        (Label 'err)
+        (Call 'raise_error)))
 
 ;; Expr CEnv -> Asm
 (define (compile-e e c)
@@ -49,12 +54,12 @@
 (define (compile-prim0 p c)
   (match p
     ['void      (seq (Mov rax val-void))]
-    ['read-byte (seq (pad-stack c)
+    ['read-byte (seq (move-env Sub c)
                      (Call 'read_byte)
-                     (unpad-stack c))]
-    ['peek-byte (seq (pad-stack c)
+                     (move-env Add c))]
+    ['peek-byte (seq (move-env Sub c)
                      (Call 'peek_byte)
-                     (unpad-stack c))]))
+                     (move-env Add c))]))
 
 ;; Op1 Expr CEnv -> Asm
 (define (compile-prim1 p e c)
@@ -101,29 +106,30 @@
                  (Label l1)))]
          ['write-byte
           (seq assert-byte
-               (pad-stack c)
+               (move-env Sub c)
                (Mov rdi rax)
                (Call 'write_byte)
-               (unpad-stack c)
+               (move-env Add c)
                (Mov rax val-void))])))
 
 ;; Op2 Expr Expr CEnv -> Asm
 (define (compile-prim2 p e1 e2 c)
-  (seq (compile-e e1 c)
-       (Push rax)
-       (compile-e e2 (cons #f c))       
-       (match p
-         ['+
-          (seq (Pop r8)
-               (assert-integer r8)
-               (assert-integer rax)
-               (Add rax r8))]
-         ['-
-          (seq (Pop r8)
-               (assert-integer r8)
-               (assert-integer rax)
-               (Sub r8 rax)
-               (Mov rax r8))])))
+  (let ((i (next c)))
+    (seq (compile-e e1 c)       
+         (Mov (Offset rsp i) rax)
+         (compile-e e2 (cons #f c))       
+         (match p
+           ['+
+            (seq (Mov r8 (Offset rsp i))
+                 (assert-integer r8)
+                 (assert-integer rax)
+                 (Add rax r8))]
+           ['-
+            (seq (Mov r8 (Offset rsp i))
+                 (assert-integer r8)
+                 (assert-integer rax)
+                 (Sub r8 rax)
+                 (Mov rax r8))]))))
 
 ;; Expr Expr Expr CEnv -> Asm
 (define (compile-if e1 e2 e3 c)
@@ -146,23 +152,21 @@
 ;; Id Expr Expr CEnv -> Asm
 (define (compile-let x e1 e2 c)
   (seq (compile-e e1 c)
-       (Push rax)
-       (compile-e e2 (cons x c))
-       (Add rsp 8)))
+       (Mov (Offset rsp (next c)) rax)
+       (compile-e e2 (cons x c))))
+
+;; CEnv -> Integer
+(define (next c)
+  (- (* 8 (add1 (length c)))))
 
 ;; CEnv -> Asm
-;; Pad the stack to be aligned for a call
-(define (pad-stack c)
-  (match (even? (length c))
-    [#t (seq (Sub rsp 8))]
-    [#f (seq)]))
-
-;; CEnv -> Asm
-;; Undo the stack alignment after a call
-(define (unpad-stack c)
-  (match (even? (length c))
-    [#t (seq (Add rsp 8))]
-    [#f (seq)]))
+;; Adjust 'rsp to save/restore current environment
+;; dir is either Sub (to save) or Add (to restore)
+(define (move-env dir c)
+  (let ((l (length c)))
+    (cond [(zero? l) (seq)] ; special case
+          [(even? l) (seq (dir rsp (* 8 l)))]
+          [(odd? l)  (seq (dir rsp (* 8 (add1 l))))])))
 
 ;; Id CEnv -> Integer
 (define (lookup x cenv)
@@ -170,15 +174,15 @@
     ['() (error "undefined variable:" x)]
     [(cons y rest)
      (match (eq? x y)
-       [#t 0]
-       [#f (+ 8 (lookup x rest))])]))
+       [#t (- (* 8 (length cenv)))]
+       [#f (lookup x rest)])]))
 
 (define (assert-type mask type)
   (λ (arg)
     (seq (Mov rbx arg)
          (And rbx mask)
          (Cmp rbx type)
-         (Jne 'raise_error))))
+         (Jne 'err))))
 
 (define assert-integer
   (assert-type mask-int type-int))
@@ -189,19 +193,20 @@
   (let ((ok (gensym)))
     (seq (assert-integer rax)
          (Cmp rax (value->bits 0))
-         (Jl 'raise_error)
+         (Jl 'err)
          (Cmp rax (value->bits 1114111))
-         (Jg 'raise_error)
+         (Jg 'err)
          (Cmp rax (value->bits 55295))
          (Jl ok)
          (Cmp rax (value->bits 57344))
          (Jg ok)
-         (Jmp 'raise_error)
+         (Jmp 'err)
          (Label ok))))
        
 (define assert-byte
   (seq (assert-integer rax)
        (Cmp rax (value->bits 0))
-       (Jl 'raise_error)
+       (Jl 'err)
        (Cmp rax (value->bits 255))
-       (Jg 'raise_error)))
+       (Jg 'err)))
+       
