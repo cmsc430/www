@@ -38,7 +38,7 @@
     [(Prim1 'integer->char e0)
      (bitwise-ior
       (arithmetic-shift
-       (arithmetic-shift (interp-bits e0 (- int-shift)))
+       (arithmetic-shift (interp-bits e0) (- int-shift))
        char-shift)
       type-char)]
     [(If e1 e2 e3)
