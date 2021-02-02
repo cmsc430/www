@@ -10,8 +10,11 @@
 
 @(define codeblock-include (make-codeblock-include #'h))
 
-@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "iniquity" f))))))
-	   '("interp.rkt" "ast.rkt" "parse.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+@(ev '(require rackunit a86))
+@(ev `(current-directory ,(path->string (build-path notes "iniquity"))))
+@(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
+@(for-each (λ (f) (ev `(require (file ,f))))
+	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
 @title[#:tag "Iniquity"]{Iniquity: function definitions and calls}
 
@@ -457,6 +460,7 @@ And we can confirm running the code produces results consistent with
 the interpreter:
 
 @ex[
+(current-objs '("runtime.o"))
 (define (run e)
   (asm-interp (compile (parse e))))
 
