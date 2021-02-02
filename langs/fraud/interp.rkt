@@ -1,6 +1,6 @@
 #lang racket
-(provide interp interp-env interp-prim1)
-(require "ast.rkt")
+(provide interp interp-env)
+(require "ast.rkt" "interp-prim.rkt")
 
 ;; type Answer = Value | 'err
 
@@ -25,9 +25,7 @@
     [(Char c) c]
     [(Eof) eof]       
     [(Var x) (lookup r x)]
-    [(Prim0 'read-byte) (read-byte)]
-    [(Prim0 'peek-byte) (peek-byte)]
-    [(Prim0 'void) (void)]
+    [(Prim0 p) (interp-prim0 p)]     
     [(Prim1 p e)
      (match (interp-env e r)
        ['err 'err]
@@ -54,26 +52,6 @@
        ['err 'err]
        [v (interp-env e2 (ext r x v))])]))
 
-;; Op1 Value -> Answer
-(define (interp-prim1 p1 v)
-  (match (list p1 v)
-    [(list 'add1 (? integer?)) (add1 v)]
-    [(list 'sub1 (? integer?)) (sub1 v)]
-    [(list 'zero? (? integer?)) (zero? v)]
-    [(list 'char? v) (char? v)]
-    [(list 'char->integer (? char?)) (char->integer v)]
-    [(list 'integer->char (? codepoint?)) (integer->char v)]
-    [(list 'eof-object? v) (eof-object? v)]
-    [(list 'write-byte (? byte?)) (write-byte v)]
-    [_ 'err]))
-
-;; Op2 Value Value -> Answer
-(define (interp-prim2 p v1 v2)
-  (match (list p v1 v2)
-    [(list '+ (? integer?) (? integer?)) (+ v1 v2)]
-    [(list '- (? integer?) (? integer?)) (- v1 v2)]
-    [_ 'err]))
-
 ;; Env Id -> Value
 (define (lookup r x)
   (match r
@@ -86,8 +64,3 @@
 (define (ext r v val)
   (cons (list v val) r))
 
-;; Any -> Boolean
-(define (codepoint? v)
-  (and (integer? v)
-       (or (<= 0 v 55295)
-           (<= 57344 v 1114111))))
