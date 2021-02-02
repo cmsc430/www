@@ -587,10 +587,9 @@ Here are the relevant parts of the compiler:
 (show '(let ((x 7)) (let ((x (add1 x))) x)))
 ]
 
-@(void (ev '(current-objs '("runtime.o"))))
-
 And running the examples:
 @ex[
+(current-objs '("runtime.o"))
 (define (tell e)
   (match (asm-interp (compile (parse e)))
     ['err 'err]
