@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label (except-in racket ... compile)))
+@(require (for-label (except-in racket ... compile) a86))
 @(require redex/pict
           racket/runtime-path
           scribble/examples
@@ -18,7 +18,7 @@
 @(ev `(current-directory ,(path->string (build-path notes "fraud"))))
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 @(for-each (λ (f) (ev `(require (file ,f))))
-	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
+	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt" "translate.rkt"))
 
 
 @(define this-lang "Fraud")
@@ -28,15 +28,6 @@
 @emph{To be is to be the value of a variable.}
 
 @table-of-contents[]
-
-@verbatim|{
-TODO:
-* Fix-up discussion of 'rsp with new stack discipline
-* Write about stack adjust around C calls
-* Push/pop etc. discussed in a86; update writing here
-* Update random testing for full language
-* Smooth out combination with Grift
-}|
 
 @section{Binding, variables, and binary operations}
 
@@ -446,14 +437,18 @@ variables, but just lexical addresses:
 @#reader scribble/comment-reader
 (racketblock
 ;; type IExpr =
+;; | (Eof)
 ;; | (Int Integer)
 ;; | (Bool Boolean)
-;; | (Prim Op Expr)
-;; | (If Expr Expr Expr)
-;; | (Let '_ Expr Expr)
+;; | (Char Character)
+;; | (Prim0 Op0)
+;; | (Prim1 Op1 IExpr)
+;; | (Prim2 Op2 IExpr IExpr)
+;; | (If IExpr IExpr IExpr)
+;; | (Begin IExpr IExpr)
+;; | (Let '_ IExpr IExpr)
 ;; | (Var Addr)
 ;; type Addr = Natural
-;; type prim = 'add1 | 'sub1 | 'zero?
 )
 
 Notice that variables have gone away, replaced by a @racket[(Var
@@ -463,7 +458,7 @@ variable name either.
 The idea is that we will translate expression (@tt{Expr}) like:
 
 @racketblock[
-(Let "x" (Int 7) (Var x))]
+(Let 'x (Int 7) (Var 'x))]
 
 into intermediate expressions (@tt{IExpr}) like:
 
@@ -474,7 +469,7 @@ into intermediate expressions (@tt{IExpr}) like:
 And:
 
 @racketblock[
-(Let "x" (Int 7) (Let "y" (Int 9) (Var "x")))
+(Let 'x (Int 7) (Let 'y (Int 9) (Var 'x)))
 ]
 
 into:
@@ -503,12 +498,20 @@ variable names by replacing variable occurrences with their lexical
 addresses.  It does a minor amount of syntax checking while it's at it
 by raising a (compile-time) error in the case of unbound variables.
 
-The interpreter for @tt{IExpr}s will still have an environment data
-structure, however it will be simpler the association list we started
-with.  The run-time environment will consist only of a list of values;
-the lexical address of (what used to be a) variable indicates the
-position in this list.  When a value is bound by a @racket[let], the
-list grows:
+We can try out some examples to confirm it works as expected.
+
+@ex[
+ (translate (Let 'x (Int 7) (Var 'x)))
+ (translate (Let 'x (Int 7) (Let 'y (Int 9) (Var 'x))))
+ ]
+
+The interpreter for @tt{IExpr}s will still have an
+environment data structure, however it will be simpler than
+the association list we started with. The run-time
+environment will consist only of a list of values; the
+lexical address of (what used to be a) variable indicates
+the position in this list. When a value is bound by a
+@racket[let], the list grows:
 
 @codeblock-include["fraud/interp-lexical.rkt"]
 
@@ -516,7 +519,7 @@ Try to convince yourself that the two version of @racket[interp]
 compute the same function.
 
 
-@section{An Example of @this-lang compilation}
+@section{Compiling lets and variables}
 
 Suppose we want to compile @racket[(let ((x 7)) (add1 x))].  There
 are two new forms we need to compile: the @racket[(let ((x ...))
@@ -544,16 +547,18 @@ Suppose we want to compile @racket[(let ((x 7)) (let ((y 2)) (add1
 x)))].  Using the intuition developed so far, we should push 7, push
 8, and then run the body.  But notice that the value of @racket['x] is
 no longer on the top of the stack; @racket[y] is.  So to retrieve the
-value of @racket[x] we need jump past the @racket[y].  But calculating
+value of @racket[x] we need skip past the @racket[y].  But calculating
 these offsets is pretty straightforward.  In this example there is one
 binding between the binding of @racket[x] and this occurrence.  Since
 we push every time we enter a let and pop every time we leave, the
 number of bindings between an occurrence and its binder is exactly the
-offset from the top of the stack we need use.
+offset from the top of the stack we need use; in other words, the compiler
+uses lexical addresses just like the alternative interperter above
+and the stack of values plays the role of the run-time envivornment.
 
 Here are the relevant parts of the compiler:
 
-@filebox-include-fake[codeblock "fraud/ast.rkt"]{
+@filebox-include-fake[codeblock "fraud/compile.rkt"]{
 ;; Expr CEnv -> Asm
 (define (compile-e e c)
   (match e
@@ -569,9 +574,28 @@ Here are the relevant parts of the compiler:
 ;; Id Expr Expr CEnv -> Asm
 (define (compile-let x e1 e2 c)
   (seq (compile-e e1 c)
-       (Mov (Offset rsp (next c)) rax)
-       (compile-e e2 (cons x c))))
+       (Push rax)
+       (compile-e e2 (cons x c))
+       (Add rax 8)))
+
+;; Id CEnv -> Integer
+(define (lookup x cenv)
+  (match cenv
+    ['() (error "undefined variable:" x)]
+    [(cons y rest)
+     (match (eq? x y)
+       [#t 0]
+       [#f (+ 8 (lookup x rest))])]))
 }
+
+Notice that the @racket[lookup] function computes a lexical
+address from an identifier and compile-time environment,
+just like the @racket[lexical-address] function in @tt{
+ translate.rkt}. The only difference is addresses are
+calculated as byte offsets, hence the addition of 8 instead
+of 1 in the recursive case.
+
+Let's take a look at some examples.
 
 @ex[
 (define (show e)
@@ -605,7 +629,7 @@ And running the examples:
 (tell '(let ((x 7)) (let ((x (add1 x))) x)))
 ]
 
-
+@section{Compiling binary operations}
 
 Binary expressions are easy to deal with at the level of the semantics
 and interpreter.  However things are more complicated at the level of
@@ -635,9 +659,9 @@ the first subexpression:
 ;; Expr Expr CEnv -> Asm
 (define (compile-+ e0 e1 c)
   (seq (compile-e e0 c)
-       (Mov 'rbx 'rax)
+       (Mov 'r8 'rax)
        (compile-e e1 c)
-       (Add 'rax 'rbx)))
+       (Add 'rax 'r8)))
 )
 
 Can you think of how this could go wrong?
@@ -658,14 +682,14 @@ could emit working code.  For example:
 ;; A special case for compiling (+ i0 e1)
 (define (compile-+-int i0 e1 c)
   (seq (compile-e e1 c)
-       (Add 'rax (arithmetic-shift i0 imm-shift))))
+       (Add 'rax (value->bits i0))))
 
 ;; Id Expr CEnv -> Asm
 ;; A special case for compiling (+ x0 e1)
 (define (compile-+-var x0 e1)
   (let ((i (lookup x0 c)))
     (seq (compile-e e1 c)
-         (Add 'rax (Offset 'rsp (- (add1 i)))))))
+         (Add 'rax (Offset 'rsp i)))))
 )
 
 The latter suggests a general solution could be to transform binary
@@ -687,7 +711,7 @@ above.  It is @emph{always} 0 because the transformation puts the
 @racket[let] immediately around the occurrence of @racket[_x].  So if
 we're compiling @racket[(+ _e0 _e1)] in environment @racket[_c] using
 this approach, we know the value of @racket[_e0] will live at
-@racket[`(offset rsp ,(- (add1 (length c))))].  There's no need for a
+@racket[(Offset 'rsp 0)].  There's no need for a
 @racket[let] binding or a fresh variable name.  And this observation
 enables us to write a general purpose compiler for binary primitives
 that doesn't require any program transformation: we simply push the
@@ -701,13 +725,13 @@ Here is a first cut:
 (define (compile-+ e0 e1 c)
   (let ((x (gensym))) ; generate a fresh variable
     (seq (compile-e e0 c)
-         (Mov (Offset 'rsp (add1 (- (length c)))) 'rax)
+         (Push 'rax)
          (compile-e e1 (cons x c))
-         (Add 'rax (Offset 'rsp (- (add1 (lookup x (cons x c)))))))))
+         (Pop 'r8)
+         (Add 'rax 'r8)))) 
 )
 
-There are a couple things to notice.  First: the @racket[(lookup x
-(cons x c))] just produces @racket[(length c)].  Second, when
+There are a couple things to notice.  When
 compiling @racket[_e1] in environment @racket[(cons x c)], we know
 that no variable in @racket[_e1] resolves to @racket[x] because
 @racket[x] is a freshly @racket[gensym]'d symbol.  Putting (an
@@ -719,17 +743,17 @@ the same thing by sticking in something that no variable is equal to:
 
 @#reader scribble/comment-reader
 (racketblock
-;; Expr Expr CEnv -> Asm
 (define (compile-+ e0 e1 c)
   (seq (compile-e e0 c)
-       (Mov (Offset 'rsp (add1 (- (length c)))) 'rax)
+       (Push 'rax)
        (compile-e e1 (cons #f c))
-       (Add 'rax (Offset 'rsp (- (add1 (length c)))))))
+       (Pop 'r8)
+       (Add 'rax 'r8)))
 )
 
 The relevant bits of the compiler are:
 
-@filebox-include-fake[codeblock "fraud/ast.rkt"]{
+@filebox-include-fake[codeblock "fraud/compile.rkt"]{
 #lang racket
 ;...
 ;; Expr CEnv -> Asm
@@ -740,23 +764,24 @@ The relevant bits of the compiler are:
 
 ;; Op2 Expr Expr CEnv -> Asm
 (define (compile-prim2 p e1 e2 c)
-  (let ((i (next c)))
-    (seq (compile-e e1 c)
-         (Mov (Offset rsp i) rax)
-         (compile-e e2 (cons #f c))
-         (match p
-           ['+
-            (seq (Mov r8 (Offset rsp i))
-                 (assert-integer r8)
-                 (assert-integer rax)
-                 (Add rax r8))]
-           ['-
-            (seq (Mov r8 (Offset rsp i))
-                 (assert-integer r8)
-                 (assert-integer rax)
-                 (Sub r8 rax)
-                 (Mov rax r8))]))))
+  (seq (compile-e e1 c)
+       (Push rax)
+       (compile-e e2 (cons #f c))       
+       (match p
+         ['+
+          (seq (Pop r8)
+               (assert-integer r8)
+               (assert-integer rax)
+               (Add rax r8))]
+         ['-
+          (seq (Pop r8)
+               (assert-integer r8)
+               (assert-integer rax)
+               (Sub r8 rax)
+               (Mov rax r8))])))
 }
+
+@section{Complete @this-lang compiler}
 
 The complete code for the compiler:
 
