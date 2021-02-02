@@ -58,7 +58,7 @@
 
 ;; Op1 Expr CEnv -> Asm
 (define (compile-prim1 p e c)
-  (seq (compile-e e)
+  (seq (compile-e e c)
        (compile-op1 p c)))
 
 ;; Op1 CEnv -> Asm
