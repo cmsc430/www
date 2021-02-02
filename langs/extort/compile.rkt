@@ -15,9 +15,13 @@
         (Extern 'write_byte)
         (Extern 'raise_error)
         (Label 'entry)
-        ; stack is misaligned
+        (Sub rsp 8)
         (compile-e e)
-        (Ret)))
+        (Add rsp 8)
+        (Ret)
+        ;; Error handler
+        (Label 'err)
+        (Call 'raise_error)))
 
 ;; Expr -> Asm
 (define (compile-e e)
@@ -39,12 +43,8 @@
 (define (compile-prim0 p)
   (match p
     ['void      (seq (Mov rax val-void))]
-    ['read-byte (seq (Sub rsp 8) ; align
-                     (Call 'read_byte)
-                     (Add rsp 8))]
-    ['peek-byte (seq (Sub rsp 8) ; align
-                     (Call 'peek_byte)
-                     (Add rsp 8))]))
+    ['read-byte (seq (Call 'read_byte))]
+    ['peek-byte (seq (Call 'peek_byte))]))
 
 ;; Op1 Expr -> Asm
 (define (compile-prim1 p e)
@@ -96,9 +96,7 @@
     ['write-byte
      (seq assert-byte
           (Mov rdi rax)
-          (Sub rsp 8)
           (Call 'write_byte)
-          (Add rsp 8)
           (Mov rax val-void))]))
 
 ;; Expr Expr Expr -> Asm
@@ -123,7 +121,7 @@
   (seq (Mov rbx rax)
        (And rbx mask)
        (Cmp rbx type)
-       (Jne 'raise_error)))
+       (Jne 'err)))
 
 (define assert-integer
   (assert-type mask-int type-int))
@@ -134,20 +132,19 @@
   (let ((ok (gensym)))
     (seq assert-integer
          (Cmp rax (value->bits 0))
-         (Jl 'raise_error)
+         (Jl 'err)
          (Cmp rax (value->bits 1114111))
-         (Jg 'raise_error)
+         (Jg 'err)
          (Cmp rax (value->bits 55295))
          (Jl ok)
          (Cmp rax (value->bits 57344))
          (Jg ok)
-         (Jmp 'raise_error)
+         (Jmp 'err)
          (Label ok))))
        
 (define assert-byte
   (seq assert-integer
        (Cmp rax (value->bits 0))
-       (Jl 'raise_error)
+       (Jl 'err)
        (Cmp rax (value->bits 255))
-       (Jg 'raise_error)))
-       
+       (Jg 'err)))
