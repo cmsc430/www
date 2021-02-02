@@ -2,7 +2,7 @@
 (provide test-runner test-runner-io)
 (require rackunit)
 
-(define (test-runner run) 
+(define (test-runner run)
   ;; Abscond examples
   (check-equal? (run 7) 7)
   (check-equal? (run -8) -8)
@@ -34,15 +34,15 @@
   (check-equal? (run '(if #f 3 4)) 4)
   (check-equal? (run '(if  0 3 4)) 3)
   (check-equal? (run '(zero? 4)) #f)
-  (check-equal? (run '(zero? 0)) #t)  
+  (check-equal? (run '(zero? 0)) #t)
   ;; Dodger examples
   (check-equal? (run #\a) #\a)
   (check-equal? (run #\b) #\b)
   (check-equal? (run '(char? #\a)) #t)
-  (check-equal? (run '(char? #t)) #f)  
-  (check-equal? (run '(char? 8)) #f) 
+  (check-equal? (run '(char? #t)) #f)
+  (check-equal? (run '(char? 8)) #f)
   (check-equal? (run '(char->integer #\a)) (char->integer #\a))
-  (check-equal? (run '(integer->char 955)) #\λ)  
+  (check-equal? (run '(integer->char 955)) #\λ)
   ;; Extort examples
   (check-equal? (run '(add1 #f)) 'err)
   (check-equal? (run '(sub1 #f)) 'err)
@@ -76,8 +76,8 @@
                         (let ((z (- 4 x)))
                           (+ (+ x x) z))))
                 7)
-  ;; Hustle examples  
-  (check-equal? (run ''()) '())  
+  ;; Hustle examples
+  (check-equal? (run ''()) '())
   (check-equal? (run '(box 1)) (box 1))
   (check-equal? (run '(cons 1 2)) (cons 1 2))
   (check-equal? (run '(unbox (box 1))) 1)
@@ -91,8 +91,7 @@
   (check-equal? (run '(let ((x (cons 1 2)))
                         (let ((y (box 3)))
                           (unbox y))))
-                3)  
-
+                3)
   ;; Iniquity tests
   (check-equal? (run
                  '(begin (define (f x) x)
@@ -105,7 +104,7 @@
                                (+ x (tri (sub1 x)))))
                          (tri 9)))
                 45)
-
+#|
   (check-equal? (run
                  '(begin (define (even? x)
                            (if (zero? x)
@@ -125,36 +124,63 @@
                                (cons (add1 (car xs))
                                      (map-add1 (cdr xs)))))
                          (map-add1 (cons 1 (cons 2 (cons 3 '()))))))
-                '(2 3 4)))
+                '(2 3 4))|#)
 
 (define (test-runner-io run)
   ;; Evildoer examples
-  (check-equal? (run 7 "") "7\n")
-  (check-equal? (run '(write-byte 97) "") "a")
-  (check-equal? (run '(read-byte) "a") "97\n")
-  (check-equal? (run '(begin (write-byte 97) (read-byte)) "b") "a98\n")
-  (check-equal? (run '(read-byte) "") "#<eof>\n")
-  (check-equal? (run '(eof-object? (read-byte)) "") "#t\n")
-  (check-equal? (run '(eof-object? (read-byte)) "a") "#f\n")
-  (check-equal? (run '(begin (write-byte 97) (write-byte 98)) "") "ab")
+  (check-equal? (run 7 "") (cons 7 ""))
+  (check-equal? (run '(write-byte 97) "") (cons (void) "a"))
+  (check-equal? (run '(read-byte) "a") (cons 97 ""))
+  (check-equal? (run '(begin (write-byte 97) (read-byte)) "b")
+                (cons 98 "a"))
+  (check-equal? (run '(read-byte) "") (cons eof ""))
+  (check-equal? (run '(eof-object? (read-byte)) "") (cons #t ""))
+  (check-equal? (run '(eof-object? (read-byte)) "a") (cons #f ""))
+  (check-equal? (run '(begin (write-byte 97) (write-byte 98)) "")
+                (cons (void) "ab"))
+
+  (check-equal? (run '(peek-byte) "ab") (cons 97 ""))
+  (check-equal? (run '(begin (peek-byte) (read-byte)) "ab") (cons 97 ""))
+  ;; Extort examples
+  (check-equal? (run '(write-byte #t) "") (cons 'err ""))
+
+  ;; Fraud examples
+  (check-equal? (run '(let ((x 97)) (write-byte x)) "") (cons (void) "a"))
+  (check-equal? (run '(let ((x 97))
+                        (begin (write-byte x)
+                               x))
+                     "")
+                (cons 97 "a"))
+  (check-equal? (run '(let ((x 97)) (begin (read-byte) x)) "b")
+                (cons 97 ""))
+  (check-equal? (run '(let ((x 97)) (begin (peek-byte) x)) "b")
+                (cons 97 ""))
+
   ;; Hustle examples
   (check-equal? (run '(let ((x 1))
                         (begin (write-byte 97)
                                1))
                      "")
-                "a1\n")
+                (cons 1 "a"))
 
   (check-equal? (run '(let ((x 1))
                         (let ((y 2))
                           (begin (write-byte 97)
                                  1)))
                      "")
-                "a1\n")
+                (cons 1 "a"))
 
-  ;; corrupts rdi if you don't save it... but how do you observe the problem...
-  ;; just starts allocating in some random spot in memory
   (check-equal? (run '(let ((x (cons 1 2)))
                         (begin (write-byte 97)
                                (car x)))
                      "")
-                "a1\n"))
+                (cons 1 "a"))
+  ;; Iniquity examples
+  (check-equal? (run '(begin (define (print-alphabet i)
+                               (if (zero? i)
+                                   (void)
+                                   (begin (write-byte (- 123 i))
+                                          (print-alphabet (sub1 i)))))
+                             (print-alphabet 26))
+                     "")
+                (cons (void) "abcdefghijklmnopqrstuvwxyz")))
