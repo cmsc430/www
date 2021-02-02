@@ -28,35 +28,20 @@
          val-true
          val-false)]
     [(Prim1 'char? e0)
-     (if (char-bits? (interp-bits e0))
+     (if (= type-char (bitwise-and (interp-bits e0) #b11))
          val-true
          val-false)]
     [(Prim1 'char->integer e0)
-     (integer->integer-bits      
-      (char-bits->integer (interp-bits e0)))]
+     (arithmetic-shift
+      (arithmetic-shift (interp-bits e0) (- char-shift))
+      int-shift)]
     [(Prim1 'integer->char e0)
-     (integer->char-bits
-      (integer-bits->integer (interp-bits e0)))]
+     (bitwise-ior
+      (arithmetic-shift
+       (arithmetic-shift (interp-bits e0 (- int-shift)))
+       char-shift)
+      type-char)]
     [(If e1 e2 e3)
      (if (= (interp-bits e1) val-false)
          (interp-bits e3)
          (interp-bits e2))]))
-
-(define (char-bits->integer b)
-  (arithmetic-shift b (- char-shift)))
-
-(define (integer-bits->integer b)
-  (arithmetic-shift b (- int-shift)))
-
-(define (integer->integer-bits b)
-  (bitwise-ior type-int
-               (arithmetic-shift b int-shift)))
-
-(define (integer->char-bits b)    
-  (bitwise-ior type-char
-               (arithmetic-shift b char-shift)))               
-
-(define (char-bits? b)
-  (= (bitwise-and (sub1 (arithmetic-shift 1 char-shift)) b)
-     type-char))
-
