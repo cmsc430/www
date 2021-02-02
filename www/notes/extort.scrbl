@@ -113,6 +113,7 @@ arguments and an error is produced if the check fails.  Errors are
 also propagated when a subexpression produces an error:
 
 @codeblock-include["extort/interp.rkt"]
+@codeblock-include["extort/interp-prim.rkt"]
 
 We can confirm the interpreter computes the right result for the
 examples given earlier:

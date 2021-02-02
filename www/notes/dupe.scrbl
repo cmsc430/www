@@ -157,7 +157,7 @@ conditional.
 This semantics has also been refactored slightly so that
 there is a single rule for the @racket[Prim1] case. The new
 rule essentially defers the work to a new metafunction,
-@racket[𝑫-𝒑𝒓𝒊𝒎]:
+@math{𝑫-𝒑𝒓𝒊𝒎}:
 
 @(centered
   (with-compound-rewriters (['+ (rewrite '+)]
@@ -183,6 +183,10 @@ The interpreter follows the rules of the semantics closely and is
 straightforward:
 
 @codeblock-include["dupe/interp.rkt"]
+
+And the interpretation of primitives closely matches @math{𝑫-𝒑𝒓𝒊𝒎}:
+
+@codeblock-include["dupe/interp-prim.rkt"]
 
 We can confirm the interpreter computes the right result for the
 examples given earlier:

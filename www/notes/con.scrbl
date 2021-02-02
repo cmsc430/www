@@ -165,6 +165,12 @@ value.
 
 @codeblock-include["con/interp.rkt"]
 
+We've also made one trivial change, which is to move @racket[interp-prim1] to its
+own module.  This will be useful in the future when more primitive operations are
+added, we won't have to clutter up the interpreter:
+
+@codeblock-include["con/interp-prim.rkt"]
+
 We can confirm the interpreter computes the right result for the
 examples given earlier (using @racket[parse] to state the examples
 with concrete notation):
