@@ -305,11 +305,16 @@ itself having access to them. Racket, on the other hand, can
 model effectful computations directly as effectful Racket
 programs.
 
-Here's an interpreter for Evildoer, that relies on the
-underlying implementations @racket[read-byte],
-@racket[write-byte], etc. from Racket:
+Here's an interpreter for Evildoer:
 
 @codeblock-include["evildoer/interp.rkt"]
+
+The interpretation of primitives relies on the
+underlying implementations @racket[read-byte],
+@racket[write-byte], etc. from Racket (just like it does
+for all the other operations):
+
+@codeblock-include["evildoer/interp-prim.rkt"]
 
 Interpreting a program that reads and writes will itself
 read and write:

@@ -98,9 +98,13 @@ system, described below, takes care of printing them.
 
 The semantics are ommitted for now (there's really nothing new that's interesting).
 
-The interpeter is much like that of Dupe:
+The interpeter is much like that of Dupe, except we have a new base case:
 
 @codeblock-include["dodger/interp.rkt"]
+
+And the interpretation of primitives is extended:
+
+@codeblock-include["dodger/interp-prim.rkt"]
 
 The meaning of characters and their operations are just lifted from Racket.
 
