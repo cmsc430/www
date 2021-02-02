@@ -1,5 +1,5 @@
 #lang racket
-(provide interp-prim0 interp-prim1 interp-prim2)
+(provide interp-prim0 interp-prim1)
 
 ;; Op0 -> Answer
 (define (interp-prim0 op)
@@ -19,12 +19,6 @@
     ['integer->char (if (codepoint? v) (integer->char v) 'err)]
     ['eof-object?   (eof-object? v)]
     ['write-byte    (if (byte? v) (write-byte v) 'err)]))
-
-;; Op2 Value Value -> Answer
-(define (interp-prim2 op v1 v2)
-  (match op
-    ['+ (if (and (integer? v1) (integer? v2)) (+ v1 v2) 'err)]
-    ['- (if (and (integer? v1) (integer? v2)) (- v1 v2) 'err)]))
 
 ;; Any -> Boolean
 (define (codepoint? v)
