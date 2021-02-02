@@ -16,7 +16,7 @@
        ['eof                    (Eof)]
        [(list 'read-byte)       (Prim0 'read-byte)]
        [(list 'peek-byte)       (Prim0 'peek-byte)]
-       [(list 'parse)           (Prim0 'parse)]
+       [(list 'void)            (Prim0 'void)]
        [(list 'add1 e)          (Prim1 'add1 (parse e))]
        [(list 'sub1 e)          (Prim1 'sub1 (parse e))]
        [(list 'zero? e)         (Prim1 'zero? (parse e))]

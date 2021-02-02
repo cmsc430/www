@@ -14,7 +14,7 @@
     [(Int i)       (compile-value i)]
     [(Bool b)      (compile-value b)]
     [(Char c)      (compile-value c)]
-    [(Prim p e)    (compile-prim p e)]
+    [(Prim1 p e)   (compile-prim p e)]
     [(If e1 e2 e3) (compile-if e1 e2 e3)]))
 
 ;; Value -> Asm

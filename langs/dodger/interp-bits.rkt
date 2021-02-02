@@ -19,22 +19,22 @@
     [(Int i)  (value->bits i)]
     [(Char c) (value->bits c)]
     [(Bool b) (value->bits b)]
-    [(Prim 'add1 e0)
+    [(Prim1 'add1 e0)
      (+ (interp-bits e0) (value->bits 1))]
-    [(Prim 'sub1 e0)
+    [(Prim1 'sub1 e0)
      (- (interp-bits e0) (value->bits 1))]
-    [(Prim 'zero? e)
+    [(Prim1 'zero? e)
      (if (zero? (interp-bits e))
          val-true
          val-false)]
-    [(Prim 'char? e0)
+    [(Prim1 'char? e0)
      (if (char-bits? (interp-bits e0))
          val-true
          val-false)]
-    [(Prim 'char->integer e0)
+    [(Prim1 'char->integer e0)
      (integer->integer-bits      
       (char-bits->integer (interp-bits e0)))]
-    [(Prim 'integer->char e0)
+    [(Prim1 'integer->char e0)
      (integer->char-bits
       (integer-bits->integer (interp-bits e0)))]
     [(If e1 e2 e3)
