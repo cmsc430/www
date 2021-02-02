@@ -18,10 +18,7 @@
         (Sub rsp 8)
         (compile-e e)
         (Add rsp 8)
-        (Ret)
-        ;; Error handler
-        (Label 'err)
-        (Call 'raise_error)))
+        (Ret)))
 
 ;; Expr -> Asm
 (define (compile-e e)
@@ -49,51 +46,55 @@
 ;; Op1 Expr -> Asm
 (define (compile-prim1 p e)
   (seq (compile-e e)
-       (match p
-         ['add1
-          (seq assert-integer
-               (Add rax (value->bits 1)))]
-         ['sub1
-          (seq assert-integer
-               (Sub rax (value->bits 1)))]         
-         ['zero?
-          (let ((l1 (gensym)))
-            (seq assert-integer
-                 (Cmp rax 0)
-                 (Mov rax val-true)
-                 (Je l1)
-                 (Mov rax val-false)
-                 (Label l1)))]
-         ['char?
-          (let ((l1 (gensym)))
-            (seq (And rax mask-char)
-                 (Xor rax type-char)
-                 (Cmp rax 0)
-                 (Mov rax val-true)
-                 (Je l1)
-                 (Mov rax val-false)
-                 (Label l1)))]
-         ['char->integer
-          (seq assert-char
-               (Sar rax char-shift)
-               (Sal rax int-shift))]
-         ['integer->char
-          (seq assert-codepoint
-               (Sar rax int-shift)
-               (Sal rax char-shift)
-               (Xor rax type-char))]
-         ['eof-object?
-          (let ((l1 (gensym)))
-            (seq (Cmp rax val-eof)
-                 (Mov rax val-true)
-                 (Je l1)
-                 (Mov rax val-false)
-                 (Label l1)))]
-         ['write-byte
-          (seq assert-byte
-               (Mov rdi rax)
-               (Call 'write_byte)
-               (Mov rax val-void))])))
+       (compile-op1 p)))
+
+;; Op1 -> Asm
+(define (compile-op1 p)
+  (match p
+    ['add1
+     (seq assert-integer
+          (Add rax (value->bits 1)))]
+    ['sub1
+     (seq assert-integer
+          (Sub rax (value->bits 1)))]
+    ['zero?
+     (let ((l1 (gensym)))
+       (seq assert-integer
+            (Cmp rax 0)
+            (Mov rax val-true)
+            (Je l1)
+            (Mov rax val-false)
+            (Label l1)))]
+    ['char?
+     (let ((l1 (gensym)))
+       (seq (And rax mask-char)
+            (Xor rax type-char)
+            (Cmp rax 0)
+            (Mov rax val-true)
+            (Je l1)
+            (Mov rax val-false)
+            (Label l1)))]
+    ['char->integer
+     (seq assert-char
+          (Sar rax char-shift)
+          (Sal rax int-shift))]
+    ['integer->char
+     (seq assert-codepoint
+          (Sar rax int-shift)
+          (Sal rax char-shift)
+          (Xor rax type-char))]
+    ['eof-object?
+     (let ((l1 (gensym)))
+       (seq (Cmp rax val-eof)
+            (Mov rax val-true)
+            (Je l1)
+            (Mov rax val-false)
+            (Label l1)))]
+    ['write-byte
+     (seq assert-byte
+          (Mov rdi rax)
+          (Call 'write_byte)
+          (Mov rax val-void))]))
 
 ;; Expr Expr Expr -> Asm
 (define (compile-if e1 e2 e3)
@@ -117,7 +118,7 @@
   (seq (Mov rbx rax)
        (And rbx mask)
        (Cmp rbx type)
-       (Jne 'err)))
+       (Jne 'raise_error)))
 
 (define assert-integer
   (assert-type mask-int type-int))
@@ -128,20 +129,20 @@
   (let ((ok (gensym)))
     (seq assert-integer
          (Cmp rax (value->bits 0))
-         (Jl 'err)
+         (Jl 'raise_errpr)
          (Cmp rax (value->bits 1114111))
-         (Jg 'err)
+         (Jg 'raise_errpr)
          (Cmp rax (value->bits 55295))
          (Jl ok)
          (Cmp rax (value->bits 57344))
          (Jg ok)
-         (Jmp 'err)
+         (Jmp 'raise_errpr)
          (Label ok))))
        
 (define assert-byte
   (seq assert-integer
        (Cmp rax (value->bits 0))
-       (Jl 'err)
+       (Jl 'raise_errpr)
        (Cmp rax (value->bits 255))
-       (Jg 'err)))
+       (Jg 'raise_errpr)))
        
