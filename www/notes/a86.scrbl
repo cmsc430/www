@@ -28,7 +28,7 @@
    (require racket/system a86/ast a86/printer)
    (define (tri n)
       (list (Label 'entry)
-         (Mov 'rbx 36)     (% "the \"input\"")
+         (Mov 'rbx n)      (% "the \"input\"")
          (%%% "tri: a recursive function for computing nth")
          (%%% "triangular number, where n is given in rbx.")
          (Label 'tri)
@@ -358,7 +358,7 @@ number.  Easy-peasy:
  ; Computes a86 code that computes the @math{n}th triangular number
  (define (tri n)
    (list (Label 'entry)
-         (Mov 'rbx 36)     (% "the \"input\"")
+         (Mov 'rbx n)      (% "the \"input\"")
          (%%% "tri: a recursive function for computing nth")
          (%%% "triangular number, where n is given in rbx.")
          (Label 'tri)
