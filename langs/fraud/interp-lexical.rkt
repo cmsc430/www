@@ -1,6 +1,6 @@
 #lang racket
 (provide (all-defined-out))
-(require "ast.rkt" "translate.rkt")
+(require "ast.rkt" "translate.rkt" "interp-prim.rkt")
 
 ;; type VEnv = (Listof Value)
 
@@ -8,13 +8,25 @@
 (define (interp e)
   (interp-env (translate e) '()))
 
-;; IExpr VEnv -> Answer
+;; Expr VEnv -> Answer
 (define (interp-env e r)
   (match e
-    [(Var a) (list-ref r a)]
     [(Int i) i]
     [(Bool b) b]
-    [(Prim1 p e) (interp-prim p (interp-env e r))]
+    [(Char c) c]
+    [(Eof) eof]       
+    [(Var a) (list-ref r a)]
+    [(Prim0 p) (interp-prim0 p)]     
+    [(Prim1 p e)
+     (match (interp-env e r)
+       ['err 'err]
+       [v (interp-prim1 p v)])]
+    [(Prim2 p e1 e2)
+     (match (interp-env e1 r)
+       ['err 'err]
+       [v1 (match (interp-env e2 r)
+             ['err 'err]
+             [v2 (interp-prim2 p v1 v2)])])]
     [(If p e1 e2)
      (match (interp-env p r)
        ['err 'err]
@@ -22,18 +34,11 @@
         (if v
             (interp-env e1 r)
             (interp-env e2 r))])]
+    [(Begin e1 e2)
+     (match (interp-env e1 r)
+       ['err 'err]
+       [v    (interp-env e2 r)])]
     [(Let '_ e1 e2)
      (match (interp-env e1 r)
        ['err 'err]
        [v (interp-env e2 (cons v r))])]))
-
-;; Op Answer -> Answer
-(define (interp-prim p a)
-  (match a
-    [(? integer? i)
-     ((match p
-        ['add1 add1]
-        ['sub1 sub1]
-        ['zero? zero?])
-      i)]
-    [_ 'err]))

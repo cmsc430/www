@@ -13,7 +13,7 @@
   (match e
     [(Int i)           (compile-integer i)]
     [(Bool b)          (compile-boolean b)]
-    [(Prim p e)        (compile-prim p e)]
+    [(Prim1 p e)       (compile-prim p e)]
     [(If e1 e2 e3)     (compile-if e1 e2 e3)]))
 
 ;; Integer -> Asm
