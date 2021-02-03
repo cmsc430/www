@@ -161,10 +161,17 @@
 (define (ld t.o t.so)
   (define err-port (open-output-string))
   (define objs (string-splice (current-objs)))
+  (define -z-defs-maybe
+    (if (eq? (system-type 'os) 'macosx)
+        ""
+        "-z defs "))
   (unless (parameterize ((current-error-port err-port))  
-            (system (format "gcc -v -shared ~a ~a -o ~a" t.o objs t.so)))
+            (system (format "gcc ~a-v -shared ~a ~a -o ~a"
+                            -z-defs-maybe
+                            t.o objs t.so)))
     (define err-msg
       (get-output-string err-port))
-    (match (regexp-match #rx"Undefined.*\"(.*)\"" err-msg)
+    (match (or (regexp-match #rx"Undefined.*\"(.*)\"" err-msg)            ; mac
+               (regexp-match #rx"undefined reference to `(.*)'" err-msg)) ; linux
       [(list _ symbol) (ld:undef-symbol symbol)]
       [_ (ld:error (format "unknown link error.\n\n~a" err-msg))])))
