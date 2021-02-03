@@ -1,22 +1,19 @@
 #lang scribble/manual
 @title[#:tag "Assignment 2" #:style 'unnumbered]{Assignment 2: Racket Primer}
 
-@bold{Due: Thursday, Sept 17, 11:59PM}
-
-@(define repo "https://classroom.github.com/a/JAOG8LvH")
+@bold{Due: Thursday, February 11, 11:59PM}
 
 The goal of this assignment is to gain practice programming in Racket.
 
 Assignment repository:
-@centered{@link[repo repo]}
 
-You are given a repository with a @tt{main.rkt} file that contains a
-number of sections.  In each section there are several function
-``stubs,'' i.e. incomplete function defitions with type signatures,
-descriptions, and a small set of tests.  Each function has a bogus
-(but type correct) body marked with a ``TODO'' comment.  Your job is
-to replace each of these expressions with a correct implementation of
-the function.
+You are given a @tt{main.rkt} file (on ELMS under "Files"), that
+contains a number of sections.  In each section there are several
+function ``stubs,'' i.e. incomplete function defitions with type
+signatures, descriptions, and a small set of tests.  Each function has
+a bogus (but type correct) body marked with a ``TODO'' comment.  Your
+job is to replace each of these expressions with a correct
+implementation of the function.
 
 The last section of problems deals with functions that operate over a
 representation of expressions in a lambda-calculus-like language and
@@ -39,23 +36,12 @@ You can test your code in several ways:
   default.}
 
  @item{Using the command line @tt{raco test main.rkt} from
-  the same directory as @tt{main.rkt}.}
-
- @item{Pushing to github. The repository is set up to use
-  Travis CI, a ``continuous integration'' system, to
-  automatically run the test suite when a push occurs. You
-  should get email notifications if tests fail. You can also
-  see test reports at:
-  @centered{@link["https://travis-ci.com/cmsc430/"]{
-    https://travis-ci.com/cmsc430/}}
-
-  (You will need to be signed in in order see results for your private repo.)}]
+  the same directory as @tt{main.rkt}.}]
 
 Note that running @tt{racket main.rkt} from the command line will not
 run the tests.
 
 @section[#:tag-prefix "a2-" #:style 'unnumbered]{Submitting}
 
-Pushing your local repository to github ``submits'' your work.  We
-will grade the latest submission that occurs before the deadline.
+Submit your filled-in @tt{main.rkt} file on Gradescope.
 
