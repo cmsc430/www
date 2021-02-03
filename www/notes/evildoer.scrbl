@@ -102,8 +102,8 @@ To the syntax of expressions, we add the following operations:
 
 @itemlist[
  @item{@racket[write-byte] @tt|{: Byte -> Void}|: writes given byte to stdout, produces nothing.}
- @item{@racket[read-byte] @tt|{: -> Byte or EOF}|: reads a byte from stdout, if there is one, EOF otherwise.}
- @item{@racket[peek-byte] @tt|{: -> Byte or EOF}|: peeks a byte from stdout, if there is one, EOF otherwise.}
+ @item{@racket[read-byte] @tt|{: -> Byte or EOF}|: reads a byte from stdin, if there is one, EOF otherwise.}
+ @item{@racket[peek-byte] @tt|{: -> Byte or EOF}|: peeks a byte from stdin, if there is one, EOF otherwise.}
  ]
 
 These operations will behave like their Racket counterpart.
