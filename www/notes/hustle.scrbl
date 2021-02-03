@@ -88,7 +88,18 @@ primitives:
 
 @;centered[(render-judgment-form 𝑯-𝒆𝒏𝒗)]
 
-@centered[(render-metafunction 𝑯-𝒑𝒓𝒊𝒎 #:contract? #t)]
+@(define ((rewrite s) lws)
+   (define lhs (list-ref lws 2))
+   (define rhs (list-ref lws 3))
+   (list "" lhs (string-append " " (symbol->string s) " ") rhs ""))
+
+@centered[
+ (with-compound-rewriters (['+ (rewrite '+)]
+                           ['- (rewrite '–)]
+                           ['= (rewrite '=)]
+                           ['!= (rewrite '≠)])
+   (render-metafunction 𝑯-𝒑𝒓𝒊𝒎 #:contract? #t))
+]
 
 The interpreter similarly has an update to the @racket[interp-prims]
 module:
