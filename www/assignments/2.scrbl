@@ -9,7 +9,7 @@ Assignment repository:
 
 You are given a @tt{main.rkt} file (on ELMS under "Files"), that
 contains a number of sections.  In each section there are several
-function ``stubs,'' i.e. incomplete function defitions with type
+function ``stubs,'' i.e. incomplete function definitions with type
 signatures, descriptions, and a small set of tests.  Each function has
 a bogus (but type correct) body marked with a ``TODO'' comment.  Your
 job is to replace each of these expressions with a correct
