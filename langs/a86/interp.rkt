@@ -171,7 +171,7 @@
                             t.o objs t.so)))
     (define err-msg
       (get-output-string err-port))
-    (match (or (regexp-match #rx"Undefined.*\"(.*)\"" err-msg)    ; mac
-               (regexp-match #rx"undefined reference to `(.*)'")) ; linux
+    (match (or (regexp-match #rx"Undefined.*\"(.*)\"" err-msg)            ; mac
+               (regexp-match #rx"undefined reference to `(.*)'" err-msg)) ; linux
       [(list _ symbol) (ld:undef-symbol symbol)]
       [_ (ld:error (format "unknown link error.\n\n~a" err-msg))])))
