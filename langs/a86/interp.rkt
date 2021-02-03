@@ -161,8 +161,14 @@
 (define (ld t.o t.so)
   (define err-port (open-output-string))
   (define objs (string-splice (current-objs)))
+  (define -z-defs-maybe
+    (if (eq? (system-type 'os) 'macosx)
+        ""
+        "-z defs "))
   (unless (parameterize ((current-error-port err-port))  
-            (system (format "gcc -v -shared ~a ~a -o ~a" t.o objs t.so)))
+            (system (format "gcc ~a-v -shared ~a ~a -o ~a"
+                            -z-defs-maybe
+                            t.o objs t.so)))
     (define err-msg
       (get-output-string err-port))
     (match (regexp-match #rx"Undefined.*\"(.*)\"" err-msg)
