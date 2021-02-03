@@ -1221,10 +1221,24 @@ code:
                     (Add 'rsp 8)
                     (Ret))))]               
 
-
 This will be particularly relevant for writing a compiler
 where emitted code will make use of functionality defined in
 a runtime system.
+
+Note that if you forget to set @racket[current-objs], you will get a
+linking error saying a symbol is undefined:
+
+@ex[
+(eval:error
+  (asm-interp (prog (Extern 'gcd)
+                    (Label 'f)
+                    (Mov 'rdi 11571)
+                    (Mov 'rsi 1767)
+                    (Sub 'rsp 8)
+                    (Call 'gcd)
+                    (Add 'rsp 8)
+                    (Ret))))]
+
 
 @defproc[(asm-interp/io [is (listof instruction?)] [in string?]) (cons integer? string?)]{
 
