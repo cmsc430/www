@@ -22,7 +22,7 @@
 
 (define staff
   (list (list (link "http://jmct.cc/" "José Manuel Calderón Trilla") "jmct@umd.edu" "-")
-        (list "Deena Postol" "dpostol@umd.edu" "TBA")
-        (list "Tasnim Kabir" "tkabir1@cs.umd.edu" "TBA")        
-        (list "Temur Saidkhodjaev" "temurson@terpmail.umd.edu" "TBA")
-        (list "Vyas Gupta" "vgupta13@terpmail.umd.edu" "TBA")))
+        (list "Deena Postol" "dpostol@umd.edu" "Mon 9-11am EST")
+        (list "Tasnim Kabir" "tkabir1@cs.umd.edu" "Tue 9-11am EST")        
+        (list "Temur Saidkhodjaev" "temurson@terpmail.umd.edu" "Wed 11am-1pm EST")
+        (list "Vyas Gupta" "vgupta13@terpmail.umd.edu" "Thu 3.30-5.30pm EST")))
