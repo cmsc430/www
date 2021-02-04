@@ -22,6 +22,10 @@ jobs:
         distribution: 'full'
         variant: ${{ matrix.racket-variant }}
         version: ${{ matrix.racket-version }}
+    - name: Version info
+      run: |
+        nasm --version
+        gcc --version        
     - name: Install langs package
       run: raco pkg install langs/
     - name: Run tests
