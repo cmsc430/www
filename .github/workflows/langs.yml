@@ -1,0 +1,28 @@
+on:
+  - push
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, ubuntu-20.04]
+        racket-variant: ['BC', 'CS']
+        racket-version: ['7.8', '7.9']
+    name: Test on Racket ${{ matrix.racket-variant }} ${{ matrix.racket-version }} on ${{ matrix.os }}	
+    steps:
+    - name: Checkout
+      uses: actions/checkout@main
+    - name: Install nasm
+      run: sudo apt-get install nasm
+    - name: Install Racket
+      uses: Bogdanp/setup-racket@v0.13
+      with:
+        architecture: 'x64'
+        distribution: 'full'
+        variant: ${{ matrix.racket-variant }}
+        version: ${{ matrix.racket-version }}
+    - name: Install langs package
+      run: raco pkg install langs/
+    - name: Run tests
+      run: raco test -p langs
