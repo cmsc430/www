@@ -21,7 +21,7 @@
                (list @wk{2/1}
 	       	     @seclink["Assignment 1"]{A1}
                      @elem{@secref["OCaml to Racket"] (cont.) (@link["https://www.youtube.com/watch?v=QfxVrYuUboc"]{vid})}
-                     @elem{@secref["a86"]})
+                     @elem{@secref["a86"] (@link["https://www.youtube.com/watch?v=iEThSsxHmaI"]{vid})})
 
                (list @wk{2/8}
 	       	     @seclink["Assignment 2"]{A2}
