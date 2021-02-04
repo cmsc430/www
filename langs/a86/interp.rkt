@@ -26,6 +26,8 @@
 (define fclose
   (get-ffi-obj "fclose" (ffi-lib #f) (_fun _pointer _-> _void)))
 
+(define fmt (if (eq? (system-type 'os) 'macosx) 'macho64 'elf64))
+
 ;; Asm String -> (cons Value String)
 ;; Like asm-interp, but uses given string for input and returns
 ;; result with string output
@@ -42,16 +44,9 @@
       (parameterize ((current-shared? #t))
         (displayln (asm-string a)))))
 
-  (with-handlers ((exn:fail? (λ (e)
-                               (error "error linking program"))))
-    (system
-     (format "nasm -f ~a ~a && gcc -shared ~a ~a -o ~a"
-             (if (eq? (system-type 'os) 'macosx) 'macho64 'elf64)
-             t.s
-             t.o
-             (string-splice (current-objs))
-             t.so)))
-
+  (nasm t.s t.o)
+  (ld t.o t.so)
+    
   (define libt.so (ffi-lib t.so))
 
   (define init-label
@@ -77,7 +72,7 @@
     (set! current-heap (make-c-parameter "heap" libt.so _pointer))
     (current-heap
      ; IMPROVE ME: hard-coded heap size
-     (malloc _int64 10000 'raw 'failok)))
+     (malloc _int64 10000 'raw)))
   
   (delete-file t.s)
   (delete-file t.o)
@@ -130,3 +125,53 @@
 
 (define (string-splice xs)
   (apply string-append (add-between xs " ")))
+
+
+;;; Utilities for calling nasm and linker with informative error messages
+
+(struct exn:nasm exn:fail:user ())
+(define nasm-msg
+  (string-append
+   "assembly error: make sure to use `prog` to construct an assembly program\n"
+   "if you did and still get this error; please share with course staff."))
+
+(define (nasm:error msg)
+  (raise (exn:nasm (format "~a\n\n~a" nasm-msg msg)
+                   (current-continuation-marks))))
+
+;; run nasm on t.s to create t.o
+(define (nasm t.s t.o)
+  (define err-port (open-output-string))
+  (unless (parameterize ((current-error-port err-port))
+            (system (format "nasm -f ~a ~a -o ~a" fmt t.s t.o)))
+    (nasm:error (get-output-string err-port))))
+
+(struct exn:ld exn:fail:user ())
+(define (ld:error msg)
+  (raise (exn:ld (format "link error: ~a" msg)
+                 (current-continuation-marks))))
+
+(define (ld:undef-symbol s)
+  (ld:error
+   (string-append 
+    (format "symbol ~a not defined in linked objects: ~a\n" s (current-objs))
+    "use `current-objs` to link in object containing symbol definition.")))
+
+;; link together t.o with current-objs to create shared t.so
+(define (ld t.o t.so)
+  (define err-port (open-output-string))
+  (define objs (string-splice (current-objs)))
+  (define -z-defs-maybe
+    (if (eq? (system-type 'os) 'macosx)
+        ""
+        "-z defs "))
+  (unless (parameterize ((current-error-port err-port))  
+            (system (format "gcc ~a-v -shared ~a ~a -o ~a"
+                            -z-defs-maybe
+                            t.o objs t.so)))
+    (define err-msg
+      (get-output-string err-port))
+    (match (or (regexp-match #rx"Undefined.*\"(.*)\"" err-msg)            ; mac
+               (regexp-match #rx"undefined reference to `(.*)'" err-msg)) ; linux
+      [(list _ symbol) (ld:undef-symbol symbol)]
+      [_ (ld:error (format "unknown link error.\n\n~a" err-msg))])))
