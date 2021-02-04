@@ -39,11 +39,10 @@ TODO:
 }
 }
 
-
-This section gives a concise overview of the subset of Racket we will
-be using for this course.  As we see more features of Racket, this
-document will be expanded to cover the new features.  See
-@secref["OCaml to Racket"] for a tutorial introducing Racket.
+We will be using the Racket programming platform extensively in this
+course.  Once you have installed Racket as described below, see 
+@secref["OCaml to Racket"] for a tutorial introducing Racket
+using your knowledge of OCaml from CMSC 330 as a basis.
 
 @section{Getting Started}
 
