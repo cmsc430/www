@@ -136,6 +136,16 @@ will be the main entry point for the program. This program
 computes the 36th triangular number, which will reside in
 register @tt{rax} when the code returns.
 
+@margin-note{The conventions for label names differ between Mac and
+Linux systems.  On MacOS, you need to prefix all label names with an
+underscore, while on Linux you do not.  So on a Mac, you would use the
+names @tt{_entry}, @tt{_tri}, and @tt{_done}, while on Linux you would
+use @tt{entry}, @tt{tri}, and @tt{done}.
+
+This example is shown using the @(if (eq? (system-type 'os) 'macosx)
+"MacOS" "Linux") naming convention, because that's what operating
+system was used when this web page was built.}
+
 @filebox-include[fancy-nasm "a86/tri.s"]
 
 The @math{n}th triangular number is the sum of the integers
@@ -235,7 +245,7 @@ We can compile the @tt{tri.s} assembly program to an object
 file with @tt{nasm}:
 
 @margin-note{The format argument should be @tt{macho64} on
- Mac OS and @tt{elf64} on Unix.}
+ Mac OS and @tt{elf64} on Linux.}
 
 @shellbox[
  (format "nasm -f ~a -o tri.o tri.s"
@@ -386,6 +396,10 @@ provided for converting from a86 to a string representation
 of x86 code in nasm notation, called @racket[asm-string].
 You can use @racket[display] to print this to the current
 output port (or to a file):
+
+@margin-note{The @racket[asm-string] function knows what OS you are
+using and adjusts the label naming convention to use underscores or
+not, so that you don't have to worry about it.}
 
 @ex[
 (display (asm-string (tri 36)))
@@ -1221,10 +1235,24 @@ code:
                     (Add 'rsp 8)
                     (Ret))))]               
 
-
 This will be particularly relevant for writing a compiler
 where emitted code will make use of functionality defined in
 a runtime system.
+
+Note that if you forget to set @racket[current-objs], you will get a
+linking error saying a symbol is undefined:
+
+@ex[
+(eval:error
+  (asm-interp (prog (Extern 'gcd)
+                    (Label 'f)
+                    (Mov 'rdi 11571)
+                    (Mov 'rsi 1767)
+                    (Sub 'rsp 8)
+                    (Call 'gcd)
+                    (Add 'rsp 8)
+                    (Ret))))]
+
 
 @defproc[(asm-interp/io [is (listof instruction?)] [in string?]) (cons integer? string?)]{
 
