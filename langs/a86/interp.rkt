@@ -72,7 +72,7 @@
     (set! current-heap (make-c-parameter "heap" libt.so _pointer))
     (current-heap
      ; IMPROVE ME: hard-coded heap size
-     (malloc _int64 10000 'raw 'failok)))
+     (malloc _int64 10000 'raw)))
   
   (delete-file t.s)
   (delete-file t.o)
