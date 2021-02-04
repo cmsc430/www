@@ -28,24 +28,34 @@
 
 
 
-@title[#:style 'unnumbered]{Racket}
+@title[#:style 'unnumbered]{Software}
 
-@;{
-@verbatim{
-TODO:
-- write style section
-- give some more examples
-- mention #lang racket
-}
-}
+This course will make use of the following software:
 
+@itemlist[
+ @item{Operating system: an x86-64 ABI conforming OS such as
+  many variants of Linux and macOS running on an x86-64 CPU.
+  For @secref{Windows}, see notes below.
 
-This section gives a concise overview of the subset of Racket we will
-be using for this course.  As we see more features of Racket, this
-document will be expanded to cover the new features.  See
-@secref["OCaml to Racket"] for a tutorial introducing Racket.
+  Students have access to the campus
+  @link["http://www.grace.umd.edu/"]{GRACE} cluster, which use
+  Red Hat Linux on an x86-64 CPU, an appropriate OS for this
+  class.}
 
-@section{Getting Started}
+ @item{Racket: the implementation language and source
+  language of our compilers.}
+
+ @item{Racket @tt{langs} package: a package containing utilities
+  for this course.}
+ 
+ @item{NASM: the Netwide Assembler, which we will use to
+  assembly x86 programs.}
+
+ @item{GCC: the GNU compiler collection or a GCC-compatible
+  system such as clang.} 
+]
+
+@section{Installing Racket}
 
 Racket is available for all major operating systems from:
 
@@ -68,6 +78,27 @@ functional programming.  If you're comfortable with basic OCaml,
 Haskell, or even JavaScript, you shouldn't have much trouble learning
 the Racket bits we will be using.
 
+@section{The @tt{langs} package}
+
+After installing Racket, install the @tt{langs} package
+which includes course utilities such as the @secref{a86}
+library.
+
+To install, run the following command:
+
+@verbatim|{raco pkg install 'https://github.com/cmsc430/www.git?path=langs#main'}|
+
+To test the package works as expected, run:
+
+@verbatim|{raco test -p langs}|
+
+All of the tests should pass; if they don't, consult course staff.
+
+The package source is hosted on Github. To check for and
+install updates, run:
+
+@verbatim|{raco pkg update langs}|
+
 @section{IDE}
 
 Racket comes with it's own IDE: DrRacket, which is the recommended way
@@ -79,7 +110,7 @@ If you'd like to use Emacs, there's a good
 using DrRacket for a while before switching to Emacs.  Using any other
 editor is fine, too.
 
-@section{Racket for Windows 10 Users}
+@section[#:tag "Windows"]{Windows 10 Users}
 
 For Windows 10 users, using WSL for testing is highly recommended. Beyond 
 the first few assignments, the projects will require generating and 
@@ -88,20 +119,26 @@ have had trouble trying to configure this in the Windows environment,
 so an easier workaround is simply to enable WSL and run your tests through 
 some Linux Distribution. Here is a breakdown of the steps:
 
-@itemlist[#:style 'ordered
- @item{Following the instructions at @link["https://docs.microsoft.com/en-us/windows/wsl/install-win10"]{this link}, install 
-a Linux Distro of your choice (e.g., Ubuntu). The instructions include 
-a suggestion to upgrade to WSL2; this is not necessary but will improve
-efficiency in general.}
+@itemlist[
+ #:style 'ordered
+ @item{Following the instructions at
+  @link["https://docs.microsoft.com/en-us/windows/wsl/install-win10"]{
+   this link}, install a Linux Distro of your choice (e.g.,
+  Ubuntu). The instructions include a suggestion to upgrade to
+  WSL2; this is not necessary but will improve efficiency in
+  general.}
 
-@item{Open your installed Linux distribution of choice and make any initial 
-configurations necessary (user, pass, etc.). Run 'sudo apt update' and 
-follow with 'sudo apt upgrade'. These two may take some time. }
+ @item{Open your installed Linux distribution of choice and
+  make any initial configurations necessary (user, pass,
+  etc.). Run @tt{sudo apt update} and follow with @tt{sudo apt
+   upgrade}. These two may take some time. }
 
-@item{Run 'sudo apt install racket' and 'sudo apt install nasm'. These two 
-should cover the necessary installations for this course.}
+ @item{Run @tt{sudo apt install racket} and @tt{
+   sudo apt install nasm}. These two should cover the necessary
+  installations for this course.}
 
-@item{Here is where to determine which IDE you would like to use.
+ @item{Here is where to determine which IDE you would like to
+  use.
 
 @itemlist[
   @item{Using vim (or Emacs as mentioned in the previous section) is simple. Git clone project repos into WSL. Modify files.}
@@ -121,6 +158,33 @@ should cover the necessary installations for this course.}
 Regardless of the IDE used, you can now run your tests from your Linux 
 subsystem by entering the project directory and using the raco command.
 
+@section{Detailed compatiblity list}
+
+The course software has been successfully tested with the
+following:
+
+@itemlist[
+ @item{Operating systems:
+  @itemlist[@item{Ubuntu 20.04}
+            @item{Ubuntu 18.04}
+            @item{Red Hat Enterprise Linux 7.7}
+            @item{macOS 11.0 (Big Sur)}
+            @item{macOS 10.15 (Catalina)}]}
+  
+ @item{Racket:
+  @itemlist[@item{Racket 7.9 [cs]}
+            @item{Racket 7.9 [bc]}
+            @item{Racket 7.8 [cs]}
+            @item{Racket 7.8 [bc]}]}
+
+ @item{NASM:
+  @itemlist[@item{NASM version 2.13.02}
+            @item{NASM version 2.15.05}]}
+
+ @item{GCC:
+  @itemlist[@item{gcc 9.3.0}
+            @item{gcc 7.5.0}
+            @item{Clang/LLVM 12.0.0}]}]
 
 @; DVH: I'm not sure this is useful.  The OCaml to Racket notes are better.
 @;{
