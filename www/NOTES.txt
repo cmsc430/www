@@ -22,3 +22,12 @@ Possible assignment ideas:
 - Implement read in terms of read-char, peek-char
 - Implement prefab structures
 - Implement bignum arithmetic library
+
+DVH ideas for Fall 2021
+
+- Rewrite a86 chapter to split out "reference" from "introduction"
+- Assignment 1 could be a86 peephole optimizer; given a template, show rewriting examples
+  test against generated code from the end of the course, measure instruction count
+  against a reference implementation.  Accomplishes both getting comfortable with
+  Racket and a86 (and power of code as data) and... can be plugged in to 
+  back-end of compiler later.
