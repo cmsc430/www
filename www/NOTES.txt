@@ -31,3 +31,6 @@ DVH ideas for Fall 2021
   against a reference implementation.  Accomplishes both getting comfortable with
   Racket and a86 (and power of code as data) and... can be plugged in to 
   back-end of compiler later.
+- Add a note explaining #:prefab when it first appears
+- Add a note about "types" in Racket: a useful concept for organizing programs even
+  without an enforcement mechanism (and there's #lang typed/racket)
