@@ -39,7 +39,7 @@
 
 @section{Refinement, take one}
 
-We've seen all the essential peices (a grammar, an AST data type
+We've seen all the essential pieces (a grammar, an AST data type
 definition, an operational semantics, an interpreter, a compiler,
 etc.) for implementing a programming language, albeit for an amazingly
 simple language.
@@ -185,7 +185,7 @@ now we can compute the right-hand-side by substracting 1 from @math{i_0}.}
 
 ]
 
-This explaination of the correspondence is essentially a proof by
+This explanation of the correspondence is essentially a proof by
 induction of the interpreter's correctness:
 
 @bold{Interpreter Correctness}: @emph{For all Blackmail expressions
