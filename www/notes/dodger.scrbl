@@ -96,7 +96,7 @@ system, described below, takes care of printing them.
 
 @section{Meaning of Dodger programs}
 
-The semantics are ommitted for now (there's really nothing new that's interesting).
+The semantics are omitted for now (there's really nothing new that's interesting).
 
 The interpeter is much like that of Dupe, except we have a new base case:
 
@@ -186,7 +186,7 @@ be linked against the run-time:
 
 @filebox-include[fancy-c "dodger/char.c"]
 
-Will these peices in place, we can try out some examples:
+Will these pieces in place, we can try out some examples:
 
 @ex[
  (define (run e)
