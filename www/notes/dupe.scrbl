@@ -785,9 +785,12 @@ values:
 The one last peice of the puzzle is updating the run-time system to
 incorporate the new representation.  The run-time system is
 essentially playing the role of @racket[bits->value]: it determines
-what is being represented and prints it appropriately.  However
-instead of using high-level mathematical operations like
-@racket[even?], @racket[/], etc., it uses low-level bit operations.
+what is being represented and prints it appropriately.
+
+For the run-time system, we define the bit representations in a header
+file corresponding to the definitions given in @tt{types.rkt}:
+
+@filebox-include[fancy-c "dupe/types.h"]
 
 It uses an idiom of ``masking'' in order to examine on particular bits
 of a value.  So for example if we want to know if the returned value
