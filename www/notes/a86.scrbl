@@ -316,6 +316,11 @@ An a86 program is a list of a86 instructions. Each
 instruction is represented as a structure, described in the
 following section.
 
+@margin-note{Before working through these examples, you'll need to
+install the @racketmodname[a86] module, part of the @tt{langs} package
+for this course.  See @secref{langs-package} for details on
+installing.}
+
 Here's the triangular number example:
 
 @margin-note{@racket[%], @racket[%%], and @racket[%%%] are
@@ -323,6 +328,8 @@ Here's the triangular number example:
 
 @#reader scribble/comment-reader
  (ex
+ ; import the a86 library
+ (require a86)
  ; a86 code that computes the 36th triangular number
  (define tri-36
    (list (Label 'entry)
