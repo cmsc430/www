@@ -184,7 +184,7 @@ expression, @racket[(let ((y 2)) x)], means @racket[2] since the body expression
 
 @item{@racket[(let ((x 7)) (let ((x 2)) x))]: this means 2 since the
 body expression, @racket[(let ((x 2)) x)], means @racket[2] since the
-body expression, @racket[x], means @racket[7] since the nearest
+body expression, @racket[x], means @racket[2] since the nearest
 enclosing binding for @racket[x] is to @racket[2].}
 
 @item{@racket[(let ((x (add1 x))) x)]: this is meaningless, since the
@@ -204,7 +204,9 @@ in the nearest enclosing @racket[let] that binds it.}
 Make sure you have a good understanding of how binding work in these
 examples before moving on.  Remember: you can always check your
 understanding by pasting expressions into Racket and seeing what it
-produces.
+produces, or better yet, write examples in DrRacket and hover over
+identifiers to see arrows between variable bindings and their
+occurrences.
 
 One thing that should be clear from these examples is that the meaning
 of a sub-expression is not determined by the form of that expression
