@@ -376,6 +376,7 @@ The main run-time file is extended slightly to take care of
 printing the new kinds of values (eof and void). Note that a
 void result causes nothing to be printed:
 
+@filebox-include[fancy-c "evildoer/runtime.h"]
 @filebox-include[fancy-c "evildoer/main.c"]
 
 But the real novelty of the Evildoer run-time is that there
