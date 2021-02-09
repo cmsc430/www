@@ -78,7 +78,7 @@ functional programming.  If you're comfortable with basic OCaml,
 Haskell, or even JavaScript, you shouldn't have much trouble learning
 the Racket bits we will be using.
 
-@section{The @tt{langs} package}
+@section[#:tag "langs-package"]{The @tt{langs} package}
 
 After installing Racket, install the @tt{langs} package
 which includes course utilities such as the @secref{a86}
