@@ -65,6 +65,10 @@
        (string-append tab "mov "
                       (arg->string a1) ", "
                       (arg->string a2))]
+      [(Cmovl a1 a2)
+       (string-append tab "cmovl "
+                      (arg->string a1) ", "
+                      (arg->string a2))]
       [(Add a1 a2)
        (string-append tab "add "
                       (arg->string a1) ", "
@@ -72,7 +76,10 @@
       [(Sub a1 a2)
        (string-append tab "sub "
                       (arg->string a1) ", "
-                      (arg->string a2))]    
+                      (arg->string a2))]
+      [(Neg r)
+       (string-append tab "neg "
+                      (reg->string r))]
       [(Cmp a1 a2)
        (string-append tab "cmp "
                       (arg->string a1) ", "
