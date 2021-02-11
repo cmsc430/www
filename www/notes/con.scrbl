@@ -65,9 +65,9 @@ the new form is an if-expression.
 
 @itemlist[
 
-@item{the meaning of a if expression @racket[(IfZero _e0 _e1 _e2)] is the
-meaning of @racket[_e1] if the meaning of @racket[_e1] if the meaning of
-@racket[_e0] is 0 and is the meaning of @racket[_e2] otherwise.}
+@item{the meaning of a if expression @racket[(IfZero _e0 _e1 _e2)] is
+the meaning of @racket[_e1] if the meaning of @racket[_e0] is 0 and is
+the meaning of @racket[_e2] otherwise.}
 
 ]
 
