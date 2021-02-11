@@ -42,6 +42,8 @@
       (error n "expects register, offset, or exact integer; given ~v" a2))
     (when (and (offset? a1) (offset? a2))
       (error n "cannot use two memory locations; given ~v, ~v" a1 a2))
+    (when (and (offset? a1) (exact-integer? a2))
+      (error n "cannot use a memory locations and literal; given ~v, ~v; go through a register instead" a1 a2))
     (values a1 a2)))
 
 (define check:shift
