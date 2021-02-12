@@ -125,8 +125,7 @@ There will be several programming @secref{Assignments}, often with full week
 given for completion and submission (e.g. if it assigned on a Tuesday it will
 be due the following Tuesday at 11:59pm EST unless otherwise noted).
 
-Assignments will be submitted through
-@link["https://classroom.github.com/"]{Github Classroom}.
+Assignments will be submitted through Gradescope.
 
 On the weeks were there are no programming assignments, there will be assigned
 reading.
