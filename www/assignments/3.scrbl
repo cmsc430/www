@@ -5,6 +5,8 @@
 @(require "../../langs/con-plus/semantics.rkt")
 @(require redex/pict)
 
+@(define repo "https://github.com/cmsc430/assign03/tree/spring2021")
+
 @bold{Due: Thu, Feb 25, 11:59PM}
 
 The goal of this assignment is to extend the parser, interpreter, and
@@ -147,6 +149,7 @@ You can test your code in several ways:
 
  @item{Using the command line @tt{raco test <file>} to
   test only @tt{<file>}.}
+]
 
 Note that only a small number of tests are given to you, so you should
 write additional test cases.
