@@ -22,5 +22,11 @@ main.o: main.c types.h
 clean:
 	rm *.o *.s *.run
 
-test: example.run
-	@test "$(shell ./example.run)" = "$(shell racket example.rkt)"
+test: 42.run
+	@test "$(shell ./42.run)" = "42"
+
+%.rrts: %.o libmain.a
+	gcc -o $@ libmain.a $< -lpthread -ldl
+
+libmain.a: main.rs
+	rustc -C target-feature=+crt-static --crate-type staticlib main.rs
