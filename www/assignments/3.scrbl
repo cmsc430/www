@@ -5,12 +5,12 @@
 @(require "../../langs/con-plus/semantics.rkt")
 @(require redex/pict)
 
-@(define repo "https://github.com/cmsc430/assign03/tree/spring2021")
+@(define repo "https://github.com/cmsc430/assign03/")
 
 @bold{Due: Thu, Feb 25, 11:59PM}
 
 The goal of this assignment is to extend the parser, interpreter, and
-compiler some simple unary numeric numeric and boolean operations and
+compiler with some simple unary numeric and boolean operations and
 conditional expressions.
 
 Assignment repository:
