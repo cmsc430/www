@@ -3,6 +3,7 @@
 
 (define int-shift    1)
 (define type-int   #b0)
+(define type-bool  #b1)
 (define val-true  #b01)
 (define val-false #b11)
 
