@@ -4,10 +4,12 @@
 @(require redex/pict
           racket/runtime-path
           scribble/examples
+          racket/format
           "../fancyverb.rkt"
 	  "utils.rkt"
 	  "ev.rkt"
 	  "../../langs/dupe/semantics.rkt"
+          "../../langs/dupe/types.rkt"
 	  "../utils.rkt")
 
 
@@ -276,31 +278,41 @@ integers and booleans, so we could use one bit to indicate whether a
 value is a boolean or an integer.  The remaining 63 bits can be used
 to represent the value itself, either true, false, or some integer.
 
-Let's use the least significant bit to indicate the type and let's use
-@code[#:lang "racket"]{#b0} for integer and @code[#:lang
-"racket"]{#b1} for boolean.  These are arbitrary choices (more or
-less).
+@(define (binary i [len 0])
+   (typeset-code #:block? #f #:indent 0
+                 (string-append "#b"
+                                (~a (number->string i 2)
+                                    #:pad-string "0"
+                                    #:min-width len))))
 
-The number @racket[1] would be represented as @code[#:lang
-"racket"]{#b10}, which is the bits for the number (i.e. @code[#:lang
-"racket"]{#b1}), followed by the integer tag (@code[#:lang
-"racket"]{#b0}).  Note that the representation of a Dupe number is no
-longer the number itself: the Dupe value @racket[1] is represented by
-the number @racket[2] (@code[#:lang "racket"]{#b10}).  The Dupe value
-@racket[#t] is represented by the number @racket[3] (@code[#:lang
-"racket"]{#b11}); the Dupe value @racket[#f] is represented by the
-number @racket[1] (@code[#:lang "racket"]{#b01}).
+Let's use the least significant bit to indicate the type and
+let's use @binary[type-int] for integer and
+@binary[type-bool] for boolean. These are arbitrary choices
+(more or less).
+
+The number @racket[1] would be represented as
+@binary[(value->bits 1)], which is the bits for the number
+(i.e. @binary[1]), followed by the integer tag
+(@binary[type-int]). Note that the representation of a Dupe
+number is no longer the number itself: the Dupe value
+@racket[1] is represented by the number @racket[2]
+(@binary[2]). The Dupe value @racket[#t]
+is represented by the number @racket[#,val-true]
+(@binary[val-true 2]); the Dupe value @racket[#f]
+is represented by the number @racket[#,val-false]
+(@binary[val-false 2]).
 
 One nice thing about our choice of encoding: @racket[0] is represented
-as @racket[0] (@code[#:lang "racket"]{#b00}).
+as @racket[0] (@binary[0 2]).
 
-If you wanted to determine if a 64-bit integer represented an integer
-or a boolean, you simply need to inquire about the value of the least
-significant bit.  At a high-level, this just corresponds to asking if
-the number is even or odd.  Odd numbers end in the bit (@code[#:lang
-"racket"]{#b1}), so they reprepresent booleans.  Even numbers
-represent integers.  Here are some functions to check our
-understanding of the encoding:
+If you wanted to determine if a 64-bit integer represented
+an integer or a boolean, you simply need to inquire about
+the value of the least significant bit. At a high-level,
+this just corresponds to asking if the number is even or
+odd. Odd numbers end in the bit (@binary[1]), so they
+reprepresent booleans. Even numbers represent integers. Here
+are some functions to check our understanding of the
+encoding:
 
 @codeblock-include["dupe/types.rkt"]
 
@@ -325,13 +337,6 @@ We can also write the inverse:
 
 @#reader scribble/comment-reader
 (ex
-
-;; Value -> Bits
-(define (value->bits v)
-  (match v
-    [#f #b01]
-    [#t #b11]
-    [n (* n 2)]))
 
 (value->bits #t)
 (value->bits #f)
@@ -450,7 +455,7 @@ So we get:
     [(Int i) (value->bits i)]
     [(Bool b) (value->bits b)]
     [(Prim1 'add1 e0)
-     (value->bits (add1 (interp- e0)))]
+     (value->bits (add1 (interp e0)))]
     [(Prim1 'sub1 e0)
      (value->bits (sub1 (interp e0)))]
     [(Prim1 'zero? e0)
@@ -468,16 +473,18 @@ Still correct:
 
 In the first two cases, we know that @racket[i] and @racket[b] are
 integers and booleans, respectively.  So we know @racket[(values->bits
-i) = (* 2 i)] and @racket[(values->bits b) = (if b #b01 #b11)].  We can
+i) = (* 2 i)] and @racket[(values->bits b) = (if b #,val-true #,val-false)].  We can
 rewrite the code as:
 
-@#reader scribble/comment-reader
-(ex #:no-prompt
-;; Expr -> Bits
+@;{the #:escape identity thing is a cute solution to the
+ problem of escaping within examples.}
+
+@ex[#:escape identity #:no-prompt
+@code:comment{Expr -> Bits}
  (define (interp-bits e)
    (match e
      [(Int i) (* 2 i)]
-     [(Bool b) (if b 3 1)]
+     [(Bool b) (if b (identity val-true) (identity val-false))]
      [(Prim1 'add1 e0)
       (value->bits (add1 (interp e0)))]
      [(Prim1 'sub1 e0)
@@ -489,7 +496,7 @@ rewrite the code as:
        (if (interp e0)
            (interp e1)
            (interp e2)))]))
-)
+]
 
 Still correct:
 @ex[
@@ -501,13 +508,12 @@ We can rewrite the last case by the following equation:
 (_f (if _e0 _e1 _e2)) = (if _e0 (_f _e1) (_f _e2))
 ]
 
-@#reader scribble/comment-reader
-(ex #:no-prompt
-;; Expr -> Bits
+@ex[#:escape identity #:no-prompt
+@code:comment{Expr -> Bits}
  (define (interp-bits e)
    (match e
      [(Int i) (* 2 i)]
-     [(Bool b) (if b 3 1)]
+     [(Bool b) (if b (identity val-true) (identity val-false))]
      [(Prim1 'add1 e0)
       (value->bits (add1 (interp e0)))]
      [(Prim1 'sub1 e0)
@@ -518,7 +524,7 @@ We can rewrite the last case by the following equation:
       (if (interp e0)
           (value->bits (interp e1))
           (value->bits (interp e2)))]))
-)
+]
 
 Still correct:
 @ex[
@@ -536,13 +542,12 @@ Let's now re-write by the following equations:
 
 to get:
 
-@#reader scribble/comment-reader
-(ex #:no-prompt
-;; Expr -> Bits
+@ex[#:escape identity #:no-prompt
+@code:comment{Expr -> Bits}
  (define (interp-bits e)
    (match e
      [(Int i) (* 2 i)]
-     [(Bool b) (if b 3 1)]
+     [(Bool b) (if b (identity val-true) (identity val-false))]
      [(Prim1 'add1 e0)
       (+ (value->bits (interp e0)) (value->bits 1))]
      [(Prim1 'sub1 e0)
@@ -553,13 +558,13 @@ to get:
       (if (interp e0)
           (value->bits (interp e1))
           (value->bits (interp e2)))]))
-)
+]
 
 Still correct:
 @ex[
 (for-each interp-bits-correct es)]
 
-By computation, @racket[(value->bits 1) = 2].
+By computation, @racket[(value->bits 1) = #,(value->bits 1)].
 
 We can now rewrite by the equation of our specification:
 
@@ -567,24 +572,23 @@ We can now rewrite by the equation of our specification:
 (value->bits (interp _e)) = (interp-bits _e)]
 
 
-@#reader scribble/comment-reader
-(ex #:no-prompt
- ;; Expr -> Bits
+@ex[#:escape identity #:no-prompt
+@code:comment{Expr -> Bits}
  (define (interp-bits e)
    (match e
      [(Int i) (* 2 i)]
-     [(Bool b) (if b 3 1)]
+     [(Bool b) (if b (identity val-true) (identity val-false))]
      [(Prim1 'add1 e0)
-      (+ (interp-bits e0) 2)]
+      (+ (interp-bits e0) (identity (value->bits 1)))]
      [(Prim1 'sub1 e0)
-      (- (interp-bits e0) 2)]
+      (- (interp-bits e0) (identity (value->bits 1)))]
      [(Prim1 'zero? e0)
       (value->bits (zero? (interp e0)))]
      [(If e0 e1 e2)      
       (if (interp e0)
           (interp-bits e1)
           (interp-bits e2))]))
-)
+]
 
 Still correct:
 @ex[
@@ -594,26 +598,25 @@ We can rewrite by the equation
 @racketblock[(zero? (interp _e0)) = (zero? (interp-bits _e0))]
 and inline @racket[value->bits] specialized to a boolean argument:
 
-@#reader scribble/comment-reader
-(ex #:no-prompt
- ;; Expr -> Bits
+@ex[#:escape identity #:no-prompt
+@code:comment{Expr -> Bits}
  (define (interp-bits e)
    (match e
      [(Int i) (* 2 i)]
-     [(Bool b) (if b 3 1)]
+     [(Bool b) (if b (identity val-true) (identity val-false))]
      [(Prim1 'add1 e0)
-      (+ (interp-bits e0) 2)]
+      (+ (interp-bits e0) (identity (value->bits 1)))]
      [(Prim1 'sub1 e0)
-      (- (interp-bits e0) 2)]
+      (- (interp-bits e0) (identity (value->bits 1)))]
      [(Prim1 'zero? e0)
       (match (zero? (interp-bits e0))
-        [#t #b11]
-        [#f #b01])]
+        [#t (identity val-true)]
+        [#f (identity val-false)])]
      [(If e0 e1 e2)
       (if (interp e0)
           (interp-bits e1)
           (interp-bits e2))]))
- )
+ ]
 
 Still correct:
 @ex[
@@ -622,29 +625,27 @@ Still correct:
 Finally, in the last case, all that matters in @racket[(if (interp e0)
 ...)] is whether @racket[(interp e0)] returns @racket[#f] or something
 else.  So we can rewrite in terms of whether @racket[(interp-bits e0)]
-produces the representation of @racket[#f] (@code[#:lang
-"racket"]{#b01}):
+produces the representation of @racket[#f] (@binary[val-false 2]):
 
-@#reader scribble/comment-reader
-(ex #:no-prompt
- ;; Expr -> Bits
+@ex[#:escape identity #:no-prompt
+@code:comment{Expr -> Bits}
  (define (interp-bits e)
    (match e
      [(Int i) (* 2 i)]
-     [(Bool b) (if b 3 1)]
+     [(Bool b) (if b (identity val-true) (identity val-false))]
      [(Prim1 'add1 e0)
-      (+ (interp-bits e0) 2)]
+      (+ (interp-bits e0) (identity (value->bits 1)))]
      [(Prim1 'sub1 e0)
-      (- (interp-bits e0) 2)]
+      (- (interp-bits e0) (identity (value->bits 1)))]
      [(Prim1 'zero? e0)
       (match (zero? (interp-bits e0))
-        [#t #b11]
-        [#f #b01])]
+        [#t (identity val-true)]
+        [#f (identity val-false)])]
      [(If e0 e1 e2)
-      (match (interp-bits e0)
-        [#b01 (interp-bits e2)]
-        [_ (interp-bits e1)])]))
- )
+      (if (= (interp-bits e0) (identity val-false))
+          (interp-bits e2)
+          (interp-bits e1))]))
+ ]
 
 
 Still correct:
@@ -654,9 +655,9 @@ Still correct:
 
 Note that whenever @racket[_bs] are bits representing an integer, then
 @racket[(value->bits (add1 (bits->value _bs)))] is equal to @racket[(+
-_bs 2)], i.e. adding @code[#:lang "racket"]{#b10}.  When @racket[_bs]
+_bs #,(value->bits 1))], i.e. adding @binary[(value->bits 1) 2].  When @racket[_bs]
 represents a boolean, then @racket[(value->bits (add1 (bits->value
-_bs)))] would crash, while @racket[(+ _bs 2)] doesn't, but this is an
+_bs)))] would crash, while @racket[(+ _bs (value->bits 1))] doesn't, but this is an
 undefined program, so changing the behavior is fine.
 
 Looking back: starting from the spec, we've arrived at a definition of
@@ -680,8 +681,8 @@ interpreter in a final conversion:
 (interp.v2 (parse '(if 0 1 2)))
 (interp.v2 (parse '(if 7 1 2)))
 (interp.v2 (parse '(if (zero? 7) 1 2)))
-(interp.v2 (parse '(add1 #f)))
-(eval:error (interp.v2 (parse '(add1 #t))))
+(eval:error (interp.v2 (parse '(add1 #f))))
+(interp.v2 (parse '(add1 #t)))
 )
 
 Notice the last two examples.  What's going on?
@@ -705,27 +706,28 @@ Let's consider some simple examples:
 before, but needs to use the new representation, i.e. the compiler
 should produce @racket[(Mov 'rax 84)], which is @racket[(* 42 2)].}
 
-@item{@racket[#f]: this should produce @racket[(Mov 'rax 1)].}
+@item{@racket[#f]: this should produce @racket[(Mov 'rax #,val-false)].}
 
-@item{@racket[#t]: this should produce @racket[(Mov 'rax 3)].}
+@item{@racket[#t]: this should produce @racket[(Mov 'rax #,val-true)].}
 
 @item{@racket[(add1 _e)]: this should produce the instructions for
-@racket[_e] followed by an instruction to add @racket[2], which is
+@racket[_e] followed by an instruction to add @racket[#,(value->bits 1)], which is
 just how @racket[interp-bits] interprets an @racket[add1].}
 
 @item{@racket[(sub1 _e)]: should work like @racket[(add1 _e)] but
-subtracting 2.}
+subtracting @racket[#,(value->bits 1)].}
 
-@item{@racket[(zero? _e)]: this should produce the instructions for
-@racket[_e] follows by instructions that compare @racket['rax] to 0
-and set @racket['rax] to @racket[#t] (i.e. 3) if true and @racket[#f]
-(i.e. 1) otherwise.}
+ @item{@racket[(zero? _e)]: this should produce the
+  instructions for @racket[_e] followed by instructions that
+  compare @racket['rax] to 0 and set @racket['rax] to
+  @racket[#t] (i.e. @binary[val-true 2]) if true and
+  @racket[#f] (i.e. @binary[val-false 2]) otherwise.}
 
 @item{@racket[(if _e0 _e1 _e2)]: this should work much like before,
 compiling each subexpression, generating some labels and the
 appropriate comparison and conditional jump.  The only difference is
 we now want to compare the result of executing @racket[_e0] with
-@racket[#f] (i.e. 1) and jumping to the code for @racket[_e2] when
+@racket[#f] (i.e. @binary[val-false 2]) and jumping to the code for @racket[_e2] when
 they are equal.}
 ]
 
@@ -792,14 +794,17 @@ file corresponding to the definitions given in @tt{types.rkt}:
 
 @filebox-include[fancy-c "dupe/types.h"]
 
-It uses an idiom of ``masking'' in order to examine on particular bits
-of a value.  So for example if we want to know if the returned value
-is an integer, we do a bitwise-and of the result and @tt{1}.  This
-produces a single bit: 0 for integer and 1 for boolean.  In the case
-of an integer, to recover the number being represented, we need to
-divide by 2, which can be done efficiently with a right-shift of 1
-bit.  Likewise with a boolean, if we shift right by 1 bit there are
-two possible results: 0 for false and 1 for true:
+It uses an idiom of ``masking'' in order to examine on
+particular bits of a value. So for example if we want to
+know if the returned value is an integer, we do a
+bitwise-and of the result and @tt{1}. This produces a single
+bit: 0 for integer and 1 for boolean. In the case of an
+integer, to recover the number being represented, we need to
+divide by 2, which can be done efficiently with a
+right-shift of 1 bit. Likewise with a boolean, if we shift
+right by 1 bit there are two possible results:
+@racket[#,val-false] for false and @racket[#,val-true] for
+true:
 
 @filebox-include[fancy-c "dupe/main.c"]
 
