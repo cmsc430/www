@@ -1,3 +1,6 @@
+#ifndef RUNTIME_H
+#define RUNTIME_H
 int64_t entry();
-FILE* in;
-FILE* out;
+extern FILE* in;
+extern FILE* out;
+#endif /* RUNTIME_H */
