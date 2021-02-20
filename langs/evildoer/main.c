@@ -3,6 +3,9 @@
 #include "types.h"
 #include "runtime.h"
 
+FILE* in;
+FILE* out;
+
 void print_result(int64_t);
 void print_char(int64_t);
 
