@@ -282,7 +282,8 @@ to represent the value itself, either true, false, or some integer.
    (typeset-code #:block? #f #:indent 0
                  (string-append "#b"
                                 (~a (number->string i 2)
-                                    #:pad-string "0"
+                                    #:left-pad-string "0"
+                                    #:align 'right
                                     #:min-width len))))
 
 Let's use the least significant bit to indicate the type and
