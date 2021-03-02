@@ -40,7 +40,7 @@
 		                 @elem{@secref["Extort"]})
                
                (list @wk{3/1}
-	       	           @seclink["Assignment 4"]{A4}
+	       	     ""
                      @elem{@secref["Fraud"]}
                      @elem{Exam Review})
                
@@ -55,7 +55,7 @@
                      @elem{No lecture (Spring Break)})
                
                (list @wk{3/22}
-                     ""
+                     @seclink["Assignment 4"]{A4}
                      @elem{@secref["Hustle"]}
                      @elem{@secref["Iniquity"]})
                
