@@ -35,10 +35,9 @@ with:
 @section[#:tag-prefix "a4-" #:style 'unnumbered]{From Con+ and Dupe+ to Fraud+}
 
 Implement the @racket[abs], unary @racket[-] and @racket[not]
-operations and the @racket[cond] form from @seclink["Assignment
-3"]{Assignment 3}.
+operations and the @racket[cond] form from @seclink["Assignment 3"]{Assignment 3}.
 
-Unlike Assignment 3, the ast struct definitions and parsing code are
+Unlike Assignment 3, the AST struct definitions and parsing code are
 provided. Study the relevant parts in @tt{ast.rkt} and @tt{parse.rkt},
 understand what is different (if anything) from your own
 implementation and implement the relevant functionality in
