@@ -578,7 +578,7 @@ Here are the relevant parts of the compiler:
   (seq (compile-e e1 c)
        (Push rax)
        (compile-e e2 (cons x c))
-       (Add rax 8)))
+       (Add rsp 8)))
 
 ;; Id CEnv -> Integer
 (define (lookup x cenv)
