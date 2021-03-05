@@ -113,7 +113,7 @@ being represented was an integer (tagged with @code[#:lang
 
 An alternative approach to disambiguate types at runtime would be to
 represent false (@racket[#f]) as 0 (@racket[#b0]), true (@racket[#t])
-as 1 (@racket[#b1]), and any integer @tt{n} as @tt{n+2}, if @tt{n > 0}
+as 1 (@racket[#b1]), and any integer @tt{n} as @tt{n+2}, if @tt{n >= 0}
 and as @tt{n} if @tt{n < 0}.
 
 Briefly answer the following questions: 
