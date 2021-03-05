@@ -95,7 +95,7 @@ Write two sequences of instructions (in a86):
 One that stores the value of @tt{rax} in location 1032 (= 1024 + 8).
 }
 @item{
-One that loads the value stored at location 1024 and stores it at @tt{rax}.
+One that loads the value stored at location 1024 and stores it in @tt{rax}.
 }
 ]
 
