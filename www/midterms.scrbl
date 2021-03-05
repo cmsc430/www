@@ -7,7 +7,7 @@ exams.  Exams will be distributed at least 72 hours before the due
 date of the midterm.
 
 @itemlist[
-  @item{Midterm 1: @bold{@m1-date}}
+  @item{Midterm 1: @link["https://www.cs.umd.edu/class/spring2021/cmsc430/Midterm_1.html"]{Instructions - Due March 9th}}
   @item{Midterm 2: @bold{@m2-date}}
 ]
 
