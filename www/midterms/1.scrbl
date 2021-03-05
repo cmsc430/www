@@ -277,14 +277,14 @@ we can simplify the entire @racket[if] to its else branch.
 
 @#reader scribble/comment-reader
 (racketblock
-(if (zero? (read-byte) 1 (zero? 0)))
+(if (zero? (read-byte)) 1 (zero? 0))
 )
 
 Becomes:
 
 @#reader scribble/comment-reader
 (racketblock
-(if (zero? (read-byte) 1 #t))
+(if (zero? (read-byte)) 1 #t)
 )
 
 Since we don't know the value of @racket[read-byte] statically,
