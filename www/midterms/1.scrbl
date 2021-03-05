@@ -159,7 +159,7 @@ at its arguments, at the bitlevel. For example:
 (bitwise-xor #t) ; contract violation
 
 ; xor with two arguments is their bitwise xor
-(bitwise-xor 1 2) = 0 ; Indeed: 1 = #b01, 2 = #b10 
+(bitwise-xor 1 2) = 3 ; Indeed: 1 = #b01, 2 = #b10 
 (bitwise-xor 1 3) = 2 ; Indeed: 1 = #b01, 3 = #b11, 2 = #b10
 
 ; xor with multiple arguments just performs the xor in sequence:
