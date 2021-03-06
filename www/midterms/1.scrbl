@@ -223,6 +223,9 @@ optimizer should leave the behavior of programs containing
 @racket[read-byte] unchanged, while still evaluating all fully-known
 sub-expressions.
 
+Again, don't worry about what happens in case for errors - you can
+assume all expressions are valid for this. 
+
 Let's look at some examples:
 
 @subsection{Example 1 - Arithmetic Expressions}
