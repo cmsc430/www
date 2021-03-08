@@ -32,7 +32,7 @@ The repository contains three things.
 
 Your submission must be submitted by 11:59 EDT on Tuesday, March
 9th. For the programmatic fragment, you should submit a zip file
-containing @emph{only} two files: the @tt{compiler.rkt} for the
+containing @emph{only} two files: the @tt{compile.rkt} for the
 @tt{VariadicXor}, and @tt{optimize.rkt} for the @tt{Optimizer}.
 
 @section{Short answer}
