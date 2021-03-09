@@ -190,7 +190,7 @@ any error handling, to keep things simple).
 )
 
 In the directory, you will find the @tt{ast.rkt}, @tt{interp.rkt}, and @tt{parse.rkt}
-already implemented. Your task is to extend the compiler in @tt{compiler.rkt} to
+already implemented. Your task is to extend the compiler in @tt{compile.rkt} to
 implement the same behavior.
 
 Don't worry about what happens if any of the arguments is not an integer or yields an
