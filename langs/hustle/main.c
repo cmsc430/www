@@ -4,6 +4,11 @@
 #include "types.h"
 #include "runtime.h"
 
+FILE* in;
+FILE* out;
+void (*error_handler)();
+int64_t *heap;
+
 void print_result(int64_t);
 
 void error_exit() {
