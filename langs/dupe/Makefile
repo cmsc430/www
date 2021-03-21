@@ -29,4 +29,4 @@ test: 42.run
 	gcc -o $@ libmain.a $< -lpthread -ldl
 
 libmain.a: main.rs
-	rustc -C target-feature=+crt-static --crate-type staticlib main.rs
+	rustc -C target-feature=+crt-static -C panic=abort -C opt-level=3 --emit=llvm-ir,asm --crate-type staticlib main.rs
