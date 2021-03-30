@@ -7,7 +7,7 @@
 (define rbx 'rbx) ; heap
 (define rdx 'rdx) ; return, 2
 (define r8  'r8)  ; scratch in +, -
-(define r9  'r9)  ; scratch in assert-type
+(define r9  'r9)  ; scratch in assert-type and tail-calls
 (define rsp 'rsp) ; stack
 (define rdi 'rdi) ; arg
 
@@ -229,9 +229,9 @@
     [0 (seq)]
     [_ (seq
          ; mov first arg to temp reg
-         (Mov rbx (Offset rsp (* 8 (sub1 i))))
+         (Mov r9 (Offset rsp (* 8 (sub1 i))))
          ; mov value to correct place on the old frame
-         (Mov (Offset rsp (* 8 (+ i cnt))) rbx)
+         (Mov (Offset rsp (* 8 (+ i cnt))) r9)
          ; Now do the next one
          (move-args (sub1 i) cnt))]))
 
