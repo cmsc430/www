@@ -16,7 +16,7 @@
 
 (define check:target
   (λ (x n)
-    (unless (symbol? x) ; either register or label
+    (unless (or (symbol? x) (offset? x)); either register or label
       (error n "expects symbol; given ~v" x))
     x))
 
