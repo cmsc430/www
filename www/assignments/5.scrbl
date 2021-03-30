@@ -123,3 +123,13 @@ exactly the same structure that the stub contains. We will only use
 the @tt{compile.rkt}, @tt{interp.rkt}, @tt{interp-prim.rkt}, and
 @tt{test/test-runner-string.rkt} files for grading, so make sure all
 your work is contained there! 
+
+@itemlist[
+
+@item{Not breaking past behavior is worth 20 points.}
+@item{The 4 string primitives are worth 60 points (30 interpreter, 30 compiler).}
+@item{Finding bugs with your tests is worth 20 points.}
+]
+
+Just zipping the empty template we provide is worth ~30 points!
+Upload often to make sure you don't run into autograder issues!

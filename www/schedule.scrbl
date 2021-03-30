@@ -60,19 +60,20 @@
                      @elem{@secref["Iniquity"]})
                
                (list @wk{3/29}
-                     @seclink["Assignment 5"]{A5}
-                     @elem{@secref["Juvie"]}
-                     @elem{@secref["Jig"]})
+                     ""
+                     @elem{@secref["Jig"]}
+                     @elem{@secref["Knock"]})
                
                (list @wk{4/5}
-                     ""
-                     @elem{@secref["Knock"]}
-                     @elem{@secref["Graphviz"] & discussion of student-chosen topics})
+                     @seclink["Assignment 5"]{A5}                     
+                     @elem{@secref["Graphviz"] & discussion of student-chosen topics}
+                     @elem{Review})                     
                                     
                (list @wk{4/12}
                      @bold{@seclink["Midterm_2"]{M2}}
-                     @elem{Review}
-		                 @elem{No lecture (exam)})
+                     @elem{No lecture (exam)}
+                     @elem{Exam Review}                     
+                     )
 
                (list @wk{4/19}
                      ""
