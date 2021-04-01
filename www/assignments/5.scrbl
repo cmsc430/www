@@ -51,7 +51,7 @@ You must add the following operations to Hustle+:
 extracts the character at the given index (using 0-based counting).  An error is signalled if 
 the index is out of bounds for the given string or if the first argument is not a string.}
 @item{@code[#:lang "racket"]{string-length ; String -> Natural}, which computes the length of the string, or yields an error if its argument is not a string.}
-@item{@code[#:lang "racket"]{make-string ; Natural Char -> Natural}, which constructs a string of the given
+@item{@code[#:lang "racket"]{make-string ; Natural Char -> String}, which constructs a string of the given
 length, filled with the given character If the first argument is not a non-negative integer, of if the second argument is not a character, an error should be returned.}
 ]
 
