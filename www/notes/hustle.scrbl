@@ -438,7 +438,7 @@ consult the System V Calling Convention, which tells us that @racket['rbx] is a
 responsible for ensuring that the value in the register is saved and restored.
 In other words: we, the caller, don't have to worry about it! Because of this
 we're going to use @racket['rbx] to store our heap pointer. You can see
-that we do this in the compiler with @tt[(Mov 'rbx 'rdi)] as part
+that we do this in the compiler with @tt{(Mov 'rbx 'rdi)} as part
 of our entry code.
 
 The second complication comes from printing.  Now that values include
