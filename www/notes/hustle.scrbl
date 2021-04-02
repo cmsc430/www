@@ -1,19 +1,22 @@
 #lang scribble/manual
 
-@(require (for-label (except-in racket ...)))
+@(require (for-label (except-in racket ... compile) a86))
 @(require redex/pict
           racket/runtime-path
           scribble/examples
-	  "../../langs/hustle/semantics.rkt"
+	  (except-in "../../langs/fraud/semantics.rkt" ext lookup)
+          (prefix-in sem: (only-in "../../langs/fraud/semantics.rkt" ext lookup))
 	  "utils.rkt"
 	  "ev.rkt"
-  	  "../fancyverb.rkt"
 	  "../utils.rkt")
 
 @(define codeblock-include (make-codeblock-include #'h))
 
-@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "hustle" f))))))
-	   '() #;'("interp.rkt" "ast.rkt" "parse.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+@(ev '(require rackunit a86))
+@(ev `(current-directory ,(path->string (build-path notes "hustle"))))
+@(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
+@(for-each (λ (f) (ev `(require (file ,f))))
+	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
 @title[#:tag "Hustle"]{Hustle: heaps and lists}
 
