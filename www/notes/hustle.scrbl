@@ -63,7 +63,7 @@ not be confused with @tt{null} in languages like C!). In Racket, and in our
 languages, we write this value as @racket['()].
 
 Using @racket[cons] and @racket['()] in a structured way we can form
-@emph[proper list], among other useful data structures.
+@emph{proper list}, among other useful data structures.
 
 We use the following grammar for Hustle:
 
