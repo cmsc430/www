@@ -431,7 +431,7 @@ to pass arguments to C functions, we can't keep our heap pointer in
 We've decided to use the second option, which leaves the choice of @emph{where}
 to move the value once we receive it from the runtime system. As usual, we will
 consult the System V Calling Convention, which tells us that @racket['rbx] is a
-@emph[callee save] register, which means that any C function we might call is
+@emph{callee save} register, which means that any C function we might call is
 responsible for ensuring that the value in the register is saved and restored.
 In other words: we, the caller, don't have to worry about it! Because of this
 we're going to use @racket['rbx] to store our heap pointer. You can see
