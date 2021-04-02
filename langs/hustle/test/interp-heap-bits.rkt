@@ -6,5 +6,4 @@
 
 (test-runner (λ (e) (interp (parse e))))
 
-(let ((interp/io (make-interp/io interp)))
-  (test-runner-io (λ (e s) (interp/io (parse e) s))))
+(test-runner-io (λ (e s) (interp/io (parse e) s)))
