@@ -4,8 +4,8 @@
 @(require redex/pict
           racket/runtime-path
           scribble/examples
-	  (except-in "../../langs/fraud/semantics.rkt" ext lookup)
-          (prefix-in sem: (only-in "../../langs/fraud/semantics.rkt" ext lookup))
+	  (except-in "../../langs/hustle/semantics.rkt" ext lookup)
+          (prefix-in sem: (only-in "../../langs/hustle/semantics.rkt" ext lookup))
 	  "utils.rkt"
 	  "ev.rkt"
 	  "../utils.rkt")
