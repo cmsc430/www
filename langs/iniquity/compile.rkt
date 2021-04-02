@@ -13,7 +13,7 @@
 
 ;; type CEnv = [Listof Variable]
 
-;; Expr -> Asm
+;; Prog -> Asm
 (define (compile p)
   (match p
     [(Prog ds e)  
