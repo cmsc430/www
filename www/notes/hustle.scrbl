@@ -6,6 +6,7 @@
           scribble/examples
 	  (except-in "../../langs/hustle/semantics.rkt" ext lookup)
           (prefix-in sem: (only-in "../../langs/hustle/semantics.rkt" ext lookup))
+	  "../fancyverb.rkt"
 	  "utils.rkt"
 	  "ev.rkt"
 	  "../utils.rkt")
