@@ -153,15 +153,26 @@ Turning to compilation, let's start small by supposing we have a
 single, pre-defined function and we add to the language the ability to
 call this function.
 
-A function in assembly has an entry point (a label), followed by a
-sequence of instruction, ending with the @tt{'ret} instruction.  As a
-convention, we will pass all arguments to a function on the stack.
+A function in assembly has an entry point (a label), followed by a sequence of
+instruction, ending with the @tt{'ret} instruction. A very common approach for
+passing arguments to a function, which we will use here, is to pass arguments
+via the stack, this way you don't have to worry as much about which registers
+may or may not be used (at the cost of performance).
 
-So here is @tt{Asm} representing a single function named @tt{double}
+
+@#reader scribble/comment-reader
+(racketblock
+(seq (Push rax)    ; argument is now at rsp
+     (Call 'double)
+     (Add 'rax 1)) ; rax now holds 11
+)
+
+So far, so good! Now we can look at what the code for the @tt{double} might
+look like:
 
 @racketblock[
 (seq (Label 'double)
-     (Mov 'rax (Offset 'rsp -1))
+     (Mov (Offset 'rsp 0) 5)
      (Add 'rax 'rax)
      (Ret))
 ]
@@ -173,27 +184,15 @@ The @racket[Ret] instruction works in concert with the @racket[Call]
 instruction, which can be given a label, designating which function to
 call.
 
-So if we wanted to call @racket[double] with an argument of 5, we'd
-first need to write 5 in to the approrpriate spot in the stack, then
-issue the @racket[(Call 'double)] instruction.
+So if we wanted to call @racket[double] with an argument of 5, we'd push 5 on
+the stack, then issue the @racket[(Call 'double)] instruction.
 
-Since the @tt{double} code is reading from offset -1 from
-@racket['rsp], it is tempting to assume this is where you should write
-the argument:
-
-@#reader scribble/comment-reader
-(racketblock
-(seq (Mov (Offset rsp -1) 5)
-     (Call 'double)
-     (Add 'rax 1)) ; rax now holds 11
-)
+The @tt{double} code is reading from offset 0 from @racket['rsp], @emph{seems}
+to make sense, since we are pushing the argument right before executing the
+@racket[Call] instruction.
 
 The problem is here is that the @racket[Call] instruction works by
-modifying the @racket['rsp] register.
-
-Remember how @racket['rsp] points to an ``occupied'' memory location
-and we said we just leave whatever is there alone?  We can now explain
-what's going on.
+modifying the @racket['rsp] register!
 
 The @racket[Call] instruction advances @racket['rsp] to the next word
 of memory and writes the location of the instruction that occurs after
@@ -214,79 +213,78 @@ So calls and returns in assembly are really just shorthand for:
 ]
 
 The problem with the function call we wrote above is that we put the
-argument in @racket[(Offset 'rsp -1)], but then the @racket[Call]
+argument in @racket[(Offset 'rsp 0)], but then the @racket[Call]
 advances (by decrementing) the @racket['rsp] register and writes the
-return point in @racket[(Offset 'rsp 0)], but that's exactly where we
-had put the argument!
+return point in @racket[(Offset 'rsp 0)], so now the relative offset
+from @racket['rsp] would be 8, not 0!
 
-The solution then, is to put the argument at index -2 from the
-caller's perspective.  When the call is made, it will be at index -1
-from the function's perspective:
+The solution then, is to make sure that the function knows that
+it's arguments have been ``shifted'' by one slot.
+
+@racketblock[
+(seq (Label 'double)
+     (Mov (Offset 'rsp 8) 5)
+     (Add 'rax 'rax)
+     (Ret))
+]
+
+We're not out of the woods yet. What we've described above @emph{would} work,
+on an idealized machine. However, the System V x86_64 calling convention adds
+one more constraint on us: @tt{rsp} @emph{must} be aligned to 16-bytes when a
+function call is performed. This requires us to do some calculating before we
+can determine whether we need to pad that stack. This requires us to know how
+many things are currently on our stack, luckily we already have an environment
+on hand, which provides this information.  So for @racket[double], it would
+look like the following:
+
 
 @#reader scribble/comment-reader
 (racketblock
-(seq (Mov (Offset 'rsp -2) 5)
-     (Call 'double)
-     (Add 'rax 1)) ; rax now holds 11
-)
+(define (compile-double-call e c)
 
-Now that we have seen how to make a call and return in assembly, we
-can tackle code generation for a function call @racket[(double _e)] in
-our language.
+  ; determine whether stack is 16-byte aligned
+  ; based on the number of things on the stack + our argument
+  (if (even? (add1 (length c)))
 
-@racketblock[
-;; Expr CEnv -> Asm
-(define (compile-call-double e0 c) 
-  (seq (compile-e e0 c)
-       (Mov (Offset 'rsp -2) 'rax) ; place result of e0 in stack
-       (Call 'double)))
-]
+      ; Stack will be 16-byte aligned:
+      (seq (compile-es e c)        ; generate code for the argument
+           (Call 'double)
+           (Add rsp 8))            ; pop argument
+
+      ; Stack will _not_ be 16-byte aligned
+      ; We need to pad the stack
+      (seq (Sub rsp 8)                  ; pad stack
+           (compile-es es (cons #f c))  ; generate code for the argument
+                                        ; taking the pad into account
+           (Call 'double)
+           (Add rsp 16)))))             ; pop args and pad
+))
 
 This will work if the program consists only of a call to
 @racket[double], however it doesn't work in general.
-
-To see the problem, notice how the call code always uses the index -2
-for the first argument and index -1 will hold the return pointer when
-the call is made.  But what if those spots are occuppied on the
-stack!?  The problem is that we've always calculated stack offsets
-statically and never mutated @racket['rsp].  But @racket[Call]
-expects @racket['rsp] to be pointing to the top of the stack.
-
-The solution is to emit code that will adjust @racket['rsp] to the top
-of (our statically calculated) stack.  How much does @racket['rsp]
-need to change?  It needs to be decremented by the number of items in
-the static environment, @racket[c].  We can adjust @racket['rsp], make
-the call, but after the call returns, we can adjust @racket['rsp] back
-to where it was before the call.
-
-The code is:
-
-@#reader scribble/comment-reader
-(racketblock
-;; Expr CEnv -> Asm
-(define (compile-call-double e0 c)
-  (let ((h  (* 8 (length c))))
-    (seq (compile-e e0 c)
-         (Sub 'rsp h)
-         (Mov (Offset 'rsp -2) rax) ; place result of e0 in stack
-         (Call 'double)
-         (Add 'rsp h))))
-)
-
-This makes calls work in any stack context.
 
 It's easy to generalize this code to call any given function name:
 
 @#reader scribble/comment-reader
 (racketblock
-;; Id Expr CEnv -> Asm
-(define (compile-call f e0 c)
-  (let ((h  (* 8 (length c))))
-    (seq (compile-e e0 c)
-         (Sub 'rsp h)
-         (Mov (Offset 'rsp -2) 'rax)
-         (Call f)
-         (Add 'rsp h))))
+(define (compile-double-call e c)
+
+  ; determine whether stack is 16-byte aligned
+  ; based on the number of things on the stack + our argument
+  (if (even? (add1 (length c)))
+
+      ; Stack will be 16-byte aligned:
+      (seq (compile-es e c)        ; generate code for the argument
+           (Call 'double)
+           (Add rsp 8))            ; pop argument
+
+      ; Stack will _not_ be 16-byte aligned
+      ; We need to pad the stack
+      (seq (Sub rsp 8)                  ; pad stack
+           (compile-es es (cons #f c))  ; generate code for the argument
+                                        ; taking the pad into account
+           (Call 'double)
+           (Add rsp 16))))              ; pop args and pad
 )
 
 If we want accept any number of arguments, we have to do a little more
@@ -304,7 +302,7 @@ expressions and saving the results on the stack:
     ['() '()]
     [(cons e es)
      (seq (compile-e e c)
-          (Mov (Offset 'rsp (- (add1 (length c)))) 'rax)
+          (Push rax)
           (compile-es es (cons #f c)))]))     
 )
 
@@ -312,19 +310,21 @@ So to compile a call with any number of arguments:
 
 @#reader scribble/comment-reader
 (racketblock
-;; Id (Listof Expr) CEnv -> Asm
-(define (compile-call f es c)
-  (let ((h  (* 8 (length c))))
-    (seq (compile-es es (cons #f c))	
-         (Sub 'rsp h)
-         (Call f)
-         (Add 'rsp h))))
+(define (compile-app f es c)
+  (if (even? (+ (length es) (length c)))
+      (seq (compile-es es c)
+           (Call f)
+           (Add rsp (* 8 (length es))))            ; pop args
+      (seq (Sub rsp 8)                             ; adjust stack
+           (compile-es es (cons #f c))
+           (Call f)
+           (Add rsp (* 8 (add1 (length es)))))))   ; pop args and pad
 )
 
-Notice that we call @racket[compile-es] in an extended static
-environment, that has one addition slot used.  This will bump the
-location of all the argument results by one, leaving the first slot
-available for the return pointer!
+Notice that in the `else' branch we call @racket[compile-es] in an extended
+static environment, that has one addition slot used.  This will bump the
+location of all the argument results by one, which is necessary for the 16-byte
+alignment.
 
 @section[#:tag-prefix "iniquity"]{Compiling a Function Definition}
 
@@ -349,32 +349,39 @@ value.
 After the instructions for the body, a @racket[(Ret)] instruction is
 emitted so that control transfers back to the caller.
 
-So the code for compiling a function definition is:
-
-@#reader scribble/comment-reader
-(racketblock
-;; Id Id Expr -> Asm
-(define (compile-define f x e0)
-  (seq (Label f)
-       (compile-e e0 (list x))      
-       (Ret)))
-)
-
 What about functions that take zero or more arguments?  That's easy,
 just compile the body in an appropriate static environment.
 
 @#reader scribble/comment-reader
 (racketblock
-;; Id (Listof Id) Expr -> Asm
-(define (compile-define f xs e0)
-  (seq (Label f)
-       (compile-e e0 (reverse xs))
-       (Ret)))
+;; Defn -> Asm
+(define (compile-define d)
+  (match d
+    [(Defn f xs e)
+     (seq (Label f)
+          (compile-e e (parity (cons #f (reverse xs))))
+          (Ret))]))
 )
 
 (Note that we reverse the parameter list due to the order in which
 arguments are added to the stack.)
 
+The @racket[parity] function is there to manage alignment appropriately.
+Because we know that the @racket[Call] instruction must be executed with
+@racket['rsp] being 16-byte aligned, and that @racket[Call] @emph{pushes} the
+return pointer on the stack, we have to make sure that the environment
+accurately portrays the stack as @emph{not} 16-byte aligned at the beginning of
+the function's code. To do this we add a dummy value to the @emph{end} of the
+environment if it has an even number of items (even would imply that we are
+16-byte aligned, when we know that we are not).
+
+@#reader scribble/comment-reader
+(racketblock
+(define (parity c)
+  (if (even? (length c))
+      (append c (list #f))
+      c))
+)
 
 @section[#:tag-prefix "iniquity"]{On Names and Labels}
 
@@ -401,18 +408,23 @@ Using this function, we can touch up our code:
 @#reader scribble/comment-reader
 (racketblock
 ;; Id (Listof Expr) CEnv -> Asm
-(define (compile-call f es c)
-  (let ((h  (* 8 (length c))))
-    (seq (compile-es es (cons #f c))
-         (Sub 'rsp h)
-         (Call (symbol->label f))
-         (Add 'rsp h))))
+(define (compile-app f es c)
+  (if (even? (+ (length es) (length c)))
+      (seq (compile-es es c)
+           (Call (symbol->label f))
+           (Add rsp (* 8 (length es))))            ; pop args
+      (seq (Sub rsp 8)                             ; adjust stack
+           (compile-es es (cons #f c))
+           (Call (symbol->label f))
+           (Add rsp (* 8 (add1 (length es)))))))   ; pop args and pad
 
-;; Id (Listof Id) Expr -> Asm
-(define (compile-define f xs e0)
-  (seq (Label (symbol->label f))
-       (compile-e e0 (reverse xs))
-       (Ret)))
+;; Defn -> Asm
+(define (compile-define d)
+  (match d
+    [(Defn f xs e)
+     (seq (Label (symbol->label f))
+          (compile-e e (parity (cons #f (reverse xs))))
+          (Ret))]))
 )
 
 
@@ -427,8 +439,16 @@ complete program:
 (define (compile p)
   (match p
     [(Prog ds e)
-     (seq (compile-entry e)
-          (compile-defines ds))]))
+     (prog (Extern 'peek_byte)
+           (Extern 'read_byte)
+           (Extern 'write_byte)
+           (Extern 'raise_error)
+           (Label 'entry)
+           (Mov rbx rdi) ; recv heap pointer
+           (compile-e e '(#f))
+           (Mov rdx rbx) ; return heap pointer in second return register
+           (Ret)
+           (compile-defines ds))]))
 )
 
 It relies on a helper @racket[compile-defines] for compiling each
