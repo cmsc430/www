@@ -29,6 +29,7 @@ int main(int argc, char** argv) {
   // `heap` gets passed in `rdi`
   // (defined by the calling convention, not up to us!)
   int64_t result = entry(heap);
+  // See if we need to print the initial tick
   if (cons_type_tag == (ptr_type_mask & result)) printf("'");
   print_result(result);
   if (result != val_void) printf("\n");
