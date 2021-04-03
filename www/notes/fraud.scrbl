@@ -10,15 +10,13 @@
 	  "ev.rkt"
 	  "../utils.rkt")
 
-
-
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(ev '(require rackunit a86))
-@(ev `(current-directory ,(path->string (build-path notes "fraud"))))
+@(ev `(current-directory ,(path->string (build-path notes "hustle"))))
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 @(for-each (λ (f) (ev `(require (file ,f))))
-	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt" "translate.rkt"))
+	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
 
 @(define this-lang "Fraud")
