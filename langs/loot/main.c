@@ -18,6 +18,8 @@ void print_codepoint(int64_t);
 int main(int argc, char** argv) {
   void * heap = malloc(heap_size);
   int64_t result = entry(heap);
+  // See if we need to print the initial tick
+  if (cons_type_tag == (ptr_type_mask & result)) printf("'");
   print_result(result);
   printf("\n");
   return 0;
