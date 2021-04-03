@@ -13,6 +13,7 @@
     "evildoer"
     "extort"
     "fraud"
+    "hustle"
     "jig"))
 
 ;; String -> (listof Path)
