@@ -14,6 +14,7 @@
     "extort"
     "fraud"
     "hustle"
+    "iniquity"
     "jig"))
 
 ;; String -> (listof Path)
