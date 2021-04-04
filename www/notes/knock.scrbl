@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label (except-in racket ...)))
+@(require (for-label (except-in racket compile ...) a86))
 @(require redex/pict
 	  racket/runtime-path
 	  scribble/examples
@@ -10,8 +10,11 @@
 
 @(define codeblock-include (make-codeblock-include #'h))
 
-@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "knock" f))))))
-	   '("interp.rkt" "compile.rkt" "syntax.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+@(ev '(require rackunit a86))
+@(ev `(current-directory ,(path->string (build-path notes "knock"))))
+@(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
+@(for-each (λ (f) (ev `(require (file ,f))))
+	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
 @title[#:tag "Knock"]{Knock: first-class function (pointers)}
 
@@ -139,8 +142,9 @@ We can verify that the compiler works for programs that use functions
 like before:
 
 @ex[
+(current-objs '("runtime.o"))
 (asm-interp
-   (compile (sexpr->prog '(begin (define (f x)
+   (compile (parse '(begin (define (f x)
                             (if (zero? x)
       		          0
       			  (add1 (call (fun f) (sub1 x)))))
@@ -150,16 +154,18 @@ like before:
 But it also works when functions are put in lists:
 
 @ex[
+(current-objs '("runtime.o"))
 (asm-interp
-   (compile (sexpr->prog '(begin (define (f x) x)
+   (compile (parse '(begin (define (f x) x)
                             (call (car (cons (fun f) '())) 7)))))
 ]
 
 And functions that produce functions:
 
 @ex[
+(current-objs '("runtime.o"))
 (asm-interp
-   (compile (sexpr->prog '(begin (define (f x) (fun h))
+   (compile (parse '(begin (define (f x) (fun h))
                             (define (h y) y)
                             (call (call (fun f) 5) 9)))))
 ]
