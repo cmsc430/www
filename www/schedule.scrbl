@@ -67,7 +67,7 @@
                (list @wk{4/5}
                      ""
                      @elem{@secref["Knock"]}
-                     @elem{@secref["Graphviz"] & discussion of student-chosen topics})
+                     @elem{Property-based/Randomized testing & Discussion of student-vote topics})
                                     
                (list @wk{4/12}
                      @bold{@seclink["Midterm_2"]{M2}}
