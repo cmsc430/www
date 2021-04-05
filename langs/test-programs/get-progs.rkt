@@ -12,7 +12,10 @@
     "dodger"
     "evildoer"
     "extort"
-    "fraud"))
+    "fraud"
+    "hustle"
+    "iniquity"
+    "jig"))
 
 ;; String -> (listof Path)
 (define (get-progs lang)

@@ -18,7 +18,7 @@
 (define val-void   #b1111000)
 (define val-empty #b10011000)
 
-(define (bits->imm b)
+(define (bits->value b)
   (cond [(= type-int (bitwise-and b mask-int))
          (arithmetic-shift b (- int-shift))]
         [(= type-char (bitwise-and b mask-char))

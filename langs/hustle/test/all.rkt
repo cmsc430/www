@@ -1,8 +1,21 @@
 #lang racket
-(provide test-runner test-runner-io)
-(require rackunit)
+(require "../compile.rkt"
+         "../interp.rkt"
+         "../interp-io.rkt"         
+         "../parse.rkt"
+         "../types.rkt"
+         "../unload-bits-asm.rkt"
+         a86
+         rackunit)
+
+;; link with runtime for IO operations
+(unless (file-exists? "../runtime.o")
+  (system "make -C .. runtime.o"))
+(current-objs
+ (list (path->string (normalize-path "../runtime.o"))))
 
 (define (test-runner run)
+  
   ;; Abscond examples
   (check-equal? (run 7) 7)
   (check-equal? (run -8) -8)
@@ -76,65 +89,14 @@
                         (let ((z (- 4 x)))
                           (+ (+ x x) z))))
                 7)
-  ;; Hustle examples
-  (check-equal? (run ''()) '())
-  (check-equal? (run '(box 1)) (box 1))
-  (check-equal? (run '(cons 1 2)) (cons 1 2))
-  (check-equal? (run '(unbox (box 1))) 1)
-  (check-equal? (run '(car (cons 1 2))) 1)
-  (check-equal? (run '(cdr (cons 1 2))) 2)
-  (check-equal? (run '(cons 1 '())) (list 1))
-  (check-equal? (run '(let ((x (cons 1 2)))
-                        (begin (cdr x)
-                               (car x))))
-                1)
-  (check-equal? (run '(let ((x (cons 1 2)))
-                        (let ((y (box 3)))
-                          (unbox y))))
-                3)
-  ;; Iniquity tests
-  (check-equal? (run
-                 '(begin (define (f x) x)
-                         (f 5)))
-                5)
-  (check-equal? (run
-                 '(begin (define (tri x)
-                           (if (zero? x)
-                               0
-                               (+ x (tri (sub1 x)))))
-                         (tri 9)))
-                45)
-  ;; Knock tests
-  (check-equal? (run
-                  '(begin (define (f x) x)
-                          (call (fun f) 42)))
-                42)
-  (check-equal? (run
-                  '(begin (define (f x) x)
-                          (define (g x) x)
-                          (call (car (cons (fun f) (cons (fun g) '()))) 42)))
-                42)
-#|
-  (check-equal? (run
-                 '(begin (define (even? x)
-                           (if (zero? x)
-                               #t
-                               (odd? (sub1 x))))
-                         (define (odd? x)
-                           (if (zero? x)
-                               #f
-                               (even? (sub1 x))))
-                         (even? 101)))
-                #f)
 
-  (check-equal? (run
-                 '(begin (define (map-add1 xs)
-                           (if (empty? xs)
-                               '()
-                               (cons (add1 (car xs))
-                                     (map-add1 (cdr xs)))))
-                         (map-add1 (cons 1 (cons 2 (cons 3 '()))))))
-                '(2 3 4))|#)
+  ;; Hustle examples
+  (check-equal? (run '(unbox (box 7))) 7)
+  (check-equal? (run '(let ((x (box 2))) (unbox x))) 2)
+  (check-equal? (run '(let ((x (cons 2 '()))) (car x))) 2))
+
+(test-runner (λ (e) (interp (parse e))))
+(test-runner (λ (e) (unload/free (asm-interp (compile (parse e))))))
 
 (define (test-runner-io run)
   ;; Evildoer examples
@@ -164,33 +126,15 @@
   (check-equal? (run '(let ((x 97)) (begin (read-byte) x)) "b")
                 (cons 97 ""))
   (check-equal? (run '(let ((x 97)) (begin (peek-byte) x)) "b")
-                (cons 97 ""))
+                (cons 97 "")))
+  
 
-  ;; Hustle examples
-  (check-equal? (run '(let ((x 1))
-                        (begin (write-byte 97)
-                               1))
-                     "")
-                (cons 1 "a"))
+(test-runner-io (λ (e s) (interp/io (parse e) s)))
+(test-runner-io (λ (e s)
+                  (match (asm-interp/io (compile (parse e)) s)
+                    [(cons 'err o) (cons 'err o)]
+                    [(cons r o) (cons (unload/free r) o)])))
 
-  (check-equal? (run '(let ((x 1))
-                        (let ((y 2))
-                          (begin (write-byte 97)
-                                 1)))
-                     "")
-                (cons 1 "a"))
-
-  (check-equal? (run '(let ((x (cons 1 2)))
-                        (begin (write-byte 97)
-                               (car x)))
-                     "")
-                (cons 1 "a"))
-  ;; Iniquity examples
-  (check-equal? (run '(begin (define (print-alphabet i)
-                               (if (zero? i)
-                                   (void)
-                                   (begin (write-byte (- 123 i))
-                                          (print-alphabet (sub1 i)))))
-                             (print-alphabet 26))
-                     "")
-                (cons (void) "abcdefghijklmnopqrstuvwxyz")))
+;; run command line compiler and compare against Racket as refernece implementation
+(require rackunit "../../test-programs/get-progs.rkt")
+(for-each test-prog (get-progs "hustle"))

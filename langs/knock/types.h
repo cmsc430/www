@@ -13,6 +13,11 @@
   - Eof:            #b10 11 000
   - Void:           #b11 11 000
   - Empty:         #b100 11 000
+
+  Pointers are
+  - Box:  end in #b001
+  - Cons: end in #b010
+  - Proc: end in #b100
 */
 #define imm_shift        3
 #define ptr_type_mask    ((1 << imm_shift) - 1)

@@ -10,8 +10,6 @@
 	  "ev.rkt"
 	  "../utils.rkt")
 
-
-
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(ev '(require rackunit a86))
@@ -339,14 +337,12 @@ We can confirm the interpreter computes the right result for the
 examples given earlier:
 
 @ex[
-(eval:error (interp (parse 'x)))
 (interp (parse '(let ((x 7)) x)))
 (interp (parse '(let ((x 7)) 2)))
 (interp (parse '(let ((x 7)) (add1 x))))
 (interp (parse '(let ((x (add1 7))) x)))
 (interp (parse '(let ((x 7)) (let ((y 2)) x))))
 (interp (parse '(let ((x 7)) (let ((x 2)) x))))
-(eval:error (interp (parse '(let ((x (add1 x))) x))))
 (interp (parse '(let ((x 7)) (let ((x (add1 x))) x))))
 ]
 
@@ -602,14 +598,12 @@ Let's take a look at some examples.
 @ex[
 (define (show e)
   (displayln (asm-string (compile (parse e)))))
-(eval:error (show 'x))
 (show '(let ((x 7)) x))
 (show '(let ((x 7)) 2))
 (show '(let ((x 7)) (add1 x)))
 (show '(let ((x (add1 7))) x))
 (show '(let ((x 7)) (let ((y 2)) x)))
 (show '(let ((x 7)) (let ((x 2)) x)))
-(eval:error (show '(let ((x (add1 x))) x)))
 (show '(let ((x 7)) (let ((x (add1 x))) x)))
 ]
 
@@ -620,14 +614,12 @@ And running the examples:
   (match (asm-interp (compile (parse e)))
     ['err 'err]
     [b (bits->value b)]))
-(eval:error (tell 'x))
 (tell '(let ((x 7)) x))
 (tell '(let ((x 7)) 2))
 (tell '(let ((x 7)) (add1 x)))
 (tell '(let ((x (add1 7))) x))
 (tell '(let ((x 7)) (let ((y 2)) x)))
 (tell '(let ((x 7)) (let ((x 2)) x)))
-(eval:error (tell '(let ((x (add1 x))) x)))
 (tell '(let ((x 7)) (let ((x (add1 x))) x)))
 ]
 

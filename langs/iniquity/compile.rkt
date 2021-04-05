@@ -13,7 +13,7 @@
 
 ;; type CEnv = [Listof Variable]
 
-;; Expr -> Asm
+;; Prog -> Asm
 (define (compile p)
   (match p
     [(Prog ds e)  
@@ -51,8 +51,7 @@
 
 ;; Expr CEnv -> Asm
 (define (compile-e e c)
-  (seq (%% (format "begin ~a" e))
-       (match e
+  (seq (match e
          [(Int i)            (compile-value i)]
          [(Bool b)           (compile-value b)]
          [(Char c)           (compile-value c)]
@@ -65,8 +64,7 @@
          [(Prim2 p e1 e2)    (compile-prim2 p e1 e2 c)]
          [(If e1 e2 e3)      (compile-if e1 e2 e3 c)]
          [(Begin e1 e2)      (compile-begin e1 e2 c)]
-         [(Let x e1 e2)      (compile-let x e1 e2 c)])
-       (%% (format "end ~a" e))))
+         [(Let x e1 e2)      (compile-let x e1 e2 c)])))
 
 ;; Value -> Asm
 (define (compile-value v)
