@@ -50,6 +50,8 @@
   (define (jump-target->string t)
     (match t
       [(? reg?) (reg->string t)]
+      [(Offset (? reg? r) i)
+       (string-append "[" (reg->string r) " + " (number->string i) "]")]
       [_ (label-symbol->string t)]))
 
   (define tab (make-string 8 #\space))

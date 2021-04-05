@@ -1,4 +1,7 @@
+#ifndef RUNTIME_H
+#define RUNTIME_H
 int64_t entry();
-FILE* in;
-FILE* out;
-void (*error_handler)();
+extern FILE* in;
+extern FILE* out;
+extern void (*error_handler)();
+#endif /* RUNTIME_H */

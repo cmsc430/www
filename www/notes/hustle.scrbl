@@ -1,19 +1,23 @@
 #lang scribble/manual
 
-@(require (for-label (except-in racket ...)))
+@(require (for-label (except-in racket ... compile) a86))
 @(require redex/pict
           racket/runtime-path
           scribble/examples
-	  "../../langs/hustle/semantics.rkt"
+	  (except-in "../../langs/hustle/semantics.rkt" ext lookup)
+          (prefix-in sem: (only-in "../../langs/hustle/semantics.rkt" ext lookup))
+	  "../fancyverb.rkt"
 	  "utils.rkt"
 	  "ev.rkt"
-  	  "../fancyverb.rkt"
 	  "../utils.rkt")
 
 @(define codeblock-include (make-codeblock-include #'h))
 
-@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "hustle" f))))))
-	   '() #;'("interp.rkt" "ast.rkt" "parse.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+@(ev '(require rackunit a86))
+@(ev `(current-directory ,(path->string (build-path notes "hustle"))))
+@(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
+@(for-each (λ (f) (ev `(require (file ,f))))
+	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
 @title[#:tag "Hustle"]{Hustle: heaps and lists}
 
@@ -23,15 +27,6 @@ the heap in the barn consists of single grains, and drop and drop
 makes an inundation.}
 
 @table-of-contents[]
-
-@verbatim|{
-TODO:
-* Add section introducing '()
-* Describe new use of 'rbx for heap pointer
-  - picked a callee-saved register, therefore
-    save once on entry, restore once on exit (use empty stack-alignment word)
-    no need to do anything at C prim calls
-}|
 
 @section{Inductive data}
 
@@ -61,6 +56,18 @@ These features will operate like their Racket counterparts:
 (cdr (cons 3 4))
 ]
 
+@section{Empty lists can be all and end all}
+
+Inductive data types are useful for creating a wide variety of data structures.
+Their practicality can be somewhat limited when their structure is unknown: Is
+the second element in a @racket[cons] important?  Or is it there because
+@emph{something} has to be there? For this reason, many languages that provide
+inductive data types also have an @emph{empty} or @emph{nil} value (this should
+not be confused with @tt{null} in languages like C!). In Racket, and in our
+languages, we write this value as @racket['()].
+
+Using @racket[cons] and @racket['()] in a structured way we can form
+@emph{proper list}, among other useful data structures.
 
 We use the following grammar for Hustle:
 
@@ -70,6 +77,8 @@ We can model this as an AST data type:
 
 @filebox-include-fake[codeblock "hustle/ast.rkt"]{
 #lang racket
+;; type Expr = ...
+;;           | (Empty)
 ;; type Op1 = ...
 ;;          | 'box | 'car | 'cdr | 'unbox
 ;; type Op2 = ...
@@ -329,10 +338,10 @@ So for example the following creates a box containing the value 7:
 @#reader scribble/comment-reader
 (racketblock
 (seq (Mov 'rax (arithmetic-shift 7 imm-shift))  
-     (Mov (Offset 'rdi 0) 'rax) ; write '7' into address held by rdi
-     (Mov 'rax 'rdi)            ; copy pointer into return register
+     (Mov (Offset 'rbx 0) 'rax) ; write '7' into address held by rbx
+     (Mov 'rax 'rbx)            ; copy pointer into return register
      (Or 'rax type-box)         ; tag pointer as a box
-     (Add 'rdi 8))              ; advance rdi one word
+     (Add 'rbx 8))              ; advance rbx one word
 )
 
 If @racket['rax] holds a box value, we can ``unbox'' it by erasing the
@@ -350,12 +359,12 @@ Pairs are similar.  Suppose we want to make @racket[(cons 3 4)]:
 @#reader scribble/comment-reader
 (racketblock
 (seq (Mov 'rax (arithmetic-shift 3 imm-shift))
-     (Mov (Offset 'rdi 0) 'rax) ; write '3' into address held by rdi
+     (Mov (Offset 'rbx 0) 'rax) ; write '3' into address held by rbx
      (Mov 'rax (arithmetic-shift 4 imm-shift))
-     (Mov (Offset 'rdi 1) 'rax) ; write '4' into word after address held by rdi
-     (Mov 'rax rdi)             ; copy pointer into return register
+     (Mov (Offset 'rbx 1) 'rax) ; write '4' into word after address held by rbx
+     (Mov 'rax rbx)             ; copy pointer into return register
      (Or 'rax type-pair)        ; tag pointer as a pair
-     (Add 'rdi 16))             ; advance rdi 2 words
+     (Add 'rbx 16))             ; advance rbx 2 words
 )
 
 If @racket['rax] holds a pair value, we can project out the elements
@@ -376,15 +385,15 @@ subexpressions and type tag checking before doing projections.
 
 @section{Allocating Hustle values}
 
-We use a register, @racket['rdi], to hold the address of the next free
+We use a register, @racket['rbx], to hold the address of the next free
 memory location in memory.  To allocate memory, we simply increment
-the content of @racket['rdi] by a multiple of 8.  To initialize the
+the content of @racket['rbx] by a multiple of 8.  To initialize the
 memory, we just write into the memory at that location.  To contruct a
 pair or box value, we just tag the unused bits of the address.
 
 
 ... will have to coordinate with the run-time system to
-initialize @racket['rdi] appropriately.
+initialize @racket['rbx] appropriately.
 @secref["hustle-run-time"]
 
 @section{A Compiler for Hustle}
@@ -399,7 +408,7 @@ The complete compiler is given below.
 The run-time system for Hustle is more involved for two main reasons:
 
 The first is that the compiler relies on a pointer to free memory
-residing in @racket['rdi].  The run-time system will be responsible
+residing in @racket['rbx].  The run-time system will be responsible
 for allocating this memory and initializing the @racket['rdi]
 register.  To allocate memory, it uses @tt{malloc}.  It passes the
 pointer returned by @tt{malloc} to the @tt{entry} function.  The
@@ -408,6 +417,30 @@ be passed in the @racket['rdi] register.  Since @tt{malloc} produces
 16-byte aligned addresses on 64-bit machines, @racket['rdi] is
 initialized with an address that ends in @code[#:lang
 "racket"]{#b000}, satisfying our assumption about addresses.
+
+Once the runtime system has provide the heap address in @racket['rdi] it become
+our responsibility to keep track of that value. Because @racket['rdi] is used
+to pass arguments to C functions, we can't keep our heap pointer in
+@racket['rdi] and expect it to be saved. This leaves us with two options:
+
+@itemlist[
+ @item{We can ensure that we save @racket['rdi] somewhere safe whenever we
+       might call a C function}
+
+ @item{We can move the value away from @racket['rdi] as soon as possible and
+       never have to worry about @racket['rdi] being clobbered during a call
+       to a C function (as long as we pick a good place!)}
+]
+
+We've decided to use the second option, which leaves the choice of @emph{where}
+to move the value once we receive it from the runtime system. As usual, we will
+consult the System V Calling Convention, which tells us that @racket['rbx] is a
+@emph{callee save} register, which means that any C function we might call is
+responsible for ensuring that the value in the register is saved and restored.
+In other words: we, the caller, don't have to worry about it! Because of this
+we're going to use @racket['rbx] to store our heap pointer. You can see
+that we do this in the compiler with @tt{(Mov 'rbx 'rdi)} as part
+of our entry code.
 
 The second complication comes from printing.  Now that values include
 inductively defined data, the printer must recursively traverse these

@@ -12,7 +12,7 @@
 ;; Value* Heap -> Value
 (define (unload-value v h)
   (match v
-    [(? imm-bits?) (bits->imm v)]
+    [(? imm-bits?) (bits->value v)]
     [(? box-bits? i)
      (box  (unload-value (heap-ref h i) h))]
     [(? cons-bits? i)
