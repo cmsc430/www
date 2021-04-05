@@ -43,8 +43,8 @@ expression (that should evaluate to a function):
 @verbatim|{
 ;; type Expr =
 ;; | ....
-;; | `(fun ,Variable)
-;; | `(call ,Expr ,@(Listof Expr))
+;; | (Fun Id)
+;; | (Call Expr (Listof Expr))
 }|
 
 These new syntactic forms are temporary forms that don't correspond
@@ -73,18 +73,18 @@ value.
 
 @#reader scribble/comment-reader
 (racketblock
-;; Variable -> Asm
+;; Id -> Asm
 (define (compile-fun f)
-  `(; rax <- address of label f
-    (lea rax (offset ,(symbol->label f) 0))
-    ; write in to heap
-    (mov (offset rdi 0) rax)
-    ; rax <- pointer into heap
-    (mov rax rdi)
-    ; tag as procedure pointer
-    (or rax ,type-proc)
-    ; alloc
-    (add rdi 8)))
+       ; Load the address of the label into rax
+  (seq (Lea rax (symbol->label f))
+       ; Copy the value onto the heap
+       (Mov (Offset rbx 0) rax)
+       ; Copy the heap address into rax
+       (Mov rax rbx)
+       ; Tag the value as a proc
+       (Or rax type-proc)
+       ; Bump the heap pointer
+       (Add rbx 8)))
 )
 
 A function call, @racket[(call _e0 _es ...)] will evaluate on the
@@ -93,45 +93,60 @@ function, i.e. tagged pointer.  We can erase the tag to compute the
 address in the heap.  Dereferencing that location, gets us the label
 address, which can then jump to.
 
+Similar to `compile-app` from Iniquity, we have to be concerned about 16-byte
+alignment for `rsp`. However, the wrinkle is that we also have the function
+pointer on the stack, so we have to do the calculation with an `extended` env:
+`env`:
+
 @#reader scribble/comment-reader
 (racketblock
-;; Expr (Listof Expr) CEnv -> Asm
 (define (compile-fun-call e0 es c)
-  (let ((cs (compile-es es (cons #f c)))
-        (c0 (compile-e e0 c))
-        (i (- (add1 (length c))))
-        (stack-size (* 8 (length c))))
-    `(,@c0
-      ; save f in stack    
-      (mov (offset rsp ,i) rax)
-      ,@cs
-      ; restore f      
-      (mov rax (offset rsp ,i))      
-      ,@assert-proc
-      (sub rsp ,stack-size)
-      (xor rax ,type-proc)
-      ; call f
-      (call (offset rax 0))
-      (add rsp ,stack-size))))
+  (let ((d (length es))
+        (env (cons #f c)))
+       ; We have to computer the function pointer either way.
+       (seq (compile-e e0 c)
+            (assert-proc rax)
+            (Push rax)
+
+       ; Then we worry about alignment
+       (if (even? (+ d (length env)))
+
+           ; We will be 16-byte aligned
+           (seq (compile-es es env)
+                (Mov rax (Offset rsp (* 8 d)))
+                (Xor rax type-proc)
+                (Call (Offset rax 0))
+                (Add rsp (* 8 (add1 d))))
+
+           ; We won't be 16-byte aligned, and need to adjust `rsp`
+           (seq (Sub rsp 8)
+                (compile-es es env)
+                (Mov rax (Offset rsp (* 8 (add1 d))))
+                (Xor rax type-proc)
+                (Call (Offset rax 0))
+                ; pop arguments, padding, and function pointer
+                (Add rsp (* 8 (+ 2 d))))))))
+
 )
 
 A tail call version of the above can be defined as:
 
 @#reader scribble/comment-reader
 (racketblock
-;; Expr (Listof Expr) CEnv -> Asm
-(define (compile-fun-tail-call e0 es c)
-  (let ((cs (compile-es es (cons #f c)))
-        (c0 (compile-e e0 c))
-        (i (- (add1 (length c)))))
-    `(,@c0
-      (mov (offset rsp ,i) rax)
-      ,@cs
-      (mov rax (offset rsp ,i))
-      ,@(move-args (length es) i)
-      ,@assert-proc
-      (xor rax ,type-proc)
-      (jmp (offset rax 0)))))
+;; Variable (Listof Expr) CEnv -> Asm
+;; Compile a call in tail position
+(define (compile-tail-fun-call f es c)
+  (let ((cnt (length es)))
+       (seq (compile-e f c)
+            (assert-proc rax)
+            (Push rax)
+            (compile-es es (cons #f c))
+            (move-args cnt (+ cnt (add1 (in-frame c))))
+            (Mov rax (Offset rsp (* 8 cnt)))
+            (Xor rax type-proc)
+            (Add rsp (* 8 (+ cnt (add1 (in-frame c)))))
+            (Jmp (Offset rax 0)))))
+
 )
 
 The complete compiler:
