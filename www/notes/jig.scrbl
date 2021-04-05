@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label (except-in racket ...)))
+@(require (for-label (except-in racket ... compile) a86))
 @(require redex/pict
 	  racket/runtime-path
 	  scribble/examples
@@ -10,8 +10,11 @@
 
 @(define codeblock-include (make-codeblock-include #'h))
 
-@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "jig" f))))))
-	   '("interp.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+@(ev '(require rackunit a86))
+@(ev `(current-directory ,(path->string (build-path notes "jig"))))
+@(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
+@(for-each (λ (f) (ev `(require (file ,f))))
+	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
 @title[#:tag "Jig"]{Jig: jumping to tail calls}
 
@@ -180,5 +183,106 @@ interpeter would inherit the lack of tail calls and we would have to
 re-write the interpreter, but as it is, we're already done.
 
 @section[#:tag-prefix "jig"]{A Compiler with Proper Tail Calls}
+
+The compiler requires a bit more work, because of how the @tt{Call} instruction
+is implemented in the hardware itself, we always use a little bit of stack
+space each time we execute a function call. Therefore, in order to implement
+tail-calls correctly, we need to @emph{avoid} the @tt{Call} instruction!
+
+How do we perform function calls without the @tt{Call} instruction, well we're
+going to have to do a little bit of extra work in the compiler. First, let's
+remind ourselves of how a `normal' function call works (we'll just look at the
+case where we don't have to adjust for alignment):
+
+@#reader scribble/comment-reader
+(racketblock
+(define (compile-app f es c)
+
+         ; Generate the code for each argument
+         ; and push each on the stack
+    (seq (compile-es es c)
+
+         ; Generate the instruction for calling the function itself
+         (Call (symbol->label f))
+
+         ; `pop` all of the arguments off of the stack
+         (Add rsp (* 8 (length es)))))
+)
+
+The first insight regards what the stack will look like once we are
+@emph{inside the function we are calling}. Upon entry to the function's code,
+@tt{rsp} will point to the return address that the last @tt{Call} instruction
+pushed onto the stack, with the arguments to the function at positive offsets
+to @tt{rsp}. As long as we ensure that this is the case we don't @emph{have} to
+call functions with @tt{Call}.
+
+The second insight is what we mentioned above, when describing tail calls
+themselves: If we're performing a call in the tail position then there is
+nothing else to do when we return. So instead of returning here, we can return
+to the @emph{previous} call, we can overwrite the current environment on the
+stack, since we won't need it (there's nothing else to do, after all). In
+jargon: we can @emph{reuse the stack frame}. The only thing we have to
+be careful about is whether the current environment is `big enough' to
+hold all of the arguments for our function call, since we are going
+to reuse it, we'll want to make sure there's enough space.
+
+For now assume we've performed that check and that there is enough space.
+Let's go through the process bit by bit:
+
+@#reader scribble/comment-reader
+(racketblock
+;; Variable (Listof Expr) CEnv -> Asm
+;; Compile a call in tail position
+(define (compile-tail-call f es c)
+  (let ((cnt (length es)))
+
+            ; Generate the code for the arguments to the function,
+            ; pushing them on the stack, this is no different
+            ; than a normal call
+       (seq (compile-es es c)
+
+
+            ; Now we _move_ the arguments from where they are on the
+            ; stack to where the _previous_ values in the environment
+            ; the function `move-args` takes the number of values we
+            ; have to move, and the number of stack slots that we have to 
+            ; move them.
+            (move-args cnt (+ cnt (in-frame c)))
+
+            ; Once we've moved the arguments, we no longer need them at the
+            ; top of the stack. This is a big part of the benefit for
+            ; tail-calls
+            (Add rsp (* 8 (+ cnt (in-frame c))))
+
+            ; Now that `rsp` points to the _previous_ return address,
+            ; and the arguments are at a positive offset of `rsp`,
+            ; we no longer need the `call` instruction (in fact, it would
+            ; be incorrect to use it!), instead we jump to the function
+            ; directly.
+            (Jmp (symbol->label f)))))
+)
+
+@tt{move-args} is defined below:
+
+
+@#reader scribble/comment-reader
+(racketblock
+;; Integer Integer -> Asm
+;; Move i arguments upward on stack by offset off
+(define (move-args i cnt)
+  (match i
+    [0 (seq)]
+    [_ (seq
+         ; mov first arg to temp reg
+         (Mov r9 (Offset rsp (* 8 (sub1 i))))
+         ; mov value to correct place on the old frame
+         (Mov (Offset rsp (* 8 (+ i cnt))) r9)
+         ; Now do the next one
+         (move-args (sub1 i) cnt))]))
+)
+
+The entire compiler will be illuminated for seeing how we keep track of which
+expressions are in a tail-call position and whether we have enough space to
+re-use the stack frame.
 
 @codeblock-include["jig/compile.rkt"]
