@@ -66,8 +66,8 @@
                
                (list @wk{4/5}
                      @seclink["Assignment 5"]{A5}                     
-                     @elem{@secref["Graphviz"] & discussion of student-chosen topics}
-                     @elem{Review})                     
+                     @elem{Randomized Testing}
+                     @elem{Review})
                                     
                (list @wk{4/12}
                      @bold{@seclink["Midterm_2"]{M2}}

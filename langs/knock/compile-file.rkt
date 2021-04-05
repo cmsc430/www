@@ -1,14 +1,13 @@
 #lang racket
-(provide (all-defined-out))
-(require "compile.rkt" "syntax.rkt" "asm/printer.rkt")
+(provide main)
+(require "parse.rkt" "compile.rkt" a86/printer)
 
 ;; String -> Void
 ;; Compile contents of given file name,
 ;; emit asm code on stdout
 (define (main fn)
-  (with-input-from-file fn
-    (λ ()
-      (let ((c (read-line))
-            (p (read)))
-        (unless (expr? p) (error "syntax error" p))
-        (asm-display (compile (sexpr->prog p)))))))
+  (let ((p (open-input-file fn)))
+    (begin
+      (read-line p) ; ignore #lang racket line
+      (displayln (asm-string (compile (parse (read p)))))
+      (close-input-port p))))

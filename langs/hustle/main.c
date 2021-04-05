@@ -4,6 +4,11 @@
 #include "types.h"
 #include "runtime.h"
 
+FILE* in;
+FILE* out;
+void (*error_handler)();
+int64_t *heap;
+
 void print_result(int64_t);
 
 void error_exit() {
@@ -19,11 +24,16 @@ int main(int argc, char** argv) {
   in = stdin;
   out = stdout;
   error_handler = &error_exit;
-  heap = malloc(8 * heap_size);
+  heap = malloc(8 * heap_size); // 8-byte words * number of words we want
+
+  // `heap` gets passed in `rdi`
+  // (defined by the calling convention, not up to us!)
   int64_t result = entry(heap);
+  // See if we need to print the initial tick
+  if (cons_type_tag == (ptr_type_mask & result)) printf("'");
   print_result(result);
   if (result != val_void) printf("\n");
-  free(heap);
+  free(heap); // good memory hygiene
   return 0;
 }
 

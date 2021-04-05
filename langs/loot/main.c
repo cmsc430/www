@@ -18,6 +18,9 @@ void print_codepoint(int64_t);
 int main(int argc, char** argv) {
   void * heap = malloc(heap_size);
   int64_t result = entry(heap);
+  // TODO: We'll need this when we update to new AST
+  // See if we need to print the initial tick
+  //if (type_pair == (result_type_mask & result)) printf("'");
   print_result(result);
   printf("\n");
   return 0;
