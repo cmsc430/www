@@ -63,6 +63,9 @@
       [(App f es)    (if (<= (length es) s)
                          (compile-tail-call f es c)
                          (compile-app f es c))]
+      [(FCall e1 es) (if (<= (length es) s)
+                         (compile-tail-fun-call e1 es c)
+                         (compile-fun-call e1 es c))]
       [(Begin e1 e2) (compile-tail-begin e1 e2 c s)]
       [_             (compile-e e c)])))
 
@@ -103,17 +106,6 @@
        (Or rax type-proc)
        ; Bump the heap pointer
        (Add rbx 8)))
-
-(define (compile-fun-call e es c)
-  (let ((d (length es)))
-       (seq (compile-e e c)
-            (assert-proc rax)
-            (Push rax)
-            (compile-es es (cons #f c))
-            (Mov rax (Offset rsp (* 8 d)))
-            (Xor rax type-proc)
-            (Call (Offset rax 0))
-            (Add rsp (* 8 (add1 d))))))
 
 ;; Op0 CEnv -> Asm
 (define (compile-prim0 p c)
@@ -247,6 +239,50 @@
             (move-args cnt (+ cnt (in-frame c)))
             (Add rsp (* 8 (+ cnt (in-frame c))))
             (Jmp (symbol->label f)))))
+
+;; Similar to `compile-app` we have to be concerned about 16-byte alignment
+;; of `rsp`. However, the wrinkle is that we also have the function pointer
+;; on the stack, so we have to do the calculation with an `extended` env: `env`
+(define (compile-fun-call e es c)
+  (let ((d (length es))
+        (env (cons #f c)))
+       ; We have to computer the function pointer either way.
+       (seq (compile-e e c)
+            (assert-proc rax)
+            (Push rax)
+
+       ; Then we worry about alignment
+       (if (even? (+ d (length env)))
+
+           ; We will be 16-byte aligned
+           (seq (compile-es es env)
+                (Mov rax (Offset rsp (* 8 d)))
+                (Xor rax type-proc)
+                (Call (Offset rax 0))
+                (Add rsp (* 8 (add1 d))))
+
+           ; We won't be 16-byte aligned, and need to adjust `rsp`
+           (seq (Sub rsp 8)
+                (compile-es es env)
+                (Mov rax (Offset rsp (* 8 (add1 d))))
+                (Xor rax type-proc)
+                (Call (Offset rax 0))
+                ; pop arguments, padding, and function pointer
+                (Add rsp (* 8 (+ 2 d))))))))
+
+;; Variable (Listof Expr) CEnv -> Asm
+;; Compile a call in tail position
+(define (compile-tail-fun-call f es c)
+  (let ((cnt (length es)))
+       (seq (compile-e f c)
+            (assert-proc rax)
+            (Push rax)
+            (compile-es es (cons #f c))
+            (move-args cnt (+ cnt (add1 (in-frame c))))
+            (Mov rax (Offset rsp (* 8 cnt)))
+            (Xor rax type-proc)
+            (Add rsp (* 8 (+ cnt (add1 (in-frame c)))))
+            (Jmp (Offset rax 0)))))
 
 ;; Integer Integer -> Asm
 ;; Move i arguments upward on stack by offset off

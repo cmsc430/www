@@ -10,6 +10,7 @@
 ;; | Integer
 ;; | Boolean
 ;; | Character
+;; | (Fun f)
 ;; | Eof
 ;; | Void
 ;; | '()
@@ -70,8 +71,22 @@
           ; arity check
           (if (= (length vs) (length xs))
               (interp-env body (zip xs vs) ds)
-              'err)])]
-      [_         'err])]))
+              'err)])])]
+    [(Fun f)
+      (match (defns-lookup ds f)
+        [(Defn f xs body)
+         (lambda (es r)
+          (match (interp-env* es r ds)
+            [(list vs ...)
+             (if (= (length vs) (length xs))
+                 (interp-env body (zip xs vs) ds)
+                 'err)]))]
+        [_ 'err])]
+    [(FCall f es)
+      (match (interp-env f r ds)
+       [(? procedure? f) (f es r)]
+       [_ 'err])]
+    [_         'err]))
 
 ;; (Listof Expr) REnv Defns -> (Listof Value) | 'err
 (define (interp-env* es r ds)
