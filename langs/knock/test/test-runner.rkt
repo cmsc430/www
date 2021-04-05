@@ -104,6 +104,16 @@
                                (+ x (tri (sub1 x)))))
                          (tri 9)))
                 45)
+  ;; Knock tests
+  (check-equal? (run
+                  '(begin (define (f x) x)
+                          (call (fun f) 42)))
+                42)
+  (check-equal? (run
+                  '(begin (define (f x) x)
+                          (define (g x) x)
+                          (call (car (cons (fun f) (cons (fun g) '()))) 42)))
+                42)
 #|
   (check-equal? (run
                  '(begin (define (even? x)
