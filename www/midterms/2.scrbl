@@ -168,7 +168,7 @@ Consider the following example:
 
 In standard call-by-value, this will read a byte from standard input,
 and proceed to call @tt{f} with that read value, ignore it, and return
-42. In call-by-need, this program will not read any value from the
+42. In call-by-name, this program will not read any value from the
 standard input - the @tt{read-byte} will never be evaluated, as the body
 of @tt{f} does not make use of @tt{x}.
 
@@ -183,7 +183,7 @@ On the other hand, consider the following program:
 
 Again, in standard call-by-value, this will read a byte from standard
 input, and proceed to call @tt{f} with that read value, doubling it.
-In call-by-need, this program will result to two different calls to
+In call-by-name, this program will result to two different calls to
 @tt{read-byte}, whose results will then be added together: when
 calling @tt{(f (read-byte))}, the argument will be substituted into
 the body of @tt{f}, yielding @tt{(+ (read-byte) (read-byte))}.
@@ -219,6 +219,15 @@ each occurence of @tt{y} in the body of f.
 )
 
 This program should yield an error - we're still using static scoping!
+
+@#reader scribble/comment-reader
+(racketblock
+(begin
+ (define (f x) (let ((y 42)) x))
+ (let ((y 17)) (f y)))
+)
+
+This program should yield 17, in both evaluation methods.
 
 @#reader scribble/comment-reader
 (racketblock
