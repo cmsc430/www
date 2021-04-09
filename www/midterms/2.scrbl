@@ -42,12 +42,15 @@ Question 4, and @tt{CallByName/interp.rkt} for Question 5.
 [10 points]
 
 @itemlist[
-@item{Why did we need to adjust the random generators to
-take a type argument when going from testing @tt{Con} to
-testing @tt{Dupe}?}
+
+@item{On the random generation lecture on Tuesday (a recording can be
+found on ELMS!), we wrote random generators for testing the @tt{Con}
+and @tt{Dupe} languages. When going from @tt{Con} to @tt{Dupe},
+we modified the generators to take an additional argument representing
+the type of the expression we want to generate. Why?}
 
 @item{Why did we need to introduce the @tt{Lea} assembly
-instruction in @tt{Knock}?}
+instruction when implementing @tt{Knock}?}
 ]
 
 @bold{Question 2}
