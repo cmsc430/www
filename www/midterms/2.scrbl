@@ -5,334 +5,274 @@
 
 @title{Midterm 2}
 
-@bold{Due: Friday, November 13th 11:59PM}
+@bold{Due: Tuesday, April 13th 11:59PM}
 
-@(define repo "https://classroom.github.com/a/Gv1cRIkD")
+@(define repo "https://github.com/cmsc430/Midterm2-prog")
 
 Midterm repository:
 @centered{@link[repo repo]}
 
-The repository contains a single markdown file @tt{m2.md}, which you can edit
-to submit your answers to the following questions.  Your submission must be
-pushed by 11:59pm on Friday (unless you have already arranged otherwise).
+The exam consists of two parts: a written portion and a programmatic
+portion.  Both will be handled through gradescope. You will see two
+gradescope assignments marked accordingly.
 
-During the 72 hours of the exam period, you may only ask private
-questions on Discord if you need assistance for the course staff.  You
-may not communicate or collaborate with any one else about the content
-of this exam.
+During the exam period, you may only ask private questions to
+the staff (via email, discord, etc.) if you need clarification.
+You may not communicate or collaborate with any one else about the
+content of this exam.
+
+Questions that are deemed applicable to the entire class will be shared, along
+with their responses, with the rest of the class.
+
+The repository contains two things.
+@itemlist[
+@item{A folder @tt{BoxIncr} which contains the base code to build upon for Question 4.}
+@item{A folder @tt{CallByName} which contains the base code to build upon for Question 5.}
+]
+
+Your submission must be submitted by 11:59 EDT on Tuesday, April
+13th. For the programmatic fragment, you should submit a zip file
+containing two files: the @tt{BoxIncr/compile.rkt} for 
+Question 4, and @tt{CallByName/interp.rkt} for Question 5.
 
 @section[#:tag-prefix "m2"]{Short answer}
 
 @bold{Question 1}
 
-[12 points]
-
-Using only @racket[cons], @racket['()], symbols, and literal numbers,
-strings, booleans, or characters, write expressions that are
-equivalent to each of the following:
+[10 points]
 
 @itemlist[
+@item{Why did we need to adjust the random generators to
+take a type argument when going from testing @tt{Con} to
+testing @tt{Dupe}?}
 
-@item{@verbatim{'(y y z (5) 2)}}
-
-@item{@verbatim{'((1 2) . 2)}}
-
-@item{@verbatim{'(a . (b . (c)))}}
-
-@item{@verbatim{'(a . (b . c))}}
-
-@item{@verbatim{`(,(add1 1) . 2)}}
-
-@item{@verbatim|{`(,@'(1 2) ,@'(x) ,3)}|}
+@item{Why did we need to introduce the @tt{Lea} assembly
+instruction in @tt{Knock}?}
 ]
-
-For example, @racket['(1 2 3)] is equivalent to @racket[(cons 1 (cons 2 (cons 3 '())))].
 
 @bold{Question 2}
 
 [10 points]
 
-Is it possible for the following program to run out of memory? Justify your
+Is it possible for @tt{fib1} to run out of memory? Justify your
 answer.
 
 @#reader scribble/comment-reader
 (racketblock
-(define (fact x)
-  (if (<= x 1)
-      1
-      (* x (fact (sub1 x)))))
+(define (fib1 i)
+  (match i
+    [0 1]
+    [1 1]
+    [_ (+ (fib1 (- i 1)) (fib1 (- i 2)))]))
 )
 
-How about this one?  Again, justify your answer.
+
+How about @tt{fib2}?  Again, justify your answer.
 
 @#reader scribble/comment-reader
 (racketblock
-(define (fact x)
-  (define (fact-prime acc i)
-    (if (<= i 1)
-        acc
-        (fact-prime (* acc i) (sub1 i))))
-  (fact-prime 1 x))
+(define (fib2-aux i fib-1 fib-2)
+  (if (zero? i) fib-1
+      (fib2-aux (sub1 i) (+ fib-1 fib-2) fib-1)))
+
+(define (fib2 i)
+  (match i
+    [0 1]
+    [1 1]
+    [_ (fib2-aux (sub1 i) 1 1)]))
 )
 
 Hint: consider Jig.
 
 @bold{Question 3}
 
-[8 points]
+[10 points]
 
 For each of the following expressions, which subexpressions are in tail
 position? Assume that the top-level expression is in tail position.
 
 @itemlist[
 
-@item{@verbatim{(if (if a0 a1 a2) e1 e2)}}
+@item{@verbatim{(sub1 e0)}}
 
-@item{@verbatim{(match e0 [p1 e1] [p2 e2])}}
+@item{@verbatim{(begin e0 e1)}}
 
-@item{@verbatim{(if e0 (if a0 a1 a2) e2)}}
+@item{@verbatim{(let ((x a)) e)}}
 
-@item{@verbatim{(add1 e0)}}
+@item{@verbatim{(if b (box e1) e2)}}
 
-@item{@verbatim{(cons e0 e1)}}
-          
+@item{@verbatim{(match e [p1 e1] [_ e2])}}
+
 ]
-
 
 @section[#:tag-prefix "m2"]{Code generation}
 
 @bold{Question 4}
 
-[20 points]
+[25 points]
 
-Suppose we wanted to add a @racket[set-box!] operation to our language.  
+In the repo (@link[repo repo]), you will find a directory named
+"BoxIncr".  That contains the @tt{Hustle} language from the lectures,
+partially extended with two additional primitives: @racket[incr-box!]
+and an @racket[decr-box!].
 
-A @racket[(set-box! _e0 _e1)] expression evaluates @racket[_e0] and
-@racket[_e1].  The result of @racket[_e0] should be a box (otherwise
-an error is signalled).  The box is updated (mutated) to contain the
-value of @racket[_e1].  Racket's @racket[set-box!] returns a special
-value called @racket[void], but your compiler may have the expression
-return any value.
+An @racket[(incr-box! _e)] expression evaluates @racket[_e]. The
+result of @racket[_e] should be a boxed integer (otherwise an error is
+signalled).  The box is updated (mutated) to increment its value by 1.
+Similarly, @racket[(decr-box! _e)] should decrement the boxed integer
+by 1. The result of the operation should be @racket[void].
 
-Here's an example (note: @racket[let] is used for sequencing here):
-
-@ex[
-(let ((b (box 10)))
-  (let ((i1 (set-box! b 2)))
-    (unbox b)))
-]
-
-Implement the following function in the compiler.  (You may assume
-this code will be added to the Knock compiler and may use any functions
-given to you.)
+Here's an example that returns 42 (note: @racket[let] is used for
+sequencing here):
 
 @#reader scribble/comment-reader
 (racketblock
-;; LExpr LExpr CEnv -> Asm
-;; Compiler for (set-box! e0 e1)
-(define (compile-set-box! e0 e1 c) ...)
+(let ((b (box 41)))
+  (let ((v (incr-box! b)))
+    (unbox b)))
 )
 
-@section[#:tag-prefix "m2"]{Program Transformation: Inlining}
+The ast, parser, and interpreter have already been updated for you to
+implement this functionality. Your job is to implement the compiler.
+
+@section[#:tag-prefix "m2"]{Call by Name}
 
 @bold{Question 5}
 
+[45 points]
+
+In the @link[repo repo], you will find a stripped down version of the
+@secref["Iniquity"] language: just the interpreter. Iniquity
+introduces the notion of function definitions and function calls.  The
+way we evaluate function calls (as in racket) is known as
+"call-by-value": the arguments to a function call are evaluated
+before the body of the function is evaluated.
+
+An alternative evaluation strategy is "call-by-name". In call-by-name,
+the arguments to a function call are substituted in the function body,
+left to be evaluated as they appear: if an argument is unused, it will
+never be evaluated; if an argument is used multiple times, it will be
+evaluated multiple times.
+
+Consider the following example:
+
+@#reader scribble/comment-reader
+(racketblock
+(begin
+ (define (f x) 42)
+ (f (read-byte)))
+)
+
+In standard call-by-value, this will read a byte from standard input,
+and proceed to call @tt{f} with that read value, ignore it, and return
+42. In call-by-need, this program will not read any value from the
+standard input - the @tt{read-byte} will never be evaluated, as the body
+of @tt{f} does not make use of @tt{x}.
+
+On the other hand, consider the following program:
+
+@#reader scribble/comment-reader
+(racketblock
+(begin
+ (define (f x) (+ x x))
+ (f (read-byte)))
+)
+
+Again, in standard call-by-value, this will read a byte from standard
+input, and proceed to call @tt{f} with that read value, doubling it.
+In call-by-need, this program will result to two different calls to
+@tt{read-byte}, whose results will then be added together: when
+calling @tt{(f (read-byte))}, the argument will be substituted into
+the body of @tt{f}, yielding @tt{(+ (read-byte) (read-byte))}.
+
+An interesting point is how call-by-value interacts with
+let-bindings. For this assignment, we will keep let-bindings strict,
+just like in the current interpreter, that is the argument to the let
+will be evaluated before the body is executed.
+
+To fully understand the interactions between let and function calls, consider the following examples:
+
+@#reader scribble/comment-reader
+(racketblock
+(begin
+ (define (f x y) (+ (+ x x) (+ y y)))
+ (let ((z (read-byte))) (f z (read-byte))))
+)
+
+This program has the effect of first evaluating @tt{read-byte} (for
+example, say 42), and then substituting its value for @tt{z} in the
+body of the let. Then it will evaluate the call @tt{(f z
+(read-byte))}. This will have the effect of substituting the value of
+@tt{z} (which has already been evaluated), and the expression
+@tt{(read-byte)} for @tt{x} and @tt{y} in the body of @tt{f}. In turn,
+that means that there will be two new calls to @tt{read-byte}, for
+each occurence of @tt{y} in the body of f.
+
+@#reader scribble/comment-reader
+(racketblock
+(begin
+ (define (f x) (+ x y))
+ (let ((y 42)) (f y)))
+)
+
+This program should yield an error - we're still using static scoping!
+
+@#reader scribble/comment-reader
+(racketblock
+(begin
+ (define (f x) (let ((x 42)) 42))
+ (f 17))
+)
+
+This example should yield 42, the let in the body of f shadows the
+argument.
+
+@#reader scribble/comment-reader
+(racketblock
+(begin
+ (define (loop x) (loop x))
+ (define (f x) 42)
+ (f (loop 0)))
+)
+
+In call-by-name, this program terminates as the argument
+@tt{(loop 0)} is never evaluated!
+
+@#reader scribble/comment-reader
+(racketblock
+(begin
+ (define (f x) 42)
+ (f (+ #t #f)))
+)
+
+In call-by-name, this program also terminates: the error-producing
+argument @tt{(+ #t #f)} is again never evaluated!
+
+Your task is to modify the interpreter to implement this style of
+evaluation.  The easiest way to do that is to re-implement
+let-bindings and function calls using substitution instead of the
+environment to pass arguments. While an implementation using
+environments is possible, it can be very tricky to get right; you have
+been warned!
+
+
+@bold{Question Call-by-need: Extra Credit}
+
 [20 points]
 
+An alternative to call-by-name is call-by-need. In call-by-need, the
+arguments to a function are not evaluated at call time (just like in
+call-by-name), but the evaluation of the argument is memoized - it's
+going to only be evaluated the first time it's needed and future
+occurences will reuse that evaluation's result.
 
-In our @secref["Iniquity"] compiler we introduced function definitions to help
-us organize our code. Function definitions came along with function @emph{calls},
-and unfortunately function calls come with a performance hit.
+You're on your own on this one and there will be no autograder, so
+reach out to set out a time to talk about your solution if you try to
+tackle this!
 
-One solution is @emph{inlining}: Taking the body of a funtion definition and
-replacing a call to that function with an instance of its body. This allows the
-programmer to have all the benefits of the function abstraction, without the
-overhead.
+@subsection{Submission and Grading}
 
-For example, consider the following program:
-
-@#reader scribble/comment-reader
-(racketblock
-(begin
-  (define (f x) (+ x 5))
-  (+ 10 (f 42)))
-)
-
-If you inlined @tt{f}, the result would be the following program:
-
-@#reader scribble/comment-reader
-(racketblock
-(begin
-  (define (f x) (+ x 5))
-  (+ 10 (+ 42 5)))
-)
-
-
-Your task is to write and document a function named @tt{inline} which takes a
-function @tt{f} and a program @tt{p}, and inlines the function @tt{f} @emph{at
-all uses of @tt{f} in the program} (this includes other function definitions!).
-
-
-@#reader scribble/comment-reader
-(racketblock
-(define (inline f p)
-  ;TODO
-)
-)
-
-
-You can assume that you have a function @tt{fvs} that given an expression,
-returns a list of all the free variables in that expression. This is be
-necessary to avoid creating incorrect programs. If dealing with variable
-clashes and creating new names seems too complicated, you can assume the
-existence of a function @tt{barendregtify} which given a program makes sure
-that all variables are unique, running it on the following:
-
-
-@#reader scribble/comment-reader
-(racketblock
-(begin
-  (define (f x) (+ x 5))
-  (define (g x) (+ x 10))
-  (f (g 10)))
-)
-
-Would produce something like:
-
-
-@#reader scribble/comment-reader
-(racketblock
-(begin
-  (define (f var1) (+ var1 5))
-  (define (g var2) (+ var2 10))
-  (f (g 10)))
-)
-
-Why should you care about @tt{fvs} or @tt{barendregtify}? Well, consider the
-following inlining:
-
-@#reader scribble/comment-reader
-(racketblock
-(begin
-  (define (f x) (let ((y 5)) x))
-  (let ((y 42)) (f y)))
-)
-
-If you inline @tt{f} without care, you would get the following:
-
-@#reader scribble/comment-reader
-(racketblock
-(begin
-  (define (f x) (let ((y 5)) x))
-  (let ((y 42)) (let ((y 5)) y)))
-)
-
-Now you've changed the program, it would result in 5 instead of 42!
-You can use @tt{fvs} to figure out which variables might be captured,
-and deal with that, or you can use @tt{barendregtify} to make sure
-that all variables are unique. Notice how if we had used @tt{barendregtify}
-we could have avoided the problem:
-
-@#reader scribble/comment-reader
-(racketblock
-(begin
-  (define (f var1) (let ((var2 5)) var1))
-  (let ((var3 42)) (f var3)))
-)
-
-Then inlining @tt{f} we get:
-
-@#reader scribble/comment-reader
-(racketblock
-(begin
-  (define (f var1) (let ((var2 5)) var1))
-  (let ((var3 42)) (let ((var2 5)) var3)))
-)
-
-You may have to run/call @tt{barendregtify} more than once to ensure
-correctness, when inlining functions.
-
-
-In addition to your code, make sure you answer the following question as part
-of your submission:
-
-@itemlist[
-
-@item{Recursive functions refer to themselves... What should you do? (You do
-not have to worry about mutual recursion between sets of functions, for this
-exam we will assume either a function refers to itself directly, or it is not
-recusive at all).}
-
-]
-
-Other things you should consider:
-
-@itemlist[
-
-@item{If @tt{f} does not exist in the program, the program should be unchanged}
-
-@item{You have to be careful with variable shadowing/capture.}
-
-]
-
-Part A:
-
-5 points from the total of 20 will be given if you can produce the correct
-inlining of @tt{f} for the following program (you are free to do this by hand):
-
-@#reader scribble/comment-reader
-(racketblock
-(begin
-  (define (f x) (let ((y (+ x 10))) (let ((z 42)) (+ x (+ y z)))))
-  (define (g x) (f x))
-  (let ((y 1024)) (g (f y))))
-)
-
-Part B:
-
-15 points for completing the implementation below:
-
-@#reader scribble/comment-reader
-(racketblock
-(define (inline f p)
-  (match p
-    [(prog ds e)
-          ;TODO
-     ]))
-)
-
-
-@bold{Question NaN: Extra Credit}
-
-[10 points]
-
-Provide two graphs in dot format (explained in our lecture on Graphviz/Dot)
-that shows the difference between interpreters and compilers. You can lay this
-out however you'd like, but the following items should definitely be present in
-one, or both, of the graphs (though not necessarily connected in the diagram!).
-These are in alphabetical order, so don't assume that their order reveals
-anything about how the diagram should be layed out. If you can think of
-other things that belong in the diagram, feel free to include them.
-
-@itemlist[
-
-@item{Source Language}
-@item{Target Language}
-@item{AST}
-@item{Code-Gen}
-@item{CPU Execution}
-@item{Interp}
-@item{Parser}
-@item{RTS}
-@item{Source Language}
-@item{Target Language}
-@item{Value/Result}
-
-]
-
-In order to get the points for this, we will take your description in dot and
-run @tt{dot} on it.  If it does not produce an output, you will get not points.
-
-If it produces an output that is a good-faith effort (i.e. there is a clear
-attempt and showing the difference between compilers and interpreters, you will
-get 5 points. If it accurately shows the difference you will get 10 points.
+We will only use two files for grading: @tt{BoxIncr/compile.rkt} and
+@tt{CallByName/interp.rkt}. You should be able to submit a zip from
+inside the cloned repo to Gradescope, but we will only be using these
+two files for grading, so restrict your work in those.
