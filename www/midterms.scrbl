@@ -8,7 +8,7 @@ date of the midterm.
 
 @itemlist[
   @item{Midterm 1: @link["https://www.cs.umd.edu/class/spring2021/cmsc430/Midterm_1.html"]{Instructions - Due March 9th}}
-  @item{Midterm 2: @bold{@m2-date}}
+  @item{Midterm 2: @link["https://www.cs.umd.edu/class/spring2021/cmsc430/Midterm_2.html"]{Instructions - Due April 13th}}
 ]
 
 @include-section["midterms/1.scrbl"]
