@@ -220,12 +220,12 @@ This program should yield an error - we're still using static scoping!
 @#reader scribble/comment-reader
 (racketblock
 (begin
- (define (f x) (let ((x 42)) 42))
+ (define (f x) (let ((x 42)) x))
  (f 17))
 )
 
 This example should yield 42, the let in the body of f shadows the
-argument.
+argument. 
 
 @#reader scribble/comment-reader
 (racketblock
