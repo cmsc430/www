@@ -16,7 +16,9 @@
     [(? reg?) (reg->string a)]
     [(? integer?) (number->string a)]
     [(Offset (? reg? r) i)
-     (string-append "[" (reg->string r) " + " (number->string i) "]")]))
+     (string-append "[" (reg->string r) " + " (number->string i) "]")]
+    [(Offset (? label? l) i)
+     (string-append "[" (symbol->string l) " + " (number->string i) "]")]))
 
 ;; Any -> Boolean
 (define (reg? x)
@@ -123,6 +125,10 @@
       [(Pop r)
        (string-append tab "pop "
                       (reg->string r))]
+      [(Lea d (? offset? x))
+       (string-append tab "lea "
+                      (arg->string d) ", "
+                      (arg->string x))]
       [(Lea d x)
        (string-append tab "lea "
                       (arg->string d) ", [rel "

@@ -5,6 +5,7 @@
 ;; Registers used
 (define rax 'rax) ; return
 (define rbx 'rbx) ; heap
+(define rcx 'rcx) ; scratch
 (define rdx 'rdx) ; return, 2
 (define r8  'r8)  ; scratch in +, -
 (define r9  'r9)  ; scratch in assert-type and tail-calls
@@ -15,39 +16,45 @@
 
 ;; Expr -> Asm
 (define (compile p)
-  (match p
-    [(Prog ds e)  
+  (match (label-λ (desugar p))                ; <-- changed!
+    [(Prog '() e)  
      (prog (Extern 'peek_byte)
            (Extern 'read_byte)
            (Extern 'write_byte)
            (Extern 'raise_error)
            (Label 'entry)
-           (Mov rbx rdi) ; recv heap pointer
+           (Mov rbx rdi)
            (compile-e e '(#f))
-           (Mov rdx rbx) ; return heap pointer in second return register           
+           (Mov rdx rbx)
            (Ret)
-           (compile-defines ds))]))
+           (compile-λ-definitions (λs e)))])) ; <-- changed!
 
 ;; [Listof Defn] -> Asm
-(define (compile-defines ds)
+(define (compile-λ-definitions ds)
   (seq
     (match ds
       ['() (seq)]
       [(cons d ds)
-       (seq (compile-define d)
-            (compile-defines ds))])))
-  
+       (seq (compile-λ-definition d)
+            (compile-λ-definitions ds))])))
+
+;; This is the code generation for the lambdas themselves.
+;; It's not very different from generating code for user-defined functions,
+;; because lambdas _are_ user defined functions, they just don't have a name
+;;
 ;; Defn -> Asm
-(define (compile-define d)
-  (match d
-    [(Defn f xs e)
-                        ; leave space for RIP
-     (let ((env (parity (cons #f (reverse xs)))))
-          (seq (Label (symbol->label f))
-               ; we need the #args on the frame, not the length of the entire
-               ; env (which may have padding)
-               (compile-tail-e e env (length xs))
-               (Ret)))]))
+(define (compile-λ-definition l)
+  (match l
+    [(Lam '() xs e) (error "Lambdas must be labelled before code gen (contact your compiler writer)")]
+    [(Lam f xs e)
+     (let* ((free (fvs e))
+            ; leave space for RIP
+            (env (parity (cons #f (cons #f (reverse (append xs free)))))))
+           (seq (Label (symbol->label f))
+             ; we need the #args on the frame, not the length of the entire
+             ; env (which may have padding)
+             (compile-tail-e e env (length (append xs free)))
+             (Ret)))]))
 
 (define (parity c)
   (if (even? (length c))
@@ -58,16 +65,14 @@
 (define (compile-tail-e e c s)
   (seq
     (match e
-      [(If e1 e2 e3) (compile-tail-if e1 e2 e3 c s)]
-      [(Let x e1 e2) (compile-tail-let x e1 e2 c s)]
-      [(App f es)    (if (<= (length es) s)
-                         (compile-tail-call f es c)
-                         (compile-app f es c))]
-      [(FCall e1 es) (if (<= (length es) s)
-                         (compile-tail-fun-call e1 es c)
-                         (compile-fun-call e1 es c))]
-      [(Begin e1 e2) (compile-tail-begin e1 e2 c s)]
-      [_             (compile-e e c)])))
+      [(If e1 e2 e3)  (compile-tail-if e1 e2 e3 c s)]
+      [(Let x e1 e2)  (compile-tail-let x e1 e2 c s)]
+      [(LetRec bs e1) (compile-tail-letrec (map car bs) (map cadr bs) e1 c)]
+      [(App f es)     (if (<= (length es) s)
+                          (compile-tail-call f es c)
+                          (compile-call f es c))]
+      [(Begin e1 e2)  (compile-tail-begin e1 e2 c s)]
+      [_              (compile-e e c)])))
 
 ;; Expr CEnv -> Asm
 (define (compile-e e c)
@@ -75,14 +80,14 @@
        (match e
          [(? imm? i)      (compile-value (get-imm i))]
          [(Var x)         (compile-variable x c)]
-         [(Fun f)         (compile-fun f)]
-         [(App f es)      (compile-app f es c)]    
-         [(FCall e1 es)   (compile-fun-call e1 es c)]    
+         [(App f es)      (compile-call f es c)]
+         [(Lam l xs e0)   (compile-λ xs l (fvs e) c)] ; why do we ignore e0?
          [(Prim0 p)       (compile-prim0 p c)]
          [(Prim1 p e)     (compile-prim1 p e c)]
          [(Prim2 p e1 e2) (compile-prim2 p e1 e2 c)]
          [(If e1 e2 e3)   (compile-if e1 e2 e3 c)]
          [(Begin e1 e2)   (compile-begin e1 e2 c)]
+         [(LetRec bs e1)  (compile-letrec (map car bs) (map cadr bs) e1 c)]
          [(Let x e1 e2)   (compile-let x e1 e2 c)])))
 
 ;; Value -> Asm
@@ -93,6 +98,44 @@
 (define (compile-variable x c)
   (let ((i (lookup x c)))       
     (seq (Mov rax (Offset rsp i)))))
+
+;; (Listof Variable) Label (Listof Variable) CEnv -> Asm
+(define (compile-λ xs f ys c)
+  (seq
+    ; Save label address
+    (Lea rax (symbol->label f))
+    (Mov (Offset rbx 0) rax)
+
+    ; Save the environment
+    (%% "Begin saving the env")
+    (Mov r8 (length ys))
+    (Mov (Offset rbx 8) r8)
+    (Mov r9 rbx)
+    (Add r9 16)
+    (copy-env-to-heap ys c 0)
+    (%% "end saving the env")
+
+    ; Return a pointer to the closure
+    (Mov rax rbx)
+    (Or rax type-proc)
+    (Add rbx (* 8 (+ 2 (length ys))))))
+
+;; (Listof Variable) CEnv Natural -> Asm
+;; Pointer to beginning of environment in r9
+(define (copy-env-to-heap fvs c i)
+  (match fvs
+    ['() (seq)]
+    [(cons x fvs)
+     (seq
+       ; Move the stack item  in question to a temp register
+       (Mov r8 (Offset rsp (lookup x c)))
+
+       ; Put the iterm in the heap
+       (Mov (Offset r9 i) r8)
+
+       ; Do it again for the rest of the items, incrementing how
+       ; far away from r9 the next item should be
+       (copy-env-to-heap fvs c (+ 8 i)))]))
 
 ;; Id CEnv -> Asm
 (define (compile-fun f)
@@ -214,75 +257,120 @@
                (Or rax type-cons)
                (Add rbx 16))])))
 
+
+
 ;; Id [Listof Expr] CEnv -> Asm
 ;; Here's why this code is so gross: you have to align the stack for the call
 ;; but you have to do it *before* evaluating the arguments es, because you need
 ;; es's values to be just above 'rsp when the call is made.  But if you push
 ;; a frame in order to align the call, you've got to compile es in a static
 ;; environment that accounts for that frame, hence:
-(define (compile-app f es c)
-  (if (even? (+ (length es) (length c))) 
-      (seq (compile-es es c)
-           (Call (symbol->label f))
-           (Add rsp (* 8 (length es))))            ; pop args
-      (seq (Sub rsp 8)                             ; adjust stack
-           (compile-es es (cons #f c))
-           (Call (symbol->label f))
-           (Add rsp (* 8 (add1 (length es)))))))   ; pop args and pad
+(define (compile-call f es c)
+  (let* ((cnt (length es))
+         (aligned (even? (+ cnt (length c))))
+         (i (if aligned 1 2))
+         (c+ (if aligned
+                 c
+                 (cons #f c)))
+         (c++ (cons #f c+)))
+    (seq
+
+      (%% (~a "Begin compile-call: aligned = " aligned " function: " f))
+      ; Adjust the stack for alignment, if necessary
+      (if aligned
+          (seq)
+          (Sub rsp 8))
+
+      ; Generate the code for the thing being called
+      ; and push the result on the stack
+      (compile-e f c+)
+      (%% "Push function on stack")
+      (Push rax)
+  
+      (%% (~a "Begin compile-es: es = " es))
+      ; Generate the code for the arguments
+      ; all results will be put on the stack (compile-es does this)
+      (compile-es es c++)
+  
+      ; Get the function being called off the stack
+      ; Ensure it's a proc and remove the tag
+      ; Remember it points to the _closure_
+      (%% "Get function off stack")
+      (Mov rax (Offset rsp (* 8 cnt)))
+      (assert-proc rax)
+      (Xor rax type-proc)
+  
+      (%% "Get closure env")
+      (copy-closure-env-to-stack)
+      (%% "finish closure env")
+
+      ; get the size of the env and save it on the stack
+      (Mov rcx (Offset rax 8))
+      (Push rcx)
+  
+      ; Actually call the function
+      (Call (Offset rax 0))
+  
+      ; Get the size of the env off the stack
+      (Pop rcx)
+      (Sal rcx 3)
+
+      ; pop args
+      ; First the number of arguments + alignment + the closure
+      ; then captured values
+      (Add rsp (* 8 (+ i cnt)))
+      (Add rsp rcx))))
 
 
-;; Variable (Listof Expr) CEnv -> Asm
-;; Compile a call in tail position
-(define (compile-tail-call f es c)
+;; LExpr (Listof LExpr) CEnv -> Asm
+(define (compile-tail-call e0 es c)
   (let ((cnt (length es)))
-       (seq (compile-es es c)
-            (move-args cnt (+ cnt (in-frame c)))
-            (Add rsp (* 8 (+ cnt (in-frame c))))
-            (Jmp (symbol->label f)))))
+    (seq
+      ; Generate the code for the thing being called
+      ; and push the result on the stack
+      (compile-e e0 c)
+      (Push rax)
 
-;; Similar to `compile-app` we have to be concerned about 16-byte alignment
-;; of `rsp`. However, the wrinkle is that we also have the function pointer
-;; on the stack, so we have to do the calculation with an `extended` env: `env`
-(define (compile-fun-call e es c)
-  (let ((d (length es))
-        (env (cons #f c)))
-       ; We have to computer the function pointer either way.
-       (seq (compile-e e c)
-            (assert-proc rax)
-            (Push rax)
+      ; Generate the code for the arguments
+      ; all results will be put on the stack (compile-es does this)
+      (compile-es es (cons #f c))
 
-       ; Then we worry about alignment
-       (if (even? (+ d (length env)))
+      ; Reuse the stack frame (as it's a tail call)
+      (move-args cnt (+ cnt (add1 (in-frame c))))
 
-           ; We will be 16-byte aligned
-           (seq (compile-es es env)
-                (Mov rax (Offset rsp (* 8 d)))
-                (Xor rax type-proc)
-                (Call (Offset rax 0))
-                (Add rsp (* 8 (add1 d))))
+      ; Get the function being called off the stack
+      ; Ensure it's a proc and remove the tag
+      ; Remember it points to the _closure_
+      (Mov rax (Offset rsp (* 8 cnt)))
+      (assert-proc rax)
+      (Xor rax type-proc)
 
-           ; We won't be 16-byte aligned, and need to adjust `rsp`
-           (seq (Sub rsp 8)
-                (compile-es es env)
-                (Mov rax (Offset rsp (* 8 (add1 d))))
-                (Xor rax type-proc)
-                (Call (Offset rax 0))
-                ; pop arguments, padding, and function pointer
-                (Add rsp (* 8 (+ 2 d))))))))
+      ; Bump stack pointer (this is where the tail-call
+      ; savings kick in)
+      (Add rsp (* 8 (+ cnt (add1 (in-frame c)))))
 
-;; Variable (Listof Expr) CEnv -> Asm
-;; Compile a call in tail position
-(define (compile-tail-fun-call f es c)
-  (let ((cnt (length es)))
-       (seq (compile-e f c)
-            (assert-proc rax)
-            (Push rax)
-            (compile-es es (cons #f c))
-            (move-args cnt (+ cnt (add1 (in-frame c))))
-            (Mov rax (Offset rsp (* 8 cnt)))
-            (Xor rax type-proc)
-            (Add rsp (* 8 (+ cnt (add1 (in-frame c)))))
-            (Jmp (Offset rax 0)))))
+      (copy-closure-env-to-stack)
+
+      (Jmp (Offset rax 0)))))
+
+;; -> Asm
+;; Copy closure's (in rax) env to stack in rcx
+(define (copy-closure-env-to-stack)
+  (let ((copy-loop (symbol->label (gensym 'copy_closure)))
+        (copy-done (symbol->label (gensym 'copy_done))))
+    (seq
+      (Mov r8 (Offset rax 8)) ; length
+      (Mov r9 rax)
+      (Add r9 16)             ; start of env
+      (Label copy-loop)
+      (Cmp r8 0)
+      (Je copy-done)
+      (Mov rcx (Offset r9 0))
+      (Push rcx)              ; Move val onto stack
+      (Sub r8 1)
+      (Add r9 8)
+      (Jmp copy-loop)
+      (Label copy-done))))
 
 ;; Integer Integer -> Asm
 ;; Move i arguments upward on stack by offset off
@@ -365,6 +453,58 @@
        (compile-tail-e e2 (cons x c) s)
        (Add rsp 8)))
 
+;; (Listof Variable) (Listof Lambda) Expr CEnv -> Asm
+(define (compile-letrec fs ls e c)
+  (seq
+    (%% (~a  "Start compile letrec with" fs))
+    (compile-letrec-λs ls c)
+    (compile-letrec-init fs ls (append (reverse fs) c))
+    (%% "Finish compile-letrec-init")
+    (compile-e e (append (reverse fs) c))
+    (Add rsp (* 8 (length fs)))))
+
+;; (Listof Variable) (Listof Lambda) Expr CEnv -> Asm
+(define (compile-tail-letrec fs ls e c)
+  (seq
+    (compile-letrec-λs ls c)
+    (compile-letrec-init fs ls (append (reverse fs) c))
+    (%% "Finish compile-letrec-init")
+    (compile-tail-e e (append (reverse fs) c))
+    (Add rsp (* 8 (length fs)))))
+
+;; (Listof Lambda) CEnv -> Asm
+;; Create a bunch of uninitialized closures and push them on the stack
+(define (compile-letrec-λs ls c)
+  (match ls
+    ['() (seq)]
+    [(cons l ls)
+     (match l
+       [(Lam lab as body)
+        (let ((ys (fvs l)))
+             (seq
+               (Lea rax (Offset (symbol->label lab) 0))
+               (Mov (Offset rbx 0) rax)
+               (Mov rax (length ys))
+               (Mov (Offset rbx 8) rax)
+               (Mov rax rbx)
+               (Or rax type-proc)
+               (Add rbx (* 8 (+ 2 (length ys))))
+               (Push rax)
+               (compile-letrec-λs ls (cons #f c))))])]))
+
+;; (Listof Variable) (Listof Lambda) CEnv -> Asm
+(define (compile-letrec-init fs ls c)
+  (match fs
+    ['() (seq)]
+    [(cons f fs)
+     (let ((ys (fvs (first ls))))
+          (seq
+            (Mov r9 (Offset rsp (lookup f c)))
+            (Xor r9 type-proc)
+            (Add r9 16) ; move past label and length
+            (copy-env-to-heap ys c 0)
+            (compile-letrec-init fs (rest ls) c)))]))
+
 ;; CEnv -> Asm
 ;; Pad the stack to be aligned for a call with stack arguments
 (define (pad-stack-call c i)
@@ -406,10 +546,12 @@
 
 (define (assert-type mask type)
   (λ (arg)
-    (seq (Mov r9 arg)
+    (seq (%% "Begin Assert")
+         (Mov r9 arg)
          (And r9 mask)
          (Cmp r9 type)
-         (Jne 'raise_error))))
+         (Jne 'raise_error)
+         (%% "End Assert"))))
 
 (define (type-pred mask type)
   (let ((l (gensym)))

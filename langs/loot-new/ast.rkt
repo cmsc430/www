@@ -150,6 +150,7 @@
 ;; Prog -> Prog
 (define (desugar e+)
   (match e+
+    [(Prog '() e)    (Prog '() (desugar e))]
     [(Prog ds e)     (let ((defs (map desugar ds)))
                           (Prog '() (LetRec defs e)))]
     [(Defn f xs e)   (list f (Lam f xs e))]

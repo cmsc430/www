@@ -56,8 +56,8 @@
 
 (define check:offset
   (λ (r i n)
-    (unless (register? r)
-      (error n "expects register as first argument; given ~v" r))
+    (unless (or (register? r) (label? r))
+      (error n "expects register or label as first argument; given ~v" r))
     (unless (exact-integer? i)
       (error n "expects exact integer as second argument; given ~v" i))
     (values r i)))
@@ -72,8 +72,8 @@
   (λ (dst x n)
     (unless (or (register? dst) (offset? dst))
       (error n "expects register or offset; given ~v" dst))
-    (unless (label? x)
-      (error n "expects label; given ~v" x))
+    (unless (or (label? x) (offset? x))
+      (error n "expects label or offset; given ~v" x))
     (values dst x)))
 
 (define check:none
