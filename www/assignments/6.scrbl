@@ -10,7 +10,7 @@
 
 @(define repo "https://github.com/cmsc430/assign06")
 
-The goal of this assignment is to implement arity checking in a
+The goal of this assignment is (1) to implement arity checking in a
 language with functions, and (2) to implement the @racket[procedure-arity]
 operation for accessing the arity of a function.
 
