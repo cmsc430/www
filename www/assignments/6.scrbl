@@ -1,5 +1,5 @@
 #lang scribble/manual
-@title[#:tag "Assignment 6" #:style 'unnumbered]{Assignment 6: Apply, arity checking, and variable arity functions}
+@title[#:tag "Assignment 6" #:style 'unnumbered]{Assignment 6: Arities!}
 
 @(require (for-label (except-in racket ...)))
 @(require redex/pict)
