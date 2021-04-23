@@ -782,7 +782,6 @@ the current location of the stack.
 
  @ex[
  (Offset 'rax 0)
- (eval:error (Offset 'r16 4))
  (eval:error (Offset 'rax 4.1))
  ]
 }
