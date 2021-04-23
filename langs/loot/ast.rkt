@@ -60,6 +60,10 @@
 (struct App    (f es)       #:prefab)
 
 
+;; For pedagogical purposes
+(struct Closure (xs e r)  #:prefab)
+(struct RecClosure (f r)  #:prefab)
+
 ;; Helper functions
 
 ;; Does an Expr represent an immediate (i.e. flat) value?

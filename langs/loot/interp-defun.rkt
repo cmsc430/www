@@ -1,5 +1,5 @@
 #lang racket
-(provide interp interp-env interp-prim1)
+(provide interp interp-env interp-prim1 apply-function)
 (require "ast.rkt"
          "env.rkt"
          "interp-prims.rkt")
@@ -16,6 +16,11 @@
 ;; | '()
 ;; | (cons Value Value)
 ;; | (box Value)
+;; | Function
+
+;; type Function =
+;; | `(closure ,Formals ,Expr ,Env)
+;; | `(rec-closure ,Lambda ,(-> Env))
 
 ;; type REnv = (Listof (List Id Value))
 ;; type Defns = (Listof Defn)
@@ -27,7 +32,7 @@
 ;; Expr Env Defns -> Answer
 (define (interp-env e r)
   (match e
-    [(Prog '() e) (interp-env e r)]
+    [(Prog '() e) (interp-env e r)] 
     [(Int i)  i]
     [(Bool b) b]
     [(Char c) c]
@@ -68,22 +73,38 @@
                      (zip (map car bs)
                           ;; η-expansion to delay evaluating r*
                           ;; relies on RHSs being functions
-                          (map (λ (l) (λ vs (apply (interp-env l (r*)) vs)))
+                          (map (λ (l) (RecClosure l r*))
                                (map cadr bs)))
                      r))))
        (interp-env e (r*)))]
     [(Lam _ xs e1)
-        (lambda vs
-          (if (= (length vs) (length xs))
-              (interp-env e1 (append (zip xs vs) r))
-              'err))]
+      (Closure xs e r)]
     [(App f es)
-     (match (interp-env* (cons f es) r)
-      [(list f vs ...)
-       (if (procedure? f)
-           (apply f vs)
-           'err)])]
+     (match (interp-env* (cons f es) r)       
+       [(list (? function? f) vs ...)
+        (apply apply-function f vs)]        
+       [e e])]
     [_         'err]))
+
+(define (function? f)
+  (match f
+    [(Closure _ _ _) #t]
+    [(RecClosure _ _) #t]
+    [(? procedure?)  #t]
+    [_ #f]))
+
+;; Function Value ... -> Answer
+(define (apply-function f . vs)
+  (match f
+    [(Closure xs e r)
+     (if (= (length xs) (length vs))
+         (interp-env e (append (zip xs vs) r))
+         'errwat)]
+    [(RecClosure (Lam '() xs e) r*)
+      ; You've got to apply the the r* thunk
+     (apply apply-function (Closure xs e (r*)) vs)]
+    [(? procedure? f) (apply f vs)]))
+
 
 ;; (Listof Expr) REnv Defns -> (Listof Value) | 'err
 (define (interp-env* es r)
@@ -91,7 +112,7 @@
     ['() '()]
     [(cons e es)
       (match (interp-env e r)
-       ['err 'err]
+       ['err 'errsdf]
        [v (cons v (interp-env* es r))])]))
 
 (define (zip xs ys)
