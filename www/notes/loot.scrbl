@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@(require (for-label (except-in racket ...)))
+@(require (for-label (except-in racket compile ...) a86))
 @(require redex/pict
 	  racket/runtime-path
 	  scribble/examples
@@ -10,8 +10,11 @@
 
 @(define codeblock-include (make-codeblock-include #'h))
 
-@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "loot" f))))))
-	   '("interp.rkt" "compile.rkt" "ast.rkt" "syntax.rkt" "asm/interp.rkt" "asm/printer.rkt"))
+@(ev '(require rackunit a86))
+@(ev `(current-directory ,(path->string (build-path notes "loot"))))
+@(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
+@(for-each (λ (f) (ev `(require (file ,f))))
+	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
 @title[#:tag "Loot"]{Loot: lambda the ultimate}
 
@@ -36,11 +39,12 @@ we use the same syntax as Racket for function application:
 @verbatim|{
 ;; type Expr =
 ;; | ....
-;; | `(λ ,Formals ,Expr)
-;; | `(,Expr ,@(Listof Expr))
+;; | Lam Name (Listof Variable) Expr
+;; | App Expr (Listof Expr)
 }|
 
-For the moment, @tt{Formals} can be defined as a list of variables:
+Two things to note: for now you can ignore the @tt{Name} parameter,
+and @tt{Formals} can be defined as a list of variables:
 
 @verbatim|{
 ;; type Formals = (Listof Variable)

@@ -47,13 +47,18 @@
   (match l
     [(Lam '() xs e) (error "Lambdas must be labelled before code gen (contact your compiler writer)")]
     [(Lam f xs e)
-     (let* ((free (fvs e))
+     (let* ((free (remq* xs (fvs e)))
             ; leave space for RIP
             (env (parity (cons #f (cons #f (reverse (append xs free)))))))
            (seq (Label (symbol->label f))
+             (%% "Compiling the body of the function")
+             (%% (~a "free vars: " free))
+             (%% (~a "args: " xs))
+             (%% (~a "env: " env))
              ; we need the #args on the frame, not the length of the entire
              ; env (which may have padding)
-             (compile-tail-e e env (length (append xs free)))
+             ; Ignore tail calls for now
+             (compile-e e env)
              (Ret)))]))
 
 (define (parity c)
@@ -108,7 +113,9 @@
 
     ; Save the environment
     (%% "Begin saving the env")
+    (%% (~a "free vars: " ys))
     (Mov r8 (length ys))
+
     (Mov (Offset rbx 8) r8)
     (Mov r9 rbx)
     (Add r9 16)
@@ -136,19 +143,6 @@
        ; Do it again for the rest of the items, incrementing how
        ; far away from r9 the next item should be
        (copy-env-to-heap fvs c (+ 8 i)))]))
-
-;; Id CEnv -> Asm
-(define (compile-fun f)
-       ; Load the address of the label into rax
-  (seq (Lea rax (symbol->label f))
-       ; Copy the value onto the heap
-       (Mov (Offset rbx 0) rax)
-       ; Copy the heap address into rax
-       (Mov rax rbx)
-       ; Tag the value as a proc
-       (Or rax type-proc)
-       ; Bump the heap pointer
-       (Add rbx 8)))
 
 ;; Op0 CEnv -> Asm
 (define (compile-prim0 p c)
@@ -257,14 +251,12 @@
                (Or rax type-cons)
                (Add rbx 16))])))
 
-
-
 ;; Id [Listof Expr] CEnv -> Asm
-;; Here's why this code is so gross: you have to align the stack for the call
-;; but you have to do it *before* evaluating the arguments es, because you need
-;; es's values to be just above 'rsp when the call is made.  But if you push
-;; a frame in order to align the call, you've got to compile es in a static
-;; environment that accounts for that frame, hence:
+;; Here's (part of) why this code is so gross: you have to align the stack for
+;; the call but you have to do it *before* evaluating the arguments es,
+;; because you need es's values to be just above 'rsp when the call is made.
+;; But if you push a frame in order to align the call, you've got to compile es
+;; in a static environment that accounts for that frame, hence:
 (define (compile-call f es c)
   (let* ((cnt (length es))
          (aligned (even? (+ cnt (length c))))
@@ -275,7 +267,7 @@
          (c++ (cons #f c+)))
     (seq
 
-      (%% (~a "Begin compile-call: aligned = " aligned " function: " f))
+      (%% "Begin compile-call")
       ; Adjust the stack for alignment, if necessary
       (if aligned
           (seq)
@@ -286,8 +278,7 @@
       (compile-e f c+)
       (%% "Push function on stack")
       (Push rax)
-  
-      (%% (~a "Begin compile-es: es = " es))
+
       ; Generate the code for the arguments
       ; all results will be put on the stack (compile-es does this)
       (compile-es es c++)
@@ -299,7 +290,7 @@
       (Mov rax (Offset rsp (* 8 cnt)))
       (assert-proc rax)
       (Xor rax type-proc)
-  
+
       (%% "Get closure env")
       (copy-closure-env-to-stack)
       (%% "finish closure env")
@@ -326,9 +317,11 @@
 (define (compile-tail-call e0 es c)
   (let ((cnt (length es)))
     (seq
+      (%% (~a "Begin compile-tail-call:  function = " e0))
       ; Generate the code for the thing being called
       ; and push the result on the stack
       (compile-e e0 c)
+      (%% "Push function on stack")
       (Push rax)
 
       ; Generate the code for the arguments
@@ -336,7 +329,7 @@
       (compile-es es (cons #f c))
 
       ; Reuse the stack frame (as it's a tail call)
-      (move-args cnt (+ cnt (add1 (in-frame c))))
+      (move-args cnt (+ cnt (+ 2 (in-frame c))))
 
       ; Get the function being called off the stack
       ; Ensure it's a proc and remove the tag
@@ -347,7 +340,7 @@
 
       ; Bump stack pointer (this is where the tail-call
       ; savings kick in)
-      (Add rsp (* 8 (+ cnt (add1 (in-frame c)))))
+      (Add rsp (* 8 (+ cnt (+ 2 (in-frame c)))))
 
       (copy-closure-env-to-stack)
 
@@ -359,6 +352,7 @@
   (let ((copy-loop (symbol->label (gensym 'copy_closure)))
         (copy-done (symbol->label (gensym 'copy_done))))
     (seq
+
       (Mov r8 (Offset rax 8)) ; length
       (Mov r9 rax)
       (Add r9 16)             ; start of env
