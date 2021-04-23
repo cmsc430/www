@@ -526,7 +526,7 @@
 ;; Id CEnv -> Integer
 (define (lookup x cenv)
   (match cenv
-    ['() (error "undefined variable:" x " Env: " cenv)]
+    ['() (error (~a "undefined variable:" x " Env: " cenv))]
     [(cons y rest)
      (match (eq? x y)
        [#t 0]
