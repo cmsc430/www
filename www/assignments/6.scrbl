@@ -71,9 +71,13 @@ in this case? (This is not a rhetorical question, if you have a
 realistic solution to this, send us an e-mail!)
 
 Your job is to modify @racket[compile.rkt] and to implement this arity
-checking protocol and the @racket[procedure-arity] primitive. It might help to
-implement the primitive before compiling the calls themselves, to
-partially test your implementation.
+checking protocol and the @racket[procedure-arity] primitive. It might
+help to implement the primitive before compiling the calls themselves,
+to partially test your implementation. Unlike previous assignments,
+there are no explicitly marked TODOs (with the exception of
+@racket[procedure-arity]). You have to make sure you modify all places
+where closures are created/accessed to ensure that your changes work
+correctly!
 
 As always, remember to test your code using both the testcases
 provided and by adding your own!
