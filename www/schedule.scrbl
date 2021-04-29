@@ -82,21 +82,21 @@
 
                (list @wk{4/26}
                      @seclink["Assignment 6"]{A6}
-                     @elem{@secref["Shakedown"]}
-                     @elem{Class-voted topic 1})
+                     @elem{Hustle Typing  - Compiler Implications}
+                     @elem{Typing Lambdas - Hidney-Millner})
 
                (list @wk{5/3}
-               @bold{@seclink["Final Project"]{Final Project}}
-                     @elem{Class-voted topic 1 (cont.)}
-                     @elem{Class-voted topic 2})
+               @bold{@seclink["Settle on Final Project"]{Final Project}}
+                     @elem{@secref["Shakedown"]}                 
+                     @elem{Final Project Q&A})
                
                (list @wk{5/10}
-	       	           ""
-                     @elem{Class-voted topic 2 (cont.)}
+      	           ""
+                     @elem{Class-voted topic}
                      @elem{No lecture (end of semester)})
 
                (list @wk{5/10}
-                     ""
+                     "Final Projects due on exam date"
                      @elem{No lectures}
                      'cont)
 
