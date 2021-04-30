@@ -7,13 +7,63 @@ several weeks of the course.  The project will involve extending the
 design and implementation of the programming language and its compiler
 that we will develop throughout the semester.
 
-Details will be announced later in the semester.
+For your project you should turn in your extension code, a directory
+of examples that showcase your extension and the differences in
+behavior compared to the original language, and a @bold{short}
+paragraph describing anything you found interesting. Submission will
+be handled by gradescope, with more details to follow.
+
+The suggested deadline is the last date of classes - May 11th - to
+avoid overlap with finals week. That said, you're free to take a few
+extra days and submit after that deadline until the nominal date
+of the final exam (which would have been on Tuesday, May 18th if it
+was happening). That is a strict deadline, not imposed by me, so make
+sure you have turned in your projects by then.
+
+As a first step, you have to pick a project idea as your "assignment"
+for this week. Just write a @bold{short} paragraph with your project
+of choice: what you hope to accomplish and a high-level description of
+your approach. This assignment should be live on Gradescope.
+
+Here are some project ideas that have been discussed throughout the
+semester:
+
+@itemlist[
+
+  @item{Error handling. Currently, our languages return a
+  not-very-informative @tt{'err} symbol when things go wrong. Real
+  languages offer a lot more information: the reason that something
+  went wrong, context, expressions involved, file name, line numbers,
+  etc. This project would aim to improve the error reporting for Loot.
+  Improving that behavior for an interpreter is pretty straightforward
+  and should be an easy first step for this project until you're happy
+  with the output error messages.  Porting that better error behavior
+  on the compiler is a bit more involved - there are multiple possible
+  approaches to this, but hacking on the runtime system is always an
+  option!
+  }
+
+  @item{Typing Loot. We have discussed typing for @tt{Hustle} and its
+  implications in the compiler (deleting a whole lot of assertions), as
+  well as typing for a simple lambda calculus. This project would aim
+  to combine the two threads, implementing a type system on top of Loot.
+  There are interesting design decisions here, so feel free to reach out
+  to talk about them!}
+
+  @item{Loot Optimizations. Sky's the limit here. You can try
+  high-level optimizations (e.g. inlining, lambda lifting, dead-code
+  elimination, partial evaluation, etc.) or low-level ones (register
+  allocation, register-based calling conventions etc.). Optimizations
+  can be tricky to get right, so make sure you reuse all the unit
+  tests we have provided throughout the semester and expand upon them!}
+
+  @item{Whatever feature you want to add! Get in touch to discuss whether
+  its scope is appropriate for a final project.}
+]
+
 
 @;{
 
-@itemlist[
-  @item{Final Project Assessment: @bold{@final-date}}
-]
 
 @(define repo "https://classroom.github.com/a/t5KO9b5-")
 
