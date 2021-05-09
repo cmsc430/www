@@ -300,7 +300,8 @@
       (Push rcx)
   
       ; Actually call the function
-      (Call (Offset rax 0))
+      (Mov rax (Offset rax 0))
+      (Call rax)
   
       ; Get the size of the env off the stack
       (Pop rcx)
@@ -476,7 +477,7 @@
        [(Lam lab as body)
         (let ((ys (fvs l)))
              (seq
-               (Lea rax (Offset (symbol->label lab) 0))
+               (Lea rax (symbol->label lab))
                (Mov (Offset rbx 0) rax)
                (Mov rax (length ys))
                (Mov (Offset rbx 8) rax)

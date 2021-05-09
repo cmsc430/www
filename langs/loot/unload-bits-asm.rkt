@@ -7,8 +7,7 @@
 (define (unload/free a)
   (match a
     ['err 'err]
-    [(cons h v) (begin0 (unload-value v)
-                        (free h))]))
+    [(cons h v) (unload-value v)]))
 
 ;; Value* -> Value
 (define (unload-value v)
