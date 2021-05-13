@@ -104,6 +104,11 @@
                                (+ x (tri (sub1 x)))))
                          (tri 9)))
                 45)
+  ;; Loot function tests
+  (check-equal? (run
+                 '(begin (define (f x) (+ x 3))
+                           (f (add1 #f))))
+                'err)
 #|
   (check-equal? (run
                  '(begin (define (even? x)
