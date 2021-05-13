@@ -91,7 +91,7 @@
     ['() '()]
     [(cons e es)
       (match (interp-env e r)
-       ['err 'err]
+       ['err (cons 'err (interp-env* es r))]
        [v (cons v (interp-env* es r))])]))
 
 (define (zip xs ys)
