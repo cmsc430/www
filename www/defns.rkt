@@ -18,8 +18,10 @@
 (define final-date "TBD")
 (define elms-url "TBD")
 
-(define racket-version "7.9")
+(define racket-version "8.1")
 
 (define staff
   (list (list (link "http://jmct.cc/" "José Manuel Calderón Trilla") "jmct@umd.edu" "-")
         (list "Vyas Gupta" "vgupta13@terpmail.umd.edu" "Thu 3.30-5.30pm EST")))
+
+(define lecture-schedule "Tuesday & Thursday, 2:00pm - 3:15pm, CSI 2117"}
