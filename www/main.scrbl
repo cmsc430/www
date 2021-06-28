@@ -21,7 +21,7 @@
 
 @emph{@string-titlecase[semester], @year}
 
-@emph{Lectures: Tuesday & Thursday, 12:30pm Eastern - 1:45pm Eastern, Online}
+@emph{Lectures: @lecture-schedule}
 
 @emph{Professor: @prof}
 
