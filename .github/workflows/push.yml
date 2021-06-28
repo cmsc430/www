@@ -45,7 +45,7 @@ jobs:
       uses: plum-umd/github-actions-rsync@master
       with:
         RSYNC_OPTIONS: -rvzp
-        RSYNC_TARGET: /fs/www/class/spring2021/
+        RSYNC_TARGET: /fs/www/class/fall2021/
         RSYNC_SOURCE: cmsc430
       env:
         SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
