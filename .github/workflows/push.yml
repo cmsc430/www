@@ -19,7 +19,7 @@ jobs:
         architecture: 'x64'
         distribution: 'full'
         variant: 'CS'
-        version: '7.9'
+        version: '8.1'
     - name: Build and test
       run: |
         raco pkg install langs/
