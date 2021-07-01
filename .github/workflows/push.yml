@@ -14,7 +14,7 @@ jobs:
         sudo apt-get install nasm
         sudo apt-get install fonts-stix
     - name: Install Racket
-      uses: Bogdanp/setup-racket@v0.10
+      uses: Bogdanp/setup-racket@v1.5
       with:
         architecture: 'x64'
         distribution: 'full'

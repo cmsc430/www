@@ -16,7 +16,7 @@ jobs:
     - name: Install nasm
       run: sudo apt-get install nasm
     - name: Install Racket
-      uses: Bogdanp/setup-racket@v1.1
+      uses: Bogdanp/setup-racket@v1.5
       with:
         architecture: 'x64'
         distribution: 'full'
