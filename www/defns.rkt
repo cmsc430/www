@@ -21,7 +21,9 @@
 (define racket-version "8.1")
 
 (define staff
-  (list (list (link "http://jmct.cc/" "José Manuel Calderón Trilla") "jmct@umd.edu" "-")
-        (list "Vyas Gupta" "vgupta13@terpmail.umd.edu" "Thu 3.30-5.30pm EST")))
+  (list (list (link "http://jmct.cc/" "José Manuel Calderón Trilla") "jmct@umd.edu" "-")        
+        (list "William Chung" "wchung12326@gmail.com" "TBD")
+        (list "Justin Frank" "jpfrank@umd.edu" "TBD")
+        (list "Vyas Gupta" "vgupta13@terpmail.umd.edu" "TBD")))
 
 (define lecture-schedule "Tuesday & Thursday, 2:00pm - 3:15pm, CSI 2117")
