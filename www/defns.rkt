@@ -22,7 +22,7 @@
 
 (define staff
   (list (list (link "http://jmct.cc/" "José Manuel Calderón Trilla") "jmct@umd.edu" "-")        
-        (list "William Chung" "wchung12326@gmail.com" "TBD")
+        (list "William Chung" "wchung1@terpmail.umd.edu" "TBD")
         (list "Justin Frank" "jpfrank@umd.edu" "TBD")
         (list "Vyas Gupta" "vgupta13@terpmail.umd.edu" "TBD")))
 
