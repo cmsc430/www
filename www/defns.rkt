@@ -27,3 +27,5 @@
         (list "Vyas Gupta" "vgupta13@terpmail.umd.edu" "TBD")))
 
 (define lecture-schedule "Tuesday & Thursday, 2:00pm - 3:15pm, CSI 2117")
+
+(define discord "https://discord.gg/tyumZUEFSk")
