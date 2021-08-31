@@ -7,6 +7,9 @@ several weeks of the course.  The project will involve extending the
 design and implementation of the programming language and its compiler
 that we will develop throughout the semester.
 
+Details of the project will be released later in the semester.
+
+@;{
 For your project you should turn in your extension code, a directory
 of examples that showcase your extension and the differences in
 behavior compared to the original language, and a @bold{short}
@@ -166,5 +169,6 @@ a significant update it will be announced on Piazza.
 
 Pushing your local repository to github ``submits'' your work.  We
 will grade the latest submission that occurs before the deadline.
+}
 
 }
