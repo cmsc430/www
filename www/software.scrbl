@@ -172,7 +172,11 @@ following:
             @item{macOS 10.15 (Catalina)}]}
   
  @item{Racket:
-  @itemlist[@item{Racket 7.9 [cs]}
+  @itemlist[@item{Racket 8.1 [cs]}
+            @item{Racket 8.1 [bc]}
+	    @item{Racket 8.0 [cs]}
+            @item{Racket 8.0 [bc]}
+	    @item{Racket 7.9 [cs]}
             @item{Racket 7.9 [bc]}
             @item{Racket 7.8 [cs]}
             @item{Racket 7.8 [bc]}]}
