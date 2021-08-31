@@ -30,7 +30,7 @@ ocamlc     : Ocaml      -> OcamlByteCode   (* .cmo *)
 ocamlopt   : Ocaml      -> Binary
 gwt        : Java       -> JavaScript      (* .js *)
 v8         : JavaScript -> Binary
-nasm       : X86        -> Binary
+nasm       : x86        -> Binary
 pdftex     : LaTeX      -> PDF
 pandoc     : Markdown   -> PDF | Html | Doc
 }
@@ -99,7 +99,7 @@ An input source program is converted to an executable binary in many stages:
 A sequel to both those classes.
 
 @itemlist[
-@item{How to write @bold{a compiler} for @tt{NanoML -> X86}
+@item{How to write @bold{a compiler} for @tt{MiniRacket -> x86}
 @itemlist[#:style 'ordered
 @item{Parsing}
 @item{Checking & Validation}
@@ -142,7 +142,7 @@ See @secref{Syllabus}.
 
 @section{What will @emph{we} do?}
 
-Write @emph{a compiler} for @tt{NanoML -> X86}
+Write @emph{a compiler} for @tt{MiniRacket -> x86}
 
 But Rome wasn’t built in a day … and neither is any serious software.
 
