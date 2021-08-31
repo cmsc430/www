@@ -8,6 +8,8 @@
 
 @(define (wk d) (nonbreaking (bold d)))
 
+@; for unreleased assignments, switch to seclink when ready to release
+@(define (tbaseclink lnk txt) txt)
 
 @tabular[#:style 'boxed
          #:sep @hspace[1] 
@@ -24,7 +26,7 @@
                      @elem{@secref["a86"]})
 
                (list @wk{9/14}
-	       	     @seclink["Assignment 2"]{A2}
+	       	     @tbaseclink["Assignment 2"]{A2}
                      @itemlist[@item{@secref["Abscond"]}
                                @item{@secref["Blackmail"]}]
                      @elem{@secref["Con"]})
@@ -35,7 +37,7 @@
                      @secref["Dodger"])
                
                (list @wk{9/28}
-	       	     @seclink["Assignment 3"]{A3}
+	       	     @tbaseclink["Assignment 3"]{A3}
                      @elem{@secref["Evildoer"]}
 		                 @elem{@secref["Extort"]})
                
@@ -45,12 +47,12 @@
                      @elem{Exam Review})
                
                (list @wk{10/12}
-	       	     @bold{@seclink["Midterm_1"]{M1}}
+	       	     @bold{@tbaseclink["Midterm_1"]{M1}}
                      @elem{No lecture (exam)}
                      @elem{Exam Q+A})
 
                (list @wk{10/19}                     
-	       	     @seclink["Assignment 4"]{A4}
+	       	     @tbaseclink["Assignment 4"]{A4}
                      @elem{@secref["Hustle"]}
                      @elem{@secref["Iniquity"]})
 		                    
@@ -60,7 +62,7 @@
                      @elem{@secref["Knock"]})
                
                (list @wk{11/2}
-                     @seclink["Assignment 5"]{A5}                     
+                     @tbaseclink["Assignment 5"]{A5}                     
                      @elem{Randomized Testing}
                      @elem{Review})
                
@@ -81,13 +83,13 @@
                      @elem{No class, Thanksgiving.})
 
                (list @wk{11/30}
-                     @seclink["Assignment 6"]{A6}
+                     @tbaseclink["Assignment 6"]{A6}
 		     @elem{Typing Lambdas - Hindley-Milner}
 		     @elem{@secref["Shakedown"]}
 		     )
 
                (list @wk{12/7}
-               @bold{@seclink["Settle on Final Project"]{Final Project}}                     
+               @bold{@tbaseclink["Settle on Final Project"]{Final Project}}                     
                      @elem{Final Project Q&A}
 		     @elem{Slack}
 		     )
