@@ -37,6 +37,19 @@ topic of the most recent video lectures.
 In-person lectures will be recorded and posted shortly after each
 class.
 
+@section{Mask Policy}
+
+University policy requires students, faculty, and staff to wear
+masks. Face coverings over the nose and mouth are required while you
+are indoors at all times. There are no exceptions when it comes to
+classrooms, laboratories, and campus offices.  Students not wearing a
+mask will be given a warning and asked to wear one, or will be asked
+to leave the room immediately. Students who have additional issues
+with the mask expectation after a first warning will be referred to
+the Office of Student Conduct for failure to comply with a directive
+of University officials.
+
+
 @section{Office Hours}
 
 Office hours will be held on @link[@discord]{this discord
@@ -196,22 +209,24 @@ Personalized assistance, e.g., with assignments or exam preparation,
 will be provided during office hours.  Office hours for the
 instructional staff will be posted on the course web page.
 
-Additional assistance will provided via the ELMS class discussion forum. You
-may use this forum to ask general questions of interest to the class as a
-whole, e.g., administrative issues or problem set clarification questions. The
-course staff will monitor ELMS on a daily basis, but do not expect immediate
-answers to questions. Please do not post publicly any information that would
-violate the university academic integrity policy (e.g., problem set code).
+Additional assistance will provided via discussion on
+@link[@discord]{Discord}. You may use this forum to ask general
+questions of interest to the class as a whole, e.g., administrative
+issues or problem set clarification questions. The course staff will
+monitor it on a daily basis, but do not expect immediate answers to
+questions. Please do not post publicly any information that would
+violate the university academic integrity policy (e.g., problem set
+code).
 
-ELMS allows students to send private questions that are only visible
-to instructors. Please use this feature if you wish to ask specific
-questions concerning your assignment solutions.
+Discord allows students to send private questions that are only
+visible to instructors. Please use this feature if you wish to ask
+specific questions concerning your assignment solutions.
 
 Personal e-mail to TAs should be reserved for issues
 that cannot be handled by the above methods.
 
 Important announcements will be made in class or on the class web
-page, and via ELMS.
+page, and via Discord.
 
 @section{Excused Absences}
 
