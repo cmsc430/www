@@ -1,13 +1,18 @@
 #lang scribble/manual
 
 @(require (for-label racket))
+@(require "../defns.rkt")
 
 @title{Midterm 1}
 
-@bold{Due: Tuesday, March 9th 11:59PM}
+@bold{Due: @m1-date 11:59PM}
 
 @(define repo "https://github.com/cmsc430/Midterm1-prog")
 
+Midterm 1 will be released at least 72 hours prior to its due date.
+
+
+@;{
 Midterm repository:
 @centered{@link[repo repo]}
 
@@ -374,3 +379,4 @@ solution gets all 15 correctness points - it is correct by
 definition! If you want to aim for the full score, you'll have to
 implement various bits of functionality - but be careful: you risk
 losing correctness points otherwise!
+}

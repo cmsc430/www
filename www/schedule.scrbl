@@ -47,7 +47,7 @@
                      @elem{Exam Review})
                
                (list @wk{10/12}
-	       	     @bold{@tbaseclink["Midterm_1"]{M1}}
+	       	     @bold{@seclink["Midterm_1"]{M1}}
                      @elem{No lecture (exam)}
                      @elem{Exam Q+A})
 
@@ -67,7 +67,7 @@
                      @elem{Review})
                
                (list @wk{11/9}
-                     @bold{@tbaseclink["Midterm_2"]{M2}}
+                     @bold{@seclink["Midterm_2"]{M2}}
                      @elem{No lecture (exam)}
                      @elem{Exam Review})
                                     

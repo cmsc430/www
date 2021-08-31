@@ -3,11 +3,17 @@
 @(require (for-label racket)
           "../notes/ev.rkt")
 
+@(require "../defns.rkt")
+
 @title{Midterm 2}
 
-@bold{Due: Tuesday, April 13th 11:59PM}
+@bold{Due: @m2-date 11:59PM}
 
 @(define repo "https://github.com/cmsc430/Midterm2-prog")
+
+Midterm 2 will be released at least 72 hours prior to its due date.
+
+@;{
 
 Midterm repository:
 @centered{@link[repo repo]}
@@ -288,3 +294,4 @@ We will only use two files for grading: @tt{BoxIncr/compile.rkt} and
 @tt{CallByName/interp.rkt}. You should be able to submit a zip from
 inside the cloned repo to Gradescope, but we will only be using these
 two files for grading, so restrict your work in those.
+}
