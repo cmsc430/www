@@ -27,21 +27,29 @@ in C and Assembly as covered in CMSC 216.
 
 @section{Course Workflow}
 
-The course will be a combination of @bold{synchronous, in-person
-lectures}, video lectures, live Q+A sessions, and online course
-notes. The short lecture videos will be available online, to view at
-your own pace. The scheduled in-person lecture time will supplement
-and expand upon the videos and incorporate Q+A time, focusing on the
-topic of the most recent video lectures.
+The course will be a combination of synchronous in-person lectures,
+video lectures, live Q+A sessions, and online course notes. The short
+lecture videos will be available online, to view at your own pace. The
+scheduled in-person lecture time will supplement and expand upon the
+videos and incorporate Q+A time, focusing on the topic of the most
+recent video lectures.
 
 In-person lectures will be recorded and posted shortly after each
 class.
 
+@section{COVID-19}
+
+In the Fall of 2021, we are still in the midst of the global COVID-19
+pandemic.  Although this semester marks a return to in-person
+instruction, a number of changes have been made by the university in
+order to anticipate and accomodate this situation.  Please review the
+Provost's FAQ on @link["https://provost.umd.edu/node/4243"]{Fall 2021
+Instruction}.
+
 @section{Mask Policy}
 
-University policy requires students, faculty, and staff to wear
-masks. Face coverings over the nose and mouth are required while you
-are indoors at all times. There are no exceptions when it comes to
+@bold{Face coverings over the nose and mouth are required while you
+are indoors at all times.} There are no exceptions when it comes to
 classrooms, laboratories, and campus offices.  Students not wearing a
 mask will be given a warning and asked to wear one, or will be asked
 to leave the room immediately. Students who have additional issues
@@ -56,7 +64,7 @@ Office hours will be held on @link[@discord]{this discord
 server}. Make sure that your 'nickname' is set to something appropriate for
 class.
 
-Please make sure that you fill out
+@;{Please make sure that you fill out
 @link["https://docs.google.com/spreadsheets/d/1sDCpekBHIGjVSuGDsabPb74wZ5nHA_sTLvIPOzTUQ4k/edit?usp=sharing"]{
 this sheet} so that we can make sure that everyone is being heard. If office
 hours end and your issue wasn't addressed, we will reach out to you to make
@@ -65,11 +73,11 @@ sure you get time with staff.
 Additionally, the benefit of registering on the sheet is that when topics come
 up repeatedly, the staff can make an announcement that addresses the concern
 for the entire class. Lastly, it helps the course staff keep an eye on what
-topics might need more attention.
+topics might need more attention.}
 
 The discord server is there for you to organize as a class, ask questions of
 each other, and to get help from staff. Its main purpose is as a vehicle for
-office hours. That said, feel free to use the discord for discussion. I (Jose)
+office hours. That said, feel free to use the discord for discussion. I (DVH)
 will check periodically, but if you would like to ask a question directly to
 the course staff, office hours and email remain the prioritized forms of
 communication.
