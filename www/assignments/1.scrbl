@@ -1,4 +1,6 @@
 #lang scribble/manual
+@(require "../defns.rkt")
+
 @title[#:tag "Assignment 1" #:style 'unnumbered]{Assignment 1: Learning about Programming Languages}
 
 @bold{Due: Tuesday, September 9, 11:59PM}
@@ -31,7 +33,7 @@ Racket, Ruby, Scheme, SML, Visual Basic.
 
 @section[#:style 'unnumbered]{What to turn in}
 
-Submit this assignment via Gradescope.
+Submit this assignment via @link[@gradescope]{Gradescope}.
 
 @;{We will be using GitHub Classroom.  This means you will work with git
 repositories and turning in your work consists of pushing the
