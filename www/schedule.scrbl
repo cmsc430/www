@@ -16,12 +16,12 @@
                (list @wk{8/31}
 	       	     ""
                      @secref["Intro"]
-                     @elem{@secref["OCaml to Racket"] (@link["code/ocaml-to-racket.pdf"]{slides}) (@link["https://www.youtube.com/watch?v=KTWq1XAfuMQ"]{vid})})
+                     @elem{@secref["OCaml to Racket"]})
 
                (list @wk{9/7}
 	       	     @seclink["Assignment 1"]{A1}
-                     @elem{@secref["OCaml to Racket"] (cont.) (@link["https://www.youtube.com/watch?v=QfxVrYuUboc"]{vid})}
-                     @elem{@secref["a86"] (@link["https://www.youtube.com/watch?v=iEThSsxHmaI"]{vid})})
+                     @elem{@secref["OCaml to Racket"] (cont.)}
+                     @elem{@secref["a86"]})
 
                (list @wk{9/14}
 	       	     @seclink["Assignment 2"]{A2}

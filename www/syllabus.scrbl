@@ -27,10 +27,15 @@ in C and Assembly as covered in CMSC 216.
 
 @section{Course Workflow}
 
-The course will be a combination of video lectures, live Q+A sessions, and
-online course notes. The lectures will be in video format, to view at your own
-pace. The scheduled lecture time will be a live Q+A, focusing on the topic of
-the most recent video lectures.
+The course will be a combination of @bold{synchronous, in-person
+lectures}, video lectures, live Q+A sessions, and online course
+notes. The short lecture videos will be available online, to view at
+your own pace. The scheduled in-person lecture time will supplement
+and expand upon the videos and incorporate Q+A time, focusing on the
+topic of the most recent video lectures.
+
+In-person lectures will be recorded and posted shortly after each
+class.
 
 @section{Office Hours}
 
@@ -112,11 +117,16 @@ percentages:
   (list "Final project" "15%")]
 
 
-@section[#:tag "syllabus-videos"]{Lecture Videos}
+@section[#:tag "syllabus-videos"]{Videos}
 
-Videos will be a core part of this course. These videos will be made available
-as the course progresses. If there is ever any issue with accessing these
-videos, let the instructor know as soon as possible.
+Videos will be a core part of this course.  There are two types of
+videos: (1) short, pre-recorded video lectures which will be made
+available before each class, and (2) screen and audio captures of each
+in-person lecture.
+
+These videos will be made available as the course progresses. If there
+is ever any issue with accessing these videos, let the instructor know
+as soon as possible.
 
 
 @section[#:tag "syllabus-assignments"]{Assignments}
