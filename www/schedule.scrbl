@@ -67,7 +67,7 @@
                      @elem{Review})
                
                (list @wk{11/9}
-                     @bold{@seclink["Midterm_2"]{M2}}
+                     @bold{@tbaseclink["Midterm_2"]{M2}}
                      @elem{No lecture (exam)}
                      @elem{Exam Review})
                                     
