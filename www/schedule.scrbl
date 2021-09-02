@@ -18,11 +18,11 @@
                (list @wk{8/31}
 	       	     ""
                      @secref["Intro"]
-                     @elem{@secref["OCaml to Racket"]})
+                     @elem{@secref["OCaml to Racket"], (@link["https://youtu.be/xKCFkXUcmK4"]{video})} )
 
                (list @wk{9/7}
 	       	     @seclink["Assignment 1"]{A1}
-                     @elem{@secref["OCaml to Racket"] (cont.)}
+                     @elem{@secref["OCaml to Racket"], cont., (@link["https://youtu.be/sLOMQ_j7cPE"]{video}) }
                      @elem{@secref["a86"]})
 
                (list @wk{9/14}
