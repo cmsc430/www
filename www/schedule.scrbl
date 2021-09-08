@@ -23,7 +23,7 @@
                (list @wk{9/7}
 	       	     @seclink["Assignment 1"]{A1}
                      @elem{@secref["OCaml to Racket"], cont., (@link["https://youtu.be/sLOMQ_j7cPE"]{video}) }
-                     @elem{@secref["a86"]})
+                     @elem{@secref["a86"], (@link["https://www.youtube.com/watch?v=25tV38STdbQ"]{video})} )
 
                (list @wk{9/14}
 	       	     @seclink["Assignment 2"]{A2}
