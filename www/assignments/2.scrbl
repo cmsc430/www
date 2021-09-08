@@ -1,11 +1,9 @@
 #lang scribble/manual
 @title[#:tag "Assignment 2" #:style 'unnumbered]{Assignment 2: Racket Primer}
 
-@bold{Due: Thursday, February 11, 11:59PM}
+@bold{Due: Tuesday, September 14, 11:59PM}
 
 The goal of this assignment is to gain practice programming in Racket.
-
-Assignment repository:
 
 You are given a @tt{main.rkt} file (on ELMS under "Files"), that
 contains a number of sections.  In each section there are several
@@ -38,10 +36,16 @@ You can test your code in several ways:
  @item{Using the command line @tt{raco test main.rkt} from
   the same directory as @tt{main.rkt}.}]
 
-Note that running @tt{racket main.rkt} from the command line will not
-run the tests.
+Note that running @tt{racket main.rkt} from the command line will
+@bold{not} run the tests.
 
 @section[#:tag-prefix "a2-" #:style 'unnumbered]{Submitting}
 
 Submit your filled-in @tt{main.rkt} file on Gradescope.
 
+@section[#:tag-prefix "a2-" #:style 'unnumbered]{Grading}
+
+Your submission will be graded for correctness.  Passing the unit
+tests included in the file is necessary but @bold{not sufficient} to
+receive a perfect score.  You are strongly encouraged to add your own
+tests to ensure the correctness of your solutions.
