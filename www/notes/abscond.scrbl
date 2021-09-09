@@ -294,10 +294,10 @@ Abscond runtime:
 
 This C program provides the main entry point for running an Abscond
 program.  It must be linked against an object file that provides the
-definition of @tt{enter_abscond}; this is the code our compiler will
+definition of @tt{entry}; this is the code our compiler will
 emit.
 
-The @tt{enter_abscond} function computes the result of running the
+The @tt{entry} function computes the result of running the
 Abscond code, i.e. an integer.  Here we are taking advantage of the
 x86-64 architecture by using 64-bit signed integers by using the
 @tt{int64_t} C type.
@@ -310,7 +310,7 @@ We can compile the run-time system to get an object file.  We'll use
 @shellbox["gcc -m64 -c -o main.o main.c"]
 
 This creates @tt{main.o}; linking this file together with an object
-file that contains @tt{enter_abscond} will produce an executable that,
+file that contains @tt{entry} will produce an executable that,
 when run, will carry out the execution of an Abscond program.
 
 @section{An Example}
