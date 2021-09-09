@@ -24,7 +24,7 @@
   (list (list (link "http://jmct.cc/" "José Manuel Calderón Trilla") "jmct@umd.edu" "-")        
         (list "William Chung" "wchung1@terpmail.umd.edu" "Th 3:30-5:30 Online")
         (list "Justin Frank" "jpfrank@umd.edu" "W 12:00-2:00 AVW 4160")
-        (list "Vyas Gupta" "vgupta13@terpmail.umd.edu" "F 2:00-4:00 Online")))
+        (list "Vyas Gupta" "vgupta13@terpmail.umd.edu" "F 1:30-3:30 AVW 4160")))
 
 (define lecture-schedule "Tuesday & Thursday, 2:00pm - 3:15pm, CSI 2117")
 
