@@ -620,7 +620,7 @@ on with @racket[Call] and @racket[Ret]:
          (Push 'rax)       ; push the return pointer on to stack
          (Jmp 'g)          ; jump to 'g
          (Label 'gret)     ; <-- return point for "call" to 'g
-         (Pop 'rbx)        ; pop saved result from callling 'f
+         (Pop 'rbx)        ; pop saved result from calling 'f
          (Add 'rax 'rbx)))
 )
 
@@ -641,7 +641,7 @@ address to jump to, we could've also written it as:
          (Lea (Offset 'rsp 0) 'gret)         
          (Jmp 'g)          ; jump to 'g
          (Label 'gret)     ; <-- return point for "call" to 'g
-         (Pop 'rbx)        ; pop saved result from callling 'f
+         (Pop 'rbx)        ; pop saved result from calling 'f
          (Add 'rax 'rbx)))
 )
 }
