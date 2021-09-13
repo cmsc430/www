@@ -27,8 +27,8 @@
 
                (list @wk{9/14}
 	       	     @seclink["Assignment 2"]{A2}
-                     @elem{@itemlist[@item{@secref["Abscond"]}
-                                      @item{@secref["Blackmail"]}], (@link["https://www.youtube.com/watch?v=28F-5sCUfzg"]{video})}
+                     @itemlist[@item{@secref["Abscond"]}
+                               @item{@secref["Blackmail"], (@link["https://www.youtube.com/watch?v=28F-5sCUfzg"]{video})}]
                      @elem{@secref["Con"]})
 
                (list @wk{9/21}
