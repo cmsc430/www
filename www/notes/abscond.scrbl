@@ -273,7 +273,7 @@ There are several reasons for this choice:
 
 @itemlist[
 
-@item{it is a low-level language, so compiling to a high-level
+@item{it is a low-level language, so compiling from a high-level
 language to x86-64 will require building everything from scratch,}
 
 @item{it is the programming language at the ``bottom'' of your
