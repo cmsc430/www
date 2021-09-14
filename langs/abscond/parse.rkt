@@ -4,7 +4,6 @@
 
 ;; S-Expr -> Expr
 (define (parse s)
-  (cond
-    [(integer? s) (Int s)]
-    [else
-     (error "Parse error")]))
+  (match s
+    [(? integer?) (Int s)]
+    [_            (error "Parse error")]))
