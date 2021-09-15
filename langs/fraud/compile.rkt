@@ -9,7 +9,11 @@
 (define rsp 'rsp)
 (define rdi 'rdi)
 
-;; type CEnv = [Listof Variable]
+;; type Slot = Variable | Temp
+;; type CEnv = [Listof Slot]
+
+(struct temp-slot () #:prefab)
+(define temp (temp-slot)) ;; A Short-hand (we don't mind if they are all the same value)
 
 ;; Expr -> Asm
 (define (compile e)
@@ -118,7 +122,7 @@
 (define (compile-prim2 p e1 e2 c)
   (seq (compile-e e1 c)
        (Push rax)
-       (compile-e e2 (cons #f c))
+       (compile-e e2 (cons temp c))
        (compile-op2 p c)))
 
 ;; Op2 CEnv -> Asm
