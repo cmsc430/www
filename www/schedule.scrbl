@@ -33,8 +33,8 @@
 
                (list @wk{9/21}
                      ""
-                     @elem{@secref["Dupe"], (@link["https://youtu.be/GdQZ2D1lyZA"])}
-                     @elem{@secref["Dodger"], (@link["https://youtu.be/-SuINAKs7gE"])})
+                     @elem{@secref["Dupe"], (@link["https://youtu.be/GdQZ2D1lyZA"]{video})}
+                     @elem{@secref["Dodger"], (@link["https://youtu.be/-SuINAKs7gE"]{video})})
                
                (list @wk{9/28}
 	       	     @tbaseclink["Assignment 3"]{A3}
