@@ -37,7 +37,7 @@
                      @secref["Dodger"])
                
                (list @wk{9/28}
-	       	     @tbaseclink["Assignment 3"]{A3}
+	       	     @seclink["Assignment 3"]{A3}
                      @elem{@secref["Evildoer"]}
 		                 @elem{@secref["Extort"]})
                
