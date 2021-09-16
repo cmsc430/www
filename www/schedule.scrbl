@@ -29,12 +29,12 @@
 	       	     @seclink["Assignment 2"]{A2}
                      @itemlist[@item{@secref["Abscond"]}
                                @item{@secref["Blackmail"], (@link["https://www.youtube.com/watch?v=28F-5sCUfzg"]{video})}]
-                     @elem{@secref["Con"]})
+                     @elem{@secref["Con"], (@link["https://youtu.be/nh8x0EQsQQY"]{video})} )
 
                (list @wk{9/21}
                      ""
-                     @elem{@secref["Dupe"]}
-                     @secref["Dodger"])
+                     @elem{@secref["Dupe"], (@link["https://youtu.be/GdQZ2D1lyZA"]{video})}
+                     @elem{@secref["Dodger"], (@link["https://youtu.be/-SuINAKs7gE"]{video})})
                
                (list @wk{9/28}
 	       	     @seclink["Assignment 3"]{A3}
