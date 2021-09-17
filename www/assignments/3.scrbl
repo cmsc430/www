@@ -34,7 +34,7 @@ Add the following forms of expression to the language:
 @itemlist[
 @item{@racket[(abs _e)]: compute the absolute value of @racket[_e],}
 @item{@racket[(- _e)]: flips the sign of @racket[_e], i.e. compute @math{0-@racket[_e]}, and}
-@item{@racket[(not _e)]: compute the logical negation of @racket[_e]; note that the negation of @emph{any} value other than @racket[#f] is @racket[#t] and the negation of @racket[#f] is @racket[#t].}
+@item{@racket[(not _e)]: compute the logical negation of @racket[_e]; note that the negation of @emph{any} value other than @racket[#f] is @racket[#f] and the negation of @racket[#f] is @racket[#t].}
 ]
 
 There are many ways to implement these at the assembly level. You should try implementing
@@ -44,11 +44,17 @@ To do this, you should:
 @itemlist[
 @item{Study @tt{ast.rkt} and the new forms of expression (i.e. new AST nodes)
       then update the comment at the top describing what the grammmar should look like.}
-@item{Study @tt{parse.rkt} and add support for parsing these expressions.}
+      
+@item{Study @tt{parse.rkt} and add support for parsing these
+expressions. (See @secref[#:tag-prefixes '("a3-")]{parse} for guidance.)}
+
 @item{Update @tt{interp-prim.rkt} and @tt{interp.rkt} to correctly interpret these expressions.}
+
 @item{Make examples of these primitives and potential translations of them
 to assembly.}
+
 @item{Update @tt{compile.rkt} to correctly compile these expressions.}
+
 @item{Check your implementation by running the tests in @tt{test/all.rkt}.}
 ]
 
@@ -123,7 +129,7 @@ To do this, you should:
 
 @itemlist[
 @item{Study @tt{ast.rkt} to add appropriate AST nodes.}
-@item{Extend @tt{parse.rkt} to parse such expressions.}
+@item{Extend @tt{parse.rkt} to parse such expressions. (See @secref[#:tag-prefixes '("a3-")]{parse} for guidance.)}
 @item{Update @tt{interp-prim.rkt} and @tt{interp.rkt} to correctly interpret @racket[cond] expressions.}
 
 @item{Make examples of @racket[cond]-expressions and potential translations of them
@@ -169,7 +175,7 @@ To do this, you should:
 
 @itemlist[
 @item{Study @tt{ast.rkt} to add appropriate AST nodes.}
-@item{Extend @tt{parse.rkt} to parse such expressions.}
+@item{Extend @tt{parse.rkt} to parse such expressions. (See @secref[#:tag-prefixes '("a3-")]{parse} for guidance.)}
 @item{Update @tt{interp-prim.rkt} and @tt{interp.rkt} to correctly interpret @racket[case] expressions.}
 
 @item{Make examples of @racket[case]-expressions and potential translations of them
@@ -178,6 +184,89 @@ to assembly.}
 @item{Update @tt{compile.rkt} to correctly compile @racket[case] expressions based on your examples.}
 
 @item{Check your implementation by running the tests in @tt{test/all.rkt}.}
+]
+
+@section[#:tag-prefix "a3-" #:style 'unnumbered #:tag "parse"]{A Leg Up on Parsing}
+
+In the past, designing the AST type and structure definitions has
+given students some grief.  Getting stuck at this point means you
+can't make any progress on the assignment and making a mistake at this
+level can cause real trouble down the line for your compiler.
+
+For that reason, let us give you a strong hint for a potential design
+of the ASTs and examples of how parsing could work.  You are not
+required to follow this design, but you certainly may.
+
+Here's a potential AST definition for the added primitives,
+@racket[cond], and @racket[case]:
+
+@#reader scribble/comment-reader
+(racketblock
+;; type Expr =
+;; ...
+;; | (Cond [Listof CondClause] Expr)
+;; | (Case Expr [Listof CaseClause] Expr)
+
+;; type CondClause = (Clause Expr Expr)
+;; type CaseClause = (Clause [Listof Datum] Expr)
+
+;; type Datum = Integer | Boolean
+
+;; type Op = 
+;; ...
+;; | 'abs | '- | 'not
+
+(struct Cond (cs e)    #:prefab)
+(struct Case (e cs el) #:prefab)
+(struct Clause (p b)   #:prefab)
+)
+
+There are two new kinds of expression constructors: @racket[Cond] and
+@racket[Case].  A @racket[Cond] AST node contains a list of
+cond-clauses and expression, which the expression of the @racket[else]
+clause.  Each cond-clause is represented by a @racket[Clause]
+structure containing two expressions: the right-hand-side of the
+clause which is used to determine whether the left-hand-side is
+evaluated, and the left-hand-side expression.
+
+The @racket[Case] AST node contains three things: an expression that
+is the subject of the dispatch (i.e. the expression that is evaluated
+to determine which clause should be taken), a list of case-clauses
+(not to be confused with cond-clauses), and an @racket[else]-clause
+expression.  Each case-clause, like a cond-clause, consists of two
+things.  Hence we re-use the @racket[Clause] structure, but with
+different types of elements.  The first element is a list of
+@emph{datums}, each being either an integer or a boolean.
+
+Now, we won't go so far as to @emph{give} you the code for
+@racket[parse], but we can give you some examples:
+
+@itemlist[
+
+@item{@racket[(abs 1)] parses as @racket[(Prim1 'abs (Int 1))],}
+
+@item{@racket[(not #t)] parses as @racket[(Prim1 'not (Bool #t))],}
+
+@item{@racket[(cond [else 5])] parses as @racket[(Cond '() (Int 5))],}
+
+@item{@racket[(cond [(not #t) 3] [else 5])] parses as @racket[(Cond
+(list (Clause (Prim1 'not (Bool #t)) (Int 3))) (Int 5))],}
+
+@item{@racket[(cond [(not #t) 3] [7 4] [else 5])] parses as
+@racket[(Cond (list (Clause (Prim1 'not (Bool #t)) (Int 3)) (Clause
+(Int 7) (Int 4))) (Int 5))],}
+
+@item{@racket[(case (add1 3) [else 2])] parses as @racket[(Case (Prim1
+'add1 (Int 3)) '() (Int 2))].}
+
+@item{@racket[(case 4 [(4) 1] [else 2])] parses as @racket[(Case (Int
+4) (list (Clause (list 4) (Int 1))) (Int 2))],}
+
+@item{@racket[(case 4 [(4 5 6) 1] [else 2])] parses as @racket[(Case (Int
+4) (list (Clause (list 4 5 6) (Int 1))) (Int 2))], and}
+
+@item{@racket[(case 4 [(4 5 6) 1] [(#t #f) 7] [else 2])] parses as @racket[(Case (Int
+4) (list (Clause (list 4 5 6) (Int 1)) (Clause (list #t #f) (Int 7))) (Int 2))].}
 ]
 
 
