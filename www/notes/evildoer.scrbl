@@ -106,7 +106,7 @@ To the syntax of expressions, we add the following operations:
  @item{@racket[peek-byte] @tt|{: -> Byte or EOF}|: peeks a byte from stdin, if there is one, EOF otherwise.}
  ]
 
-These operations will behave like their Racket counterpart.
+These operations will behave like their Racket counterparts.
 
 To complement these operations, we add two new values:
 
