@@ -28,22 +28,25 @@
                (list @wk{9/14}
 	       	     @seclink["Assignment 2"]{A2}
                      @itemlist[@item{@secref["Abscond"]}
-                               @item{@secref["Blackmail"], (@link["https://www.youtube.com/watch?v=28F-5sCUfzg"]{video})}]
-                     @elem{@secref["Con"], (@link["https://youtu.be/nh8x0EQsQQY"]{video})} )
+                               @item{@secref["Blackmail"], (@link["https://www.youtube.com/watch?v=28F-5sCUfzg"]{video})}
+			       @item{@secref["Con"], (@link["https://youtu.be/nh8x0EQsQQY"]{video})}]
+                     @elem{@secref["Dupe"], (@link["https://youtu.be/GdQZ2D1lyZA"]{video})})
 
                (list @wk{9/21}
-                     ""
-                     @elem{@secref["Dupe"], (@link["https://youtu.be/GdQZ2D1lyZA"]{video})}
-                     @elem{@secref["Dodger"], (@link["https://youtu.be/-SuINAKs7gE"]{video})})
-               
+	             ""
+                     @itemlist[@item{@secref["Dodger"], (@link["https://youtu.be/-SuINAKs7gE"]{video})}
+                               @item{@secref["Evildoer"]}]
+                     @itemlist[@item{@secref["Extort"]}
+                               @item{@secref["Fraud"]}])
+                                    
                (list @wk{9/28}
 	       	     @seclink["Assignment 3"]{A3}
-                     @elem{@secref["Evildoer"]}
-		                 @elem{@secref["Extort"]})
+		     "TBD"
+		     "TBD")
                
                (list @wk{10/5}
 	       	     ""
-                     @elem{@secref["Fraud"]}
+                     "TBD"
                      @elem{Exam Review})
                
                (list @wk{10/12}
