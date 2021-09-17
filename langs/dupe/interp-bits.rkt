@@ -2,12 +2,6 @@
 (provide interp interp-bits)
 (require "ast.rkt" "types.rkt")
 
-;; type Value =
-;; | Integer
-;; | Boolean
-
-;; type Bits = Integer
-
 ;; Expr -> Value
 (define (interp e)
   (bits->value (interp-bits e)))
