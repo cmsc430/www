@@ -99,7 +99,7 @@ integer literals.
 
 Once a multiplicity of types are introduced, we are forced to come to
 grips with @bold{type mismatches}.  For example, what should
-@racket[(add1 #f)] mean?  What about @racket[(if 7 #t -2)]?
+@racket[(add1 #f)] mean?
 
 Languages adopt several approaches:
 
@@ -113,8 +113,7 @@ Languages adopt several approaches:
 ]
 
 We are going to start by taking the last approach.  Later we can
-reconsider the design, but for now this is a simple (and dangerous!)
-approach.
+reconsider the design, but for now this is a simple approach.
 
 
 The semantics is still a binary relation between expressions and their
@@ -169,8 +168,7 @@ rule essentially defers the work to a new metafunction,
     (render-metafunction 𝑫-𝒑𝒓𝒊𝒎 #:contract? #t)))
 
 Returning to the issue of type mismatches, what does the
-semantics say about @racket[(Prim1 'add1 (Bool #f))]? What about
-@racket[(If (Int 7) (Bool #t) (Int -2))]?
+semantics say about @racket[(Prim1 'add1 (Bool #f))]?
 
 What it says is: nothing.  These programs are simply not in the
 semantic relation for this language. There's only one rule for giving
