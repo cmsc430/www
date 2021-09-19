@@ -8,10 +8,27 @@
 (define rdx 'rdx) ; return, 2
 (define r8  'r8)  ; scratch in +, -
 (define r9  'r9)  ; scratch in assert-type and tail-calls
-(define rsp 'rsp) ; stack
+(define r10  'r10)  ; scratch in assert-type and tail-calls
+(define r11  'r11)  ; scratch in assert-type and tail-calls
+(define rsp 'rsp) ; stack pointer
+(define rbp 'rbp) ; base pointer
 (define rdi 'rdi) ; arg
 
-;; type CEnv = [Listof Variable]
+;; type Slot = Variable | Temp | PC | Pad
+;; type CEnv = [Listof Slot]
+
+;; Short-hand (we don't mind if all slots of the same kind are the same value)
+(struct temp-slot () #:prefab)
+(define temp (temp-slot)) 
+(struct pc-slot () #:prefab)
+(define pc (pc-slot)) 
+(struct bp-slot () #:prefab)
+(define bp (bp-slot)) 
+(struct pad-slot () #:prefab)
+(define pad (pad-slot)) 
+(struct arg-slot () #:prefab)
+(define arg (arg-slot)) 
+
 
 ;; Expr -> Asm
 (define (compile p)
@@ -23,8 +40,11 @@
            (Extern 'raise_error)
            (Label 'entry)
            (Mov rbx rdi) ; recv heap pointer
-           (compile-e e '(#f)) ; NOT A TAIL CALL! We can't re-use the frame!!!
+           (Push rbp)
+           (Mov rbp rsp)
+           (compile-e e (list bp pc))
            (Mov rdx rbx) ; return heap pointer in second return register           
+           (Pop rbp)
            (Ret)
            (compile-defines ds))]))
 
@@ -42,28 +62,31 @@
   (match d
     [(Defn f xs e)
                         ; leave space for RIP
-     (let ((env (parity (cons #f (reverse xs)))))
+     (let ((env (parity (cons pc (reverse xs)))))
           (seq (Label (symbol->label f))
-               ; we need the #args on the frame, not the length of the entire
-               ; env (which may have padding)
-               (compile-tail-e e env (length xs))
+               (Push rbp)
+               (Mov rbp rsp)
+               ;; rsp will, by definition, always be aligned after we push
+               ;; rbp on the stack, this is because we are always unaligned
+               ;; on entry to a function
+               (compile-tail-e e (cons bp env))
+               (Mov rsp rbp)
+               (Pop rbp)
                (Ret)))]))
 
 (define (parity c)
   (if (even? (length c))
-      (append c (list #f))
+      (append c (list pad))
       c))
 
-;; Expr Expr Expr CEnv Int -> Asm
-(define (compile-tail-e e c s)
+;; Expr Expr Expr CEnv -> Asm
+(define (compile-tail-e e c)
   (seq
     (match e
-      [(If e1 e2 e3) (compile-tail-if e1 e2 e3 c s)]
-      [(Let x e1 e2) (compile-tail-let x e1 e2 c s)]
-      [(App f es)    (if (<= (length es) s)
-                         (compile-tail-call f es c)
-                         (compile-app f es c))]
-      [(Begin e1 e2) (compile-tail-begin e1 e2 c s)]
+      [(If e1 e2 e3) (compile-tail-if e1 e2 e3 c)]
+      [(Let x e1 e2) (compile-tail-let x e1 e2 c)]
+      [(App f es)    (compile-tail-call f es c)]
+      [(Begin e1 e2) (compile-tail-begin e1 e2 c)]
       [_             (compile-e e c)])))
 
 ;; Expr CEnv -> Asm
@@ -167,7 +190,7 @@
 (define (compile-prim2 p e1 e2 c)
   (seq (compile-e e1 c)
        (Push rax)
-       (compile-e e2 (cons #f c))
+       (compile-e e2 (cons temp c))
        (match p
          ['+
           (seq (Pop r8)
@@ -200,7 +223,7 @@
 ;; Here's why this code is so gross: you have to align the stack for the call
 ;; but you have to do it *before* evaluating the arguments es, because you need
 ;; es's values to be just above 'rsp when the call is made.  But if you push
-;; a frame in order to align the call, you've got to compile es in a static
+;; a pad in order to align the call, you've got to compile es in a static
 ;; environment that accounts for that frame, hence:
 (define (compile-app f es c)
   (if (even? (+ (length es) (length c))) 
@@ -208,7 +231,7 @@
            (Call (symbol->label f))
            (Add rsp (* 8 (length es))))            ; pop args
       (seq (Sub rsp 8)                             ; adjust stack
-           (compile-es es (cons #f c))
+           (compile-es es (cons pad c))
            (Call (symbol->label f))
            (Add rsp (* 8 (add1 (length es)))))))   ; pop args and pad
 
@@ -216,24 +239,117 @@
 ;; Variable (Listof Expr) CEnv -> Asm
 ;; Compile a call in tail position
 (define (compile-tail-call f es c)
-  (let ((cnt (length es)))
-       (seq (compile-es es c)
-            (move-args cnt (+ cnt (in-frame c)))
-            (Add rsp (* 8 (+ cnt (in-frame c))))
-            (Jmp (symbol->label f)))))
+  (let* ((cnt (length es))
+         (i (lookup-pc c))
+         (align (if (odd? cnt) 8 0)))
+        (seq (% (~a "i: " i))
+             (% (~a "c: " c))
+             (Mov 'r8 (Offset rsp i))
+             (Mov 'r11 (Offset rsp (- i 8)))
+             (% "Begin compile-es")
+             (compile-es es c)         ;; (A)
+             (% "End compile-es")
+             (Mov r10 (Offset rbp 0))
+             ;; We're 16-byte aligned at where BP is (invariant of the CC)
+             ;; So for even number args we'll be fine, for odd number args
+             ;; we need to pad the stack here
+             (Sub r10 align)
+             (% "End positioning of move-args pointers")
+             (move-args cnt 0)         ;; (B1 + B2)
+             (% "End move-args")
+             (Mov rsp r10)             ;;
+             (Mov rbp r11)             ;;
+             (% "End reset rsp and rbp")
+             (Push 'r8)                ;;
+             (Jmp (symbol->label f)))))
 
-;; Integer Integer -> Asm
+
+;; (let ((x 42)) (f 84 21))
+;;
+;; (1)
+;;
+;; in-frames = 5
+;; cnt       = 2
+;;
+;;                  /-----------------v
+;; 0 ... |21|84|42|BP|PC|a3|a2|a1|pd|BP|... MAX_RAM
+;; rsp ---^        /                /
+;; rbp -----------/                /
+;; r10 ---------------------------/
+;; r8  = PC 
+;; r11 = BP
+
+;; (let ((x 42)) (f 84 21))
+;;
+;; (2)
+;;
+;; in-frames = 5
+;; cnt       = 2
+;;
+;;                  /-----------------v
+;; 0 ... |21|84|42|BP|PC|a3|a2|a1|pd|BP|... MAX_RAM
+;; rsp ---^        /             /
+;; rbp -----------/             /
+;; r10 ------------------------/
+;; r8  = PC 
+;; r11 = BP
+
+;; (let ((x 42)) (f 84 21))
+;;
+;; (A)
+;;
+;; in-frames = 5
+;; cnt       = 2
+;;
+;;                  /-----------------v
+;; 0 ... |21|84|42|BP|PC|a3|a2|a1|pd|BP|... MAX_RAM
+;; rsp ---^        /
+;; rbp -----------/
+;; r8  = PC 
+;; r11 = BP
+
+;; (B1)
+;;             in-frames #
+;;           v--------------v
+;; 0 ... |21|84|42|PC|a3|a2|84|pd|... MAX_RAM
+;; rsp ---^
+;; r8 = PC 
+
+;; (B2)
+;;          in-frames #
+;;        v--------------v
+;; 0 ... |21|84|42|PC|a3|21|84|pd|... MAX_RAM
+;; rsp ---^
+;; r8 = PC 
+
+;; (C)
+;;
+;; 0 ... |21|84|42|PC|a3|21|84|pd|... MAX_RAM
+;; rsp ------------------^
+;;        ^--------------^
+;;          in-frames #
+;; r8 = PC 
+
+;; (D)
+;;
+;; 0 ... |21|84|42|PC|PC|21|84|pd|... MAX_RAM
+;; rsp ---------------^
+;;
+;; r8 = PC 
+
+
+;; Integer -> Asm
 ;; Move i arguments upward on stack by offset off
-(define (move-args i cnt)
+(define (move-args i c)
   (match i
-    [0 (seq)]
+    [0 (seq) (Sub r10 (* c 8))]
     [_ (seq
          ; mov first arg to temp reg
          (Mov r9 (Offset rsp (* 8 (sub1 i))))
          ; mov value to correct place on the old frame
-         (Mov (Offset rsp (* 8 (+ i cnt))) r9)
+         (Mov (Offset r10 (- (* (add1 c) 8))) r9)
          ; Now do the next one
-         (move-args (sub1 i) cnt))]))
+         (move-args (sub1 i) (add1 c)))]))
 
 ;; [Listof Expr] CEnv -> Asm
 (define (compile-es es c)
@@ -242,7 +358,7 @@
     [(cons e es)
      (seq (compile-e e c)
           (Push rax)
-          (compile-es es (cons #f c)))]))
+          (compile-es es (cons arg c)))]))
 
 ;; Imm -> Asm
 (define (eq-imm imm)
@@ -267,16 +383,16 @@
          (Label l2))))
 
 ;; Expr Expr Expr CEnv -> Asm
-(define (compile-tail-if e1 e2 e3 c s)
+(define (compile-tail-if e1 e2 e3 c)
   (let ((l1 (gensym 'if))
         (l2 (gensym 'if)))
     (seq (compile-e e1 c)
          (Cmp rax val-false)
          (Je l1)
-         (compile-tail-e e2 c s)
+         (compile-tail-e e2 c)
          (Jmp l2)
          (Label l1)
-         (compile-tail-e e3 c s)
+         (compile-tail-e e3 c)
          (Label l2))))
 
 ;; Expr Expr CEnv -> Asm
@@ -285,9 +401,9 @@
        (compile-e e2 c)))
 
 ;; Expr Expr CEnv -> Asm
-(define (compile-tail-begin e1 e2 c s)
+(define (compile-tail-begin e1 e2 c)
   (seq (compile-e e1 c)
-       (compile-tail-e e2 c s)))
+       (compile-tail-e e2 c)))
 
 ;; Id Expr Expr CEnv -> Asm
 (define (compile-let x e1 e2 c)
@@ -297,10 +413,10 @@
        (Add rsp 8)))
 
 ;; Id Expr Expr CEnv -> Asm
-(define (compile-tail-let x e1 e2 c s)
+(define (compile-tail-let x e1 e2 c)
   (seq (compile-e e1 c)
        (Push rax)
-       (compile-tail-e e2 (cons x c) s)
+       (compile-tail-e e2 (cons x c))
        (Add rsp 8)))
 
 ;; CEnv -> Asm
@@ -336,11 +452,22 @@
        [#t 0]
        [#f (+ 8 (lookup x rest))])]))
 
-(define (in-frame cenv)
+;; CEnv -> Integer
+(define (lookup-pc cenv)
+  (define (look c)
+    (match c
+      ['() (error "This should never be the case: No prog-counter found" cenv)]
+      [(cons y rest)
+       (match (eq? pc y)
+         [#t 0]
+         [#f (+ 8 (look rest))])]))
+  (look cenv))
+
+(define (in-frames cenv)
   (match cenv
     ['() 0]
-    [(cons #f rest) 0]
-    [(cons y rest)  (+ 1 (in-frame rest))]))
+    [(cons pad rest) 0]
+    [(cons y rest)   (+ 1 (in-frames rest))]))
 
 (define (assert-type mask type)
   (λ (arg)
