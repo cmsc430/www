@@ -35,13 +35,13 @@
                (list @wk{9/21}
 	             ""
                      @itemlist[@item{@secref["Dodger"], (@link["https://youtu.be/-SuINAKs7gE"]{video})}
-                               @item{@secref["Evildoer"]}]
-                     @itemlist[@item{@secref["Extort"]}
-                               @item{@secref["Fraud"]}])
+                               @item{Semantics, Correctness, Testing}]
+                     @elem{@secref["Evildoer"]})
                                     
                (list @wk{9/28}
 	       	     @seclink["Assignment 3"]{A3}
-		     "TBD"
+		     @itemlist[@item{@secref["Extort"]}
+                               @item{@secref["Fraud"]}]
 		     "TBD")
                
                (list @wk{10/5}
