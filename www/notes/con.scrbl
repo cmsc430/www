@@ -262,6 +262,11 @@ The complete compiler code is:
 
 @codeblock-include["con/compile.rkt"]
 
+Mirroring the change we made to the interpreter, we separate out a
+module for compiling primitives:
+
+@codeblock-include["con/compile-prim.rkt"]
+
 Let's take a look at a few examples:
 @ex[
 (define (show s)
