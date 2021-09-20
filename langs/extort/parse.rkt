@@ -5,10 +5,10 @@
 ;; S-Expr -> Expr
 (define (parse s)
   (match s
-    [(integer? s) (Int s)]
-    [(boolean? s) (Bool s)]
-    [(char? s)    (Char s)]    
-    ['eof         (Eof)]
+    [(? integer? s) (Int s)]
+    [(? boolean? s) (Bool s)]
+    [(? char? s)    (Char s)]    
+    ['eof           (Eof)]
     [(list (? op0? o))    (Prim0 o)]
     [(list (? op1? o) e)  (Prim1 o (parse e))]
     [(list 'begin e1 e2)  (Begin (parse e1) (parse e2))]
