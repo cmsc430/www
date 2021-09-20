@@ -1,6 +1,6 @@
 #lang racket
 (provide (all-defined-out))
-(require "ast.rkt" a86/ast)
+(require "ast.rkt" a86/ast "compile-prim.rkt")
 
 ;; Expr -> Asm
 (define (compile e)
