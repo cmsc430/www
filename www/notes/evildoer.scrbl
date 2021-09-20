@@ -142,7 +142,7 @@ expression for its result.
 
 
 Abstract syntax and parsing is done as you would expect.
-Since we now have primitive operations that take 0 argument,
+Since we now have primitive operations that take 0 arguments,
 we split the @racket[Prim] constructor into @racket[Prim0]
 and @racket[Prim1].
 
@@ -177,7 +177,7 @@ don't @emph{produce} any value. Or more precisely, they
 print and then produce a value that indicates "no useful
 value has been produced." In OCaml, this value is called
 "unit"; in Racket, it's called "void." When the REPL is
-given an expression that produces void as it's result, it
+given an expression that produces void as its result, it
 doesn't show anything. Here's any example that uses the
 Racket @racket[void] function, which simply returns the void
 value:
