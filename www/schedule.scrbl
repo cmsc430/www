@@ -36,7 +36,7 @@
 	             ""
                      @itemlist[@item{@secref["Dodger"], (@link["https://youtu.be/-SuINAKs7gE"]{video})}
                                @item{Semantics, Correctness, Testing}]
-                     @elem{@secref["Evildoer"]})
+                     @elem{@secref["Evildoer"], (@link["https://youtu.be/ouOgFdbT9fk"]{video})})
                                     
                (list @wk{9/28}
 	       	     @seclink["Assignment 3"]{A3}
