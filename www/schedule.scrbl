@@ -40,8 +40,8 @@
                                     
                (list @wk{9/28}
 	       	     @seclink["Assignment 3"]{A3}
-		     @itemlist[@item{@secref["Extort"]}
-                               @item{@secref["Fraud"]}]
+		     @itemlist[@item{@secref["Extort"], (@link["https://youtu.be/4lU-0i5sl-Q"]{video})}
+                               @item{@secref["Fraud"], (@link["https://youtu.be/XmezNX4qfWE"]{video})}]
 		     "TBD")
                
                (list @wk{10/5}
