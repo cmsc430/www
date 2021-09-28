@@ -82,7 +82,7 @@
           (Sar rax char-shift)
           (Sal rax int-shift))]
     ['integer->char
-     (seq assert-codepoint
+     (seq (assert-codepoint)
           (Sar rax int-shift)
           (Sal rax char-shift)
           (Xor rax type-char))]
@@ -128,7 +128,7 @@
 (define assert-char
   (assert-type mask-char type-char))
 
-(define assert-codepoint
+(define (assert-codepoint)
   (let ((ok (gensym)))
     (seq assert-integer
          (Cmp rax (value->bits 0))

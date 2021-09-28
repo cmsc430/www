@@ -64,7 +64,10 @@
   (check-equal? (run '(integer->char -1)) 'err)
   (check-equal? (run '(write-byte #f)) 'err)
   (check-equal? (run '(write-byte -1)) 'err)
-  (check-equal? (run '(write-byte 256)) 'err))
+  (check-equal? (run '(write-byte 256)) 'err)
+  (check-equal? (run '(begin (integer->char 97)
+                             (integer->char 98)))
+                #\b))
 
 (test-runner (λ (e) (interp (parse e))))
 (test-runner (λ (e) (match (asm-interp (compile (parse e)))
@@ -85,7 +88,7 @@
                 (cons (void) "ab"))
 
   (check-equal? (run '(peek-byte) "ab") (cons 97 ""))
-  (check-equal? (run '(begin (peek-byte) (read-byte)) "ab") (cons 97 ""))
+  (check-equal? (run '(begin (peek-byte) (read-byte)) "ab") (cons 97 ""))  
   ;; Extort examples
   (check-equal? (run '(write-byte #t) "") (cons 'err "")))
 
