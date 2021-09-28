@@ -9,5 +9,5 @@
   (let ((p (open-input-file fn)))
     (begin
       (read-line p) ; ignore #lang racket line
-      (displayln (interp (parse (read p))))
+      (writeln (interp (parse (read p))))
       (close-input-port p))))
