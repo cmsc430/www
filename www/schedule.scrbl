@@ -45,7 +45,7 @@
                
                (list @wk{10/5}
 	       	     ""
-                     "TBD"
+                     @elem{@secref["Fraud"], cont. (@link["https://youtu.be/XmezNX4qfWE"]{video})}
                      @elem{Exam Review})
                
                (list @wk{10/12}
