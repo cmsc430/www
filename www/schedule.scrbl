@@ -55,7 +55,7 @@
 
                (list @wk{10/19}                     
 	       	     @tbaseclink["Assignment 4"]{A4}
-                     @elem{@secref["Hustle"]}
+                     @elem{@secref["Hustle"], cont. (@link["https://youtu.be/SwKc_FeEmHk"]{video})}
                      @elem{@secref["Iniquity"]})
 		                    
                (list @wk{10/26}
