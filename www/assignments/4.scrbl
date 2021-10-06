@@ -7,35 +7,32 @@
 
 @(require "../notes/ev.rkt")
 
-@bold{Due: Tuesday, March 23rd at 11:59PM EST}
+@bold{Due: Tuesday, Oct 19th at 11:59PM EST}
 
-@(define repo "https://github.com/cmsc430/assign04")
+The goal of this assignment is to extend a compiler with binding
+forms and primitives that can take any number of arguments.
 
-The goal of this assignment is to extend a compiler with binding forms. 
-
-Assignment repository:
-@centered{@link[repo repo]}
-
-You are given a repository with a starter compiler similar to the
-@seclink["Fraud"]{Fraud} language we studied in class.  You are tasked
-with:
+You are given a zip file on ELMS with a starter compiler similar to
+the @seclink["Fraud"]{Fraud} language we studied in class.  You are
+tasked with:
 
 @itemlist[
 
-@item{incorporating the Con+ features you added in
+@item{incorporating the language features you added in
 @seclink["Assignment 3"]{Assignment 3},}
 
 @item{extending the addition primitive to handle an arbitrary number of arguments,}
 
 @item{extending the @racket[let]-binding form of the language to bind any number of variables, and}
 
-@item{extending the @racket[let]-binding form of the language to allow back-references (@racket[let*]).}
+@item{adding a @racket[let*]-binding form to the language to allow back-references.}
 ]
 
-@section[#:tag-prefix "a4-" #:style 'unnumbered]{From Con+ and Dupe+ to Fraud+}
+@section[#:tag-prefix "a4-" #:style 'unnumbered]{From Dupe+ to Fraud+}
 
-Implement the @racket[abs], unary @racket[-] and @racket[not]
-operations and the @racket[cond] form from @seclink["Assignment 3"]{Assignment 3}.
+Implement the @racket[abs], unary @racket[-], and @racket[not]
+operations and the @racket[cond] and @racket[case] forms from
+@seclink["Assignment 3"]{Assignment 3}.
 
 Unlike Assignment 3, the AST struct definitions and parsing code are
 provided. Study the relevant parts in @tt{ast.rkt} and @tt{parse.rkt},
@@ -51,33 +48,6 @@ While you're at it, implement the predicates @racket[integer?] and
 @racket[boolean?] for checking the type of an argument, modeled by
 @racket[char?] which was covered in the lectures.
 
-In case it's helpful, the formal semantics of @racket[cond] are defined as:
-
-@(define ((rewrite s) lws)
-   (define lhs (list-ref lws 2))
-   (define rhs (list-ref lws 3))
-   (list "" lhs (string-append " " (symbol->string s) " ") rhs ""))
-
-@(require (only-in racket add-between))
-@(define-syntax-rule (show-judgment name i j)
-   (with-unquote-rewriter
-      (lambda (lw)
-        (build-lw (lw-e lw) (lw-line lw) (lw-line-span lw) (lw-column lw) (lw-column-span lw)))
-      (with-compound-rewriters (['+ (rewrite '+)]
-                                ['- (rewrite '–)]
-                                ['= (rewrite '=)]
-				['!= (rewrite '≠)])
-        (apply centered
-	   (add-between 
-             (build-list (- j i)
-	                 (λ (n) (begin (judgment-form-cases (list (+ n i)))
-	                               (render-judgment-form name))))
-             (hspace 4))))))
-
-@(show-judgment 𝑭-𝒆𝒏𝒗 0 1)
-@(show-judgment 𝑭-𝒆𝒏𝒗 1 2)
-@(show-judgment 𝑭-𝒆𝒏𝒗 2 3)
-
 
 The following files have already been updated for you:
 @itemlist[
@@ -90,34 +60,29 @@ You will need to modify:
 @item{@tt{compile.rkt}}
 @item{@tt{interp.rkt}}
 @item{@tt{interp-prim.rkt}}
-@item{@tt{types.rkt}}
 ]
 to correctly implement these features.
 
 You do not necessarily need to change all of these files depending on
 your design choices, but you shouldn't alter any other files for
-Gradescope to work. If you feel that modifying a different file leads
-to a more natural/intuitive design - reach out! We'll be happy to see
-a different approach and possibly extend our infrastructure to handle
-that.
+Gradescope to work.
 
 @section[#:tag-prefix "a4-" #:style 'unnumbered]{From Binary to Variadic Addition}
 
 In Fraud, we implemented a binary operation for addition. However,
 Racket supports an arbitrary number of arguments for @racket[+]. Your
-job is to extend the parser, interpreter, and compiler to behave
-similarly.
+job is to extend the interpreter and compiler to behave similarly.
 
 The following file have already been updated for you:
 
 @itemlist[
 @item{@tt{ast.rkt}}
+@item{@tt{parse.rkt}}
 ]
 
 You will need to modify
 @itemlist[
 @item{@tt{compile.rkt}}
-@item{@tt{parse.rkt}}
 @item{@tt{interp.rkt}}
 @item{@tt{interp-prim.rkt}}
 ]
@@ -148,25 +113,19 @@ in the right-hand-sides of any of the @racket[let].
 For example, @racketblock[(let ((x 1) (y x)) 0)] is a syntax error
 because the occurrence of @racket[x] is not bound.
 
-To capture that behavior, you need to implement:
+The following file have already been updated for you:
 
-@itemize[
-@item{@code[#:lang "racket"]{well-formed? ; Expr -> Boolean} in @tt{parse.rkt},
-which consumes
-an expression and determines if it is a well-formed expression, i.e. it
-must be an instance of an @tt{Expr} @emph{and} each @racket[let]
-expression must bind a distinct set of variables, while the bodies of the
-let-bindings only reference variables that are available in the context
-prior to the let.
-We have provided a new struct in @tt{ast.rkt}, @racket[IllFormedError]
-that is raised by the parser when the expression read fails the
-@racket[well-formed] check.
-}
-
-@item{The parser, interpeter, and compiler functionality to correctly
-handle the generalized form of @racket[let].  The compiler may assume
-the input is a @racket[well-formed] expression.}
+@itemlist[
+@item{@tt{ast.rkt}}
+@item{@tt{parse.rkt}}
 ]
+
+You will need to modify
+@itemlist[
+@item{@tt{compile.rkt}}
+@item{@tt{interp.rkt}}
+]
+to correctly implement the generalized form of @racket[let].
 
 @section[#:tag-prefix "a4-" #:style 'unnumbered]{Back-Referencing Let}
 
@@ -187,10 +146,23 @@ to occur, so @racket[(let* () _e)] is valid syntax and is equivalent to
 @racket[_e].
 
 Unlike @racket[let], @racketblock[(let* ((x 1) (y x)) 0)] is @emph{not} a syntax
-error and should not produce an @racket[IllFormedError].
+error.
 
-Update the parser, interpreter, and compiler to implement
-this different form of let-binding.
+The following file have already been updated for you:
+
+@itemlist[
+@item{@tt{ast.rkt}}
+@item{@tt{parse.rkt}}
+]
+
+You will need to modify
+@itemlist[
+@item{@tt{compile.rkt}}
+@item{@tt{interp.rkt}}
+]
+to correctly implement the generalized form of @racket[let*].
+
+HINT: what would a lazy compiler writer do?
 
 @section[#:tag-prefix "a4-" #:style 'unnumbered]{Testing}
 
@@ -208,18 +180,14 @@ You can test your code in several ways:
 Note that only a small number of tests are given to you, so you should
 write additional test cases.
 
-@bold{We provide a @tt{random-exprs.rkt} module which provides
-@racket[exprs], a list of 500 randomly-generated closed expressions. You can use
-them freely to test various properties of your interpreter or compiler.}
-
 @section[#:tag-prefix "a4-" #:style 'unnumbered]{Submitting}
 
 You should submit on Gradescope. You should submit a zip file that has
 exactly the same structure that the stub contains. We will only use
-the @tt{parse.rkt}, @tt{compile.rkt}, @tt{interp.rkt}, @tt{types.rkt}
-and @tt{interp-prim.rkt} files for grading, so make sure all your work
-is contained there! Note the lack of @tt{ast.rkt} - part of assignment
-3 was learning to design your own structures, part of assignment 4 is
+the @tt{compile.rkt}, @tt{interp.rkt}, and @tt{interp-prim.rkt} files
+for grading, so make sure all your work is contained there! Note the
+lack of @tt{ast.rkt}, @tt{parse.rkt}, etc. - part of assignment 3 was
+learning to design your own structures, part of assignment 4 is
 learning to work within the constraints of an existing design!
 
 

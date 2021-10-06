@@ -54,7 +54,7 @@
                      @elem{Exam Q+A})
 
                (list @wk{10/19}                     
-	       	     @tbaseclink["Assignment 4"]{A4}
+	       	     @seclink["Assignment 4"]{A4}
                      @elem{@secref["Hustle"]}
                      @elem{@secref["Iniquity"]})
 		                    
