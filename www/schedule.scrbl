@@ -46,17 +46,19 @@
                (list @wk{10/5}
 	       	     ""
                      @elem{@secref["Fraud"], cont. (@link["https://youtu.be/XmezNX4qfWE"]{video})}
-                     @elem{Exam Review})
+                     @itemlist[@item{Exam Review}
+		               @item{@secref["Hustle"] (@link["https://youtu.be/SwKc_FeEmHk"]{video})}])
                
                (list @wk{10/12}
 	       	     @bold{@seclink["Midterm_1"]{M1}}
                      @elem{No lecture (exam)}
-                     @elem{Exam Q+A})
+                     @itemlist[@item{Exam Q+A}
+		               @item{@secref["Iniquity"]}])
 
                (list @wk{10/19}                     
 	       	     @seclink["Assignment 4"]{A4}
-                     @elem{@secref["Hustle"] (@link["https://youtu.be/SwKc_FeEmHk"]{video})}
-                     @elem{@secref["Iniquity"]})
+                     @elem{TBD}
+                     @elem{TBD})
 		                    
                (list @wk{10/26}
                      ""
