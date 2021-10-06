@@ -8,7 +8,7 @@
 ;; | (Char Character)
 ;; | (Prim0 Op0)
 ;; | (Prim1 Op1 Expr)
-;; | (Prim2 Op2 Op2 Expr)
+;; | (Prim2 Op2 Expr Expr)
 ;; | (If Expr Expr Expr)
 ;; | (Begin Expr Expr)
 ;; | (Let Id Expr Expr)
