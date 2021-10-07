@@ -27,9 +27,10 @@
 
 (define op1
   '(add1 sub1 zero? char? write-byte eof-object?
-         integer->char char->integer box unbox empty? car cdr))
+         integer->char char->integer
+         box unbox empty? cons? box? car cdr))
 (define op2
-  '(+ - eq? cons))
+  '(+ - cons))
 
 (define (op? ops)
   (λ (x)

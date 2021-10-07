@@ -19,8 +19,8 @@
 ;;           | 'char? | 'integer->char | 'char->integer
 ;;           | 'write-byte | 'eof-object?
 ;;           | 'box | 'car | 'cdr | 'unbox
-;;           | 'empty?
-;; type Op2  = '+ | '- | 'eq?
+;;           | 'empty? | 'cons? | 'box?
+;; type Op2  = '+ | '-
 ;;           | 'cons
 (struct Eof   ()           #:prefab)
 (struct Empty ()           #:prefab)

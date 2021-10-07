@@ -93,7 +93,13 @@
   ;; Hustle examples
   (check-equal? (run '(unbox (box 7))) 7)
   (check-equal? (run '(let ((x (box 2))) (unbox x))) 2)
-  (check-equal? (run '(let ((x (cons 2 '()))) (car x))) 2))
+  (check-equal? (run '(let ((x (cons 2 '()))) (car x))) 2)
+  (check-equal? (run '(box? (box 7))) #t)
+  (check-equal? (run '(cons? (box 7))) #f)
+  (check-equal? (run '(box? (cons 7 8))) #f)
+  (check-equal? (run '(cons? (cons 7 8))) #t)
+  (check-equal? (run '(empty? '())) #t)
+  (check-equal? (run '(empty? 7)) #f))
 
 (test-runner (λ (e) (interp (parse e))))
 (test-runner (λ (e) (unload/free (asm-interp (compile (parse e))))))

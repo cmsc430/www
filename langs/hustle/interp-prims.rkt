@@ -18,6 +18,8 @@
     [(list 'car (? pair?))                (car v)]
     [(list 'cdr (? pair?))                (cdr v)]
     [(list 'empty? v)                     (empty? v)]
+    [(list 'cons? v)                      (cons? v)]
+    [(list 'box? v)                       (box? v)]
     [_                                    'err]))
 
 ;; Op2 Value Value -> Answer
@@ -25,7 +27,6 @@
   (match (list p v1 v2)
     [(list '+ (? integer?) (? integer?))  (+ v1 v2)]
     [(list '- (? integer?) (? integer?))  (- v1 v2)]
-    [(list 'eq? v1 v2)                    (eqv? v1 v2)]
     [(list 'cons v1 v2)                   (cons v1 v2)]
     [_                                    'err]))
 
