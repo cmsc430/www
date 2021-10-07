@@ -41,9 +41,31 @@ this restriction.
 Boxes are like unary pairs, they simply hold a value, which can be
 projected out.  Pairs hold two values which each can be projected out.
 
+To see how values are now inductively defined notice that if you have
+a value @racket[_v], you can make anoter value with @racket[(box _v)].
+Similarly, if @racket[_v1] and @racket[_v2] are values, then so is
+@racket[(cons _v1 _v2)].  This suggests the following recursive type
+definition for values:
+
+@#reader scribble/comment-reader
+(racketblock
+;; type Value =
+;; | Integer
+;; | Boolean
+;; | Character
+;; | Eof
+;; | Void
+;; | '()
+;; | (cons Value Value)
+;; | (box Value)
+)
+
+
 The new operations include constructors @racket[(box _e)] and
 @racket[(cons _e0 _e1)] and projections @racket[(unbox _e)],
-@racket[(car _e)], and @racket[(cdr _e)].
+@racket[(car _e)], and @racket[(cdr _e)].  We'll also include
+predicates for identifying boxes and pairs: @racket[(box? _e)] and
+@racket[(cons? _e)].
 
 @margin-note{Usually boxes are @emph{mutable} data structures, like
 OCaml's @tt{ref} type, but we will examine this aspect later.  For now,
@@ -54,17 +76,23 @@ These features will operate like their Racket counterparts:
 (unbox (box 7))
 (car (cons 3 4))
 (cdr (cons 3 4))
+(box? (box 7))
+(cons? (cons 3 4))
+(box? (cons 3 4))
+(cons? (box 7))
 ]
 
 @section{Empty lists can be all and end all}
 
-Inductive data types are useful for creating a wide variety of data structures.
-Their practicality can be somewhat limited when their structure is unknown: Is
-the second element in a @racket[cons] important?  Or is it there because
-@emph{something} has to be there? For this reason, many languages that provide
-inductive data types also have an @emph{empty} or @emph{nil} value (this should
-not be confused with @tt{null} in languages like C!). In Racket, and in our
-languages, we write this value as @racket['()].
+While we've introduced pairs, you may wonder what about @emph{lists}?
+Just as in Racket, lists can be represented by idiomatic uses of
+@racket[cons]: a non-empty list is a pair whose @racket[car] is an
+element and whose @racket[cdr] is the rest of the list.  What's left?
+We need a representation of the empty list!
+
+In Racket, and in our languages, we write this value as @racket['()].
+There's nothing particularly special about the empty list value, we
+just need another distinguished value to designate it.
 
 Using @racket[cons] and @racket['()] in a structured way we can form
 @emph{proper list}, among other useful data structures.
@@ -80,7 +108,7 @@ We can model this as an AST data type:
 ;; type Expr = ...
 ;;           | (Empty)
 ;; type Op1 = ...
-;;          | 'box | 'car | 'cdr | 'unbox
+;;          | 'box | 'car | 'cdr | 'unbox | 'box? | 'cons?
 ;; type Op2 = ...
 ;;          | 'cons
 }
