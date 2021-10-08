@@ -835,7 +835,7 @@ interpreter will signal an error:
 (eval:error (interp (parse '(if (zero? #t) 7 8))))
 ]
 
-On the hand, the compiler may produce bits that are illegal
+On the other hand, the compiler may produce bits that are illegal
 or, even worse, simply do something by misinterpreting the
 meaning of the bits:
 @ex[
