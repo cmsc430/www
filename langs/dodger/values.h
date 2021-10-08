@@ -11,7 +11,7 @@ typedef enum type_t {
   /* immediates */
   T_INT,
   T_BOOL,
-  T_CHAR
+  T_CHAR,
 } type_t;
 
 typedef uint32_t val_char_t;
