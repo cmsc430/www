@@ -7,17 +7,24 @@ else
   format=elf64
 endif
 
-%.run: %.o main.o char.o
-	gcc main.o char.o $< -o $@
+objs = \
+	main.o \
+	values.o \
+	char.o
 
-main.o: main.c types.h
-	gcc -c main.c -o main.o
+default: runtime.o
 
-char.o: char.c types.h
-	gcc -c char.c -o char.o
+runtime.o: $(objs)
+	ld -r $(objs) -o runtime.o
 
-%.o: %.s
-	nasm -f $(format) -o $@ $<
+%.run: %.o runtime.o
+	gcc runtime.o $< -o $@
+
+.c.o:
+	gcc -fPIC -c -g -o $@ $<
+
+.s.o:
+	nasm -g -f $(format) -o $@ $<
 
 %.s: %.rkt
 	racket -t compile-file.rkt -m $< > $@
@@ -25,5 +32,5 @@ char.o: char.c types.h
 clean:
 	rm *.o *.s *.run
 
-test: 42.run
-	@test "$(shell ./42.run)" = "42"
+test: example.run
+	@test "$(shell ./example.run)" = "$(shell racket example.rkt)"
