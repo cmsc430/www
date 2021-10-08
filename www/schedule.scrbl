@@ -51,9 +51,8 @@
                
                (list @wk{10/12}
 	       	     @bold{@seclink["Midterm_1"]{M1}}
-                     @elem{No lecture (exam)}
-                     @itemlist[@item{Exam Q+A}
-		               @item{@secref["Iniquity"]}])
+                     @elem{@secref["Hustle"], cont. (@link["https://youtu.be/SwKc_FeEmHk"]{video})}
+                     @elem{No lecture (exam)})
 
                (list @wk{10/19}                     
 	       	     @seclink["Assignment 4"]{A4}
