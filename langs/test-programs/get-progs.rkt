@@ -47,9 +47,11 @@
   (check-true (make p.run))
   (if (file-exists? p.in)
       (check-equal? (run/io p.run p.in)
-                    (racket/io p.rkt p.in))
+                    (racket/io p.rkt p.in)
+                    p.rkt)
       (check-equal? (run p.run)
-                    (racket p.rkt))))
+                    (racket p.rkt)
+                    p.rkt)))
 
 (define (system/s cmd)
   (with-output-to-string (thunk (system cmd))))
