@@ -17,7 +17,7 @@ typedef enum type_t {
 type_t val_typeof(val_t x);
 
 /**
- * Wrap/unwrap villain values
+ * Wrap/unwrap values
  *
  * The behavior of unwrap functions are undefined on type mismatch.
  */

@@ -4,7 +4,7 @@
 #include "values.h"
 
 val_t entry();
-void print_result(int64_t);
+void print_result(val_t);
 
 int main(int argc, char** argv)
 {
