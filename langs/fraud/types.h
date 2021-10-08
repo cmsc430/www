@@ -1,3 +1,6 @@
+#ifndef TYPES_H
+#define TYPES_H
+
 /*
   Bit layout of values
 
@@ -21,3 +24,5 @@
 #define val_false ((1 << char_shift) | nonchar_type_tag)
 #define val_eof   ((2 << char_shift) | nonchar_type_tag)
 #define val_void  ((3 << char_shift) | nonchar_type_tag)
+
+#endif
