@@ -2,83 +2,97 @@
 #include <inttypes.h>
 #include <stdlib.h>
 #include "types.h"
+#include "values.h"
 #include "runtime.h"
 
 FILE* in;
 FILE* out;
 void (*error_handler)();
-int64_t *heap;
+val_t *heap;
 
-void print_result(int64_t);
+void print_result(val_t);
+void print_char(val_char_t);
+void print_cons(val_cons_t*);
 
-void error_exit() {
+void error_exit()
+{
   printf("err\n");
   exit(1);
 }
 
-void raise_error() {
+void raise_error()
+{
   return error_handler();
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
   in = stdin;
   out = stdout;
   error_handler = &error_exit;
-  heap = malloc(8 * heap_size); // 8-byte words * number of words we want
+  heap = malloc(8 * heap_size);
 
-  // `heap` gets passed in `rdi`
-  // (defined by the calling convention, not up to us!)
-  int64_t result = entry(heap);
-  // See if we need to print the initial tick
-  if (cons_type_tag == (ptr_type_mask & result)) printf("'");
+  int64_t result;
+
+  result = entry(heap);
+
   print_result(result);
-  if (result != val_void) printf("\n");
-  free(heap); // good memory hygiene
+  if (val_typeof(result) != T_VOID)
+    putchar('\n');
+
+  free(heap);
   return 0;
 }
 
-void print_char(int64_t);
-void print_cons(int64_t);
-
-void print_result(int64_t result) {
-  if (cons_type_tag == (ptr_type_mask & result)) {
-    printf("(");
-    print_cons(result);
-    printf(")");
-  } else if (box_type_tag == (ptr_type_mask & result)) {
+void print_result(val_t x)
+{
+  switch (val_typeof(x)) {
+  case T_INT:
+    printf("%" PRId64, val_unwrap_int(x));
+    break;
+  case T_BOOL:
+    printf(val_unwrap_bool(x) ? "#t" : "#f");
+    break;
+  case T_CHAR:
+    print_char(val_unwrap_char(x));
+    break;
+  case T_EOF:
+    printf("#<eof>");
+    break;
+  case T_VOID:
+    break;
+  case T_EMPTY:
+    printf("'()");
+    break;
+  case T_BOX:
     printf("#&");
-    print_result (*((int64_t *)(result ^ box_type_tag)));
-  } else if (int_type_tag == (int_type_mask & result)) {
-    printf("%" PRId64, result >> int_shift);
-  } else if (char_type_tag == (char_type_mask & result)) {
-    print_char(result);
-  } else {
-    switch (result) {
-    case val_true:
-      printf("#t"); break;
-    case val_false:
-      printf("#f"); break;
-    case val_eof:
-      printf("#<eof>"); break;
-    case val_empty:
-      printf("()"); break;
-    case val_void:
-      /* nothing */ break;
-    }
-  }  
+    print_result(val_unwrap_box(x)->val);
+    break;
+  case T_CONS:
+    printf("'(");
+    print_cons(val_unwrap_cons(x));
+    printf(")");
+    break;
+  case T_INVALID:
+    printf("internal error");
+  }
 }
 
-void print_cons(int64_t a) {  
-  int64_t car = *((int64_t *)((a + 8) ^ cons_type_tag));
-  int64_t cdr = *((int64_t *)((a + 0) ^ cons_type_tag));
-  print_result(car);
-  if (cdr == val_empty) {
+void print_cons(val_cons_t *cons)
+{
+  print_result(cons->fst);
+
+  switch (val_typeof(cons->snd)) {
+  case T_EMPTY:
     // nothing
-  } else if (cons_type_tag == (ptr_type_mask & cdr)) {
+    break;
+  case T_CONS:
     printf(" ");
-    print_cons(cdr);
-  } else {
+    print_cons(val_unwrap_cons(cons->snd));
+    break;
+  default:
     printf(" . ");
-    print_result(cdr);
+    print_result(cons->snd);
+    break;
   }
 }
