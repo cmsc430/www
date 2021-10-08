@@ -1,25 +1,25 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include "types.h"
+#include "values.h"
 #include "runtime.h"
 
-int64_t read_byte(void) {
+val_t read_byte(void)
+{
   char c = getc(in);
-  return (c == EOF) ?
-    val_eof :
-    (int64_t)(c << int_shift);
+  return (c == EOF) ? val_wrap_eof() : val_wrap_int(c);  
 }
 
-int64_t peek_byte(void) {
+val_t peek_byte(void)
+{
   char c = getc(in);
   ungetc(c, in);
-  return (c == EOF) ?
-    val_eof :
-    (int64_t)(c << int_shift);
+  return (c == EOF) ? val_wrap_eof() : val_wrap_int(c);
+  
 }
 
-int64_t write_byte(int64_t c) {
-  int64_t codepoint = c >> int_shift;
-  putc((char) codepoint, out);
-  return 0;
+val_t write_byte(val_t c)
+{
+  putc((char) val_unwrap_int(c), out);
+  return val_wrap_void();
 }
