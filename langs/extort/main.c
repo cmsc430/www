@@ -57,7 +57,6 @@ void print_result(val_t x)
   case T_VOID:
     break;    
   case T_INVALID:
-  default:
     printf("internal error");
   }
 }

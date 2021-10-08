@@ -29,9 +29,7 @@ void print_result(val_t x)
     print_char(val_unwrap_char(x));    
     break;
   case T_INVALID:
-  default:
     printf("internal error");
   }
   printf("\n");
-
 }

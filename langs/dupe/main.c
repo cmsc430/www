@@ -25,7 +25,6 @@ void print_result(val_t x)
     printf(val_unwrap_bool(x) ? "#t" : "#f");
     break;
   case T_INVALID:
-  default:
     printf("internal error");
   }
   printf("\n");
