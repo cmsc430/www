@@ -1,13 +1,15 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include "types.h"
+#include "values.h"
 
-void print_codepoint(int64_t);
+void print_codepoint(val_char_t);
+int utf8_encode_char(val_char_t, char *);
 
-void print_char (int64_t v) {
-  int64_t codepoint = v >> char_shift;
+void print_char(val_char_t c)
+{
   printf("#\\");
-  switch (codepoint) {
+  switch (c) {
   case 0:
     printf("nul"); break;
   case 8:
@@ -27,31 +29,38 @@ void print_char (int64_t v) {
   case 127:
     printf("rubout"); break;
   default:
-    print_codepoint(v);
+    print_codepoint(c);
   }
 }
 
-void print_codepoint(int64_t v) {
-  int64_t codepoint = v >> char_shift;
-  // Print using UTF-8 encoding of codepoint
+void print_codepoint(val_char_t c)
+{
+  static char buffer[5] = {0};
+  utf8_encode_char(c, buffer);
+  printf("%s", buffer);
+}
+
+int utf8_encode_char(val_char_t c, char *buffer)
+{
+  // Output to buffer using UTF-8 encoding of codepoint
   // https://en.wikipedia.org/wiki/UTF-8
-  if (codepoint < 128) {
-    printf("%c", (char) codepoint);
-  } else if (codepoint < 2048) {
-    printf("%c%c",
-	   (char)(codepoint >> 6) | 192,
-	   ((char)codepoint & 63) | 128);
-  } else if (codepoint < 65536) {
-    printf("%c%c%c",
-	   (char)(codepoint >> 12) | 224,
-	   ((char)(codepoint >> 6) & 63) | 128,
-	   ((char)codepoint & 63) | 128);
+  if (c < 128) {
+    buffer[0] = (char) c;
+    return 1;
+  } else if (c < 2048) {
+    buffer[0] =  (char)(c >> 6)       | 192;
+    buffer[1] = ((char)       c & 63) | 128;
+    return 2;
+  } else if (c < 65536) {
+    buffer[0] =  (char)(c >> 12)      | 224;
+    buffer[1] = ((char)(c >> 6) & 63) | 128;
+    buffer[2] = ((char)       c & 63) | 128;
+    return 3;
   } else {
-    printf("%c%c%c%c",
-	   (char)(codepoint >> 18) | 240,
-	   ((char)(codepoint >> 12) & 63) | 128,
-	   ((char)(codepoint >> 6) & 63) | 128,
-	   ((char)codepoint & 63) | 128);
+    buffer[0] =  (char)(c >> 18)       | 240;
+    buffer[1] = ((char)(c >> 12) & 63) | 128;
+    buffer[2] = ((char)(c >>  6) & 63) | 128;
+    buffer[3] = ((char)        c & 63) | 128;
+    return 4;
   }
 }
-

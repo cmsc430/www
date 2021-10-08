@@ -7,26 +7,31 @@ else
   format=elf64
 endif
 
+objs = \
+	main.o \
+	values.o \
+	char.o \
+	io.o
+
+default: runtime.o
+
+runtime.o: $(objs)
+	ld -r $(objs) -o runtime.o
+
 %.run: %.o runtime.o
 	gcc runtime.o $< -o $@
 
-runtime.o: main.o char.o io.o
-	ld -r main.o char.o io.o -o runtime.o
+.c.o:
+	gcc -fPIC -c -g -o $@ $<
 
-main.o: main.c types.h runtime.h
-	gcc -fPIC -c main.c -o main.o
-
-char.o: char.c types.h
-	gcc -fPIC -c char.c -o char.o
-
-io.o: io.c runtime.h
-	gcc -fPIC -c io.c -o io.o
-
-%.o: %.s
-	nasm -f $(format) -o $@ $<
+.s.o:
+	nasm -g -f $(format) -o $@ $<
 
 %.s: %.rkt
 	racket -t compile-file.rkt -m $< > $@
 
 clean:
 	rm *.o *.s *.run
+
+test: example.run
+	@test "$(shell ./example.run)" = "$(shell racket example.rkt)"
