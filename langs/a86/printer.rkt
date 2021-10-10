@@ -164,4 +164,6 @@
       tab "section .text\n"
       (instrs->string a))]
     [_
+     (instrs->string a)
+     #;
      (error "program does not have an initial label")]))

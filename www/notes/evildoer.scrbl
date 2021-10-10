@@ -390,7 +390,7 @@ functions called @racket[read_byte], @racket[peek_byte] and
 The main novely of the @emph{compiler} will be that emits code
 to make calls to these C functions.
 
-@section{Calling C functions from a86}
+@section[#:tag "calling-c"]{Calling C functions from a86}
 
 If you haven't already, be sure to read up on how calls work
 in @secref{a86}.

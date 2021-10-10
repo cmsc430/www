@@ -543,85 +543,63 @@ the stack.  After exiting the let, the stack can be popped.
 
 Suppose we want to compile @racket[(let ((x 7)) (let ((y 2)) (add1
 x)))].  Using the intuition developed so far, we should push 7, push
-8, and then run the body.  But notice that the value of @racket['x] is
-no longer on the top of the stack; @racket[y] is.  So to retrieve the
-value of @racket[x] we need skip past the @racket[y].  But calculating
-these offsets is pretty straightforward.  In this example there is one
-binding between the binding of @racket[x] and this occurrence.  Since
-we push every time we enter a let and pop every time we leave, the
-number of bindings between an occurrence and its binder is exactly the
-offset from the top of the stack we need use; in other words, the compiler
-uses lexical addresses just like the alternative interperter above
-and the stack of values plays the role of the run-time envivornment.
+2, and then run the body.
 
-Here are the relevant parts of the compiler:
+@#reader scribble/comment-reader
+(racketblock
+(seq (Mov 'rax (values->bits 7))
+     (Push 'rax)
+     (Mov 'rax (values->bits 2))
+     (Push 'rax)))
 
-@filebox-include-fake[codeblock "fraud/compile.rkt"]{
-;; Expr CEnv -> Asm
-(define (compile-e e c)
-  (match e
-    ; ...
-    [(Var x)         (compile-variable x c)]
-    [(Let x e1 e2)   (compile-let x e1 e2 c)]))
+But notice that the value of @racket[x] is no longer on the top of the
+stack; @racket[y] is.  So to retrieve the value of @racket[x] we need
+skip past the @racket[y].  But calculating these offsets is pretty
+straightforward.  In this example there is one binding between the
+binding of @racket[x] and this occurrence, so to reference @racket[x],
+load the second element on the stack.  The complete expression can be
+compiled as:
 
-;; Id CEnv -> Asm
-(define (compile-variable x c)
-  (let ((i (lookup x c)))
-    (seq (Mov rax (Offset rsp i)))))
+@#reader scribble/comment-reader
+(racketblock
+(seq (Mov 'rax (values->bits 7))
+     (Push 'rax)
+     (Mov 'rax (values->bits 2))
+     (Push 'rax)
+     ; (add1 x)
+     (Mov 'rax (Offset 'rsp 8))
+     (Add 'rax (value->bits 1))))
 
-;; Id Expr Expr CEnv -> Asm
-(define (compile-let x e1 e2 c)
-  (seq (compile-e e1 c)
-       (Push rax)
-       (compile-e e2 (cons x c))
-       (Add rsp 8)))
+When the @racket[let] expression is complete, the bindings for
+@racket[x] and @racket[y] need to be popped off the stack.  To do so,
+we can simply increment @racket['rsp] since the values of @racket[x]
+and @racket[y] are irrelevant.
 
-;; Id CEnv -> Integer
-(define (lookup x cenv)
-  (match cenv
-    ['() (error "undefined variable:" x)]
-    [(cons y rest)
-     (match (eq? x y)
-       [#t 0]
-       [#f (+ 8 (lookup x rest))])]))
-}
+@#reader scribble/comment-reader
+(racketblock
+;; complete compilation of (let ((x 7)) (let ((y 2)) (add1 x))):
+(seq (Mov 'rax (values->bits 7))
+     (Push 'rax) ; bind x to 7
+     (Mov 'rax (values->bits 2))
+     (Push 'rax) ; bind y to 2
+     (Mov 'rax (Offset 'rsp 8)) ; ref x
+     (Add 'rax (value->bits 1)) ; add1
+     (Add 'rsp 8)  ; pop y
+     (Add 'rsp 8)) ; pop x
+)
 
-Notice that the @racket[lookup] function computes a lexical
-address from an identifier and compile-time environment,
-just like the @racket[lexical-address] function in @tt{
- translate.rkt}. The only difference is addresses are
-calculated as byte offsets, hence the addition of 8 instead
-of 1 in the recursive case.
+Since we push every time we enter a let and pop every time we leave,
+the number of bindings between an occurrence and its binder is exactly
+the offset from the top of the stack we need use; in other words, the
+compiler uses lexical addresses just like the alternative interperter
+above and the stack of values plays the role of the run-time
+envivornment.
 
-Let's take a look at some examples.
-
-@ex[
-(define (show e)
-  (displayln (asm-string (compile (parse e)))))
-(show '(let ((x 7)) x))
-(show '(let ((x 7)) 2))
-(show '(let ((x 7)) (add1 x)))
-(show '(let ((x (add1 7))) x))
-(show '(let ((x 7)) (let ((y 2)) x)))
-(show '(let ((x 7)) (let ((x 2)) x)))
-(show '(let ((x 7)) (let ((x (add1 x))) x)))
-]
-
-And running the examples:
-@ex[
-(current-objs '("runtime.o"))
-(define (tell e)
-  (match (asm-interp (compile (parse e)))
-    ['err 'err]
-    [b (bits->value b)]))
-(tell '(let ((x 7)) x))
-(tell '(let ((x 7)) 2))
-(tell '(let ((x 7)) (add1 x)))
-(tell '(let ((x (add1 7))) x))
-(tell '(let ((x 7)) (let ((y 2)) x)))
-(tell '(let ((x 7)) (let ((x 2)) x)))
-(tell '(let ((x 7)) (let ((x (add1 x))) x)))
-]
+This means the compiler will need to use a compile-time environment to
+track bound variables and make use of a @racket[lookup] function to
+compute the lexical address of variable references just like the
+interpreter.  The only (trivial) difference is the addresses are given
+in word offsets, i.e. each binding adds @racket[8] to the address.
 
 @section{Compiling binary operations}
 
@@ -641,9 +619,9 @@ ignoring type errors for the moment):
        (Add 'rax _????)))
 )
 
-The problem here is that executing @racket[c0] places its result in
-register @racket['rax], but then executing @racket[c1] places its
-result in @racket['rax], overwriting the value of @racket[e0].
+The problem here is that executing @racket[_e0] places its result in
+register @racket['rax], but then executing @racket[_e1] places its
+result in @racket['rax], overwriting the value of @racket[_e0].
 
 It may be tempting to use another register to stash away the result of
 the first subexpression:
@@ -709,7 +687,7 @@ this approach, we know the value of @racket[_e0] will live at
 @racket[let] binding or a fresh variable name.  And this observation
 enables us to write a general purpose compiler for binary primitives
 that doesn't require any program transformation: we simply push the
-value of @racket[e0] on the top of the stack and retrieve it later.
+value of @racket[_e0] on the top of the stack and retrieve it later.
 
 Here is a first cut:
 
@@ -745,38 +723,153 @@ the same thing by sticking in something that no variable is equal to:
        (Add 'rax 'r8)))
 )
 
-The relevant bits of the compiler are:
+With variables, @racket[let]s, and binary operations in place, we can
+complete the compiler.
 
-@filebox-include-fake[codeblock "fraud/compile.rkt"]{
-#lang racket
-;...
-;; Expr CEnv -> Asm
-(define (compile-e e c)
-  (match e
-    ; ...
-    [(Prim2 p e1 e2) (compile-prim2 p e1 e2 c)]))
+@section{The wrinkle of stack alignment}
 
-;; Op2 Expr Expr CEnv -> Asm
-(define (compile-prim2 p e1 e2 c)
-  (seq (compile-e e1 c)
-       (Push rax)
-       (compile-e e2 (cons #f c))       
-       (match p
-         ['+
-          (seq (Pop r8)
-               (assert-integer r8)
-               (assert-integer rax)
-               (Add rax r8))]
-         ['-
-          (seq (Pop r8)
-               (assert-integer r8)
-               (assert-integer rax)
-               (Sub r8 rax)
-               (Mov rax r8))])))
-}
+There is a wrinkle that comes from using the stack to hold variable
+bindings and intermediate results, which has to do with how it
+interacts with our previous language features.  In particular, we were
+previously able to take a fairly simple approach to implement calls to
+C functions in the runtime system.
+
+Recall from @secref{calling-c} that the stack needs to be 16-byte
+aligned before issuing a @racket[Call] instruction.  Since the runtime
+calls the @racket['entry] label to execute the code emitted by the
+compiler, and this pushes an 8-byte address on the stack, the stack is
+misaligned at the entry to our code.  Our solution was to immediately
+subtract 8 from @racket['rsp] at entry and add back 8 just before
+returning.  This way any calls, such as calls to @tt{read_byte},
+@tt{write_byte}, or even @tt{raise_error} were in an aligned state.
+
+This simple approach worked since the code emitted by the compiler
+never modified the stack (other than making calls).  But now what
+happens since code makes frequent use of the stack?
+
+Consider the following two, seemingly equivalent, examples:
+
+@itemlist[
+@item{@racket[(write-byte 97)]}
+@item{@racket[(let ((x 97)) (write-byte x))]}]
+
+Assuming the stack is aligned before making the call to the C function
+@tt{write_byte} in the first example, means that it will be misaligned
+in second example, since the code would have first @racket[Push]ed
+@racket[97] on the stack.  Symmetrically, if the stack were aligned in
+the second example, then it couldn't be in the first.
+
+So our previous once-and-done solution to the stack alignment issue
+will no longer work.  Instead, we will have to emit code that aligns
+the stack at every @racket[Call] and this adjustment will depend upon
+the compile-time environment in which the call occurs.
+
+For example, let's assume we no longer adjust the stack at the entry
+of our code.  The first example (occuring in the empty compile-time
+environment) will need subtract 8 to the stack pointer, call, and then
+add 8 to the stack pointer.  In the second example, the
+@racket[write-byte] call occurs in a compile-time environment of
+@racket['(x)].  The single binding being pushed on the stack, in
+combination with the original call from the run-time system, results
+in an aligned stack, so no adjustment is needed.  Had there been two
+elements on the stack, an adjustment similar to the first example
+would be needed.  In other words, if there are an even number of
+elements on the stack, we need to adjust.
+
+This means, compared to the previous compiler for primitive
+operations, each part of the compiler that may issue @racket[Call]
+instructions will need to be informed of the current environment.
+
+We will use a helper function @racket[(pad-stack _c)] and
+@racket[(unpad-stack _c)] that takes a compile-time environment and
+produce instructions to align and revert the stack (if needed) before
+and after @racket[Call]s.
+
+Signalling errors is likewise complicated and we handle it by having
+two target labels that can be jumped to when an error happens:
+@racket['raise_error] and @racket['raise_error_align].  The latter
+adds 8 to @racket['rsp] and jumps to @racket['raise_error].  Since we
+don't expect the the error handler function to return, we don't need
+to worry about adjusting the stack afterward.  We use another helper
+function @racket[(error-label _c)] that computes the appropriate target
+based on the given compile-time environment.
+
+Here is the compiler for primitives that incorporates all of these
+stack-alignment issues, but is otherwise the same as before:
+
+@filebox-include[codeblock "fraud/compile-ops.rkt"]
 
 @section{Complete @this-lang compiler}
 
-The complete code for the compiler:
+We can now take a look at the main compiler for expressions.  Notice
+the compile-time environment which is weaved through out the
+@racket[compile-e] function and its subsidiaries, which is critical in
+@racket[compile-variable] and extended in @racket[compile-let].  It is
+passed to the @racket[compile-op0], @racket[compile-op1] and
+@racket[compile-op2] functions for the purposes of stack alignment
+before calls into the runtime system.
 
-@codeblock-include["fraud/compile.rkt"]
+@filebox-include[codeblock "fraud/compile.rkt"]
+
+Notice that the @racket[lookup] function computes a lexical
+address from an identifier and compile-time environment,
+just like the @racket[lexical-address] function in @tt{
+ translate.rkt}. The only difference is addresses are
+calculated as byte offsets, hence the addition of 8 instead
+of 1 in the recursive case.
+
+Let's take a look at some examples of @racket[let]s and variables:
+
+@ex[
+(define (show e c)
+  (displayln (asm-string (compile-e (parse e) c))))
+(show 'x '(x))
+(show 'x '(z y x))
+(show '(let ((x 7)) x) '())
+(show '(let ((x 7)) 2) '())
+(show '(let ((x 7)) (add1 x)) '())
+(show '(let ((x (add1 7))) x) '())
+(show '(let ((x 7)) (let ((y 2)) x)) '())
+(show '(let ((x 7)) (let ((x 2)) x)) '())
+(show '(let ((x 7)) (let ((x (add1 x))) x)) '())
+]
+
+And running the examples:
+@ex[
+(current-objs '("runtime.o"))
+(define (tell e)
+  (match (asm-interp (compile (parse e)))
+    ['err 'err]
+    [b (bits->value b)]))
+(tell '(let ((x 7)) x))
+(tell '(let ((x 7)) 2))
+(tell '(let ((x 7)) (add1 x)))
+(tell '(let ((x (add1 7))) x))
+(tell '(let ((x 7)) (let ((y 2)) x)))
+(tell '(let ((x 7)) (let ((x 2)) x)))
+(tell '(let ((x 7)) (let ((x (add1 x))) x)))
+]
+
+Here are some examples of binary operations:
+
+@ex[
+(show '(+ 1 2) '())
+(show '(+ (+ 3 4) (+ 1 2)) '())
+(show '(+ x y) '(x y))
+]
+
+And running the examples:
+@ex[
+(tell '(+ 1 2))
+(tell '(+ (+ 3 4) (+ 1 2)))
+(tell '(let ((y 3)) (let ((x 2)) (+ x y))))
+]
+
+Finally, we can see the stack alignment issues in action:
+
+@ex[
+(show '(write-byte 97) '())
+(show '(write-byte 97) '(x))
+(show '(add1 #f) '())
+(show '(add1 #f) '(x))
+]
