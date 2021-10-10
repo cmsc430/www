@@ -699,9 +699,13 @@ advantage of the fact that no other stack changes occur and
 adjust the stack just once at the entry and exit of the
 code.
 
-The complete compiler:
+The top-level compiler:
 
 @codeblock-include["evildoer/compile.rkt"]
+
+The primitive operation compiler:
+
+@codeblock-include["evildoer/compile-ops.rkt"]
 
 We can continue to interactively try out examples with
 @racket[asm-interp], although there are two issues we need
