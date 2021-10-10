@@ -1,6 +1,8 @@
 #lang racket
 (provide (all-defined-out))
-(require "ast.rkt" "types.rkt" "compile-prim.rkt" a86/ast)
+(require "ast.rkt" "types.rkt" "compile-ops.rkt" a86/ast)
+
+(define rax 'rax)
 
 ;; Expr -> Asm
 (define (compile e)
@@ -11,21 +13,26 @@
 ;; Expr -> Asm
 (define (compile-e e)
   (match e
-    [(Int i)        (compile-value i)]
-    [(Bool b)       (compile-value b)]
-    [(Prim1 p e)    (compile-prim1 p (compile-e e))]
-    [(If e1 e2 e3)  (compile-if e1 e2 e3)]))
+    [(Int i)       (compile-value i)]
+    [(Bool b)      (compile-value b)]
+    [(Prim1 p e)   (compile-prim1 p e)]
+    [(If e1 e2 e3) (compile-if e1 e2 e3)]))
 
 ;; Value -> Asm
-(define (compile-value i)
-  (seq (Mov 'rax (value->bits i))))
+(define (compile-value v)
+  (seq (Mov rax (value->bits v))))
+
+;; Op1 Expr -> Asm
+(define (compile-prim1 p e)
+  (seq (compile-e e)
+       (compile-op1 p)))
 
 ;; Expr Expr Expr -> Asm
 (define (compile-if e1 e2 e3)
   (let ((l1 (gensym 'if))
         (l2 (gensym 'if)))
     (seq (compile-e e1)
-         (Cmp 'rax val-false)
+         (Cmp rax val-false)
          (Je l1)
          (compile-e e2)
          (Jmp l2)

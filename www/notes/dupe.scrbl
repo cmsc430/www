@@ -749,7 +749,7 @@ Based on the examples, we can write the compiler:
 The compilation of primitives, including the new @racket[zero?]
 primitive, can be accomplished with:
 
-@codeblock-include["dupe/compile-prim.rkt"]
+@codeblock-include["dupe/compile-ops.rkt"]
 
 We can try out the compiler with the help of @racket[asm-interp],
 but you'll notice the results are a bit surprising:
