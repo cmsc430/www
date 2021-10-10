@@ -21,7 +21,9 @@
 @(ev `(current-directory ,(path->string (build-path notes "extort"))))
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 
-@title[#:tag "Extort"]{Extort: when errors exist}
+@(define this-lang "Extort")
+
+@title[#:tag this-lang]{@|this-lang|: when errors exist}
 
 @emph{The greatest mistake is to imagine that we never err.}
 
@@ -35,16 +37,17 @@ Now let's redesign the semantics to specify the error behavior of such
 programs.
 
 
-We'll call it @bold{Extort}.
+We'll call it @bold{@this-lang}.
 
-Nothing changes in the syntax of Extort from Dupe, although we will
-need to talk about two kinds of @emph{results} from evaluating
-programs: values and errors.  We will say that evaluation produces an
-@bold{answer}, which is either a value or error:
+Nothing changes in the syntax of @this-lang from the previous
+language, although we will need to talk about two kinds of
+@emph{results} from evaluating programs: values and errors.  We will
+say that evaluation produces an @bold{answer}, which is either a value
+or error:
 
 @centered{@render-language[E]}
 
-@section{Meaning of Extort programs}
+@section{Meaning of @this-lang programs}
 
 Languages adopt several approaches to type mismatches:
 
@@ -61,7 +64,7 @@ We've previously seen the last approach.  Now let's do what Racket
 does and signal an error.
 
 
-The meaning of Extort programs that have type errors will now be
+The meaning of @this-lang programs that have type errors will now be
 defined as @racket['err]:
 
 @itemlist[
@@ -128,7 +131,7 @@ The statement of correctness stays the same, but now observe that
 there is no way to crash the interpreter with any @tt{Expr} value.
 
 
-@section{A Compiler for Extort}
+@section{A Compiler for @this-lang}
 
 Suppose we want to compile @racket[(add1 #f)], what needs to happen?
 Just as in the interpreter, we need to check the integerness of the
