@@ -17,7 +17,7 @@
 @(ev `(current-directory ,(path->string (build-path notes "hustle"))))
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 @(for-each (λ (f) (ev `(require (file ,f))))
-	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
+	   '("interp.rkt" "compile.rkt" "compile-ops.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
 @title[#:tag "Hustle"]{Hustle: heaps and lists}
 
@@ -357,9 +357,16 @@ have a box pointer, we can simply zero out the box type tag to obtain
 the address of the boxes content.  Likewise with pairs.
 
 
+We use a register, @racket['rbx], to hold the address of the next free
+memory location in memory.  To allocate memory, we simply increment
+the content of @racket['rbx] by a multiple of 8.  To initialize the
+memory, we just write into the memory at that location.  To contruct a
+pair or box value, we just tag the unused bits of the address.
 
 
-
+The generated code will have to coordinate with the run-time system to
+initialize @racket['rbx] appropriately, which we discuss in
+@secref["hustle-run-time"].
 
 So for example the following creates a box containing the value 7:
 
@@ -389,7 +396,7 @@ Pairs are similar.  Suppose we want to make @racket[(cons 3 4)]:
 (seq (Mov 'rax (arithmetic-shift 3 imm-shift))
      (Mov (Offset 'rbx 0) 'rax) ; write '3' into address held by rbx
      (Mov 'rax (arithmetic-shift 4 imm-shift))
-     (Mov (Offset 'rbx 1) 'rax) ; write '4' into word after address held by rbx
+     (Mov (Offset 'rbx 8) 'rax) ; write '4' into word after address held by rbx
      (Mov 'rax rbx)             ; copy pointer into return register
      (Or 'rax type-pair)        ; tag pointer as a pair
      (Add 'rbx 16))             ; advance rbx 2 words
@@ -403,7 +410,7 @@ then dereferencing either the first or second word of memory:
 (racketblock
 (seq (Xor 'rax type-pair)         ; erase the pair tag
      (Mov 'rax (Offset 'rax 0))   ; load car into rax
-     (Mov 'rax (Offset 'rax 1)))  ; or... load cdr into rax
+     (Mov 'rax (Offset 'rax 8)))  ; or... load cdr into rax
 )
 
 From here, writing the compiler for @racket[box], @racket[unbox],
@@ -411,29 +418,68 @@ From here, writing the compiler for @racket[box], @racket[unbox],
 putting together pieces we've already seen such as evaluating multiple
 subexpressions and type tag checking before doing projections.
 
-@section{Allocating Hustle values}
-
-We use a register, @racket['rbx], to hold the address of the next free
-memory location in memory.  To allocate memory, we simply increment
-the content of @racket['rbx] by a multiple of 8.  To initialize the
-memory, we just write into the memory at that location.  To contruct a
-pair or box value, we just tag the unused bits of the address.
-
-
-... will have to coordinate with the run-time system to
-initialize @racket['rbx] appropriately.
-@secref["hustle-run-time"]
-
 @section{A Compiler for Hustle}
 
+The compiler for Hustle is essentially the same as for Fraud, although
+now with support for the new primitives: @racket[box], @racket[unbox],
+@racket[box?], @racket[cons], @racket[car], @racket[car],
+@racket[cdr], @racket[cons?], and @racket[empty?]:
 
-The complete compiler is given below.
+@codeblock-include["hustle/compile-ops.rkt"]
 
-@codeblock-include["hustle/compile.rkt"]
+We can now confirm that the compiler generates code similar to what we
+wrote by hand above:
+
+@ex[
+(define (show e c)
+  (displayln (asm-string (compile-e (parse e) c))))
+
+(show '(box 7) '())
+]
+
+This moves the encoding of @racket[7] into @racket['rax], then writes
+it into the memory address pointed to by @racket['rbx], i.e. the next
+free memory location.  That address is then moved to @racket['rax] and
+tagged as a box, which is the result of the expression.  The final
+step is to increment @racket['rbx] by @racket[8] to advance the free
+memory pointer since one word of memory is now used.
+
+Suppose we have a box value bound to variable @racket[x], then this
+code will unbox the value:
+
+@ex[
+(show '(unbox x) '(x))
+]
+
+This loads @racket[x] from the stack into @racket['rax], then does tag
+checking to make sure it's a box pointer, after which it erases the
+tag to reveal the address and loads that memory address into
+@racket['rax], thereby retrieving the value in the box.
+
+The way that @racket[cons], @racket[car], and @racket[cdr] work are
+essentially the same, except that pairs hold two values instead of
+one:
+
+@ex[
+(show '(cons 7 5) '())
+(show '(car x) '(x))
+(show '(cdr x) '(x))
+]
 
 @section[#:tag "hustle-run-time"]{A Run-Time for Hustle}
 
-The run-time system for Hustle is more involved for two main reasons:
+First, we extend our runtime system's view of values to include
+pointers and use C @tt{struct} to represent them:
+
+@filebox-include[fancy-c "hustle/values.h"]
+
+The implementation of @tt{val_typeof} is extended to handle
+pointer types:
+
+@filebox-include[fancy-c "hustle/values.c"]
+
+The rest of the run-time system for Hustle is more involved for two
+main reasons:
 
 The first is that the compiler relies on a pointer to free memory
 residing in @racket['rbx].  The run-time system will be responsible
@@ -446,10 +492,11 @@ be passed in the @racket['rdi] register.  Since @tt{malloc} produces
 initialized with an address that ends in @code[#:lang
 "racket"]{#b000}, satisfying our assumption about addresses.
 
-Once the runtime system has provide the heap address in @racket['rdi] it become
-our responsibility to keep track of that value. Because @racket['rdi] is used
-to pass arguments to C functions, we can't keep our heap pointer in
-@racket['rdi] and expect it to be saved. This leaves us with two options:
+Once the runtime system has provided the heap address in
+@racket['rdi], it becomes our responsibility to keep track of that
+value. Because @racket['rdi] is used to pass arguments to C functions,
+we can't keep our heap pointer in @racket['rdi] and expect it to be
+saved. This leaves us with two options:
 
 @itemlist[
  @item{We can ensure that we save @racket['rdi] somewhere safe whenever we
@@ -467,13 +514,14 @@ consult the System V Calling Convention, which tells us that @racket['rbx] is a
 responsible for ensuring that the value in the register is saved and restored.
 In other words: we, the caller, don't have to worry about it! Because of this
 we're going to use @racket['rbx] to store our heap pointer. You can see
-that we do this in the compiler with @tt{(Mov 'rbx 'rdi)} as part
+that we do this in the compiler with @racket[(Mov 'rbx 'rdi)] as part
 of our entry code.
 
 The second complication comes from printing.  Now that values include
 inductively defined data, the printer must recursively traverse these
-values to print them.
+values to print them.  It also must account for the wrinkle of how the
+printing of proper and improper lists is different.
 
-The complete run-time system is below.
+The main function of the run-time system is below.
 
 @filebox-include[fancy-c "hustle/main.c"]
