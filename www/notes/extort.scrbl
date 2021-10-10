@@ -134,18 +134,35 @@ Suppose we want to compile @racket[(add1 #f)], what needs to happen?
 Just as in the interpreter, we need to check the integerness of the
 argument's value before doing the addition operation.
 
-We extend the run-time system with a C function called @tt{error}
-that prints "err" and exits:
+We extend the run-time system with a C function called
+@tt{raise_error} that prints "err" and exits with a non-zero status to
+indicate something has gone wrong.  @margin-note{The runtime system is
+written with a level of indirection between @tt{raise_error} and the
+code that prints and exits in @tt{error_exit}; this is done so that
+the testing framework can intercede and replace the error function,
+but it can be ignored.}
 
 @filebox-include[fancy-c "extort/main.c"]
 
-The compiler now emits code to check the type of arguments:
+Most of the work of error checking happens in the code emitted for
+primitive operations.  Whenever an error is detected, control jumps to
+a label called @racket['err] that immediately calls @tt{raise_error}:
+
+@codeblock-include["extort/compile-ops.rkt"]
+
+All that's left for the top-level compile function to declare an
+external label @racket['raise_error] that will be defined by the
+run-time system and to emit a label called @racket['err] that calls
+@tt{raise_error}, otherwise this part of the compiler doesn't change:
 
 @codeblock-include["extort/compile.rkt"]
 
 Here's the code we generate for @racket['(add1 #f)]:
 @ex[
-(displayln (asm-string (compile (Prim1 'add1 (Bool #f)))))
+(define (show e)
+  (displayln (asm-string (compile-e (parse e)))))
+
+(show '(add1 #f))
 ]
 
 @(void (ev '(current-objs '("runtime.o"))))

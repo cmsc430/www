@@ -115,11 +115,6 @@
        (Cmp rax (value->bits 255))
        (Jg 'err)))
 
-(define (assert-natural r)
-  (seq (assert-integer r)
-       (Cmp rax (value->bits 0))
-       (Jl 'err)))
-
 ;; Imm -> Asm
 (define (eq-imm imm)
   (let ((l1 (gensym)))

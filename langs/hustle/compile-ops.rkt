@@ -171,11 +171,6 @@
        (Cmp rax (imm->bits 255))
        (Jg (error-label c))))
 
-(define (assert-natural r c)
-  (seq (assert-integer r c)
-       (Cmp rax (imm->bits 0))
-       (Jl (error-label c))))
-
 ;; Imm -> Asm
 (define (eq-imm imm)
   (let ((l1 (gensym)))
