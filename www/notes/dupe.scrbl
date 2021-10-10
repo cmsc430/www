@@ -808,7 +808,15 @@ divide by 2, which can be done efficiently with a
 right-shift of 1 bit. Likewise with a boolean, if we shift
 right by 1 bit there are two possible results:
 @racket[#,val-false] for false and @racket[#,val-true] for
-true:
+true.
+
+We use the following interface for values in the runtime system:
+
+@filebox-include[fancy-c "dupe/values.h"]
+@filebox-include[fancy-c "dupe/values.c"]
+
+And finally the main function is updated in @tt{print_result} to do a
+case analysis on the type of the result and print accordingly:
 
 @filebox-include[fancy-c "dupe/main.c"]
 
