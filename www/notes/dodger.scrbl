@@ -168,16 +168,43 @@ And now the interpreter:
 Compilation is pretty easy, particularly since we took the
 time to develop the bit-level interpreter. The compiler uses
 the same bit-level representation of values and uses logical
-operations to implement the same bit manipulating operations:
+operations to implement the same bit manipulating operations.
+Most of the work happens in the compilation of primitives:
+
+@codeblock-include["dodger/compile-ops.rkt"]
+
+The top-level compiler for expressions now has a case for character
+literals, which are compiled like other kinds of values:
 
 @codeblock-include["dodger/compile.rkt"]
+
+We can take a look at a few examples:
+
+@ex[
+(define (show e)
+  (displayln (asm-string (compile-e (parse e)))))
+(show '#\a)
+(show '#\λ)
+(show '(char->integer #\λ))
+(show '(integer->char 97))]
 
 @section{A Run-Time for Dodger}
 
 The only interesting aspect of Dodger, really, is that we
 need to add run-time support for printing character literals.
 
+We extend the bit-encoding of values following the pattern we've
+already seen:
+
 @filebox-include[fancy-c "dodger/types.h"]
+
+And update the interface for values in the runtime system:
+
+@filebox-include[fancy-c "dodger/values.h"]
+@filebox-include[fancy-c "dodger/values.c"]
+
+The main function remains the same although @tt{print_result} is
+updated to handle the case of printing characters:
 
 @filebox-include[fancy-c "dodger/main.c"]
 

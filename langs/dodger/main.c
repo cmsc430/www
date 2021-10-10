@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <inttypes.h>
-#include "types.h"
 #include "values.h"
 
 val_t entry();

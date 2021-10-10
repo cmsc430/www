@@ -1,6 +1,8 @@
 #lang racket
 (provide (all-defined-out))
-(require "ast.rkt" "types.rkt" a86/ast)
+(require "ast.rkt" "types.rkt" "compile-ops.rkt" a86/ast)
+
+(define rax 'rax)
 
 ;; Expr -> Asm
 (define (compile e)
@@ -14,49 +16,24 @@
     [(Int i)       (compile-value i)]
     [(Bool b)      (compile-value b)]
     [(Char c)      (compile-value c)]
-    [(Prim1 p e)   (compile-prim p e)]
+    [(Prim1 p e)   (compile-prim1 p e)]
     [(If e1 e2 e3) (compile-if e1 e2 e3)]))
 
 ;; Value -> Asm
 (define (compile-value v)
-  (seq (Mov 'rax (value->bits v))))
+  (seq (Mov rax (value->bits v))))
 
-;; Op Expr -> Asm
-(define (compile-prim p e)
+;; Op1 Expr -> Asm
+(define (compile-prim1 p e)
   (seq (compile-e e)
-       (match p
-         ['add1 (Add 'rax (value->bits 1))]
-         ['sub1 (Sub 'rax (value->bits 1))]
-         ['zero?
-          (let ((l1 (gensym)))
-            (seq (Cmp 'rax 0)
-                 (Mov 'rax val-true)
-                 (Je l1)
-                 (Mov 'rax val-false)
-                 (Label l1)))]
-         ['char?
-          (let ((l1 (gensym)))
-            (seq (And 'rax mask-char)
-                 (Xor 'rax type-char)
-                 (Cmp 'rax 0)
-                 (Mov 'rax val-true)
-                 (Je l1)
-                 (Mov 'rax val-false)
-                 (Label l1)))]
-         ['char->integer
-          (seq (Sar 'rax char-shift)
-               (Sal 'rax int-shift))]
-         ['integer->char
-          (seq (Sar 'rax int-shift)
-               (Sal 'rax char-shift)
-               (Xor 'rax type-char))]))) 
+       (compile-op1 p)))
 
 ;; Expr Expr Expr -> Asm
 (define (compile-if e1 e2 e3)
   (let ((l1 (gensym 'if))
         (l2 (gensym 'if)))
     (seq (compile-e e1)
-         (Cmp 'rax val-false)
+         (Cmp rax val-false)
          (Je l1)
          (compile-e e2)
          (Jmp l2)
