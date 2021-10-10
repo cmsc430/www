@@ -7,7 +7,9 @@ else
   format=elf64
 endif
 
-objs = main.o
+objs = \
+	main.o \
+	print.o
 
 default: runtime.o
 
