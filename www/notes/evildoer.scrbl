@@ -28,7 +28,7 @@
 @(begin-for-syntax
    (require "utils.rkt")
    (parameterize ([current-directory (build-path notes "evildoer")])
-     (save-file "print.c"
+     (save-file "simple.c"
 #<<HERE
 #include <stdio.h>
 #include <inttypes.h>
@@ -403,7 +403,7 @@ run-time system, which is this C program that invokes an
 assembly program with a label called @tt{entry} and prints
 the result:
 
-@filebox-include[fancy-c "evildoer/print.c"]
+@filebox-include[fancy-c "evildoer/simple.c"]
 
 Now, here is a little program that has a function called @tt{meaning}
 that returns @tt{42}.  The main entry point calls @tt{meaning},
@@ -432,10 +432,10 @@ We can assemble it, link it together with the printer, and run it:
 
 @(define format (if (eq? (system-type 'os) 'macosx) "macho64" "elf64"))
           
-@shellbox["gcc -c print.c -o print.o"
+@shellbox["gcc -c simple.c -o simple.o"
           (string-append "nasm -f " format " p.s -o p.o")
-          "gcc print.o p.o -o print"
-          "./print"]
+          "gcc simple.o p.o -o simple"
+          "./simple"]
 
 In this case, the @tt{meaning} label is defined @emph{within} the same
 assembly program as @tt{entry}, although that doesn't have to be the case.
@@ -512,8 +512,8 @@ And assemble:
 
 Then we can link all the pieces together and run it:
 
-@shellbox["gcc print.o p.o life.o -o print"
-          "./print"]
+@shellbox["gcc simple.o p.o life.o -o simple"
+          "./simple"]
           
 Now if we look at @tt{life.s}, this is an assembly program
 that defines the @tt{meaning} label. We defined it by
@@ -539,8 +539,8 @@ list the defined symbols of an object file:
 We can again link together the pieces and confirm that it
 still produces the same results:
 
-@shellbox["gcc print.o p.o life.o -o print"
-          "./print"]
+@shellbox["gcc simple.o p.o life.o -o simple"
+          "./simple"]
 
 
 At this point, we've written a little assembly program (@tt{
@@ -602,8 +602,8 @@ We can assemble it into an object file:
 And linking everything together and running shows it works
 as expected:
 
-@shellbox["gcc print.o q.o double.o -o print"
-          "./print"]
+@shellbox["gcc simple.o q.o double.o -o simple"
+          "./simple"]
 
 
 Now we have all the tools needed to interact with libraries
@@ -639,8 +639,8 @@ pop around the call:
   #:exists 'truncate)]
 
 @shellbox[(string-append "nasm -f " format " q.s -o q.o")
-          "gcc print.o q.o double.o -o print"
-          "./print"]
+          "gcc simple.o q.o double.o -o simple"
+          "./simple"]
 
 The wrinkle is actually a bit deeper than this too. Suppose
 we are using other registers, maybe some that are not used
