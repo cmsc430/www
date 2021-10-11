@@ -19,7 +19,9 @@
 @(for-each (λ (f) (ev `(require (file ,f))))
 	   '("interp.rkt" "compile.rkt" "compile-ops.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
-@title[#:tag "Hustle"]{Hustle: heaps and lists}
+@(define this-lang "Hustle")
+
+@title[#:tag this-lang]{@|this-lang|: heaps and lists}
 
 
 @emph{A little and a little, collected together, become a great deal;
@@ -34,7 +36,7 @@ So far all of the data we have considered can fit in a single machine
 word (64-bits).  Well, integers can't, but we truncated them and only
 consider, by fiat, those integers that fit into a register.
 
-In the @bold{Hustle} language, we will add two @bold{inductively
+In the @bold{@this-lang} language, we will add two @bold{inductively
 defined data types}, boxes and pairs, which will require us to relax
 this restriction.
 
@@ -97,7 +99,7 @@ just need another distinguished value to designate it.
 Using @racket[cons] and @racket['()] in a structured way we can form
 @emph{proper list}, among other useful data structures.
 
-We use the following grammar for Hustle:
+We use the following grammar for @|this-lang|:
 
 @centered[(render-language H)]
 
@@ -113,9 +115,9 @@ We can model this as an AST data type:
 ;;          | 'cons
 }
 
-@section{Meaning of Hustle programs, implicitly}
+@section{Meaning of @this-lang programs, implicitly}
 
-The meaning of Hustle programs is just a slight update to Grift
+The meaning of @this-lang programs is just a slight update to Grift
 programs, namely we add a few new primitives.
 
 The update to the semantics is just an extension of the semantics of
@@ -152,7 +154,7 @@ how constructing inductive data works because they simply use
 the mechanism of the defining language to construct inductive data.
 Let's try to address that.
 
-@section{Meaning of Hustle programs, explicitly}
+@section{Meaning of @this-lang programs, explicitly}
 
 Let's develop an alternative semantics and interpreter that
 describes constructing inductive data without itself
@@ -285,7 +287,7 @@ the place in memory that contains the data.
 
 @;codeblock-include["hustle/interp.rkt"]
 
-@section{Representing Hustle values}
+@section{Representing @this-lang values}
 
 The first thing do is make another distinction in the kind of values
 in our language.  Up until now, each value could be represented in a
@@ -418,9 +420,9 @@ From here, writing the compiler for @racket[box], @racket[unbox],
 putting together pieces we've already seen such as evaluating multiple
 subexpressions and type tag checking before doing projections.
 
-@section{A Compiler for Hustle}
+@section{A Compiler for @this-lang}
 
-The compiler for Hustle is essentially the same as for Fraud, although
+The compiler for @this-lang is essentially the same as for Fraud, although
 now with support for the new primitives: @racket[box], @racket[unbox],
 @racket[box?], @racket[cons], @racket[car], @racket[car],
 @racket[cdr], @racket[cons?], and @racket[empty?]:
@@ -466,7 +468,7 @@ one:
 (show '(cdr x) '(x))
 ]
 
-@section[#:tag "hustle-run-time"]{A Run-Time for Hustle}
+@section[#:tag "hustle-run-time"]{A Run-Time for @this-lang}
 
 First, we extend our runtime system's view of values to include
 pointers and use C @tt{struct} to represent them:
@@ -478,7 +480,7 @@ pointer types:
 
 @filebox-include[fancy-c "hustle/values.c"]
 
-The rest of the run-time system for Hustle is more involved for two
+The rest of the run-time system for @this-lang is more involved for two
 main reasons:
 
 The first is that the compiler relies on a pointer to free memory
