@@ -15,7 +15,8 @@
 ;; | '()
 ;; | (cons Value Value)
 ;; | (box Value)
-;; | (Vectorof Value)
+;; | (vector Value ...)
+;; | (string Char ...)
 
 ;; type REnv = (Listof (List Id Value))
 
@@ -32,6 +33,7 @@
     [(Eof)    eof]
     [(Empty)  '()]
     [(Var x)  (lookup r x)]
+    [(Str s)  (string-copy s)]
     [(Prim0 'void) (void)]
     [(Prim0 'read-byte) (read-byte)]
     [(Prim0 'peek-byte) (peek-byte)]
@@ -68,4 +70,3 @@
      (match (interp-env e1 r)
        ['err 'err]
        [v (interp-env e2 (ext r x v))])]))
-

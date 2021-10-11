@@ -8,10 +8,11 @@
     [(? integer?)                  (Int s)]
     [(? boolean?)                  (Bool s)]
     [(? char?)                     (Char s)]
+    [(? string?)                   (Str s)]
     ['eof                          (Eof)]
     [(? symbol?)                   (Var s)]
     [(list 'quote (list))          (Empty)]
-    [(list (? (op? op0) p0))       (Prim0 p0)]           
+    [(list (? (op? op0) p0))       (Prim0 p0)]
     [(list (? (op? op1) p1) e)     (Prim1 p1 (parse e))]
     [(list (? (op? op2) p2) e1 e2) (Prim2 p2 (parse e1) (parse e2))]
     [(list (? (op? op3) p3) e1 e2 e3)
@@ -31,9 +32,9 @@
   '(add1 sub1 zero? char? write-byte eof-object?
          integer->char char->integer
          box unbox empty? cons? box? car cdr
-         vector? vector-length))
+         vector? vector-length string? string-length))
 (define op2
-  '(+ - cons make-vector vector-ref))
+  '(+ - cons make-vector vector-ref make-string string-ref))
 (define op3
   '(vector-set!))
 

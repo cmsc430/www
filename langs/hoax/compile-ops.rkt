@@ -5,9 +5,9 @@
 (define rax 'rax) ; return
 (define rbx 'rbx) ; heap
 (define rdi 'rdi) ; arg
-(define r8  'r8)  ; scratch in +, -, make-vector, vector-ref, vector-set!
-(define r9  'r9)  ; scratch in assert-type, make-vector, vector-ref, vector-set!
-(define r10 'r10) ; scratch in vector-set!
+(define r8  'r8)  ; scratch
+(define r9  'r9)  ; scratch
+(define r10 'r10) ; scratch
 (define rsp 'rsp) ; stack
 
 ;; Op0 CEnv -> Asm
@@ -31,22 +31,10 @@
      (seq (assert-integer rax c)
           (Sub rax (imm->bits 1)))]
     ['zero?
-     (let ((l1 (gensym)))
-       (seq (assert-integer rax c)
-            (Cmp rax 0)
-            (Mov rax val-true)
-            (Je l1)
-            (Mov rax val-false)
-            (Label l1)))]
+     (seq (assert-integer rax c)
+          (eq-imm 0))]
     ['char?
-     (let ((l1 (gensym)))
-       (seq (And rax mask-char)
-            (Xor rax type-char)
-            (Cmp rax 0)
-            (Mov rax val-true)
-            (Je l1)
-            (Mov rax val-false)
-            (Label l1)))]
+     (type-pred mask-char type-char)]
     ['char->integer
      (seq (assert-char rax c)
           (Sar rax char-shift)
@@ -56,7 +44,7 @@
           (Sar rax int-shift)
           (Sal rax char-shift)
           (Xor rax type-char))]
-    ['eof-object? (eq-imm val-eof)]
+    ['eof-object? (eq-imm eof)]
     ['write-byte
      (seq (assert-byte c)
           (pad-stack c)
@@ -81,39 +69,41 @@
      (seq (assert-cons rax c)
           (Xor rax type-cons)
           (Mov rax (Offset rax 0)))]
-    ['empty? (eq-imm val-empty)]
-    ['cons?
-     (let ((l1 (gensym)))
-       (seq (And rax ptr-mask)
-            (Xor rax type-cons)
-            (Cmp rax 0)
-            (Mov rax val-true)
-            (Je l1)
-            (Mov rax val-false)
-            (Label l1)))]
+    ['empty? (eq-imm '())]
     ['box?
-     (let ((l1 (gensym)))
-       (seq (And rax ptr-mask)
-            (Xor rax type-box)
-            (Cmp rax 0)
-            (Mov rax val-true)
-            (Je l1)
-            (Mov rax val-false)
-            (Label l1)))]
+     (type-pred ptr-mask type-box)]
+    ['cons?
+     (type-pred ptr-mask type-cons)]
     ['vector?
-     (let ((l1 (gensym)))
-       (seq (And rax ptr-mask)
+     (type-pred ptr-mask type-vect)]
+    ['string?
+     (type-pred ptr-mask type-str)]
+    ['vector-length
+     (let ((zero (gensym))
+           (done (gensym)))
+       (seq (assert-vector rax c)
             (Xor rax type-vect)
             (Cmp rax 0)
-            (Mov rax val-true)
-            (Je l1)
-            (Mov rax val-false)
-            (Label l1)))]
-    ['vector-length
-     (seq (assert-vector rax c)
-          (Xor rax type-vect)
-          (Mov rax (Offset rax 0))
-          (Sal rax int-shift))]))
+            (Je zero)
+            (Mov rax (Offset rax 0))
+            (Sal rax int-shift)
+            (Jmp done)
+            (Label zero)
+            (Mov rax 0)
+            (Label done)))]
+    ['string-length
+     (let ((zero (gensym))
+           (done (gensym)))
+       (seq (assert-string rax c)
+            (Xor rax type-str)
+            (Cmp rax 0)
+            (Je zero)
+            (Mov rax (Offset rax 0))
+            (Sal rax int-shift)
+            (Jmp done)
+            (Label zero)
+            (Mov rax 0)
+            (Label done)))]))
 
 ;; Op2 CEnv -> Asm
 (define (compile-op2 p c)
@@ -180,7 +170,68 @@
           (Jl (error-label c))
           (Sal rax 3)
           (Add r8 rax)
-          (Mov rax (Offset r8 8)))]))
+          (Mov rax (Offset r8 8)))]
+
+    ['make-string
+     (let ((loop (gensym))
+           (done (gensym))
+           (empty (gensym)))
+       ;; This is like make-vector except the second arg must be a
+       ;; char and it allocates an array of size ceil(len/2) words and
+       ;; initializes each element with two copies of char's codepoint
+       ;; in the lower and upper 32 bits of the word.
+       (seq (Pop r8)
+            (assert-natural r8 c)
+            (assert-char rax c)
+            (Cmp r8 0) ; special case empty string
+            (Je empty)
+
+            (Mov r9 rbx)
+            (Or r9 type-str)
+
+            (Sar r8 int-shift)
+            (Mov (Offset rbx 0) r8)
+            (Add rbx 8)
+
+            (Add r8 1) ;; add 1
+            (Sar r8 1) ;; divide by 2 to size in words
+
+            (Sar rax char-shift)
+            (Mov r10 rax)
+            (Sal r10 32)
+            (Or rax r10)
+
+            (Label loop)
+            (Mov (Offset rbx 0) rax)
+            (Add rbx 8)
+            (Sub r8 1)
+            (Cmp r8 0)
+            (Jne loop)
+
+            (Mov rax r9)
+            (Jmp done)
+
+            (Label empty)
+            (Mov rax type-str)
+            (Label done)))]
+
+    ['string-ref
+     (seq (Pop r8)
+          (assert-string r8 c)
+          (assert-integer rax c)
+          (Cmp rax 0)
+          (Jl (error-label c))
+          (Xor r8 type-str)       ; r8 = ptr
+          (Mov r9 (Offset r8 0))  ; r9 = len
+          (Sar rax int-shift)     ; rax = index
+          (Sub r9 1)
+          (Cmp r9 rax)
+          (Jl (error-label c))
+          (Sal rax 2)
+          (Add r8 rax)
+          (Mov 'eax (Offset r8 8))
+          (Sal rax char-shift)
+          (Or rax type-char))]))
 
 ;; Op3 CEnv -> Asm
 (define (compile-op3 p c)
@@ -232,6 +283,8 @@
   (assert-type ptr-mask type-cons))
 (define assert-vector
   (assert-type ptr-mask type-vect))
+(define assert-string
+  (assert-type ptr-mask type-str))
 
 (define (assert-codepoint c)
   (let ((ok (gensym)))
@@ -259,10 +312,10 @@
        (Cmp rax (imm->bits 0))
        (Jl (error-label c))))
 
-;; Imm -> Asm
+;; Value -> Asm
 (define (eq-imm imm)
   (let ((l1 (gensym)))
-    (seq (Cmp rax imm)
+    (seq (Cmp rax (imm->bits imm))
          (Mov rax val-true)
          (Je l1)
          (Mov rax val-false)

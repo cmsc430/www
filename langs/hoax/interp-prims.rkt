@@ -22,6 +22,8 @@
     [(list 'box? v)                       (box? v)]
     [(list 'vector? v)                    (vector? v)]
     [(list 'vector-length (? vector?))    (vector-length v)]
+    [(list 'string? v)                    (string? v)]
+    [(list 'string-length (? string?))    (string-length v)]
     [_                                    'err]))
 
 ;; Op2 Value Value -> Answer
@@ -38,7 +40,15 @@
      (if (<= 0 v2 (sub1 (vector-length v1)))
          (vector-ref v1 v2)
          'err)]
-    [_                                    'err]))
+    [(list 'make-string (? integer?) (? char?))
+     (if (<= 0 v1)
+         (make-string v1 v2)
+         'err)]
+    [(list 'string-ref (? string?) (? integer?))
+     (if (<= 0 v2 (sub1 (string-length v1)))
+         (string-ref v1 v2)
+         'err)]
+    [_ 'err]))
 
 ;; Op3 Value Value Value -> Answer
 (define (interp-prim3 p v1 v2 v3)

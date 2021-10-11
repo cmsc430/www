@@ -7,6 +7,7 @@
 (define type-box       #b001)
 (define type-cons      #b010)
 (define type-vect      #b011)
+(define type-str       #b100)
 (define int-shift  (+ 1 imm-shift))
 (define char-shift (+ 2 imm-shift))
 (define type-int      #b0000)
@@ -60,3 +61,6 @@
 
 (define (vect-bits? v)
   (zero? (bitwise-xor (bitwise-and v imm-mask) type-vect)))
+
+(define (str-bits? v)
+  (zero? (bitwise-xor (bitwise-and v imm-mask) type-str)))

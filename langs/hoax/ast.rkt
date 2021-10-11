@@ -1,11 +1,12 @@
 #lang racket
-(provide Eof Int Bool Char Prim0 Prim1 Prim2 Prim3 If Begin Let Var Empty)
+(provide Eof Int Bool Char Str Prim0 Prim1 Prim2 Prim3 If Begin Let Var Empty)
 
 ;; type Expr = (Eof)
 ;;           | (Empty)
 ;;           | (Int Integer)
 ;;           | (Bool Boolean)
 ;;           | (Char Character)
+;;           | (Str String)
 ;;           | (Prim0 Op0)
 ;;           | (Prim1 Op1 Expr)
 ;;           | (Prim2 Op2 Expr Expr)
@@ -31,6 +32,7 @@
 (struct Int   (i)          #:prefab)
 (struct Bool  (b)          #:prefab)
 (struct Char  (c)          #:prefab)
+(struct Str   (s)          #:prefab)
 (struct Prim0 (p)          #:prefab)
 (struct Prim1 (p e)        #:prefab)
 (struct Prim2 (p e1 e2)    #:prefab)

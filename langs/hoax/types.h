@@ -22,6 +22,7 @@
 #define box_type_tag     1
 #define cons_type_tag    2
 #define vect_type_tag    3
+#define str_type_tag     4
 #define int_shift        (1 + imm_shift)
 #define int_type_mask    ((1 << int_shift) - 1)
 #define int_type_tag     (0 << (int_shift - 1))

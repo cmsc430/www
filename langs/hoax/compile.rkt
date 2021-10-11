@@ -33,6 +33,7 @@
     [(Eof)              (compile-value eof)]
     [(Empty)            (compile-value '())]
     [(Var x)            (compile-variable x c)]
+    [(Str s)            (compile-string s)]
     [(Prim0 p)          (compile-prim0 p c)]
     [(Prim1 p e)        (compile-prim1 p e c)]
     [(Prim2 p e1 e2)    (compile-prim2 p e1 e2 c)]
@@ -49,6 +50,28 @@
 (define (compile-variable x c)
   (let ((i (lookup x c)))
     (seq (Mov rax (Offset rsp i)))))
+
+;; String -> Asm
+(define (compile-string s)
+  (let ((len (string-length s)))
+    (if (zero? len)
+        (seq (Mov rax type-str))
+        (seq (Mov rax len)
+             (Mov (Offset rbx 0) rax)
+             (compile-string-chars (string->list s) 8)
+             (Mov rax rbx)
+             (Or rax type-str)
+             (Add rbx
+                  (+ 8 (* 4 (if (odd? len) (add1 len) len))))))))
+
+;; [Listof Char] Integer -> Asm
+(define (compile-string-chars cs i)
+  (match cs
+    ['() (seq)]
+    [(cons c cs)
+     (seq (Mov rax (char->integer c))
+          (Mov (Offset rbx i) 'eax)
+          (compile-string-chars cs (+ 4 i)))]))
 
 ;; Op0 CEnv -> Asm
 (define (compile-prim0 p c)

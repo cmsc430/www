@@ -2,7 +2,7 @@
 (provide test-runner test-runner-io)
 (require rackunit)
 
-(define (test-runner run) 
+(define (test-runner run)
   ;; Abscond examples
   (check-equal? (run 7) 7)
   (check-equal? (run -8) -8)
@@ -34,15 +34,16 @@
   (check-equal? (run '(if #f 3 4)) 4)
   (check-equal? (run '(if  0 3 4)) 3)
   (check-equal? (run '(zero? 4)) #f)
-  (check-equal? (run '(zero? 0)) #t)  
+  (check-equal? (run '(zero? 0)) #t)
+
   ;; Dodger examples
   (check-equal? (run #\a) #\a)
   (check-equal? (run #\b) #\b)
   (check-equal? (run '(char? #\a)) #t)
-  (check-equal? (run '(char? #t)) #f)  
-  (check-equal? (run '(char? 8)) #f) 
+  (check-equal? (run '(char? #t)) #f)
+  (check-equal? (run '(char? 8)) #f)
   (check-equal? (run '(char->integer #\a)) (char->integer #\a))
-  (check-equal? (run '(integer->char 955)) #\λ)  
+  (check-equal? (run '(integer->char 955)) #\λ)
   ;; Extort examples
   (check-equal? (run '(add1 #f)) 'err)
   (check-equal? (run '(sub1 #f)) 'err)
@@ -53,6 +54,7 @@
   (check-equal? (run '(write-byte #f)) 'err)
   (check-equal? (run '(write-byte -1)) 'err)
   (check-equal? (run '(write-byte 256)) 'err)
+
   ;; Fraud examples
   (check-equal? (run '(let ((x 7)) x)) 7)
   (check-equal? (run '(let ((x 7)) 2)) 2)
@@ -76,8 +78,8 @@
                         (let ((z (- 4 x)))
                           (+ (+ x x) z))))
                 7)
-  ;; Hustle examples  
-  (check-equal? (run ''()) '())  
+  ;; Hustle examples
+  (check-equal? (run ''()) '())
   (check-equal? (run '(box 1)) (box 1))
   (check-equal? (run '(cons 1 2)) (cons 1 2))
   (check-equal? (run '(unbox (box 1))) 1)
@@ -89,9 +91,9 @@
   (check-equal? (run '(box? (cons 7 8))) #f)
   (check-equal? (run '(cons? (cons 7 8))) #t)
   (check-equal? (run '(empty? '())) #t)
-  (check-equal? (run '(empty? 7)) #f)  
+  (check-equal? (run '(empty? 7)) #f)
   (check-equal? (run '(let ((x (box 2))) (unbox x))) 2)
-  (check-equal? (run '(let ((x (cons 2 '()))) (car x))) 2)  
+  (check-equal? (run '(let ((x (cons 2 '()))) (car x))) 2)
   (check-equal? (run '(let ((x (cons 1 2)))
                         (begin (cdr x)
                                (car x))))
@@ -100,6 +102,7 @@
                         (let ((y (box 3)))
                           (unbox y))))
                 3)
+
   ;; Hoax examples
   (check-equal? (run '(make-vector 0 0)) #())
   (check-equal? (run '(make-vector 1 0)) #(0))
@@ -119,7 +122,22 @@
   (check-equal? (run '(let ((x (make-vector 3 5)))
                         (begin (vector-set! x 1 4)
                                x)))
-                #(5 4 5)))
+                #(5 4 5))
+  (check-equal? (run '(vector-length (make-vector 3 #f))) 3)
+  (check-equal? (run '(vector-length (make-vector 0 #f))) 0)
+  (check-equal? (run '"") "")
+  (check-equal? (run '"fred") "fred")
+  (check-equal? (run '"wilma") "wilma")
+  (check-equal? (run '(make-string 0 #\f)) "")
+  (check-equal? (run '(make-string 3 #\f)) "fff")
+  (check-equal? (run '(string-length "")) 0)
+  (check-equal? (run '(string-length "fred")) 4)
+  (check-equal? (run '(string-ref "fred" 0)) #\f)
+  (check-equal? (run '(string-ref "fred" 1)) #\r)
+  (check-equal? (run '(string-ref "fred" 2)) #\e)
+  (check-equal? (run '(string-ref "fred" 4)) 'err)
+  (check-equal? (run '(string? "fred")) #t)
+  (check-equal? (run '(string? (cons 1 2))) #f))
 
 (define (test-runner-io run)
   ;; Evildoer examples
