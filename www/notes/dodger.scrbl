@@ -203,15 +203,10 @@ And update the interface for values in the runtime system:
 @filebox-include[fancy-c "dodger/values.h"]
 @filebox-include[fancy-c "dodger/values.c"]
 
-The main function remains the same although @tt{print_result} is
-updated to handle the case of printing characters:
+The only other change is that @tt{print_result} is updated to handle
+the case of printing characters:
 
-@filebox-include[fancy-c "dodger/main.c"]
-
-The work of printing characters is moved to it's own file, which can
-be linked against the run-time:
-
-@filebox-include[fancy-c "dodger/char.c"]
+@filebox-include[fancy-c "dodger/print.c"]
 
 Will these pieces in place, we can try out some examples:
 
