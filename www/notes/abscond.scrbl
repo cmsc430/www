@@ -293,9 +293,18 @@ Abscond runtime:
 @filebox-include[fancy-c "abscond/main.c"]
 
 This C program provides the main entry point for running an Abscond
-program.  It must be linked against an object file that provides the
-definition of @tt{entry}; this is the code our compiler will
-emit.
+program.  It relies upon a function @tt{print_result} which is defined
+as follows:
+
+@filebox-include[fancy-c "abscond/print.h"]
+@filebox-include[fancy-c "abscond/print.c"]
+
+Separating out @tt{print_result}, which at this point is just a simple
+@tt{printf} statement, seems like overkill, but it will be useful in
+the future as the language gets more complicated.
+
+The runtime must be linked against an object file that provides the
+definition of @tt{entry}; this is the code our compiler will emit.
 
 The @tt{entry} function computes the result of running the
 Abscond code, i.e. an integer.  Here we are taking advantage of the
