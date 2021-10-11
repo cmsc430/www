@@ -822,7 +822,7 @@ Let's take a look at some examples of @racket[let]s and variables:
 
 @ex[
 (define (show e c)
-  (displayln (asm-string (compile-e (parse e) c))))
+  (compile-e (parse e) c))
 (show 'x '(x))
 (show 'x '(z y x))
 (show '(let ((x 7)) x) '())

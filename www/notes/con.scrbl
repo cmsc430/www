@@ -270,7 +270,7 @@ module for compiling primitives:
 Let's take a look at a few examples:
 @ex[
 (define (show s)
-  (displayln (asm-string (compile (parse s)))))
+  (compile-e (parse s)))
     
 (show '(if (zero? 8) 2 3))
 (show '(if (zero? 0) 1 2))

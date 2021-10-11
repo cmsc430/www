@@ -117,8 +117,8 @@ We can model this as an AST data type:
 
 @section{Meaning of @this-lang programs, implicitly}
 
-The meaning of @this-lang programs is just a slight update to Grift
-programs, namely we add a few new primitives.
+The meaning of @this-lang programs is just a slight update to the
+prior language, namely we add a few new primitives.
 
 The update to the semantics is just an extension of the semantics of
 primitives:
@@ -434,7 +434,7 @@ wrote by hand above:
 
 @ex[
 (define (show e c)
-  (displayln (asm-string (compile-e (parse e) c))))
+  (compile-e (parse e) c))
 
 (show '(box 7) '())
 ]

@@ -303,7 +303,9 @@ implemented.
 (random-expr)
 (random-expr)
 (random-expr)
-(displayln (asm-string (compile (random-expr))))
+(define e (random-expr))
+e
+(compile e)
 (for ([i (in-range 10)])
   (check-compiler (random-expr)))
 ]
