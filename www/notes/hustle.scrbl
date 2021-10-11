@@ -517,11 +517,11 @@ we're going to use @racket['rbx] to store our heap pointer. You can see
 that we do this in the compiler with @racket[(Mov 'rbx 'rdi)] as part
 of our entry code.
 
+@filebox-include[fancy-c "hustle/main.c"]
+
 The second complication comes from printing.  Now that values include
 inductively defined data, the printer must recursively traverse these
 values to print them.  It also must account for the wrinkle of how the
-printing of proper and improper lists is different.
+printing of proper and improper lists is different:
 
-The main function of the run-time system is below.
-
-@filebox-include[fancy-c "hustle/main.c"]
+@filebox-include[fancy-c "hustle/print.c"]
