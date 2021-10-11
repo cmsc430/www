@@ -815,10 +815,15 @@ We use the following interface for values in the runtime system:
 @filebox-include[fancy-c "dupe/values.h"]
 @filebox-include[fancy-c "dupe/values.c"]
 
-And finally the main function is updated in @tt{print_result} to do a
-case analysis on the type of the result and print accordingly:
+The @tt{main} function remains largely the same although now we use
+@tt{val_t} in place of @tt{int64_t}:
 
 @filebox-include[fancy-c "dupe/main.c"]
+
+And finally, @tt{print_result} is updated to do a case analysis on the
+type of the result and print accordingly:
+
+@filebox-include[fancy-c "dupe/print.c"]
 
 @section{Correctness and testing}
 
