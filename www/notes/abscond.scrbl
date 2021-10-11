@@ -317,10 +317,12 @@ We can compile the run-time system to get an object file.  We'll use
 @tt{gcc} for compiling C:
 
 @shellbox["gcc -m64 -c -o main.o main.c"]
+@shellbox["gcc -m64 -c -o print.o print.c"]
 
-This creates @tt{main.o}; linking this file together with an object
-file that contains @tt{entry} will produce an executable that,
-when run, will carry out the execution of an Abscond program.
+This creates @tt{main.o} and @tt{print.o}; linking these file together
+with an object file that contains @tt{entry} will produce an
+executable that, when run, will carry out the execution of an Abscond
+program.
 
 @section{An Example}
 
@@ -377,7 +379,7 @@ above (in binary format).
 
 We can link this file with the run-time to produce an executable file:
 
-@shellbox["gcc main.o 42.o -o 42.run"]
+@shellbox["gcc main.o print.o 42.o -o 42.run"]
 
 This creates the file @tt{42.run}, an exectuable program:
 
