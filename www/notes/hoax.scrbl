@@ -327,7 +327,7 @@ This is just like referencing an element of a vector, except:
 @itemlist[
 @item{the offset will be computed differently,}
 @item{only 32-bits should be loaded from memory, and}
-@item{the codepoint needs to be converted into a character.}
+@item{the codepoint needs to be converted into a character.}]
 
 Suppose we want to fetch the 2nd element (i.e. index @racket[1]) of a
 string in @racket['rax]:
