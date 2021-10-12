@@ -14,6 +14,7 @@
     "extort"
     "fraud"
     "hustle"
+    "hoax"
     "iniquity"
     "jig"))
 
