@@ -24,6 +24,7 @@ suggestions for improving the material, @bold{please},
 @include-section{notes/fraud.scrbl}
 @;include-section{notes/grift.scrbl}
 @include-section{notes/hustle.scrbl}
+@include-section{notes/hoax.scrbl}
 @include-section{notes/iniquity.scrbl}
 @include-section{notes/juvie.scrbl}
 @include-section{notes/jig.scrbl}
