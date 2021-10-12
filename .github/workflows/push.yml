@@ -24,7 +24,6 @@ jobs:
       run: |
         raco pkg install langs/
         raco make www/main.scrbl
-        raco test langs
         make -C www main
     - name: Archive www
       uses: actions/upload-artifact@v2
