@@ -130,6 +130,7 @@
   (check-equal? (run '"wilma") "wilma")
   (check-equal? (run '(make-string 0 #\f)) "")
   (check-equal? (run '(make-string 3 #\f)) "fff")
+  (check-equal? (run '(make-string 3 #\g)) "ggg")
   (check-equal? (run '(string-length "")) 0)
   (check-equal? (run '(string-length "fred")) 4)
   (check-equal? (run '(string-ref "fred" 0)) #\f)
