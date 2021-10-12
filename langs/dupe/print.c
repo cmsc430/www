@@ -14,5 +14,4 @@ void print_result(val_t x)
   case T_INVALID:
     printf("internal error");
   }
-  printf("\n");
 }

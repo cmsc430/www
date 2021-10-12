@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <inttypes.h>
 #include "print.h"
 
@@ -9,5 +10,6 @@ int main(int argc, char** argv)
 
   result = entry();
   print_result(result);
+  putchar('\n');
   return 0;
 }
