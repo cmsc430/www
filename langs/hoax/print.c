@@ -8,6 +8,7 @@ void print_cons(val_cons_t *);
 void print_vect(val_vect_t*);
 void print_str(val_str_t*);
 void print_str_char(val_char_t);
+void print_result_interior(val_t);
 int utf8_encode_char(val_char_t, char *);
 
 void print_result(val_t x)
@@ -28,27 +29,42 @@ void print_result(val_t x)
   case T_VOID:
     break;
   case T_EMPTY:
-    printf("'()");
-    break;
   case T_BOX:
-    printf("#&");
-    print_result(val_unwrap_box(x)->val);
-    break;
   case T_CONS:
-    printf("'(");
-    print_cons(val_unwrap_cons(x));
-    printf(")");
-    break;
-  case T_VECT:
-    print_vect(val_unwrap_vect(x));
+  case T_VECT:    
+    printf("'");
+    print_result_interior(x);
     break;
   case T_STR:
     putchar('"');
     print_str(val_unwrap_str(x));
     putchar('"');
-    break;
+    break;    
   case T_INVALID:
     printf("internal error");
+  }
+}
+
+void print_result_interior(val_t x)
+{
+  switch (val_typeof(x)) {
+  case T_EMPTY:
+    printf("()");
+    break;
+  case T_BOX:
+    printf("#&");
+    print_result_interior(val_unwrap_box(x)->val);
+    break;
+  case T_CONS:
+    printf("(");
+    print_cons(val_unwrap_cons(x));
+    printf(")");
+    break;
+  case T_VECT:
+    print_vect(val_unwrap_vect(x));
+    break;    
+  default:
+    print_result(x);
   }
 }
 
@@ -56,11 +72,11 @@ void print_vect(val_vect_t *v)
 {
   uint64_t i;
 
-  if (!v) { printf("'#()"); return; }
+  if (!v) { printf("#()"); return; }
 
-  printf("'#(");
+  printf("#(");
   for (i = 0; i < v->len; ++i) {
-    print_result(v->elems[i]);
+    print_result_interior(v->elems[i]);
 
     if (i < v->len - 1)
       putchar(' ');
@@ -70,7 +86,7 @@ void print_vect(val_vect_t *v)
 
 void print_cons(val_cons_t *cons)
 {
-  print_result(cons->fst);
+  print_result_interior(cons->fst);
 
   switch (val_typeof(cons->snd)) {
   case T_EMPTY:
@@ -82,7 +98,7 @@ void print_cons(val_cons_t *cons)
     break;
   default:
     printf(" . ");
-    print_result(cons->snd);
+    print_result_interior(cons->snd);
     break;
   }
 }
