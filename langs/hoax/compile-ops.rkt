@@ -3,6 +3,7 @@
 (require "ast.rkt" "types.rkt" a86/ast)
 
 (define rax 'rax) ; return
+(define eax 'eax) ; 32-bit load/store
 (define rbx 'rbx) ; heap
 (define rdi 'rdi) ; arg
 (define r8  'r8)  ; scratch
@@ -176,10 +177,6 @@
      (let ((loop (gensym))
            (done (gensym))
            (empty (gensym)))
-       ;; This is like make-vector except the second arg must be a
-       ;; char and it allocates an array of size ceil(len/2) words and
-       ;; initializes each element with two copies of char's codepoint
-       ;; in the lower and upper 32 bits of the word.
        (seq (Pop r8)
             (assert-natural r8 c)
             (assert-char rax c)
@@ -193,17 +190,15 @@
             (Mov (Offset rbx 0) r8)
             (Add rbx 8)
 
-            (Add r8 1) ;; add 1
-            (Sar r8 1) ;; divide by 2 to size in words
-
             (Sar rax char-shift)
-            (Mov r10 rax)
-            (Sal r10 32)
-            (Or rax r10)
+
+            (Add r9 1) ; adds 1
+            (Sar r9 1) ; when
+            (Sal r9 1) ; len is odd
 
             (Label loop)
-            (Mov (Offset rbx 0) rax)
-            (Add rbx 8)
+            (Mov (Offset rbx 0) eax)
+            (Add rbx 4)
             (Sub r8 1)
             (Cmp r8 0)
             (Jne loop)
