@@ -1,5 +1,5 @@
 #lang racket
-(provide interp interp-env interp-prim1)
+(provide interp interp-env)
 (require "ast.rkt"
          "env.rkt"
          "interp-prims.rkt")
@@ -15,6 +15,8 @@
 ;; | '()
 ;; | (cons Value Value)
 ;; | (box Value)
+;; | (vector Value ...)
+;; | (string Char ...)
 
 ;; type REnv = (Listof (List Id Value))
 ;; type Defns = (Listof Defn)
@@ -34,6 +36,7 @@
     [(Eof)    eof]
     [(Empty)  '()]
     [(Var x)  (lookup r x)]
+    [(Str s)  (string-copy s)]
     [(Prim0 'void) (void)]
     [(Prim0 'read-byte) (read-byte)]
     [(Prim0 'peek-byte) (peek-byte)]
@@ -47,6 +50,14 @@
        [v1 (match (interp-env e2 r ds)
              ['err 'err]
              [v2 (interp-prim2 p v1 v2)])])]
+    [(Prim3 p e1 e2 e3)
+     (match (interp-env e1 r ds)
+       ['err 'err]
+       [v1 (match (interp-env e2 r ds)
+             ['err 'err]
+             [v2 (match (interp-env e3 r ds)
+                   ['err 'err]
+                   [v3 (interp-prim3 p v1 v2 v3)])])])]
     [(If p e1 e2)
      (match (interp-env p r ds)
        ['err 'err]
@@ -57,28 +68,28 @@
     [(Begin e1 e2)
      (match (interp-env e1 r ds)
        ['err 'err]
-       [_ (interp-env e2 r ds)])]
+       [_    (interp-env e2 r ds)])]
     [(Let x e1 e2)
      (match (interp-env e1 r ds)
        ['err 'err]
        [v (interp-env e2 (ext r x v) ds)])]
     [(App f es)
      (match (interp-env* es r ds)
-      [(list vs ...)
+       ['err 'err]
+       [vs
         (match (defns-lookup ds f)
-         [(Defn f xs body)
-          ; arity check
-          (if (= (length vs) (length xs))
-              (interp-env body (zip xs vs) ds)
-              'err)])]
-      [_         'err])]))
+          [(Defn f xs e)
+           ; check arity matches
+           (if (= (length xs) (length vs))
+               (interp-env e (zip xs vs) ds)
+               'err)])])]))
 
 ;; (Listof Expr) REnv Defns -> (Listof Value) | 'err
 (define (interp-env* es r ds)
   (match es
     ['() '()]
     [(cons e es)
-      (match (interp-env e r ds)
+     (match (interp-env e r ds)
        ['err 'err]
        [v (cons v (interp-env* es r ds))])]))
 
