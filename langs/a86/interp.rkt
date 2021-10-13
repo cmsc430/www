@@ -127,8 +127,9 @@
 
 
 (define (string-splice xs)
-  (apply string-append (add-between xs " ")))
-
+  (apply string-append
+         (add-between (map (lambda (s) (string-append "\"" s "\"")) xs)
+                      " ")))
 
 ;;; Utilities for calling nasm and linker with informative error messages
 
