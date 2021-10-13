@@ -184,6 +184,3 @@
                              (print-alphabet 26))
                      "")
                 (cons (void) "abcdefghijklmnopqrstuvwxyz")))
-
-(require rackunit "../../test-programs/get-progs.rkt")
-(for-each test-prog (get-progs "jig"))
