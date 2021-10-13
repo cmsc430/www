@@ -306,7 +306,7 @@ So, suppose we want to create the string @racket["abc"]:
      (Mov 'eax (char->integer #\b))
      (Mov (Offset 'rbx 12) 'eax)   ; write #\b in string slot 1
      (Mov 'eax (char->integer #\c))
-     (Mov (Offset 'ebx 16) 'rax)   ; write #\c in string slot 3
+     (Mov (Offset 'ebx 16) 'rax)   ; write #\c in string slot 2
      (Mov 'rax 'rbx)
      (Or 'rax type-str)            ; tag pointer as a string
      (Add 'rbx 24))                ; advance rbx three words(!)
