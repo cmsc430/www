@@ -6,6 +6,8 @@
 (define ptr-mask       #b111)
 (define type-box       #b001)
 (define type-cons      #b010)
+(define type-vect      #b011)
+(define type-str       #b100)
 (define int-shift  (+ 1 imm-shift))
 (define char-shift (+ 2 imm-shift))
 (define type-int      #b0000)
@@ -18,7 +20,7 @@
 (define val-void   #b1111000)
 (define val-empty #b10011000)
 
-(define (bits->imm b)
+(define (bits->value b)
   (cond [(= type-int (bitwise-and b mask-int))
          (arithmetic-shift b (- int-shift))]
         [(= type-char (bitwise-and b mask-char))
@@ -56,3 +58,9 @@
 
 (define (box-bits? v)
   (zero? (bitwise-xor (bitwise-and v imm-mask) type-box)))
+
+(define (vect-bits? v)
+  (zero? (bitwise-xor (bitwise-and v imm-mask) type-vect)))
+
+(define (str-bits? v)
+  (zero? (bitwise-xor (bitwise-and v imm-mask) type-str)))
