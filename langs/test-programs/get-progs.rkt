@@ -13,8 +13,8 @@
     "evildoer"
     "extort"
     "fraud"
-    ; "hustle"
-    ; "hoax"
+    "hustle"
+    "hoax"
     "iniquity"
     "jig"))
 
