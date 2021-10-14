@@ -1,6 +1,6 @@
 #lang racket
 (provide (all-defined-out))
-(require "ast.rkt" "types.rkt" "compile-ops.rkt" a86/ast)
+(require "ast.rkt" "types.rkt" "compile-ops.rkt" "stdlib-provides.rkt" a86/ast)
 
 ;; Registers used
 (define rax 'rax) ; return
@@ -10,6 +10,47 @@
 
 ;; type CEnv = [Listof Variable]
 
+;; Module -> Asm
+(define (compile-module m)
+  (match (normalize-module m)
+    [(Module ps rs ds)
+     (prog (externs)
+           (compile-provides ps)
+           (compile-requires rs)
+           (compile-main ds)
+           (compile-defines ds)           
+           (Label 'raise_error_align)
+           (Sub rsp 8)
+           (Jmp 'raise_error))]))
+
+;; Module -> Module
+;; Remove anything from requires that is provided by this module
+(define (normalize-module m)
+  (match m
+    [(Module ps rs ds)
+     (Module ps (remq* ps (append rs stdlib-provides)) ds)]))
+
+(define (compile-main ds)
+  (if (main? ds)
+      (seq (Global 'entry)
+           (Label 'entry)
+           (Mov rbx rdi) ; recv heap pointer
+           (Jmp (symbol->label 'main)))
+      (seq)))
+
+(define (main? ds)
+  (match ds
+    ['() #f]
+    [(cons (Defn 'main '() _) ds) #t]
+    [(cons _ ds) (main? ds)]))
+
+(define (compile-provides ps)
+  (map (lambda (p) (Global (symbol->label p))) ps))
+
+(define (compile-requires ps)
+  (map (lambda (p) (Extern (symbol->label p))) ps))
+
+#|
 ;; Prog -> Asm
 (define (compile p)
   (match p
@@ -25,6 +66,7 @@
            (Sub rsp 8)
            (Jmp 'raise_error)
            (compile-defines ds))]))
+|#
 
 ;; -> [Listof Extern]
 (define (stdlib)

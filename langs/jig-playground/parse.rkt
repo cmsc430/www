@@ -1,16 +1,64 @@
 #lang racket
-(provide parse parse-e parse-d)
+(provide parse-e parse-define parse-module parse-module-file)
 (require "ast.rkt")
 
-;; S-Expr -> Prog
-(define (parse s)
-  (match s
-    [(list 'begin (and ds (list 'define _ _)) ... e)
-     (Prog (map parse-d ds) (parse-e e))]
-    [e (Prog '() (parse-e e))]))
+;; String -> Module
+(define (parse-module-file fn)
+  (let ((p (open-input-file fn)))
+    (begin (read-line p) ; ignore #lang racket line
+           (begin0 (parse-module (read-all p))
+             (close-input-port p)))))
+
+;; Port -> SExpr
+(define (read-all p)
+  (let ((r (read p)))
+    (if (eof-object? r)
+        '()
+        (cons r (read-all p)))))
+
+;; S-Expr -> Module
+(define (parse-module m)
+  (match (parse-module* m)
+    [(list ps rs ds #f)
+     (Module ps rs ds)]
+    [(list ps rs ds e)
+     (Module (cons 'main ps) rs (cons (Defn 'main '() e) ds))]))
+
+(define (parse-module* m)
+  (match m
+    ['() (list '() '() '() #f)]
+    [(cons x m)
+     (match (parse-module* m)
+       [(list ps rs ds e)
+        (match x
+          [(cons 'provide _)
+           (list (append (parse-provide x) ps) rs ds e)]
+          [(cons 'require _)
+           (list ps (append (parse-require x) rs) ds e)]
+          [(cons 'define _)
+           (list ps rs (cons (parse-define x) ds) e)]
+          [_
+           (list ps rs ds
+                 (if e
+                     (Begin (parse-e x) e)
+                     (parse-e x)))])])]))                     
+
+(define (parse-provide x)
+  (match x
+    [(cons 'provide xs)
+     (if (andmap symbol? xs)
+         xs
+         (error "invalid provide clause"))]))
+
+(define (parse-require x)
+  (match x
+    [(cons 'require xs)
+     (if (andmap string? xs)
+         (append-map Module-ps (map parse-module-file xs))
+         (error "invalid require clause"))]))
 
 ;; S-Expr -> Defn
-(define (parse-d s)
+(define (parse-define s)
   (match s
     [(list 'define (list (? symbol? f) (? symbol? xs) ...) e)
      (Defn f xs (parse-e e))]

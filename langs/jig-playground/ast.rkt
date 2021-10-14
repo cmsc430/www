@@ -1,8 +1,16 @@
 #lang racket
 (provide (all-defined-out))
 
-;; type Prog = (Prog (Listof Defn) Expr)
-(struct Prog (ds e) #:prefab)
+;; Concrete syntax:
+
+;; module ::= <elem>*
+;; <elem> ::= (provide id*)
+;;         |  (require <string>*)
+;;         |  (define (<id> <id>*) <expr>)
+;;         |  <expr>
+
+;; type Module = (Module [Listof Id] [Listof String] [Listof Defn])
+(struct Module (ps rs ds) #:prefab)
 
 ;; type Defn = (Defn Id (Listof Id) Expr)
 (struct Defn (f xs e) #:prefab)

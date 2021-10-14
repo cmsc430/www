@@ -28,9 +28,6 @@ runtime.o: $(objs)
 .s.o:
 	nasm -g -f $(format) -o $@ $<
 
-stdlib.s: stdlib.rkt
-	racket -t compile-library.rkt -m $< > $@
-
 %.s: %.rkt
 	racket -t compile-file.rkt -m $< > $@
 
