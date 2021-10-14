@@ -89,4 +89,4 @@ One idea is that the runtime should jump to a `main` function.  So one
 of the modules will need to provide `main`, and now everything is just
 module with a uniform compilation strategy.  The parser could be set
 up so that if there's only an expression in the file, it parses it as
-`(define (main) e)`.
+`(provide main) (define (main) e)`.
