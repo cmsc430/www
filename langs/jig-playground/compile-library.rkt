@@ -9,7 +9,7 @@
   (let ((p (open-input-file fn)))
     (begin
       (read-line p) ; ignore #lang racket line
-      (read-line p) ; ignore provide line      
+      (read p)      ; ignore provide
       (displayln (asm-string (compile-library (read-defns p))))
       (close-input-port p))))
 
