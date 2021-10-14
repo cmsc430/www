@@ -25,6 +25,35 @@ functions as `External` and the parser will parse any non-primitive
 application as `(App <id> <exp> ...)` so any use of a standard library
 function is just a function call.
 
+Example
+-------
+
+Here's an example of a program using a standard library function
+`reverse`; notice how `stdlib.rkt` gets compiled with
+`compile-library.rkt`:
+
+```
+> more example.rkt
+#lang racket
+(reverse (cons 1 (cons 2 (cons 3 '()))))
+
+> make example.run
+gcc -fPIC -c -g -o main.o main.c
+gcc -fPIC -c -g -o values.o values.c
+gcc -fPIC -c -g -o print.o print.c
+racket -t compile-library.rkt -m stdlib.rkt > stdlib.s
+nasm -g -f macho64 -o stdlib.o stdlib.s
+gcc -fPIC -c -g -o io.o io.c
+ld -r main.o values.o print.o stdlib.o io.o -o runtime.o
+racket -t compile-file.rkt -m example.rkt > example.s
+nasm -g -f macho64 -o example.o example.s
+gcc runtime.o example.o -o example.run
+rm example.o example.s
+>  ./example.run
+'(3 2 1)
+```
+
+
 Discussion
 ----------
 
