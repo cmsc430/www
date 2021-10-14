@@ -62,11 +62,11 @@ library has no top-level expression, so the compiler does not emit an
 `entry` label.
 
 The other difference is a library declares all defined functions with
-`External`.
+`Global`.
 
 One way to unify the two is to handle `provide` specs at the top of a
 library/program.  Everything in the `provide` gets declared
-`External`.  The programs we've been writing implicit have an empty
+`Global`.  The programs we've been writing implicitly have an empty
 `provide` spec.
 
 It's also pretty easy to handle `require` specs.  A `require` gives a
