@@ -1,5 +1,5 @@
 #lang racket
-(provide parse parse-e)
+(provide parse parse-e parse-d)
 (require "ast.rkt")
 
 ;; S-Expr -> Prog
