@@ -90,3 +90,76 @@ of the modules will need to provide `main`, and now everything is just
 module with a uniform compilation strategy.  The parser could be set
 up so that if there's only an expression in the file, it parses it as
 `(provide main) (define (main) e)`.
+
+Modules
+-------
+
+OK, I implemented roughly what's described above.  Now there's just a
+notion of a module and a uniform way of compiling modules.
+
+A module that has an expression in it or a main function is considered
+the main module and the run-time will jump to it.
+
+I more or less am happy with this EXCEPT, building programs is more of
+a pain now because `make` doesn't just magically work.  If a module
+requires another module, you have to build its object code and then
+link it by hand.
+
+Here's an example; the main module is example.rkt, and it requires
+sum.rkt, and also uses a standard library function, `reverse`:
+
+```
+> cat sum.rkt
+#lang racket
+(provide sum)
+(define (sum xs)
+  (if (empty? xs)
+      0
+      (+ (car xs) (sum (cdr xs)))))
+
+> cat example.rkt
+#lang racket
+(require "sum.rkt")
+(sum (reverse (cons 1 (cons 2 (cons 3 '())))))
+
+> make runtime.o
+gcc -fPIC -c -g -o main.o main.c
+gcc -fPIC -c -g -o values.o values.c
+gcc -fPIC -c -g -o print.o print.c
+racket -t compile-file.rkt -m stdlib.rkt > stdlib.s
+nasm -g -f macho64 -o stdlib.o stdlib.s
+gcc -fPIC -c -g -o io.o io.c
+ld -r main.o values.o print.o stdlib.o io.o -o runtime.o
+rm stdlib.s
+> make sum.o
+racket -t compile-file.rkt -m sum.rkt > sum.s
+nasm -g -f macho64 -o sum.o sum.s
+rm sum.s
+> make example.o
+racket -t compile-file.rkt -m example.rkt > example.s
+nasm -g -f macho64 -o example.o example.s
+rm example.s
+> gcc example.o sum.o runtime.o -o example.run
+> ./example.run
+6
+```
+
+The problem with `make example.run` is that the Makefile doesn't know
+anything about `example.rkt` requiring `sum.rkt`, so it doesn't know
+to make `sum.o` and link it in to the final executable.
+
+I think part of the problem is that the Makefile is playing two roles:
+
+* as a Makefile for building the compiler
+* as a utility for running the compiler
+
+Maybe the latter is an abuse of the Makefile.  I'm not sure if we
+should do something else, or continue the abuse.  But if it's the
+latter, I think we have to do something like this:
+
+https://www.gnu.org/software/make/manual/html_node/Automatic-Prerequisites.html
+
+which seems kinda awful.
+
+
+
