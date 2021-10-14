@@ -4,7 +4,8 @@
 
 ;; Expr -> Asm
 (define (compile e)
-  (prog (Label 'entry)
+  (prog (Global 'entry)
+        (Label 'entry)
         (compile-e e)
         (Ret)))
 

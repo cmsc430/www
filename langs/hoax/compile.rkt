@@ -16,6 +16,7 @@
         (Extern 'read_byte)
         (Extern 'write_byte)
         (Extern 'raise_error)
+        (Global 'entry)
         (Label 'entry)
         (Mov rbx rdi) ; recv heap pointer
         (compile-e e '())

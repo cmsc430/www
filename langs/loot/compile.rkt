@@ -22,6 +22,7 @@
            (Extern 'read_byte)
            (Extern 'write_byte)
            (Extern 'raise_error)
+           (Global 'entry)
            (Label 'entry)
            (Mov rbx rdi)
            (compile-e e '(#f))

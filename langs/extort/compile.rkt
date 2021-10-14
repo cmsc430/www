@@ -12,6 +12,7 @@
         (Extern 'read_byte)
         (Extern 'write_byte)
         (Extern 'raise_error)
+        (Global 'entry)
         (Label 'entry)
         (Sub 'rsp 8)
         (compile-e e)

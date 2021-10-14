@@ -109,6 +109,7 @@
            #:transparent
            #:guard guard)))
 
+(instruct Global (x)       check:label-symbol)
 (instruct Label  (x)       check:label-symbol)
 (instruct Call   (x)       check:target)
 (instruct Ret    ()        check:none)
@@ -146,7 +147,8 @@
        (not (register? x))))
 
 (define (instruction? x)
-  (or (Label? x)
+  (or (Global? x)
+      (Label? x)
       (Extern? x)
       (Call? x)
       (Ret? x)

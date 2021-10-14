@@ -11,6 +11,7 @@
   (prog (Extern 'peek_byte)
         (Extern 'read_byte)
         (Extern 'write_byte)
+        (Global 'entry)
         (Label 'entry)
         (Sub rsp 8)
         (compile-e e)

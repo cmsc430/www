@@ -27,7 +27,8 @@
 @(begin-for-syntax
    (require racket/system a86/ast a86/printer)
    (define (tri n)
-      (list (Label 'entry)
+      (list (Global 'entry)
+         (Label 'entry)
          (Mov 'rbx n)      (% "the \"input\"")
          (%%% "tri: a recursive function for computing nth")
          (%%% "triangular number, where n is given in rbx.")
@@ -332,7 +333,8 @@ Here's the triangular number example:
  (require a86)
  ; a86 code that computes the 36th triangular number
  (define tri-36
-   (list (Label 'entry)
+   (list (Global 'entry)
+         (Label 'entry)
          (Mov 'rbx 36)     (% "the \"input\"")
          (%%% "tri: a recursive function for computing nth")
          (%%% "triangular number, where n is given in rbx.")
@@ -374,7 +376,8 @@ number.  Easy-peasy:
  ; Natural -> a86
  ; Computes a86 code that computes the @math{n}th triangular number
  (define (tri n)
-   (list (Label 'entry)
+   (list (Global 'entry)
+         (Label 'entry)
          (Mov 'rbx n)      (% "the \"input\"")
          (%%% "tri: a recursive function for computing nth")
          (%%% "triangular number, where n is given in rbx.")
@@ -500,6 +503,7 @@ us try out examples:
 (define (eg asm)
   (asm-interp
    (prog
+    (Global 'entry)
     (Label 'entry)
     asm  ; the example code we want to try out
     (Ret)
@@ -814,6 +818,7 @@ the current location of the stack.
  @ex[
  (asm-interp
   (prog
+   (Global 'entry)
    (Label 'entry)
    (Call 'f)
    (Add 'rax 1)
@@ -831,6 +836,7 @@ the current location of the stack.
  @ex[
  (asm-interp
   (prog
+   (Global 'entry)
    (Label 'entry)
    (Mov 'rax 42)
    (Ret)))
@@ -847,6 +853,7 @@ the current location of the stack.
  @ex[
  (asm-interp
   (prog
+   (Global 'entry)
    (Label 'entry)                   
    (Mov 'rbx 42)
    (Mov 'rax 'rbx)
@@ -864,6 +871,7 @@ the current location of the stack.
  @ex[
  (asm-interp
   (prog
+   (Global 'entry)
    (Label 'entry)                   
    (Mov 'rax 32)
    (Add 'rax 10)
@@ -879,6 +887,7 @@ the current location of the stack.
  @ex[
  (asm-interp
   (prog
+   (Global 'entry)
    (Label 'entry)                   
    (Mov 'rax 32)
    (Sub 'rax 10)
@@ -893,6 +902,7 @@ the current location of the stack.
  @ex[
  (asm-interp
   (prog
+   (Global 'entry)
    (Label 'entry)
    (Mov 'rax 42)
    (Cmp 'rax 2)
@@ -909,6 +919,7 @@ the current location of the stack.
  @ex[
  (asm-interp
   (prog
+   (Global 'entry)
    (Label 'entry)
    (Mov 'rax 42)
    (Jmp 'l1)
@@ -918,6 +929,7 @@ the current location of the stack.
 
  (asm-interp
   (prog
+   (Global 'entry)
    (Label 'entry)
    (Mov 'rax 42)
    (Pop 'rbx)   
@@ -932,6 +944,7 @@ the current location of the stack.
  @ex[
  (asm-interp
   (prog
+   (Global 'entry)
    (Label 'entry)
    (Mov 'rax 42)
    (Cmp 'rax 2)
@@ -948,6 +961,7 @@ the current location of the stack.
  @ex[
  (asm-interp
   (prog
+   (Global 'entry)
    (Label 'entry)
    (Mov 'rax 42)
    (Cmp 'rax 2)
@@ -964,6 +978,7 @@ the current location of the stack.
  @ex[
  (asm-interp
   (prog
+   (Global 'entry)
    (Label 'entry)
    (Mov 'rax 42)
    (Cmp 'rax 2)
@@ -980,6 +995,7 @@ the current location of the stack.
  @ex[
  (asm-interp
   (prog
+   (Global 'entry)
    (Label 'entry)
    (Mov 'rax 42)
    (Cmp 'rax 2)
@@ -997,6 +1013,7 @@ the current location of the stack.
  (ex
  (asm-interp
   (prog
+   (Global 'entry)
    (Label 'entry)
    (Mov 'rax #b1011) ; #b1011 = 11
    (And 'rax #b1110) ; #b1110 = 14
@@ -1011,6 +1028,7 @@ the current location of the stack.
  (ex
  (asm-interp
   (prog
+   (Global 'entry)
    (Label 'entry)
    (Mov 'rax #b1011) ; #b1011 = 11
    (Or 'rax #b1110)  ; #b1110 = 14
@@ -1025,6 +1043,7 @@ the current location of the stack.
  (ex
  (asm-interp
   (prog
+   (Global 'entry)
    (Label 'entry)
    (Mov 'rax #b1011) ; #b1011 = 11
    (Xor 'rax #b1110) ; #b1110 = 14
@@ -1040,6 +1059,7 @@ the current location of the stack.
  (ex
  (asm-interp
   (prog
+   (Global 'entry)
    (Label 'entry)
    (Mov 'rax #b100) ; #b100 = 4 = 2^2
    (Sal 'rax 6)
@@ -1055,6 +1075,7 @@ the current location of the stack.
  (ex
  (asm-interp
   (prog
+   (Global 'entry)
    (Label 'entry)
    (Mov 'rax #b100000000) ; #b100000000 = 256
    (Sar 'rax 6)
@@ -1062,6 +1083,7 @@ the current location of the stack.
 
  (asm-interp
   (prog
+   (Global 'entry)
    (Label 'entry)
    (Mov 'rax #b100001101) ; #b100001101 = 269
    (Sar 'rax 6)
@@ -1077,6 +1099,7 @@ the current location of the stack.
  @ex[
  (asm-interp
   (prog
+   (Global 'entry)
    (Label 'entry)
    (Mov 'rax 42) 
    (Push 'rax)
@@ -1092,6 +1115,7 @@ the current location of the stack.
  @ex[
  (asm-interp
   (prog
+   (Global 'entry)
    (Label 'entry)
    (Mov 'rax 42) 
    (Push 'rax)
@@ -1107,6 +1131,7 @@ the current location of the stack.
  @ex[
  (asm-interp
   (prog
+   (Global 'entry)
    (Label 'entry)
    (Lea 'rbx 'done)
    (Mov 'rax 42)
@@ -1129,12 +1154,14 @@ the current location of the stack.
  @tt{nasm}.
 
  @ex[
- (asm-string (prog (Label 'entry)
+ (asm-string (prog (Global 'entry)
+                   (Label 'entry)
                    (Mov 'rax 42)
                    (Ret)))
 
  (display
-  (asm-string (prog (Label 'entry)
+  (asm-string (prog (Global 'entry)
+                    (Label 'entry)
                     (Mov 'rax 42)
                     (Ret))))
  ]
@@ -1160,7 +1187,8 @@ The simplest form of interpreting an a86 program is to use
  Assemble, link, and execute an a86 program.
 
  @ex[
- (asm-interp (prog (Label 'entry)
+ (asm-interp (prog (Global 'entry)
+                   (Label 'entry)
                    (Mov 'rax 42)
                    (Ret)))
  ]
@@ -1170,7 +1198,8 @@ The simplest form of interpreting an a86 program is to use
  program is:
 
 @ex[
- (asm-interp (prog (Label 'f)
+ (asm-interp (prog (Global 'f)
+                   (Label 'f)
                    (Mov 'rax 42)
                    (Ret)))
  ]
@@ -1189,7 +1218,8 @@ The simplest form of interpreting an a86 program is to use
  to jump to null, which causes a segmentation fault:
 
  @ex[
- (eval:error (asm-interp (prog (Label 'crash)
+ (eval:error (asm-interp (prog (Global 'crash)
+                               (Label 'crash)
                                (Mov 'rax 0)
                                (Jmp 'rax))))
  ]
@@ -1233,6 +1263,7 @@ code:
 @ex[
 (parameterize ((current-objs '("gcd.o")))
   (asm-interp (prog (Extern 'gcd)
+                    (Global 'f)
                     (Label 'f)
                     (Mov 'rdi 11571)
                     (Mov 'rsi 1767)
@@ -1251,6 +1282,7 @@ linking error saying a symbol is undefined:
 @ex[
 (eval:error
   (asm-interp (prog (Extern 'gcd)
+                    (Global 'f)
                     (Label 'f)
                     (Mov 'rdi 11571)
                     (Mov 'rsi 1767)

@@ -411,7 +411,8 @@ adds 1 to the result, and returns:
 
 @ex[
 (define p
-  (prog (Label 'entry)
+  (prog (Global 'entry)
+        (Label 'entry)
         (Call 'meaning)
         (Add 'rax 1)
         (Ret)
@@ -445,12 +446,14 @@ so long as we declare in this one that @tt{meaning} is an external label:
 @ex[
 (define p
   (prog (Extern 'meaning)
+        (Global 'entry)
         (Label 'entry)
         (Call 'meaning)
         (Add 'rax 1)
         (Ret)))
 (define life
-  (prog (Label 'meaning)
+  (prog (Global 'meaning)
+        (Label 'meaning)
         (Mov 'rax 42)
         (Ret)))
 ]
@@ -484,6 +487,7 @@ saving anything; this is just about alignment. The revised
 @ex[    
 (define p
   (prog (Extern 'meaning)
+        (Global 'entry)
         (Label 'entry)
         (Sub 'rsp 8)
         (Call 'meaning)
@@ -585,7 +589,8 @@ of its argument in @racket['rdi] before the call:
 @ex[
  (define q
    (prog (Extern 'dbl)
-         (Label 'entry)
+         (Global 'entry)
+	 (Label 'entry)
          (Mov 'rdi 21)
          (Call 'dbl)
          (Add 'rax 1)
@@ -623,7 +628,8 @@ pop around the call:
 @ex[
  (define q
    (prog (Extern 'dbl)
-         (Label 'entry)
+         (Global 'entry)
+	 (Label 'entry)
          (Sub 'rsp 8)
          (Mov 'rdi 1)
          (Push 'rdi)
@@ -733,6 +739,7 @@ function from before, we can do the following:
  (current-objs '("double.o"))
  (asm-interp
   (prog (Extern 'dbl)
+        (Global 'entry)
         (Label 'entry)
         (Mov 'rdi 21)
         (Call 'dbl)
@@ -762,6 +769,7 @@ involving IO:
  (asm-interp/io
    (prog (Extern 'read_byte)
          (Extern 'write_byte)
+	 (Global 'entry)
          (Label 'entry)
          (Call 'read_byte)
          (Mov 'rdi 'rax)
