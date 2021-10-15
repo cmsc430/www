@@ -19,8 +19,8 @@ default: runtime.o
 runtime.o: $(objs)
 	ld -r $(objs) -o runtime.o
 
-%.run: %.o runtime.o
-	gcc runtime.o $< -o $@
+#%.run: %.o runtime.o
+#	gcc runtime.o $< -o $@
 
 .c.o:
 	gcc -fPIC -c -g -o $@ $<
@@ -36,3 +36,6 @@ clean:
 
 test: example.run
 	@test "$(shell ./example.run)" = "$(shell racket example.rkt)"
+
+%.run: %.o runtime.o $(shell echo "sum.o")
+	gcc $(shell racket -t deps.rkt -m $(patsubst %.run,%.rkt,$(@))) $< runtime.o -o $@

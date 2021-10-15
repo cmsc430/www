@@ -28,7 +28,11 @@
 (define (normalize-module m)
   (match m
     [(Module ps rs ds)
-     (Module ps (remq* ps (append rs stdlib-provides)) ds)]))
+     (Module ps (normalize-provides ps rs) ds)]))
+
+(define (normalize-provides ps rs)
+  (remq* ps (append stdlib-provides
+                    (append-map second rs))))
 
 (define (compile-main ds)
   (if (main? ds)
@@ -47,8 +51,8 @@
 (define (compile-provides ps)
   (map (lambda (p) (Global (symbol->label p))) ps))
 
-(define (compile-requires ps)
-  (map (lambda (p) (Extern (symbol->label p))) ps))
+(define (compile-requires rs)
+  (map (lambda (r) (Extern (symbol->label r))) rs))
 
 #|
 ;; Prog -> Asm

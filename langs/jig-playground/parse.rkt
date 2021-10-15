@@ -54,7 +54,9 @@
   (match x
     [(cons 'require xs)
      (if (andmap string? xs)
-         (append-map Module-ps (map parse-module-file xs))
+         (map (lambda (x)
+                (list x (Module-ps (parse-module-file x))))
+              xs)
          (error "invalid require clause"))]))
 
 ;; S-Expr -> Defn
