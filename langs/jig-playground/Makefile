@@ -1,6 +1,8 @@
 UNAME := $(shell uname)
 .PHONY: test
 
+.SECONDARY: $(wild *.make)
+
 ifeq ($(UNAME), Darwin)
   format=macho64
 else
@@ -19,9 +21,6 @@ default: runtime.o
 runtime.o: $(objs)
 	ld -r $(objs) -o runtime.o
 
-#%.run: %.o runtime.o
-#	gcc runtime.o $< -o $@
-
 .c.o:
 	gcc -fPIC -c -g -o $@ $<
 
@@ -31,11 +30,13 @@ runtime.o: $(objs)
 %.s: %.rkt
 	racket -t compile-file.rkt -m $< > $@
 
+%.make: %.rkt
+	racket -t build.rkt -m $< > $@
+
+%.run: %.make
+	make $@
+
 clean:
-	rm *.o *.s *.run
+	-rm *.o *.s *.run *.make
 
-test: example.run
-	@test "$(shell ./example.run)" = "$(shell racket example.rkt)"
-
-%.run: %.o runtime.o $(shell echo "sum.o")
-	gcc $(shell racket -t deps.rkt -m $(patsubst %.run,%.rkt,$(@))) $< runtime.o -o $@
+-include $(wildcard *.make)
