@@ -34,3 +34,29 @@ DVH ideas for Fall 2021
 - Add a note explaining #:prefab when it first appears
 - Add a note about "types" in Racket: a useful concept for organizing programs even
   without an enforcement mechanism (and there's #lang typed/racket)
+
+DVH ideas based on Fall 2021
+
+* Make take-home exam 48 instead of 72 hours, release on Tuesday at
+  lecture time, due on Thursday just before lecture.  No need to miss
+  two classes.
+
+* Need to address increasing problem with non-x86 machines.
+
+* Do three shorter exams.
+
+* Have an early assignment that requires demonstrating all of the
+  tooling works.
+
+* Think hard about what to ask on the exams to force students
+  internalizing the important concepts from the class.  The box-swap
+  question on midterm 1 was good in this regard.  So was Fraud problem
+  since it was more open ended (less guidance on where to write code)
+  and required a run-time loop, which caused some students to trip up
+  on the phase distinction.
+
+* Make testing take time.
+
+* Possible idea: Each assignment due in two parts, first week has no
+  testing feedback.  Second has testing feedback.  Teach random
+  testing early and get students to build their own testers.
