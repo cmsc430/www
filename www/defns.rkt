@@ -14,8 +14,8 @@
 
 
 (define m1-date "Friday, October 15th")
-(define m2-date "Tuesday, November 9th")
-(define final-date "TBD")
+(define m2-date "Friday, November 12th")
+(define final-date "Saturday, December 18th")
 (define elms-url "TBD")
 
 (define racket-version "8.1")

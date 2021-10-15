@@ -6,6 +6,7 @@
 	  scribble/examples
 	  "utils.rkt"
 	  "ev.rkt"
+	  "../fancyverb.rkt"
 	  "../utils.rkt")
 
 @(define codeblock-include (make-codeblock-include #'h))
@@ -16,7 +17,14 @@
 @(for-each (λ (f) (ev `(require (file ,f))))
 	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
-@title[#:tag "Iniquity"]{Iniquity: function definitions and calls}
+@(define (shellbox . s)
+   (parameterize ([current-directory (build-path notes "iniquity")])
+     (filebox (emph "shell")
+              (fancyverbatim "fish" (apply shell s)))))
+
+@(define this-lang "Iniquity")
+
+@title[#:tag this-lang]{@|this-lang|: function definitions and calls}
 
 @table-of-contents[]
 
@@ -58,14 +66,15 @@ arbitrarily large data with finite-sized programs.
 Let's call it @bold{Iniquity}.
 
 We will extend the syntax by introducing a new syntactic category of
-programs, which have the shape:
+@bold{programs}, which consist of a sequence of function definitions
+followed by an expression:
 
 @racketblock[
-(begin
-  (define (_f0 _x0 ...) _e0)
-  (define (_f1 _x1 ...) _e1)
-  ...
-  _e)]
+(define (_f0 _x00 ...) _e0)
+(define (_f1 _x10 ...) _e1)
+...
+e
+]
 
 And the syntax of expressions will be extended to include function calls:
 
@@ -79,6 +88,36 @@ Note that functions can have any number of parameters and,
 symmetrically, calls can have any number of arguments.  A program
 consists of zero or more function definitions followed by an
 expression.
+
+
+An example concrete @this-lang program is:
+
+@codeblock-include["iniquity/example/len.rkt"]
+
+To represent these kinds of programs, we extend the definition of ASTs
+as follows:
+
+@codeblock-include["iniquity/ast.rkt"]
+
+The parser will need to be updated to parse programs, not just
+expressions.  Since a program is a sequence of forms, we will assume
+the reader will read in all of these forms and construct a list of the
+elements.  So the program parser @racket[parse] takes a list
+of s-expressions.  There is also a new parse for function definitions,
+@racket[parse-definition].  The parser for expressions @racket[parse-e]
+is updated to include function applications.
+
+@codeblock-include["iniquity/parse.rkt"]
+
+Because of the change from a program being a single expression to a
+sequence, we have to update the utilities that read program files,
+i.e. @tt{interp-file.rkt} and @tt{compile-file.rkt}:
+
+@codeblock-include["iniquity/interp-file.rkt"]
+@codeblock-include["iniquity/compile-file.rkt"]
+
+
+
 
 
 @section[#:tag-prefix "iniquity"]{An Interpreter for Functions}
@@ -117,35 +156,47 @@ have significantly increased the expressivity of our language.}
 We can try it out:
 
 @ex[
-(interp (parse '(begin (define (double x) (+ x x))
-                       (double 5))))
+(interp
+ (parse
+  '[(define (double x) (+ x x))
+    (double 5) ]))
 ]
 
 We can see it works with recursive functions, too. Here's a recursive
 function for computing triangular numbers:
 
 @ex[
-(interp (parse '(begin (define (tri x)
-                         (if (zero? x)
-                             0
-                             (+ x (tri (sub1 x)))))
-                       (tri 9))))
-]
+(interp
+  (parse
+   '[(define (tri x)
+       (if (zero? x)
+           0
+           (+ x (tri (sub1 x)))))
+     
+     (tri 9)]))
+ ]
 
 We can even define mutually recursive functions such as @racket[even?]
 and @racket[odd?]:
 
 @ex[
-(interp (parse '(begin (define (even? x)
-                         (if (zero? x)
-                             #t
-                             (odd? (sub1 x))))
-                       (define (odd? x)
-                         (if (zero? x)
-                             #f
-                             (even? (sub1 x))))
-                       (even? 101))))
-]
+(interp
+  (parse
+   '[(define (even? x)
+       (if (zero? x)
+           #t
+           (odd? (sub1 x))))
+     
+     (define (odd? x)
+       (if (zero? x)
+           #f
+           (even? (sub1 x))))
+     (even? 101)]))]
+
+And the utility for interpreting programs in files works as well:
+
+@shellbox["racket -t interp-file.rkt -m example/len.rkt"]
+
 
 @section[#:tag-prefix "iniquity"]{Compiling a Call}
 
@@ -257,8 +308,8 @@ look like the following:
            (compile-es es (cons #f c))  ; generate code for the argument
                                         ; taking the pad into account
            (Call 'double)
-           (Add rsp 16)))))             ; pop args and pad
-))
+           (Add rsp 16))))              ; pop args and pad
+)))
 
 This will work if the program consists only of a call to
 @racket[double], however it doesn't work in general.
@@ -473,7 +524,7 @@ Here's an example of the code this compiler emits:
 (displayln
  (asm-string
   (compile
-   (parse '(begin (define (double x) (+ x x)) (double 5))))))
+   (parse '[(define (double x) (+ x x)) (double 5)]))))
 ]
 
 And we can confirm running the code produces results consistent with
@@ -481,27 +532,27 @@ the interpreter:
 
 @ex[
 (current-objs '("runtime.o"))
-(define (run e)
-  (asm-interp (compile (parse e))))
+(define (run p)
+  (asm-interp (compile (parse p))))
 
-(run '(begin (define (double x) (+ x x))
-             (double 5)))
+(run '[(define (double x) (+ x x))
+       (double 5)])
 
-(run '(begin (define (tri x)
-               (if (zero? x)
-                   0
-                   (+ x (tri (sub1 x)))))
-             (tri 9)))
+(run '[(define (tri x)
+         (if (zero? x)
+             0
+             (+ x (tri (sub1 x)))))
+       (tri 9)])
 
-(run '(begin (define (even? x)
-               (if (zero? x)
-                   #t
-                   (odd? (sub1 x))))
-             (define (odd? x)
-               (if (zero? x)
-                   #f
-                   (even? (sub1 x))))
-             (even? 101)))
+(run '[(define (even? x)
+         (if (zero? x)
+             #t
+             (odd? (sub1 x))))
+       (define (odd? x)
+         (if (zero? x)
+             #f
+             (even? (sub1 x))))
+       (even? 101)])
 ]
 
 

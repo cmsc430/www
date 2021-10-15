@@ -1,6 +1,6 @@
 #lang racket
 (provide main)
-(require "parse.rkt" "interp.rkt")
+(require "parse.rkt" "interp.rkt" "read-all.rkt")
 
 ;; String -> Void
 ;; Parse and interpret contents of given filename,
@@ -9,5 +9,5 @@
   (let ((p (open-input-file fn)))
     (begin
       (read-line p) ; ignore #lang racket line
-      (println (interp (parse (read p))))
+      (println (interp (parse (read-all p))))
       (close-input-port p))))
