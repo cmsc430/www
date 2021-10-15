@@ -51,13 +51,17 @@
                
                (list @wk{10/12}
 	       	     @bold{@seclink["Midterm_1"]{M1}}
-                     @elem{@secref["Hustle"], cont. (@link["https://youtu.be/SwKc_FeEmHk"]{video})}
+                     @itemlist[
+		       @item{@secref["Hustle"], cont. (@link["https://youtu.be/SwKc_FeEmHk"]{video})}
+		       @item{@secref["Hoax"]}]
                      @elem{No lecture (exam)})
 
                (list @wk{10/19}                     
 	       	     @seclink["Assignment 4"]{A4}
-                     @elem{TBD}
-                     @elem{TBD})
+		     @itemlist[
+		       @item{@secref["Hoax"], cont.}
+                       @item{Hoodwink}]
+                     @elem{@secref{Iniquity}})
 		                    
                (list @wk{10/26}
                      ""
@@ -66,29 +70,29 @@
                
                (list @wk{11/2}
                      @tbaseclink["Assignment 5"]{A5}                     
-                     @elem{Randomized Testing}
-                     @elem{Review})
+                     @elem{@secref["Loot"]}
+                     @elem{@secref["Loot"], cont.})
                
                (list @wk{11/9}
                      @bold{@seclink["Midterm_2"]{M2}}
-                     @elem{No lecture (exam)}
-                     @elem{Exam Review})
+                     @elem{(slack.)}
+                     @elem{No lecture (exam)})
                                     
                (list @wk{11/16}
 	             ""
-                     @elem{@secref["Loot"]}
-		     @elem{@secref["Loot"] (cont.)}		     
+                     @elem{Mountebank} @;{Match}
+		     @elem{Neerdowell} @;{ ?? }
                      )
 
                (list @wk{11/23}
                      ""
-                     @elem{Hustle Typing  - Compiler Implications}
+                     @elem{Self-hosting}
                      @elem{No class, Thanksgiving.})
 
                (list @wk{11/30}
                      @tbaseclink["Assignment 6"]{A6}
-		     @elem{Typing Lambdas - Hindley-Milner}
-		     @elem{@secref["Shakedown"]}
+		     @elem{GC}
+		     @elem{GC}
 		     )
 
                (list @wk{12/7}
