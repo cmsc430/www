@@ -1,8 +1,8 @@
 #lang racket
-(begin
-    (define (repeat n v)
-        (if (zero? n)
-            '()
-            (cons v (repeat (sub1 n) v))))
-    (repeat 10 42))
+(define (repeat n v)
+  (if (zero? n)
+      '()
+      (cons v (repeat (sub1 n) v))))
+
+(repeat 10 42)
 

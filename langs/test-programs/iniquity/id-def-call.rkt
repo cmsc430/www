@@ -1,5 +1,3 @@
 #lang racket
-(begin
-    (define (f x) x)
-    (f 5))
-
+(define (f x) x)
+(f 5)
