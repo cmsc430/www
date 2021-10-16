@@ -319,20 +319,20 @@
 ;; CEnv -> Asm
 ;; Pad the stack to be aligned for a call
 (define (pad-stack c)
-  (match (even? (length c))
+  (match (odd? (length c))
     [#t (seq (Sub rsp 8))]
     [#f (seq)]))
 
 ;; CEnv -> Asm
 ;; Undo the stack alignment after a call
 (define (unpad-stack c)
-  (match (even? (length c))
+  (match (odd? (length c))
     [#t (seq (Add rsp 8))]
     [#f (seq)]))
 
 ;; CEnv -> Label
 ;; Determine correct error handler label to jump to.
 (define (error-label c)
-  (match (even? (length c))
+  (match (odd? (length c))
     [#t 'raise_error]
     [#f 'raise_error_align]))

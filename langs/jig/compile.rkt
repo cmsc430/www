@@ -7,6 +7,7 @@
 (define rbx 'rbx) ; heap
 (define rsp 'rsp) ; stack
 (define rdi 'rdi) ; arg
+(define r15 'r15)
 
 ;; type CEnv = [Listof Variable]
 
@@ -21,7 +22,9 @@
            (Global 'entry)
            (Label 'entry)
            (Mov rbx rdi) ; recv heap pointer
+           (Pop r15)
            (compile-e e '() #t)
+           (Push r15)
            (Ret)
            (Label 'raise_error_align)
            (Sub rsp 8)
@@ -43,7 +46,7 @@
      (seq (Label (symbol->label f))
           (compile-e e (reverse xs) #t)
           (Add rsp (* 8 (length xs))) ; pop args
-          (Ret))]))
+          (Jmp r15))]))
 
 ;; Expr CEnv Bool -> Asm
 (define (compile-e e c t?)
@@ -174,17 +177,19 @@
 (define (compile-app-nontail f es c)
   (let ((ret (gensym 'ret)))
     (if (odd? (length c))
-        (seq (Lea r8 ret)
-             (Push r8)
+        (seq (Push r15)
+             (Lea r15 ret)
              (compile-es es (cons #f c))
              (Jmp (symbol->label f))
-             (Label ret))
+             (Label ret)
+             (Pop r15))
         (seq (Sub rsp 8)
-             (Lea r8 ret)
-             (Push r8)
+             (Push r15)
+             (Lea r15 ret)
              (compile-es es (cons #f (cons #f c)))
              (Jmp (symbol->label f))
              (Label ret)
+             (Pop r15)
              (Add rsp 8)))))
 
 ;; [Listof Expr] CEnv -> Asm
