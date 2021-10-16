@@ -1,19 +1,24 @@
 #lang racket
-(provide parse parse-e parse-d)
+(provide parse parse-define parse-e)
 (require "ast.rkt")
 
-;; S-Expr -> Prog
+;; [Listof S-Expr] -> Prog
 (define (parse s)
   (match s
-    [(list 'begin (and ds (list 'define _ _)) ... e)
-     (Prog (map parse-d ds) (parse-e e))]
-    [e (Prog '() (parse-e e))]))
+    [(cons (and (cons 'define _) d) s)
+     (match (parse s)
+       [(Prog ds e)
+        (Prog (cons (parse-define d) ds) e)])]
+    [(cons e '()) (Prog '() (parse-e e))]
+    [_ (error "program parse error")]))
 
 ;; S-Expr -> Defn
-(define (parse-d s)
+(define (parse-define s)
   (match s
-    [(list 'define (list (? symbol? f) (? symbol? xs) ...) e)
-     (Defn f xs (parse-e e))]
+    [(list 'define (list-rest (? symbol? f) xs) e)
+     (if (andmap symbol? xs)
+         (Defn f xs (parse-e e))
+         (error "parse definition error"))]
     [_ (error "Parse defn error" s)]))
 
 ;; S-Expr -> Expr
@@ -30,7 +35,7 @@
     [(list (? (op? op1) p1) e)     (Prim1 p1 (parse-e e))]
     [(list (? (op? op2) p2) e1 e2) (Prim2 p2 (parse-e e1) (parse-e e2))]
     [(list (? (op? op3) p3) e1 e2 e3)
-     (Prim3 p3 (parse-e e1) (parse-e e2) (parse-e e3))]    
+     (Prim3 p3 (parse-e e1) (parse-e e2) (parse-e e3))]
     [(list 'begin e1 e2)
      (Begin (parse-e e1) (parse-e e2))]
     [(list 'if e1 e2 e3)

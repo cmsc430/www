@@ -4,5 +4,5 @@
          "../interp.rkt"
          "../interp-io.rkt")
 
-(test-runner    (λ (e) (interp (parse e))))
-(test-runner-io (λ (e s) (interp/io (parse e) s)))
+(test-runner    (λ p (interp (parse p))))
+(test-runner-io (λ (s . p) (interp/io (parse p) s)))
