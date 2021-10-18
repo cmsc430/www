@@ -24,7 +24,9 @@
 (define (interp-prim2 op v1 v2)
   (match op
     ['+ (if (and (integer? v1) (integer? v2)) (+ v1 v2) 'err)]
-    ['- (if (and (integer? v1) (integer? v2)) (- v1 v2) 'err)]))
+    ['- (if (and (integer? v1) (integer? v2)) (- v1 v2) 'err)]
+    ['< (if (and (integer? v1) (integer? v2)) (< v1 v2) 'err)]
+    ['= (if (and (integer? v1) (integer? v2)) (= v1 v2) 'err)]))
 
 ;; Any -> Boolean
 (define (codepoint? v)

@@ -1,17 +1,6 @@
 #lang racket
-(require "../compile.rkt"
-         "../interp.rkt"
-         "../interp-io.rkt"         
-         "../parse.rkt"
-         "../types.rkt"
-         a86
-         rackunit)
-
-;; link with runtime for IO operations
-(unless (file-exists? "../runtime.o")
-  (system "make -C .. runtime.o"))
-(current-objs
- (list (path->string (normalize-path "../runtime.o"))))
+(provide test-runner test-runner-io)
+(require rackunit)
 
 (define (test-runner run)
   
@@ -39,9 +28,9 @@
   ;; Dupe examples
   (check-equal? (run #t) #t)
   (check-equal? (run #f) #f)
-  (check-equal? (run (if #t 1 2)) 1)
-  (check-equal? (run (if #f 1 2)) 2)
-  (check-equal? (run (if 0 1 2)) 1)
+  (check-equal? (run '(if #t 1 2)) 1)
+  (check-equal? (run '(if #f 1 2)) 2)
+  (check-equal? (run '(if 0 1 2)) 1)
   (check-equal? (run '(if #t 3 4)) 3)
   (check-equal? (run '(if #f 3 4)) 4)
   (check-equal? (run '(if  0 3 4)) 3)
@@ -87,12 +76,15 @@
   (check-equal? (run '(let ((x (+ 1 2)))
                         (let ((z (- 4 x)))
                           (+ (+ x x) z))))
-                7))
+                7)
 
-(test-runner (λ (e) (interp (parse e))))
-(test-runner (λ (e) (match (asm-interp (compile (parse e)))
-                      ['err 'err]
-                      [bs (bits->value bs)])))
+  (check-equal? (run '(= 5 5)) #t)
+  (check-equal? (run '(= 4 5)) #f)
+  (check-equal? (run '(= (add1 4) 5)) #t)
+  (check-equal? (run '(< 5 5)) #f)
+  (check-equal? (run '(< 4 5)) #t)
+  (check-equal? (run '(< (add1 4) 5)) #f))
+
 
 (define (test-runner-io run)
   ;; Evildoer examples
@@ -123,15 +115,3 @@
                 (cons 97 ""))
   (check-equal? (run '(let ((x 97)) (begin (peek-byte) x)) "b")
                 (cons 97 "")))
-  
-
-(test-runner-io (λ (e s) (interp/io (parse e) s)))
-(test-runner-io (λ (e s)
-                  (match (asm-interp/io (compile (parse e)) s)
-                    [(cons 'err o) (cons 'err o)]
-                    [(cons r o)
-                     (cons (bits->value r) o)])))
-
-;; run command line compiler and compare against Racket as refernece implementation
-(require rackunit "../../test-programs/get-progs.rkt")
-(for-each test-prog (get-progs "fraud"))

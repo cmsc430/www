@@ -121,13 +121,13 @@
 
 (define-extended-language G-concrete F-concrete
   (e ::= x i b (if e e e) (let ((x e)) e) (p1 e) (p2 e e))
-  (p2 ::= + -)
+  (p2 ::= + - < =)
   (p1 ::= add1 sub1 zero?)
   (p ::= p1 p2))
 
 (define-extended-language G F
   (e ::= .... (Prim2 p2 e e))
-  (p2 ::= '+ '-)
+  (p2 ::= '+ '- '< '=)
   (p ::= p1 p2))
   
 (define-judgment-form G
@@ -192,6 +192,8 @@
   [(𝑭-𝒑𝒓𝒊𝒎 'zero? i) #f]
   [(𝑭-𝒑𝒓𝒊𝒎 '+ i_0 i_1) ,(+ (term i_0) (term i_1))]
   [(𝑭-𝒑𝒓𝒊𝒎 '- i_0 i_1) ,(- (term i_0) (term i_1))]
+  [(𝑭-𝒑𝒓𝒊𝒎 '< i_0 i_1) ,(< (term i_0) (term i_1))]
+  [(𝑭-𝒑𝒓𝒊𝒎 '= i_0 i_1) ,(< (term i_0) (term i_1))]    
   [(𝑭-𝒑𝒓𝒊𝒎 _ ...) err])
 
 (define-metafunction G

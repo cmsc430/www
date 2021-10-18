@@ -110,6 +110,8 @@ What's new are the following @emph{binary} operations:
 @racketblock[
 (+ _e0 _e1)
 (- _e0 _e1)
+(< _e0 _e1)
+(= _e0 _e1)
 ]
 
 This leads to the following revised grammar for @|this-lang|:
@@ -123,7 +125,7 @@ We can model it as a datatype as usual:
 ;; type Expr =
 ;; ...
 ;; | (Prim2 Op2 Expr Expr)
-;; type Op2 = '+ | '-
+;; type Op2 = '+ | '- | '< | '=
 ...
 (struct Prim2 (p e1 e2) #:prefab)
 }
@@ -248,7 +250,9 @@ the expression evaluates to (in the given environment):
       (lambda (lw)
         (build-lw (lw-e lw) (lw-line lw) (lw-line-span lw) (lw-column lw) (lw-column-span lw)))
       (with-compound-rewriters (['+ (rewrite '+)]
-                                ['- (rewrite '–)])
+                                ['- (rewrite '–)]
+				['< (rewrite '<)]
+				['= (rewrite '=)])
         (apply centered
 	   (add-between 
              (map (λ (c) (parameterize ([judgment-form-cases (list c)]
@@ -311,6 +315,8 @@ It makes use of an auxiliary judgment for interpreting primitives:
 
  (with-compound-rewriters (['+ (rewrite '+)]
                            ['- (rewrite '–)]
+			   ['< (rewrite '<)]
+			   ['= (rewrite '=)]
                            ['= (rewrite '=)]
                            ['!= (rewrite '≠)])
    (render-metafunction 𝑭-𝒑𝒓𝒊𝒎 #:contract? #t))

@@ -18,7 +18,7 @@
 ;; type Op1 = 'add1 | 'sub1 | 'zero?
 ;;          | 'char? | 'integer->char | 'char->integer
 ;;          | 'write-byte | 'eof-object?
-;; type Op2 = '+ | '-
+;; type Op2 = '+ | '- | '< | '=
 (struct Eof   ()         #:prefab)
 (struct Int   (i)        #:prefab)
 (struct Bool  (b)        #:prefab)

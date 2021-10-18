@@ -76,7 +76,28 @@
           (assert-integer r8 c)
           (assert-integer rax c)
           (Sub r8 rax)
-          (Mov rax r8))]))
+          (Mov rax r8))]
+    ['<
+     (seq (Pop r8)
+          (assert-integer r8 c)
+          (assert-integer rax c)
+          (Cmp r8 rax)          
+          (Mov rax val-true)
+          (let ((true (gensym)))
+            (seq (Jl true)
+                 (Mov rax val-false)
+                 (Label true))))]
+    ['=
+     (seq (Pop r8)
+          (assert-integer r8 c)
+          (assert-integer rax c)
+          (Cmp r8 rax)          
+          (Mov rax val-true)
+          (let ((true (gensym)))
+            (seq (Je true)
+                 (Mov rax val-false)
+                 (Label true))))]))
+    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
