@@ -20,7 +20,7 @@
 ;;           | 'write-byte | 'eof-object?
 ;;           | 'box | 'car | 'cdr | 'unbox
 ;;           | 'empty? | 'cons? | 'box?
-;; type Op2  = '+ | '-
+;; type Op2  = '+ | '- | '< | '=
 ;;           | 'cons
 (struct Eof   ()           #:prefab)
 (struct Empty ()           #:prefab)

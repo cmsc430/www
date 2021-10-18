@@ -28,6 +28,8 @@
   (match (list p v1 v2)
     [(list '+ (? integer? i1) (? integer? i2)) (cons h (+ i1 i2))]
     [(list '- (? integer? i1) (? integer? i2)) (cons h (- i1 i2))]
+    [(list '< (? integer? i1) (? integer? i2)) (cons h (< i1 i2))]
+    [(list '= (? integer? i1) (? integer? i2)) (cons h (= i1 i2))]    
     [(list 'eq? v1 v2)
      (match (list v1 v2)
        [(list (list t1 a1)  (list t2 a2)) (cons h (and (eq? t1 t2) (= a1 a2)))]
