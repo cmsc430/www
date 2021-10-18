@@ -26,10 +26,10 @@
            (Jmp 'raise_error))]))
 
 (define (externs)
-  (Extern 'peek_byte)
-  (Extern 'read_byte)
-  (Extern 'write_byte)
-  (Extern 'raise_error))
+  (seq (Extern 'peek_byte)
+       (Extern 'read_byte)
+       (Extern 'write_byte)
+       (Extern 'raise_error)))
 
 ;; [Listof Defn] -> Asm
 (define (compile-defines ds)
