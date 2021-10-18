@@ -26,7 +26,7 @@ suggestions for improving the material, @bold{please},
 @include-section{notes/hustle.scrbl}
 @include-section{notes/hoax.scrbl}
 @include-section{notes/iniquity.scrbl}
-@include-section{notes/juvie.scrbl}
+@;include-section{notes/juvie.scrbl}
 @include-section{notes/jig.scrbl}
 @include-section{notes/knock.scrbl}
 @include-section{notes/loot.scrbl}
