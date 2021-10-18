@@ -60,3 +60,11 @@ DVH ideas based on Fall 2021
 * Possible idea: Each assignment due in two parts, first week has no
   testing feedback.  Second has testing feedback.  Teach random
   testing early and get students to build their own testers.
+
+* Add CMOVcc instructions to a86 and use them in the compiler.  All
+  the jumping is teaching a bad habit.
+
+* There should be a FAQ on software: I have nasm installed but when I
+  run DrRacket it complains that the nasm command cannot be found.
+  Need to run `drracket` from the command line.
+
