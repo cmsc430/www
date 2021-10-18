@@ -23,9 +23,11 @@
 ;;           | 'box | 'car | 'cdr | 'unbox
 ;;           | 'empty? | 'cons? | 'box?
 ;;           | 'vector? | vector-length
+;;           | 'string? | string-length
 ;; type Op2  = '+ | '- | '< | '=
 ;;           | 'cons
 ;;           | 'make-vector | 'vector-ref
+;;           | 'make-string | 'string-ref
 ;; type Op3  = 'vector-set!
 (struct Eof   ()           #:prefab)
 (struct Empty ()           #:prefab)
