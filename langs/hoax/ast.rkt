@@ -23,7 +23,7 @@
 ;;           | 'box | 'car | 'cdr | 'unbox
 ;;           | 'empty? | 'cons? | 'box?
 ;;           | 'vector? | vector-length
-;; type Op2  = '+ | '-
+;; type Op2  = '+ | '- | '< | '=
 ;;           | 'cons
 ;;           | 'make-vector | 'vector-ref
 ;; type Op3  = 'vector-set!

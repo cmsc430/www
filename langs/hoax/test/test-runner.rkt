@@ -78,6 +78,13 @@
                         (let ((z (- 4 x)))
                           (+ (+ x x) z))))
                 7)
+  (check-equal? (run '(= 5 5)) #t)
+  (check-equal? (run '(= 4 5)) #f)
+  (check-equal? (run '(= (add1 4) 5)) #t)
+  (check-equal? (run '(< 5 5)) #f)
+  (check-equal? (run '(< 4 5)) #t)
+  (check-equal? (run '(< (add1 4) 5)) #f)
+  
   ;; Hustle examples
   (check-equal? (run ''()) '())
   (check-equal? (run '(box 1)) (box 1))

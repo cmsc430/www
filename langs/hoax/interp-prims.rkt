@@ -31,6 +31,8 @@
   (match (list p v1 v2)
     [(list '+ (? integer?) (? integer?))  (+ v1 v2)]
     [(list '- (? integer?) (? integer?))  (- v1 v2)]
+    [(list '< (? integer?) (? integer?))  (< v1 v2)]
+    [(list '= (? integer?) (? integer?))  (= v1 v2)]    
     [(list 'cons v1 v2)                   (cons v1 v2)]
     [(list 'make-vector (? integer?) _)
      (if (<= 0 v1)
