@@ -14,19 +14,22 @@
 (define (compile p)
   (match p
     [(Prog ds e)  
-     (prog (Extern 'peek_byte)
-           (Extern 'read_byte)
-           (Extern 'write_byte)
-           (Extern 'raise_error)
+     (prog (externs)
            (Global 'entry)
            (Label 'entry)
            (Mov rbx rdi) ; recv heap pointer
            (compile-e e '())
            (Ret)
+           (compile-defines ds)
            (Label 'raise_error_align)
            (Sub rsp 8)
-           (Jmp 'raise_error)
-           (compile-defines ds))]))
+           (Jmp 'raise_error))]))
+
+(define (externs)
+  (Extern 'peek_byte)
+  (Extern 'read_byte)
+  (Extern 'write_byte)
+  (Extern 'raise_error))
 
 ;; [Listof Defn] -> Asm
 (define (compile-defines ds)
@@ -149,20 +152,20 @@
 ;; The return address is placed above the arguments, so callee pops
 ;; arguments and return address is next frame
 (define (compile-app f es c)
-  (let ((ret (gensym 'ret)))
-    (if (odd? (length c))
-        (seq (Lea r8 ret)
-             (Push r8)
-             (compile-es es (cons #f c))
-             (Jmp (symbol->label f))
-             (Label ret))
-        (seq (Sub rsp 8)
-             (Lea r8 ret)
-             (Push r8)
-             (compile-es es (cons #f (cons #f c)))
-             (Jmp (symbol->label f))
-             (Label ret)
-             (Add rsp 8)))))
+  (let ((r (gensym 'ret)))
+    (seq (pad-stack c)
+         (Lea rax r)
+         (Push rax)
+         (compile-es es (static-pad (cons #f c)))
+         (Jmp (symbol->label f))
+         (Label r)
+         (unpad-stack c))))
+
+;; CEnv -> CEnv
+(define (static-pad c)
+  (if (odd? (length c))
+      (cons #f c)
+      c))
 
 ;; [Listof Expr] CEnv -> Asm
 (define (compile-es es c)
