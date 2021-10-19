@@ -42,6 +42,12 @@ Be sure to read the entire problem description before starting.  There
 are a number of @secref[#:tag-prefixes '("a5-")]{Suggestions} on how to
 approach the assignment near the end.
 
+@section[#:tag-prefix "a5-" #:style 'unnumbered #:tag "update"]{Update a86}
+
+There have been some changes to a86 that you'll need.  You can update
+the @tt{langs} package with the following:
+
+@verbatim|{raco pkg update langs}|
 
 @section[#:tag-prefix "a5-" #:style 'unnumbered #:tag "arity"]{Checking arity}
 
