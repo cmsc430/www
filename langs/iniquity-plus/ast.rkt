@@ -59,4 +59,4 @@
 (struct Begin (e1 e2)      #:prefab)
 (struct Let   (x e1 e2)    #:prefab)
 (struct Var   (x)          #:prefab)
-(struct Call  (f es)       #:prefab)
+(struct App   (f es)       #:prefab)

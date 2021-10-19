@@ -85,7 +85,7 @@
     [(list 'let (list (list (? symbol? x) e1)) e2)
      (Let x (parse-e e1) (parse-e e2))]
     [(cons (? symbol? f) es)
-     (Call f (map parse-e es))]
+     (App f (map parse-e es))]
     [_ (error "Parse error" s)]))
 
 (define op0
