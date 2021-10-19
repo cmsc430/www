@@ -680,15 +680,16 @@ and @racketmodname[a86/interp], described below
 
 This section describes the instruction set of a86.
 
-There are 16 registers: @racket['rax], @racket['rbx],
-@racket['rcx], @racket['rdx], @racket['rbp], @racket['rsp],
-@racket['rsi], @racket['rdi], @racket['r8], @racket['r9],
-@racket['r10], @racket['r11], @racket['r12], @racket['r13],
-@racket['r14], and @racket['r15]. These registers are
-64-bits wide. There is no analog to the x86 register
-suffixes for accessing low-order bits. Each register plays
-the same role as in x86, so for example @racket['rsp] holds
-the current location of the stack.
+There are 16 registers: @racket['rax], @racket['rbx], @racket['rcx],
+@racket['rdx], @racket['rbp], @racket['rsp], @racket['rsi],
+@racket['rdi], @racket['r8], @racket['r9], @racket['r10],
+@racket['r11], @racket['r12], @racket['r13], @racket['r14], and
+@racket['r15]. These registers are 64-bits wide.  There is also
+@racket['eax] which accesses the lower 32-bits of @racket['rax].
+This is useful in case you need to read or write 32-bits of memory.
+
+Each register plays the same role as in x86, so for example
+@racket['rsp] holds the current location of the stack.
 
 @defproc[(register? [x any/c]) boolean?]{
  A predicate for registers.
