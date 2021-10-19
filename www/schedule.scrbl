@@ -60,12 +60,12 @@
 	       	     @seclink["Assignment 4"]{A4}
 		     @itemlist[
 		       @item{@secref["Hoax"], cont.}
-                       @item{Hoodwink}]
-                     @elem{@secref{Iniquity}})
+                       @item{@secref{Iniquity}}]
+                     @elem{@secref{Jig}})
 		                    
                (list @wk{10/26}
                      ""
-                     @elem{@secref["Jig"]}
+                     @elem{@secref["Jig"], cont.}
                      @elem{@secref["Knock"]})
                
                (list @wk{11/2}
