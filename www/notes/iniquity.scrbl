@@ -63,7 +63,7 @@ incorporating @bold{ functions}, and in particular,
 @bold{recursive functions}, which will allow us to compute over
 arbitrarily large data with finite-sized programs.
 
-Let's call it @bold{Iniquity}.
+Let's call it @bold{@|this-lang|}.
 
 We will extend the syntax by introducing a new syntactic category of
 @bold{programs}, which consist of a sequence of function definitions
@@ -122,7 +122,7 @@ i.e. @tt{interp-file.rkt} and @tt{compile-file.rkt}:
 
 @section[#:tag-prefix "iniquity"]{An Interpreter for Functions}
 
-Writing an interpreter for Inquity is not too hard.  The main idea is
+Writing an interpreter for @|this-lang| is not too hard.  The main idea is
 that the interpretation of expression is now parameterized by a set of
 function definitions from the program.  It serves as a second kind of
 environment that gets passed around and is used to resolve function
@@ -660,7 +660,7 @@ Using this function, we can touch up our code:
 )
 
 
-@section[#:tag-prefix "iniquity"]{A Compiler for Iniquity}
+@section[#:tag-prefix "iniquity"]{A Compiler for @|this-lang|}
 
 The last piece of the puzzle is the function for emitting code for a
 complete program:
