@@ -69,7 +69,7 @@
                      @elem{@secref["Knock"]})
                
                (list @wk{11/2}
-                     @tbaseclink["Assignment 5"]{A5}                     
+                     @seclink["Assignment 5"]{A5}                     
                      @elem{@secref["Loot"]}
                      @elem{@secref["Loot"], cont.})
                
