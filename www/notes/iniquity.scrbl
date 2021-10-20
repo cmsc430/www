@@ -547,56 +547,6 @@ parameters.  Touching up the code, we compile function definitions as:
      (Ret))
 )
 
-There is another issue which we must deal with: the aligning of the
-stack.  As we saw when added code to call C functions, we are required
-to align the stack to 16-bytes (or 2 64-bit words) when making a call.
-
-Because function definitions may include expressions that make such
-calls to C, we need to make sure the stack is aligned before doing so.
-And because a user-defined function may be called from a point where
-the stack is aligned @emph{or} where the stack is off by 8-bytes---in
-fact the same function may be called from @emph{both}---it will be the
-responsibility of the caller to align the stack for the function.
-
-@#reader scribble/comment-reader
-(racketblock
-(let ((r (gensym 'ret)))
-  (seq (pad-stack c)
-       (Lea rax r)
-       (Push rax)
-       (compile-es es (static-pad (cons #f c)))
-       (Jmp (symbol->label f))
-       (Label r)
-       (unpad-stack c)))
-       )
-
-The @racket[pad-stack] and @racket[unpad-stack] are functions we used
-when implementing calls to C functions.  Recall that on entry to the
-code our compiler generates, the stack is off by one word (because of
-the call to @racket['entry] from the run-time system).  If the static
-environment's length is even, it means we've pushed an even number of
-elements on the stack, and so it remains misaligned by one word.  On
-the other hand if the static environment is odd, an odd number of
-pushes have occurred, so the stack is aligned.  Hence,
-@racket[pad-stack] decrements @racket['rsp] by @racket[8] when
-@racket[c] is of even length and does nothing otherwise;
-@racket[unpad-stack] undoes the padding by incrementing when
-@racket[c] is even.
-
-The @racket[static-pad] function does something similar but instead of
-modifying the run-time static, it works on the compile-time
-environment, adding an extra frame whenever the stack would be padded
-for alignment purposes:
-
-@#reader scribble/comment-reader
-(racketblock
-;; CEnv -> CEnv
-(define (static-pad c)
-  (if (odd? (length c))
-      (cons #f c)
-      c))
-)
-
 Now writing the complete definitions for @racket[compile-define] and
 @racket[compile-app], we have:
 
@@ -614,13 +564,11 @@ Now writing the complete definitions for @racket[compile-define] and
 ;; Id [Listof Expr] CEnv -> Asm
 (define (compile-app f es c)
   (let ((r (gensym 'ret)))
-    (seq (pad-stack c)
-         (Lea rax r)
+    (seq (Lea rax r)
          (Push rax)
          (compile-es es (static-pad (cons #f c)))
          (Jmp (symbol->label f))
-         (Label r)
-         (unpad-stack c))))
+         (Label r))))         
 )
 
 
