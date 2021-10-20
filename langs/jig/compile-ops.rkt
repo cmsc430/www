@@ -9,49 +9,50 @@
 (define r8  'r8)  ; scratch
 (define r9  'r9)  ; scratch
 (define r10 'r10) ; scratch
+(define r15 'r15) ; stack pad (non-volatile)
 (define rsp 'rsp) ; stack
 
-;; Op0 CEnv -> Asm
-(define (compile-op0 p c)
+;; Op0 -> Asm
+(define (compile-op0 p)
   (match p
     ['void      (seq (Mov rax val-void))]
-    ['read-byte (seq (pad-stack c)
+    ['read-byte (seq pad-stack
                      (Call 'read_byte)
-                     (unpad-stack c))]
-    ['peek-byte (seq (pad-stack c)
+                     unpad-stack)]
+    ['peek-byte (seq pad-stack
                      (Call 'peek_byte)
-                     (unpad-stack c))]))
+                     unpad-stack)]))
 
-;; Op1 CEnv -> Asm
-(define (compile-op1 p c)
+;; Op1 -> Asm
+(define (compile-op1 p)
   (match p
     ['add1
-     (seq (assert-integer rax c)
+     (seq (assert-integer rax)
           (Add rax (imm->bits 1)))]
     ['sub1
-     (seq (assert-integer rax c)
+     (seq (assert-integer rax)
           (Sub rax (imm->bits 1)))]
     ['zero?
-     (seq (assert-integer rax c)
+     (seq (assert-integer rax)
           (eq-imm 0))]
     ['char?
      (type-pred mask-char type-char)]
     ['char->integer
-     (seq (assert-char rax c)
+     (seq (assert-char rax)
           (Sar rax char-shift)
           (Sal rax int-shift))]
     ['integer->char
-     (seq (assert-codepoint c)
+     (seq (assert-codepoint rax)
           (Sar rax int-shift)
           (Sal rax char-shift)
           (Xor rax type-char))]
     ['eof-object? (eq-imm eof)]
     ['write-byte
-     (seq (assert-byte c)
-          (pad-stack c)
+     (seq (assert-byte rax)
+          pad-stack
           (Mov rdi rax)
           (Call 'write_byte)
-          (unpad-stack c)
+          unpad-stack
           (Mov rax val-void))]
     ['box
      (seq (Mov (Offset rbx 0) rax)
@@ -59,15 +60,15 @@
           (Or rax type-box)
           (Add rbx 8))]
     ['unbox
-     (seq (assert-box rax c)
+     (seq (assert-box rax)
           (Xor rax type-box)
           (Mov rax (Offset rax 0)))]
     ['car
-     (seq (assert-cons rax c)
+     (seq (assert-cons rax)
           (Xor rax type-cons)
           (Mov rax (Offset rax 8)))]
     ['cdr
-     (seq (assert-cons rax c)
+     (seq (assert-cons rax)
           (Xor rax type-cons)
           (Mov rax (Offset rax 0)))]
     ['empty? (eq-imm '())]
@@ -82,7 +83,7 @@
     ['vector-length
      (let ((zero (gensym))
            (done (gensym)))
-       (seq (assert-vector rax c)
+       (seq (assert-vector rax)
             (Xor rax type-vect)
             (Cmp rax 0)
             (Je zero)
@@ -95,7 +96,7 @@
     ['string-length
      (let ((zero (gensym))
            (done (gensym)))
-       (seq (assert-string rax c)
+       (seq (assert-string rax)
             (Xor rax type-str)
             (Cmp rax 0)
             (Je zero)
@@ -106,24 +107,24 @@
             (Mov rax 0)
             (Label done)))]))
 
-;; Op2 CEnv -> Asm
-(define (compile-op2 p c)
+;; Op2 -> Asm
+(define (compile-op2 p)
   (match p
     ['+
      (seq (Pop r8)
-          (assert-integer r8 c)
-          (assert-integer rax c)
+          (assert-integer r8)
+          (assert-integer rax)
           (Add rax r8))]
     ['-
      (seq (Pop r8)
-          (assert-integer r8 c)
-          (assert-integer rax c)
+          (assert-integer r8)
+          (assert-integer rax)
           (Sub r8 rax)
           (Mov rax r8))]
     ['<
      (seq (Pop r8)
-          (assert-integer r8 c)
-          (assert-integer rax c)
+          (assert-integer r8)
+          (assert-integer rax)
           (Cmp r8 rax)
           (Mov rax val-true)
           (let ((true (gensym)))
@@ -132,8 +133,8 @@
                  (Label true))))]
     ['=
      (seq (Pop r8)
-          (assert-integer r8 c)
-          (assert-integer rax c)
+          (assert-integer r8)
+          (assert-integer rax)
           (Cmp r8 rax)
           (Mov rax val-true)
           (let ((true (gensym)))
@@ -152,7 +153,7 @@
            (done (gensym))
            (empty (gensym)))
        (seq (Pop r8)
-            (assert-natural r8 c)
+            (assert-natural r8)
             (Cmp r8 0) ; special case empty vector
             (Je empty)
 
@@ -179,16 +180,16 @@
 
     ['vector-ref
      (seq (Pop r8)
-          (assert-vector r8 c)
-          (assert-integer rax c)
+          (assert-vector r8)
+          (assert-integer rax)
           (Cmp rax 0)
-          (Jl (error-label c))
+          (Jl 'raise_error_align)
           (Xor r8 type-vect)      ; r8 = ptr
           (Mov r9 (Offset r8 0))  ; r9 = len
           (Sar rax int-shift)     ; rax = index
           (Sub r9 1)
           (Cmp r9 rax)
-          (Jl (error-label c))
+          (Jl 'raise_error_align)
           (Sal rax 3)
           (Add r8 rax)
           (Mov rax (Offset r8 8)))]
@@ -198,8 +199,8 @@
            (done (gensym))
            (empty (gensym)))
        (seq (Pop r8)
-            (assert-natural r8 c)
-            (assert-char rax c)
+            (assert-natural r8)
+            (assert-char rax)
             (Cmp r8 0) ; special case empty string
             (Je empty)
 
@@ -232,38 +233,38 @@
 
     ['string-ref
      (seq (Pop r8)
-          (assert-string r8 c)
-          (assert-integer rax c)
+          (assert-string r8)
+          (assert-integer rax)
           (Cmp rax 0)
-          (Jl (error-label c))
+          (Jl 'raise_error_align)
           (Xor r8 type-str)       ; r8 = ptr
           (Mov r9 (Offset r8 0))  ; r9 = len
           (Sar rax int-shift)     ; rax = index
           (Sub r9 1)
           (Cmp r9 rax)
-          (Jl (error-label c))
+          (Jl 'raise_error_align)
           (Sal rax 2)
           (Add r8 rax)
           (Mov 'eax (Offset r8 8))
           (Sal rax char-shift)
           (Or rax type-char))]))
 
-;; Op3 CEnv -> Asm
-(define (compile-op3 p c)
+;; Op3 -> Asm
+(define (compile-op3 p)
   (match p
     ['vector-set!
      (seq (Pop r10)
           (Pop r8)
-          (assert-vector r8 c)
-          (assert-integer r10 c)
+          (assert-vector r8)
+          (assert-integer r10)
           (Cmp r10 0)
-          (Jl (error-label c))
+          (Jl 'raise_error_align)
           (Xor r8 type-vect)       ; r8 = ptr
           (Mov r9 (Offset r8 0))   ; r9 = len
           (Sar r10 int-shift)      ; r10 = index
           (Sub r9 1)
           (Cmp r9 r10)
-          (Jl (error-label c))
+          (Jl 'raise_error_align)
           (Sal r10 3)
           (Add r8 r10)
           (Mov (Offset r8 8) rax)
@@ -273,11 +274,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (assert-type mask type)
-  (λ (arg c)
+  (λ (arg)
     (seq (Mov r9 arg)
          (And r9 mask)
          (Cmp r9 type)
-         (Jne (error-label c)))))
+         (Jne 'raise_error_align))))
 
 (define (type-pred mask type)
   (let ((l (gensym)))
@@ -301,31 +302,31 @@
 (define assert-string
   (assert-type ptr-mask type-str))
 
-(define (assert-codepoint c)
+(define (assert-codepoint r)
   (let ((ok (gensym)))
-    (seq (assert-integer rax c)
-         (Cmp rax (imm->bits 0))
-         (Jl (error-label c))
-         (Cmp rax (imm->bits 1114111))
-         (Jg (error-label c))
-         (Cmp rax (imm->bits 55295))
+    (seq (assert-integer r)
+         (Cmp r (imm->bits 0))
+         (Jl 'raise_error_align)
+         (Cmp r (imm->bits 1114111))
+         (Jg 'raise_error_align)
+         (Cmp r (imm->bits 55295))
          (Jl ok)
-         (Cmp rax (imm->bits 57344))
+         (Cmp r (imm->bits 57344))
          (Jg ok)
-         (Jmp (error-label c))
+         (Jmp 'raise_error_align)
          (Label ok))))
 
-(define (assert-byte c)
-  (seq (assert-integer rax c)
-       (Cmp rax (imm->bits 0))
-       (Jl (error-label c))
-       (Cmp rax (imm->bits 255))
-       (Jg (error-label c))))
+(define (assert-byte r)
+  (seq (assert-integer r)
+       (Cmp r (imm->bits 0))
+       (Jl 'raise_error_align)
+       (Cmp r (imm->bits 255))
+       (Jg 'raise_error_align)))
 
-(define (assert-natural r c)
-  (seq (assert-integer r c)
-       (Cmp rax (imm->bits 0))
-       (Jl (error-label c))))
+(define (assert-natural r)
+  (seq (assert-integer r)
+       (Cmp r (imm->bits 0))
+       (Jl 'raise_error_align)))
 
 ;; Value -> Asm
 (define (eq-imm imm)
@@ -336,23 +337,14 @@
          (Mov rax val-false)
          (Label l1))))
 
-;; CEnv -> Asm
-;; Pad the stack to be aligned for a call
-(define (pad-stack c)
-  (match (odd? (length c))
-    [#t (seq (Sub rsp 8))]
-    [#f (seq)]))
+;; Asm
+;; Dynamically pad the stack to be aligned for a call
+(define pad-stack
+  (seq (Mov r15 rsp)
+       (And r15 #b1000)
+       (Sub rsp r15)))
 
-;; CEnv -> Asm
+;; Asm
 ;; Undo the stack alignment after a call
-(define (unpad-stack c)
-  (match (odd? (length c))
-    [#t (seq (Add rsp 8))]
-    [#f (seq)]))
-
-;; CEnv -> Label
-;; Determine correct error handler label to jump to.
-(define (error-label c)
-  (match (odd? (length c))
-    [#t 'raise_error]
-    [#f 'raise_error_align]))
+(define unpad-stack
+  (seq (Add rsp r15)))

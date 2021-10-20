@@ -7,7 +7,6 @@
 (define rbx 'rbx) ; heap
 (define rsp 'rsp) ; stack
 (define rdi 'rdi) ; arg
-(define r15 'r15)
 
 ;; type CEnv = [Listof Variable]
 
@@ -15,21 +14,23 @@
 (define (compile p)
   (match p
     [(Prog ds e)  
-     (prog (Extern 'peek_byte)
-           (Extern 'read_byte)
-           (Extern 'write_byte)
-           (Extern 'raise_error)
+     (prog (externs)
            (Global 'entry)
            (Label 'entry)
            (Mov rbx rdi) ; recv heap pointer
-           (Pop r15)
            (compile-e e '() #t)
-           (Jmp r15)
+           (Ret)
+           (compile-defines ds)
            (Label 'raise_error_align)
-           (Sub rsp 8)
-           (Jmp 'raise_error)
-           (compile-defines ds))]))
+           pad-stack
+           (Call 'raise_error))]))
 
+(define (externs)
+  (seq (Extern 'peek_byte)
+       (Extern 'read_byte)
+       (Extern 'write_byte)
+       (Extern 'raise_error)))
+           
 ;; [Listof Defn] -> Asm
 (define (compile-defines ds)
   (match ds
@@ -45,7 +46,7 @@
      (seq (Label (symbol->label f))
           (compile-e e (reverse xs) #t)
           (Add rsp (* 8 (length xs))) ; pop args
-          (Jmp r15))]))
+          (Ret))]))
 
 ;; Expr CEnv Bool -> Asm
 (define (compile-e e c t?)
@@ -99,19 +100,19 @@
 
 ;; Op0 CEnv -> Asm
 (define (compile-prim0 p c)
-  (compile-op0 p c))
+  (compile-op0 p))
 
 ;; Op1 Expr CEnv -> Asm
 (define (compile-prim1 p e c)
   (seq (compile-e e c #f)
-       (compile-op1 p c)))
+       (compile-op1 p)))
 
 ;; Op2 Expr Expr CEnv -> Asm
 (define (compile-prim2 p e1 e2 c)
   (seq (compile-e e1 c #f)
        (Push rax)
        (compile-e e2 (cons #f c) #f)
-       (compile-op2 p c)))
+       (compile-op2 p)))
 
 ;; Op3 Expr Expr Expr CEnv -> Asm
 (define (compile-prim3 p e1 e2 e3 c)
@@ -120,7 +121,7 @@
        (compile-e e2 (cons #f c) #f)
        (Push rax)
        (compile-e e3 (cons #f (cons #f c)) #f)
-       (compile-op3 p c)))
+       (compile-op3 p)))
 
 ;; Expr Expr Expr CEnv Bool -> Asm
 (define (compile-if e1 e2 e3 c t?)
@@ -174,21 +175,12 @@
 ;; The return address is placed above the arguments, so callee pops
 ;; arguments and return address is next frame
 (define (compile-app-nontail f es c)
-  (let ((ret (gensym 'ret))
-        (c   (cons #f c)))
-    (seq (pad-stack c)
-         (Push r15)
-         (Lea r15 ret)
-         (compile-es es (static-pad c))
+  (let ((r (gensym 'ret)))
+    (seq (Lea rax r)
+         (Push rax)
+         (compile-es es (cons #f c))
          (Jmp (symbol->label f))
-         (Label ret)
-         (Pop r15)
-         (unpad-stack c))))
-
-(define (static-pad c)
-  (if (odd? (length c))
-      (cons #f c)
-      c))
+         (Label r))))
 
 ;; [Listof Expr] CEnv -> Asm
 (define (compile-es es c)
