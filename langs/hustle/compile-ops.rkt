@@ -38,15 +38,7 @@
             (Je l1)
             (Mov rax val-false)
             (Label l1)))]
-    ['char?
-     (let ((l1 (gensym)))
-       (seq (And rax mask-char)
-            (Xor rax type-char)
-            (Cmp rax 0)
-            (Mov rax val-true)
-            (Je l1)
-            (Mov rax val-false)
-            (Label l1)))]
+    ['char? (type-pred mask-char type-char)]
     ['char->integer
      (seq (assert-char rax)
           (Sar rax char-shift)
@@ -82,24 +74,8 @@
           (Xor rax type-cons)
           (Mov rax (Offset rax 0)))]
     ['empty? (eq-imm val-empty)]
-    ['cons?
-     (let ((l1 (gensym)))
-       (seq (And rax ptr-mask)
-            (Xor rax type-cons)
-            (Cmp rax 0)
-            (Mov rax val-true)
-            (Je l1)
-            (Mov rax val-false)
-            (Label l1)))]
-    ['box?
-     (let ((l1 (gensym)))
-       (seq (And rax ptr-mask)
-            (Xor rax type-box)
-            (Cmp rax 0)
-            (Mov rax val-true)
-            (Je l1)
-            (Mov rax val-false)
-            (Label l1)))]))
+    ['cons? (type-pred ptr-mask type-cons)]
+    ['box?  (type-pred ptr-mask type-box)]))
 
 ;; Op2 -> Asm
 (define (compile-op2 p)
