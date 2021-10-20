@@ -276,14 +276,6 @@ integers and booleans, so we could use one bit to indicate whether a
 value is a boolean or an integer.  The remaining 63 bits can be used
 to represent the value itself, either true, false, or some integer.
 
-@(define (binary i [len 0])
-   (typeset-code #:block? #f #:indent 0
-                 (string-append "#b"
-                                (~a (number->string i 2)
-                                    #:left-pad-string "0"
-                                    #:align 'right
-                                    #:min-width len))))
-
 Let's use the least significant bit to indicate the type and
 let's use @binary[type-int] for integer and
 @binary[type-bool] for boolean. These are arbitrary choices
