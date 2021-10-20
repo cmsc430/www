@@ -155,8 +155,16 @@
        (string-append (line-comment i s) "\n" (instrs->string a))]
       [(cons i a)
        (string-append (instr->string i) "\n" (instrs->string a))]))
-  
-  (string-append
-   tab "default rel\n"
-   tab "section .text\n"
-   (instrs->string a)))
+
+  ;; entry point will be first label
+  (match (findf Label? a)
+    [(Label g)
+     (string-append
+      tab "global " (label-symbol->string g) "\n"
+      tab "default rel\n"
+      tab "section .text\n"
+      (instrs->string a))]
+    [_
+     (instrs->string a)
+     #;
+     (error "program does not have an initial label")]))
