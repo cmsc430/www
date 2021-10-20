@@ -84,9 +84,24 @@
      (If (parse-e e1) (parse-e e2) (parse-e e3))]
     [(list 'let (list (list (? symbol? x) e1)) e2)
      (Let x (parse-e e1) (parse-e e2))]
+    [(list-rest 'apply es)
+     (match es
+       [(cons (? symbol? f) es)
+        (parse-apply f es)]
+       [_ (error "parse apply error")])]
     [(cons (? symbol? f) es)
      (App f (map parse-e es))]
     [_ (error "Parse error" s)]))
+
+;; Id S-Expr -> Expr
+(define (parse-apply f es)
+  (match es
+    [(list e) (Apply f '() (parse-e e))]
+    [(cons e es)
+     (match (parse-apply f es)
+       [(Apply f es e0)
+        (Apply f (cons (parse-e e) es) e0)])]
+    [_ (error "parse apply error")]))
 
 (define op0
   '(read-byte peek-byte void))

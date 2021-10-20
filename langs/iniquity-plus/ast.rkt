@@ -30,7 +30,8 @@
 ;;           | (Begin Expr Expr)
 ;;           | (Let Id Expr Expr)
 ;;           | (Var Id)
-;;           | (Call Id (Listof Expr))
+;;           | (App Id (Listof Expr))
+;;           | (Apply Id (Listof Expr) Expr)
 ;; type Id   = Symbol
 ;; type Op0  = 'read-byte
 ;; type Op1  = 'add1 | 'sub1 | 'zero?
@@ -60,3 +61,4 @@
 (struct Let   (x e1 e2)    #:prefab)
 (struct Var   (x)          #:prefab)
 (struct App   (f es)       #:prefab)
+(struct Apply (f es e)     #:prefab)

@@ -1,5 +1,5 @@
 #lang scribble/manual
-@title[#:tag "Assignment 5" #:style 'unnumbered]{Assignment 5: Arity Checking, Rest Arguments, and Case Functions}
+@title[#:tag "Assignment 5" #:style 'unnumbered]{Assignment 5: Arity Checking, Rest Arguments, Case Functions, and Apply}
 
 @(require (for-label (except-in racket ...)))
 @(require "../notes/ev.rkt"
@@ -13,8 +13,9 @@
 @bold{Due: Tuesday, November 2nd, 11:59PM EDT}
 
 The goal of this assignment is to extend a compiler with arity
-checking for function calls and to add new kinds of function parameter
-features.
+checking for function calls, to add new kinds of function parameter
+features, and to add the @racket[apply] form for applying a function
+to a list of arguments.
 
 You are given a repository with a starter compiler similar to the
 @seclink["Iniquity"]{Iniquity} language we studied in class.  You are
@@ -28,10 +29,13 @@ tasked with:
 parameters for writing variable arity functions,}
 
 @item{extending function definitions to include
-@racket[case-lambda]-style multiple-arity functions, and}
+@racket[case-lambda]-style multiple-arity functions,}
 
 @item{extending the arity checking features to handle these new forms
-of function definitions.}
+of function definitions, and}
+
+@item{implementing the @racket[apply] mechanism for applying a function
+to the elements of a list as arguments.}
 ]
 
 Unlike previous assignments, you do not need to bring forward your
@@ -78,7 +82,12 @@ register to the number of arguments before jumping to the function.
 The function should check this number against the expected number and
 signal an error when they don't match.
 
-[NOTE on stack alignment on errors.]
+Note that there's now an easier way to signal an error in the
+compiler; simply jump to @racket['raise_error_align].  There's no need
+to do the @racket[(error-label c)] thing anymore.  Jumping to
+@racket['raise_error_align] will dynamically align the stack before
+calling the C code in the runtime system that prints an error and
+exits.
 
 You should modify @racket[compile-app] and @racket[compile-define] to
 implement this part of the assignment.
@@ -231,8 +240,7 @@ This function takes any number of arguments, but when given three, it
 produces @racket["three!"]; in all other cases it produces the number
 of arguments.
 
-@;{
-@section[#:tag-prefix "a5-" #:style 'unnumbered #:tag "arity"]{Apply}
+@section[#:tag-prefix "a5-" #:style 'unnumbered #:tag "apply"]{Apply}
 
 Apply is the yin to the yang of rest arguments (or maybe the other way
 around).  Whereas a rest argument let's a function take arbitrarily
@@ -252,8 +260,8 @@ given as arguments.
 ]
 
 Here you can see @racket[apply] taking two things: a function and
-single argument which is a list.  It is apply to call the function
-with the elements of the list as the arguments.
+single argument which is a list.  It is calling the function with the
+elements of the list as the arguments.
 
 It turns out, @racket[apply] can also take other arguments in addition
 to the list and pass them along to the function.
@@ -277,10 +285,74 @@ A new form of expression has been added to the @tt{Expr} AST type:
 @#reader scribble/comment-reader
 (racketblock
 ;; type Expr = ...
-;;           | (Apply ID [Listof Expr] Expr)
+;;           | (Apply Id [Listof Expr] Expr)
 )
 
-}
+The parser has been updated to handle concrete syntax of the form:
+
+@#reader scribble/comment-reader
+(racketblock
+(apply _f _e0 ... _en)
+)
+
+@ex[
+(parse-e '(apply f x y zs))
+]
+
+Note that the AST for an @racket[apply] expression has the function
+name, an arbitrarily long list of arguments, plus a distinguished last
+argument that should produce a list.  (It is an error if this expression
+produces anything other than a list.)
+
+While it's allowable to have only the function and the list argument,
+it's a syntax error to leave off a list argument altogether:
+
+@ex[
+(parse-e '(apply f xs))
+(eval:error (parse-e '(apply f)))
+]
+
+The interpreter also handles @racket[apply] expressions:
+
+@ex[
+(interp (parse '[ (define (f x y) (cons y x))
+                  (apply f (cons 1 (cons 2 '()))) ]))
+]
+
+Together with rest arguments, @racket[apply] makes it possible to
+write many functions you may like to use:
+
+@#reader scribble/comment-reader
+(ex
+(interp
+  (parse
+    '[;; an append that works on any number of lists
+      (define (append . xss)
+        (if (empty? xss)
+            '()
+            (if (empty? (car xss))
+                (apply append (cdr xss))
+                (cons (car (car xss))
+                      (apply append (cdr (car xss)) (cdr xss))))))
+       ;; the list function!
+       (define (list . xs) xs)
+
+       (append (list 1 2 3) (list 4) (list 5 6 7))])))
+
+In @tt{compile.rkt}, the @racket[compile-e] has an added case for
+@racket[Apply] AST nodes and calls @racket[compile-apply], which is
+stubbed out for you.  You will need to implement @racket[apply] there.
+
+Here is the idea for @racket[apply]: it is doing something similar to
+a function call, so it needs to make a label for the return point and
+push that on the stack. It then needs to execute all of the given
+arguments, pushing them on the stack (again just like a regular
+function call).  Then it needs to execute the distinguished list
+argument and generate code that will traverse the list at run-time,
+pushing elements on to the stack until reaching the end of the list.
+At this point, all of the arguments, both those given explicitly and
+those in the list are on the stack.  Jump to the function.
+
 
 @section[#:tag-prefix "a5-" #:style 'unnumbered]{Representing the
 syntax of function definitions}
@@ -400,8 +472,11 @@ minimum, but the rest argument will always be bound to empty.  Once
 working, try to modify the code to build a list as it pops arguments.
 Test that it works.}
 
-@item{Move on to @secref[#:tag-prefixes '("a5-")
-"case-lambda"]. Remember that you have a compiler for plain and rest
+@item{Next you could either tackle @racket[apply] or
+@racket[case-lambda].}
+
+@item{For @secref[#:tag-prefixes '("a5-")
+"case-lambda"], remember that you have a compiler for plain and rest
 argument functions at this point.  That should come in handy.  Think
 of @racket[case-lambda] as generating a set of function definitions
 (with generated names), and then the main work of @racket[case-lambda]
@@ -410,6 +485,14 @@ specific number of arguments passed in by the caller.  When you find
 the function that fits, jump to it.  You might start by only handling
 plain function clauses in @racket[case-lambda] before moving on to
 handling rest argument functions, too.}
+
+@item{For @secref[#:tag-prefixes '("a5-") "apply"], at first don't
+worry about arity checking and consider the case where there are no
+explicit arguments given, i.e. focus on @racket[(apply _f _e)].  Once
+you have that working, consider the more general case of
+@racket[(apply _f _e0 ... _e)].  Then figure out how to add in the
+arity checking part.  Finally, make sure you're detecting error cases
+such as when @racket[_e] is not a proper list.}
 
 ]
 

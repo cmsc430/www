@@ -79,7 +79,19 @@
        [vs
         (match (defns-lookup ds f)
           [(Defn _ fun)
-           (apply-fun fun vs ds)])])]))
+           (apply-fun fun vs ds)])])]
+    [(Apply f es e)
+     (match (interp-env* es r ds)
+       ['err 'err]
+       [vs
+        (match (interp-env e r ds)
+          ['err 'err]
+          [ws
+           (if (list? ws)
+               (match (defns-lookup ds f)
+                 [(Defn _ fun)
+                  (apply-fun fun (append vs ws) ds)])
+               'err)])])]))
 
 ;; Fun [Listof Values] Defns -> Answer
 (define (apply-fun f vs ds)
