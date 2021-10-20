@@ -231,4 +231,41 @@
                             (begin (write-byte (- 123 i))
                                    (print-alphabet (sub1 i)))))
                      '(print-alphabet 26))
-                (cons (void) "abcdefghijklmnopqrstuvwxyz")))
+                (cons (void) "abcdefghijklmnopqrstuvwxyz"))
+
+  (check-equal? (run ""
+                     '(define (f x)
+                        (write-byte x))
+                     '(f 97))
+                (cons (void) "a"))  
+  (check-equal? (run ""
+                     '(define (f x y)
+                        (write-byte x))
+                     '(f 97 98))
+                (cons (void) "a"))  
+  (check-equal? (run ""
+                     '(define (f x)
+                        (let ((y x))
+                          (write-byte y)))
+                     '(f 97))
+                (cons (void) "a"))
+  (check-equal? (run ""
+                     '(define (f x y)
+                        (let ((y x))
+                          (write-byte y)))
+                     '(f 97 98))
+                (cons (void) "a"))  
+  (check-equal? (run ""
+                     '(define (f x)
+                        (write-byte x))
+                     '(let ((z 97))
+                        (f z)))
+                (cons (void) "a"))  
+  (check-equal? (run ""
+                     '(define (f x y)
+                        (write-byte x))
+                     '(let ((z 97))
+                        (f z 98)))
+                (cons (void) "a")))
+  
+  

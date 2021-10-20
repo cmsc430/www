@@ -153,19 +153,11 @@
 ;; arguments and return address is next frame
 (define (compile-app f es c)
   (let ((r (gensym 'ret)))
-    (seq (pad-stack c)
-         (Lea rax r)
+    (seq (Lea rax r)
          (Push rax)
-         (compile-es es (static-pad (cons #f c)))
+         (compile-es es (cons #f c))
          (Jmp (symbol->label f))
-         (Label r)
-         (unpad-stack c))))
-
-;; CEnv -> CEnv
-(define (static-pad c)
-  (if (odd? (length c))
-      (cons #f c)
-      c))
+         (Label r))))
 
 ;; [Listof Expr] CEnv -> Asm
 (define (compile-es es c)

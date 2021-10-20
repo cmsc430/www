@@ -9,18 +9,19 @@
 (define r8  'r8)  ; scratch
 (define r9  'r9)  ; scratch
 (define r10 'r10) ; scratch
+(define r15 'r15) ; stack pad (non-volatile)
 (define rsp 'rsp) ; stack
 
 ;; Op0 CEnv -> Asm
 (define (compile-op0 p c)
   (match p
     ['void      (seq (Mov rax val-void))]
-    ['read-byte (seq (pad-stack c)
+    ['read-byte (seq pad-stack
                      (Call 'read_byte)
-                     (unpad-stack c))]
-    ['peek-byte (seq (pad-stack c)
+                     unpad-stack)]
+    ['peek-byte (seq pad-stack
                      (Call 'peek_byte)
-                     (unpad-stack c))]))
+                     unpad-stack)]))
 
 ;; Op1 CEnv -> Asm
 (define (compile-op1 p c)
@@ -48,10 +49,10 @@
     ['eof-object? (eq-imm eof)]
     ['write-byte
      (seq (assert-byte c)
-          (pad-stack c)
+          pad-stack
           (Mov rdi rax)
           (Call 'write_byte)
-          (unpad-stack c)
+          unpad-stack
           (Mov rax val-void))]
     ['box
      (seq (Mov (Offset rbx 0) rax)
@@ -182,13 +183,13 @@
           (assert-vector r8 c)
           (assert-integer rax c)
           (Cmp rax 0)
-          (Jl (error-label c))
+          (Jl 'raise_error_align)
           (Xor r8 type-vect)      ; r8 = ptr
           (Mov r9 (Offset r8 0))  ; r9 = len
           (Sar rax int-shift)     ; rax = index
           (Sub r9 1)
           (Cmp r9 rax)
-          (Jl (error-label c))
+          (Jl 'raise_error_align)
           (Sal rax 3)
           (Add r8 rax)
           (Mov rax (Offset r8 8)))]
@@ -235,13 +236,13 @@
           (assert-string r8 c)
           (assert-integer rax c)
           (Cmp rax 0)
-          (Jl (error-label c))
+          (Jl 'raise_error_align)
           (Xor r8 type-str)       ; r8 = ptr
           (Mov r9 (Offset r8 0))  ; r9 = len
           (Sar rax int-shift)     ; rax = index
           (Sub r9 1)
           (Cmp r9 rax)
-          (Jl (error-label c))
+          (Jl 'raise_error_align)
           (Sal rax 2)
           (Add r8 rax)
           (Mov 'eax (Offset r8 8))
@@ -257,13 +258,13 @@
           (assert-vector r8 c)
           (assert-integer r10 c)
           (Cmp r10 0)
-          (Jl (error-label c))
+          (Jl 'raise_error_align)
           (Xor r8 type-vect)       ; r8 = ptr
           (Mov r9 (Offset r8 0))   ; r9 = len
           (Sar r10 int-shift)      ; r10 = index
           (Sub r9 1)
           (Cmp r9 r10)
-          (Jl (error-label c))
+          (Jl 'raise_error_align)
           (Sal r10 3)
           (Add r8 r10)
           (Mov (Offset r8 8) rax)
@@ -277,7 +278,7 @@
     (seq (Mov r9 arg)
          (And r9 mask)
          (Cmp r9 type)
-         (Jne (error-label c)))))
+         (Jne 'raise_error_align))))
 
 (define (type-pred mask type)
   (let ((l (gensym)))
@@ -305,27 +306,27 @@
   (let ((ok (gensym)))
     (seq (assert-integer rax c)
          (Cmp rax (imm->bits 0))
-         (Jl (error-label c))
+         (Jl 'raise_error_align)
          (Cmp rax (imm->bits 1114111))
-         (Jg (error-label c))
+         (Jg 'raise_error_align)
          (Cmp rax (imm->bits 55295))
          (Jl ok)
          (Cmp rax (imm->bits 57344))
          (Jg ok)
-         (Jmp (error-label c))
+         (Jmp 'raise_error_align)
          (Label ok))))
 
 (define (assert-byte c)
   (seq (assert-integer rax c)
        (Cmp rax (imm->bits 0))
-       (Jl (error-label c))
+       (Jl 'raise_error_align)
        (Cmp rax (imm->bits 255))
-       (Jg (error-label c))))
+       (Jg 'raise_error_align)))
 
 (define (assert-natural r c)
   (seq (assert-integer r c)
        (Cmp rax (imm->bits 0))
-       (Jl (error-label c))))
+       (Jl 'raise_error_align)))
 
 ;; Value -> Asm
 (define (eq-imm imm)
@@ -336,23 +337,14 @@
          (Mov rax val-false)
          (Label l1))))
 
-;; CEnv -> Asm
-;; Pad the stack to be aligned for a call
-(define (pad-stack c)
-  (match (even? (length c))
-    [#t (seq (Sub rsp 8))]
-    [#f (seq)]))
+;; Asm
+;; Dynamically pad the stack to be aligned for a call
+(define pad-stack
+  (seq (Mov r15 rsp)
+       (And r15 #b1000)
+       (Sub rsp r15)))
 
-;; CEnv -> Asm
+;; Asm
 ;; Undo the stack alignment after a call
-(define (unpad-stack c)
-  (match (even? (length c))
-    [#t (seq (Add rsp 8))]
-    [#f (seq)]))
-
-;; CEnv -> Label
-;; Determine correct error handler label to jump to.
-(define (error-label c)
-  (match (even? (length c))
-    [#t 'raise_error]
-    [#f 'raise_error_align]))
+(define unpad-stack
+  (seq (Add rsp r15)))
