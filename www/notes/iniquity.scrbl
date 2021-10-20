@@ -566,7 +566,7 @@ Now writing the complete definitions for @racket[compile-define] and
   (let ((r (gensym 'ret)))
     (seq (Lea rax r)
          (Push rax)
-         (compile-es es (static-pad (cons #f c)))
+         (compile-es es (cons #f c))
          (Jmp (symbol->label f))
          (Label r))))         
 )
