@@ -37,15 +37,7 @@
             (Je l1)
             (Mov rax val-false)
             (Label l1)))]
-    ['char?
-     (let ((l1 (gensym)))
-       (seq (And rax mask-char)
-            (Xor rax type-char)
-            (Cmp rax 0)
-            (Mov rax val-true)
-            (Je l1)
-            (Mov rax val-false)
-            (Label l1)))]
+    ['char? (type-pred mask-char type-char)]
     ['char->integer
      (seq (assert-char rax)
           (Sar rax char-shift)
