@@ -22,8 +22,8 @@
            (Ret)
            (compile-defines ds)
            (Label 'raise_error_align)
-           (Or rsp 8)
-           (Jmp 'raise_error))]))
+           pad-stack
+           (Call 'raise_error))]))
 
 (define (externs)
   (seq (Extern 'peek_byte)

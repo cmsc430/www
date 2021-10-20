@@ -22,8 +22,8 @@
         (compile-e e '())
         (Ret)
         (Label 'raise_error_align)
-        (Or rsp 8)
-        (Jmp 'raise_error)))
+        pad-stack
+        (Call 'raise_error)))
 
 ;; Expr CEnv -> Asm
 (define (compile-e e c)
