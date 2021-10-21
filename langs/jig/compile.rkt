@@ -157,15 +157,14 @@
 ;; Id [Listof Expr] CEnv -> Asm
 (define (compile-app-tail f es c)
   (seq (compile-es es c)
-       (if (zero? (length c))
-           (seq)           
-           (move-args (length es) (length c)))
+       (move-args (length es) (length c))
        (Add rsp (* 8 (length c)))
        (Jmp (symbol->label f))))
 
 ;; Integer Integer -> Asm
 (define (move-args i off)
-  (cond [(zero? i) (seq)]
+  (cond [(zero? off) (seq)]
+        [(zero? i)   (seq)]
         [else
          (seq (Mov r8 (Offset rsp (* 8 (sub1 i))))
               (Mov (Offset rsp (* 8 (+ off (sub1 i)))) r8)
