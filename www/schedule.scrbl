@@ -60,7 +60,7 @@
 	       	     @seclink["Assignment 4"]{A4}
 		     @itemlist[
 		       @item{@secref["Hoax"], cont.}
-                       @item{@secref{Iniquity}}]
+                       @item{@secref{Iniquity}, (@link["https://www.youtube.com/watch?v=Yz2n7KgIfNQ"]{video})}]
                      @elem{@secref{Jig}})
 		                    
                (list @wk{10/26}
