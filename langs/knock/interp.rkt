@@ -102,7 +102,7 @@
 (define (interp-match-pat p v r)
   (match p
     [(PWild) r]
-    [(Var x) (ext r x v)]
+    [(PVar x) (ext r x v)]
     [(PLit l) (and (eqv? l v) r)]
     [(PCons p1 p2)
      (match v

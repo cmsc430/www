@@ -223,7 +223,7 @@
   (match p
     [(PWild)
      (list (seq) (seq) cm)]
-    [(Var x)
+    [(PVar x)
      (list (seq (Push rax))
            (seq)
            (cons x cm))]
@@ -243,7 +243,7 @@
            (list
             (seq (Push rax)
                  i1
-                 (Mov rax (Offset rsp (* 8 (- (sub1 (length cm1)) (length cm))))) ;; ?
+                 (Mov rax (Offset rsp (* 8 (- (sub1 (length cm1)) (length cm)))))
                  i2)
             (seq f1 f2)
             cm2)])])]
@@ -254,8 +254,7 @@
           [(list i2 f2 cm2)
            (let ((fail (gensym)))
              (list
-              (seq (%%% "Match cons")
-                   (Mov r8 rax)
+              (seq (Mov r8 rax)
                    (And r8 ptr-mask)
                    (Cmp r8 type-cons)
                    (Jne fail)                   
@@ -264,7 +263,7 @@
                    (Push r8)                ; push cdr
                    (Mov rax (Offset rax 8)) ; mov rax car
                    i1
-                   (Mov rax (Offset rsp (* 8 (- (sub1 (length cm1)) (length cm))))) ;; ?
+                   (Mov rax (Offset rsp (* 8 (- (sub1 (length cm1)) (length cm)))))
                    i2)
               (seq f1
                    f2

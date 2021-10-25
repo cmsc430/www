@@ -65,7 +65,7 @@
     [(? char?)    (PLit p)]
     [''()         (PLit '())]
     ['_           (PWild)]
-    [(? symbol?)  (Var p)]
+    [(? symbol?)  (PVar p)]
     [(list 'cons p1 p2)
      (PCons (parse-pat p1) (parse-pat p2))]
     [(list 'and p1 p2)

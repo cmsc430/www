@@ -37,11 +37,11 @@
 ;;           | 'make-vector | 'vector-ref
 ;;           | 'make-string | 'string-ref
 ;; type Op3  = 'vector-set!
-;; type Pat  = (Var Id)
-;;           | (Wild)
-;;           | (Lit Literal)
-;;           | (Cons Pat Pat)
-;;           | (And Pat Pat)
+;; type Pat  = (PVar Id)
+;;           | (PWild)
+;;           | (PLit Literal)
+;;           | (PCons Pat Pat)
+;;           | (PAnd Pat Pat)
 
 (struct Eof   ()           #:prefab)
 (struct Empty ()           #:prefab)
@@ -60,6 +60,7 @@
 (struct App   (f es)       #:prefab)
 (struct Match (e ps es)    #:prefab)
 
+(struct PVar  (x)          #:prefab)
 (struct PWild ()           #:prefab)
 (struct PLit  (x)          #:prefab)
 (struct PCons (p1 p2)      #:prefab)
