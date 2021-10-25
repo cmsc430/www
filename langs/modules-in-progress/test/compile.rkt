@@ -11,8 +11,8 @@
 (current-objs
  (list (path->string (normalize-path "../runtime.o"))))
 
-(test-runner    (λ (e) (unload/free (asm-interp (compile (parse e))))))
-(test-runner-io (λ (e s)
-                  (match (asm-interp/io (compile (parse e)) s)
+(test-runner    (λ p (unload/free (asm-interp (compile (parse p))))))
+(test-runner-io (λ (s . p)
+                  (match (asm-interp/io (compile (parse p)) s)
                     ['err 'err]
                     [(cons r o) (cons (unload/free r) o)])))

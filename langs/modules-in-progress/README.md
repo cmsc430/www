@@ -1,6 +1,13 @@
 Standard Library and Modules
 ============================
 
+This is a work in progress on a uniform approach to a standard library
+and modules.  It's mostly OK, but needs work on the file system
+aspects and the Makefile is a little brittle.  Not sure it fits in
+with the `test-progs` approach to testing either.
+
+
+
 Standard Library
 ----------------
 

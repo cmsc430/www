@@ -1,12 +1,15 @@
 #lang racket
-(provide parse-e parse-define parse-module parse-module-file)
+(provide parse parse-e parse-define parse-module parse-module-file)
 (require "ast.rkt")
+
+;; Need to pass around the module's file name in order to resolve
+;; paths in requires.
 
 ;; String -> Module
 (define (parse-module-file fn)
   (let ((p (open-input-file fn)))
     (begin (read-line p) ; ignore #lang racket line
-           (begin0 (parse-module (read-all p))
+           (begin0 (parse-module (read-all p) fn)
              (close-input-port p)))))
 
 ;; Port -> SExpr
@@ -16,25 +19,27 @@
         '()
         (cons r (read-all p)))))
 
-;; S-Expr -> Module
-(define (parse-module m)
-  (match (parse-module* m)
+;; S-Expr Path -> Module
+(define (parse-module m p)
+  (match (parse-module* m p)
     [(list ps rs ds #f)
      (Module ps rs ds)]
     [(list ps rs ds e)
      (Module (cons 'main ps) rs (cons (Defn 'main '() e) ds))]))
 
-(define (parse-module* m)
+(define parse parse-module)
+
+(define (parse-module* m p)
   (match m
     ['() (list '() '() '() #f)]
     [(cons x m)
-     (match (parse-module* m)
+     (match (parse-module* m p)
        [(list ps rs ds e)
         (match x
           [(cons 'provide _)
            (list (append (parse-provide x) ps) rs ds e)]
           [(cons 'require _)
-           (list ps (append (parse-require x) rs) ds e)]
+           (list ps (append (parse-require x p) rs) ds e)]
           [(cons 'define _)
            (list ps rs (cons (parse-define x) ds) e)]
           [_
@@ -100,7 +105,7 @@
          box unbox empty? cons? box? car cdr
          vector? vector-length string? string-length))
 (define op2
-  '(+ - cons make-vector vector-ref make-string string-ref))
+  '(+ - < = cons make-vector vector-ref make-string string-ref))
 (define op3
   '(vector-set!))
 

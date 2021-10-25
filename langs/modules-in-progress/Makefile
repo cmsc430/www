@@ -3,6 +3,8 @@ UNAME := $(shell uname)
 
 .SECONDARY: $(wild *.make)
 
+BUILD_DIR := .
+
 ifeq ($(UNAME), Darwin)
   format=macho64
 else
@@ -31,12 +33,13 @@ runtime.o: $(objs)
 	racket -t compile-file.rkt -m $< > $@
 
 %.make: %.rkt
+	echo "MAKING"
 	racket -t build.rkt -m $< > $@
 
 %.run: %.make
 	make $@
 
 clean:
-	-rm *.o *.s *.run *.make
+	-rm *.o *.s *.run $(BUILD_DIR)/*.make
 
--include $(wildcard *.make)
+-include $(wildcard $(BUILD_DIR)/*.make)

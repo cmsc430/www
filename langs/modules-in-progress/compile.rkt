@@ -20,8 +20,10 @@
            (compile-main ds)
            (compile-defines ds)           
            (Label 'raise_error_align)
-           (Sub rsp 8)
-           (Jmp 'raise_error))]))
+           pad-stack
+           (Call 'raise_error))]))
+
+(define compile compile-module)
 
 ;; Module -> Module
 ;; Remove anything from requires that is provided by this module
@@ -49,10 +51,10 @@
     [(cons _ ds) (main? ds)]))
 
 (define (compile-provides ps)
-  (map (lambda (p) (Global (symbol->label p))) ps))
+  (map (λ (p) (Global (symbol->label p))) ps))
 
 (define (compile-requires rs)
-  (map (lambda (r) (Extern (symbol->label r))) rs))
+  (map (λ (r) (Extern (symbol->label r))) rs))
 
 #|
 ;; Prog -> Asm
@@ -154,19 +156,19 @@
 
 ;; Op0 CEnv -> Asm
 (define (compile-prim0 p c)
-  (compile-op0 p c))
+  (compile-op0 p))
 
 ;; Op1 Expr CEnv -> Asm
 (define (compile-prim1 p e c)
   (seq (compile-e e c #f)
-       (compile-op1 p c)))
+       (compile-op1 p)))
 
 ;; Op2 Expr Expr CEnv -> Asm
 (define (compile-prim2 p e1 e2 c)
   (seq (compile-e e1 c #f)
        (Push rax)
        (compile-e e2 (cons #f c) #f)
-       (compile-op2 p c)))
+       (compile-op2 p)))
 
 ;; Op3 Expr Expr Expr CEnv -> Asm
 (define (compile-prim3 p e1 e2 e3 c)
@@ -174,8 +176,8 @@
        (Push rax)
        (compile-e e2 (cons #f c) #f)
        (Push rax)
-       (compile-e e3 (cons #f (cons #f c)))
-       (compile-op3 p c)))
+       (compile-e e3 (cons #f (cons #f c)) #f)
+       (compile-op3 p)))
 
 ;; Expr Expr Expr CEnv Bool -> Asm
 (define (compile-if e1 e2 e3 c t?)
@@ -211,15 +213,14 @@
 ;; Id [Listof Expr] CEnv -> Asm
 (define (compile-app-tail f es c)
   (seq (compile-es es c)
-       (if (zero? (length c))
-           (seq)           
-           (move-args (length es) (length c)))
+       (move-args (length es) (length c))
        (Add rsp (* 8 (length c)))
        (Jmp (symbol->label f))))
 
 ;; Integer Integer -> Asm
 (define (move-args i off)
-  (cond [(zero? i) (seq)]
+  (cond [(zero? off) (seq)]
+        [(zero? i)   (seq)]
         [else
          (seq (Mov r8 (Offset rsp (* 8 (sub1 i))))
               (Mov (Offset rsp (* 8 (+ off (sub1 i)))) r8)
@@ -229,20 +230,12 @@
 ;; The return address is placed above the arguments, so callee pops
 ;; arguments and return address is next frame
 (define (compile-app-nontail f es c)
-  (let ((ret (gensym 'ret)))
-    (if (odd? (length c))
-        (seq (Lea r8 ret)
-             (Push r8)
-             (compile-es es (cons #f c))
-             (Jmp (symbol->label f))
-             (Label ret))
-        (seq (Sub rsp 8)
-             (Lea r8 ret)
-             (Push r8)
-             (compile-es es (cons #f (cons #f c)))
-             (Jmp (symbol->label f))
-             (Label ret)
-             (Add rsp 8)))))
+  (let ((r (gensym 'ret)))
+    (seq (Lea rax r)
+         (Push rax)
+         (compile-es es (cons #f c))
+         (Jmp (symbol->label f))
+         (Label r))))
 
 ;; [Listof Expr] CEnv -> Asm
 (define (compile-es es c)
