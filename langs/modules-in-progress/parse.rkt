@@ -27,7 +27,7 @@
     [(list ps rs ds e)
      (Module (cons 'main ps) rs (cons (Defn 'main '() e) ds))]))
 
-(define parse parse-module)
+(define parse (lambda (m) (parse-module m "<STDIN>")))
 
 (define (parse-module* m p)
   (match m
