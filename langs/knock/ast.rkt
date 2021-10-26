@@ -39,9 +39,13 @@
 ;; type Op3  = 'vector-set!
 ;; type Pat  = (PVar Id)
 ;;           | (PWild)
-;;           | (PLit Literal)
+;;           | (PLit Lit)
 ;;           | (PCons Pat Pat)
 ;;           | (PAnd Pat Pat)
+;; type Lit  = Boolean
+;;           | Character
+;;           | Integer
+;;           | '()
 
 (struct Eof   ()           #:prefab)
 (struct Empty ()           #:prefab)
