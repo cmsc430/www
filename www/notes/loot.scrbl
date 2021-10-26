@@ -13,6 +13,7 @@
 @(ev '(require rackunit a86))
 @(ev `(current-directory ,(path->string (build-path notes "loot"))))
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
+@(void (ev '(current-objs '("runtime.o"))))
 @(for-each (λ (f) (ev `(require (file ,f))))
 	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
