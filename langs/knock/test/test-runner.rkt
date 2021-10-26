@@ -221,8 +221,21 @@
   (check-equal? (run '(match 1 [(cons x y) x] [_ 3]))
                 3)
   (check-equal? (run '(match (cons 1 2) [(cons 1 3) 0] [(cons 1 y) y] [_ 3]))
-                2))
-
+                2)
+  (check-equal? (run '(match (box 1) [(box 1) 0] [_ 1]))
+                0)
+  (check-equal? (run '(match (box 1) [(box 2) 0] [_ 1]))
+                1)
+  (check-equal? (run '(match (box 1) [(box x) x] [_ 2]))
+                1)
+  (check-equal? (run '(match '() [(list) 1] [_ 2]))
+                1)
+  (check-equal? (run '(match '() [(list 1) 1] [_ 2]))
+                2)
+  (check-equal? (run '(match (cons 1 '()) [(list 1) 1] [_ 2]))
+                1)
+  (check-equal? (run '(match (cons 1 (cons 2 (cons 3 '()))) [(list x y z) z] [_ 2]))
+                3))
 
 (define (test-runner-io run)
   ;; Evildoer examples

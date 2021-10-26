@@ -40,6 +40,7 @@
 ;; type Pat  = (PVar Id)
 ;;           | (PWild)
 ;;           | (PLit Lit)
+;;           | (PBox Pat)
 ;;           | (PCons Pat Pat)
 ;;           | (PAnd Pat Pat)
 ;; type Lit  = Boolean
@@ -67,5 +68,6 @@
 (struct PVar  (x)          #:prefab)
 (struct PWild ()           #:prefab)
 (struct PLit  (x)          #:prefab)
+(struct PBox  (p)          #:prefab)
 (struct PCons (p1 p2)      #:prefab)
 (struct PAnd  (p1 p2)      #:prefab)

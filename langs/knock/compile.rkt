@@ -247,6 +247,23 @@
                  i2)
             (seq f1 f2)
             cm2)])])]
+    [(PBox p)
+     (match (compile-pattern p cm next)
+       [(list i1 f1 cm1)
+        (let ((fail (gensym)))
+          (list
+           (seq (Mov r8 rax)
+                (And r8 ptr-mask)
+                (Cmp r8 type-box)
+                (Jne fail)
+                (Xor rax type-box)
+                (Mov rax (Offset rax 0))
+                i1)
+           (seq f1
+                (Label fail)
+                (Add rsp (* 8 (length cm))) ; haven't pushed anything yet
+                (Jmp next))
+           cm1))])]
     [(PCons p1 p2)
      (match (compile-pattern p1 (cons #f cm) next)
        [(list i1 f1 cm1)

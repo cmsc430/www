@@ -104,6 +104,11 @@
     [(PWild) r]
     [(PVar x) (ext r x v)]
     [(PLit l) (and (eqv? l v) r)]
+    [(PBox p)
+     (match v
+       [(box v)
+        (interp-match-pat p v r)]
+       [_ #f])]
     [(PCons p1 p2)
      (match v
        [(cons v1 v2)
