@@ -317,7 +317,7 @@ This looks a lot like the creation of a vector, however note that we
 @item{use @racket['eax] to write 32-bits of memory,}
 @item{advance the offset by 4-bytes (32-bits) on each subsequent character,}
 @item{write @racket[(char->integer #\a)] instead of @racket[(value->bits #\a)] into memory,}
-@item{increment @racket['rbx] by 24, even though we've only written 20 bits.}
+@item{increment @racket['rbx] by 24, even though we've only written 20 bytes.}
 ]
 
 Now let’s consider referencing elements of a string.  Suppose
