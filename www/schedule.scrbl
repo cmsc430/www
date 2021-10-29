@@ -53,13 +53,13 @@
 	       	     @bold{@seclink["Midterm_1"]{M1}}
                      @itemlist[
 		       @item{@secref["Hustle"], cont. (@link["https://youtu.be/SwKc_FeEmHk"]{video})}
-		       @item{@secref["Hoax"]}]
+		       @item{@secref["Hoax"]} (@link["https://youtu.be/yEsXYn8exfk"]{video})]
                      @elem{No lecture (exam)})
 
                (list @wk{10/19}                     
 	       	     @seclink["Assignment 4"]{A4}
 		     @itemlist[
-		       @item{@secref["Hoax"], cont.}
+		       @item{@secref["Hoax"], cont. (@link["https://youtu.be/SwKc_FeEmHk"]{video})}
                        @item{@secref{Iniquity}, (@link["https://www.youtube.com/watch?v=Yz2n7KgIfNQ"]{video})}]
                      @elem{@secref{Jig}})
 		                    
