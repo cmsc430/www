@@ -23,37 +23,157 @@
 
 @section[#:tag-prefix "loot"]{Functions in their most general form}
 
-We've been building up the pieces of functions, first with
-second-class functions, then with tail-calls, then with first-class
-function pointers.
+We've added function calls and function definitions, but what we don't
+have and really should is function @bold{values}.
+
+Programming with functions as values is a powerful idiom that is at
+the heart of both functional programming and object-oriented
+programming, which both center around the idea that computation itself
+can be packaged up in a suspended form as a value and later run.
 
 Now we're ready to deal with functions in their most general form:
 @racket[λ]-expressions.
 
 
-We add @racket[λ]-expressions to the syntax and remove the
-@racket[(fun ,Variable)] and @racket[(call ,Expr ,@(Listof Expr))]
-forms.  We no longer need a separate syntactic form for referencing
-the name of a function, we can just use variable binding.  Likewise,
-we use the same syntax as Racket for function application:
+Let's call it @bold{Loot}.
 
-@verbatim|{
-;; type Expr =
-;; | ....
-;; | Lam Name (Listof Variable) Expr
-;; | App Expr (Listof Expr)
-}|
+We add @racket[λ]-expressions to the syntax of expressions:
 
-Two things to note: for now you can ignore the @tt{Name} parameter,
-and @tt{Formals} can be defined as a list of variables:
+@racketblock[
+(λ (_x0 ...) _e0)
+]
 
-@verbatim|{
-;; type Formals = (Listof Variable)
-}|
+Here @racket[_x0 ...] are the formal parameters of the function and
+@racket[_e0] is the body.
 
-But it's possible to extend the @racket[λ]-notation to include the
-ability to define variable-arity functions, as you will see in
-@secref["Assignment 6"].
+The syntax is evocative of function definitions:
+
+@racketblock[
+(define (_f _x0 ...) _e0)
+]
+
+However, you'll notice:
+
+@itemlist[
+
+@item{There is no function name in the @racket[λ]-expression; it is an
+@bold{anonymous} function.}
+
+@item{The new form is an expression---it can appear any where as a
+subexpression in a program, whereas definitions were restricted to be
+at the top-level.}
+
+]
+
+There also is a syntactic relaxation on the grammar of application
+expressions (a.k.a. function calls).  Previously, a function call
+consisted of a function name and some number of arguments:
+
+@racketblock[
+(_f _e0 ...)
+]
+
+But since functions will now be considered values, we can generalize
+what's allowed in the function position of the syntax for calls to be
+an arbitrary expression.  That expression is expected to produce a
+function value (and this expectation gives rise to a new kind of
+run-time error when violated: applying a non-function to arguments),
+which can called with the value of the arguments.
+
+Hence the syntax is extended to:
+
+@racketblock[
+(_e _e0 ...)
+]
+
+In particular, the function expression can be a @racket[λ]-expression,
+e.g.:
+
+@racketblock[
+((λ (x) (+ x x)) 10)
+]
+
+But also it may be expression which produces a function, but isn't
+itself a @racket[λ]-expression:
+
+
+@racketblock[
+(define (adder n)
+  (λ (x)
+    (+ x n)))
+((adder 5) 10)
+]
+
+Here, @racket[(adder 5)] is the function position of @racket[((adder
+5) 10)].  That subexpression is itself a function call expression,
+calling @racket[adder] with the argument @racket[5].  The result of
+that subexpression is a function that, when applied, adds @racket[5]
+to its argument.
+
+In terms of the AST, here's how we model the extended syntax:
+
+@filebox-include-fake[codeblock "loot/ast.rkt"]{
+#lang racket
+;; type Expr = ...
+;;           | (App Expr (Listof Expr))
+;;           | (Lam (Listof Id) Expr)
+}
+
+So for example, the expression @racket[((adder 5) 10)] would be parsed
+as:
+
+@racketblock[
+(App (App (Var 'adder) (Int 5)) (Int 10))
+]
+
+and @racket[(λ (x) (+ x n))] would be parsed as:
+
+@racketblock[
+(Lam (list 'x) (Prim2 '+ (Var 'x) (Var 'n)))
+]
+
+We will actually use a slight tweak of this AST when it comes to
+representing the syntax of @racket[λ]-expressions.  Although functions
+are anynomous, it will nonetheless be useful to syntactically
+distinguish one @racket[λ]-expression @emph{occurrence} from an
+otherwise identical occurrence.
+
+Consider for example:
+
+@racketblock[
+(let ((g1 (let ((x 100)) (λ (y) (+ x y))))
+      (g2 (let ((x   9)) (λ (y) (+ x y)))))
+  ...)      
+]
+
+This program has two occurrences of the expression @racket[(λ (y) (+ x
+y))].  Even though these expressions are identical and both evaluate
+to functions, they @emph{do not} evaluate to the same function!  One
+is the ``add 100'' function and the other is the ``add 9'' function.
+
+It will be useful to distinguish these two occurrences so we can talk
+about @emph{this} or @emph{that} @racket[λ]-expression.
+
+The way we accomplish this is we will assume the AST representation of
+each distinct occurrence of a @racket[λ]-expression has it's own
+unique name (represented with a symbol).  We choose to have the parser
+take of labelling @racket[λ]-expressions by inserting a
+@racket[gensym]'d symbol.  So, we touch-up the @racket[Lam] AST type
+definition as follows:
+
+@#reader scribble/comment-reader
+(racketblock
+;; type Expr = ...
+;;           | (Lam Id (Listof Id) Expr)
+)
+
+and these two occurrence would be distinguished by having distinct
+symbols for the label of the expression:
+
+@ex[
+(Lam (gensym) (list 'x) (Prim2 '+ (Var 'x) (Var 'y)))
+(Lam (gensym) (list 'x) (Prim2 '+ (Var 'x) (Var 'y)))
+]
 
 @section[#:tag-prefix "loot"]{Long Live Lambda!}
 
@@ -62,11 +182,12 @@ forms are @racket[λ]s and applications:
 
 @#reader scribble/comment-reader
 (racketblock
-;; Expr REnv -> Answer
-(define (interp-env e r)
-    ;;...
+;; Expr REnv Defns -> Answer
+(define (interp-env e r ds)
+  (match e
+    ;; ...
     [(Lam _ xs e)  '...]
-    [(App e es)  '...])
+    [(App e es)    '...]))
 )
 
 These two parts of the interpreter must fit together: @racket[λ] is
@@ -110,15 +231,20 @@ in what we know so far:
 
 @#reader scribble/comment-reader
 (racketblock
-;; Expr REnv -> Answer
-(define (interp-env e r)
-    ;;...
+;; Expr REnv Defns -> Answer
+(define (interp-env e r ds)
+  (match e
+    ;; ...
     [(Lam _ xs e)
      (λ ??? '...)]
     [(App e es)
-     (let ((f (interp-eval e r))
-           (vs (interp-eval* es r)))
-       (apply f vs))])
+     (match (interp-env e r ds)
+       ['err 'err]
+       [f
+        (match (interp-env* es r ds)
+          ['err 'err]
+          [vs
+           (apply f vs)])])]))
 )
 
 
@@ -130,17 +256,21 @@ number of arguments:
 
 @#reader scribble/comment-reader
 (racketblock
-;; Expr REnv -> Answer
-(define (interp-env e r)
-    ;;...
+;; Expr REnv Defns -> Answer
+(define (interp-env e r ds)
+  (match e
+    ;; ...
     [(Lam _ xs e)
      (λ vs '...)]
     [(App e es)
-     (let ((f (interp-eval e r))
-           (vs (interp-eval* es r)))
-       (apply f vs))])
+     (match (interp-env e r ds)
+       ['err 'err]
+       [f
+        (match (interp-env* es r ds)
+          ['err 'err]
+          [vs
+           (apply f vs)])])]))
 )
-
 
 Second, what should happen when a function is applied?  It should
 produce the answer produced by the body of the @racket[λ] expression
@@ -149,15 +279,20 @@ Translating that to code, we get:
 
 @#reader scribble/comment-reader
 (racketblock
-;; Expr REnv -> Answer
-(define (interp-env e r)
-    ;;...
+;; Expr REnv Defns -> Answer
+(define (interp-env e r ds)
+  (match e
+    ;; ...
     [(Lam _ xs e)
-     (λ vs (interp-env e (zip xs vs)))]
+     (λ vs (interp-env e (zip xs vs) ds))]
     [(App e es)
-     (let ((f (interp-eval e r))
-           (vs (interp-eval* es r)))
-       (apply f vs))])
+     (match (interp-env e r ds)
+       ['err 'err]
+       [f
+        (match (interp-env* es r ds)
+          ['err 'err]
+          [vs
+           (apply f vs)])])]))
 )
 
 And now we have simultaneously arrived at our representation of function values:
@@ -194,67 +329,115 @@ in the (Racket) function:
 
 @#reader scribble/comment-reader
 (racketblock
-;; Expr REnv -> Answer
-(define (interp-env e r)
-    ;;...
+;; Expr REnv Defns -> Answer
+(define (interp-env e r ds)
+  (match e
+    ;; ...
     [(Lam _ xs e)
-     (λ (vs) (interp-env e (append (zip xs vs) r)))]
+     (λ vs (interp-env e (append (zip xs vs) r)) ds)]
     [(App e es)
-     (let ((f (interp-eval e r))
-           (vs (interp-eval* es r)))
-       (apply f vs))])
+     (match (interp-env e r ds)
+       ['err 'err]
+       [f
+        (match (interp-env* es r ds)
+          ['err 'err]
+          [vs
+           (apply f vs)])])]))
 )
 
 The last remaining issue is we should do some type and arity-checking:
 
 @#reader scribble/comment-reader
 (racketblock
-;; Expr REnv -> Answer
-(define (interp-env e r)
-    ;;...
+;; Expr REnv Defns -> Answer
+(define (interp-env e r ds)
+  (match e
+    ;; ...
     [(Lam _ xs e)
-     (λ (vs)
-       (if (= (length xs) (length vs))
-           (interp-env e (append (zip xs vs) r))
-	   'err))]
+     (λ vs
+       ; check arity matches
+       (if (= (length xs) (length vs))           
+           (interp-env e (append (zip xs vs) r) ds)
+           'err))]
     [(App e es)
-     (let ((f (interp-eval e r))
-           (vs (interp-eval* es r)))
-       (if (procedure? f)
-           (apply f vs)
-	   'err))])
+     (match (interp-env e r ds)
+       ['err 'err]
+       [f
+        (match (interp-env* es r ds)
+          ['err 'err]
+          [vs
+           (if (procedure? f)
+               (apply f vs)
+               'err)])])]))
 )
+
+We have a final issue to deal with.  What should we do about
+references to functions defined at the top-level of the program?  In
+other words, how do we make function applicaton when the function was
+defined with @racket[define]?
+
+One possible answer to re-use our new power of
+@racket[lambda]-expression by considering @racket[define]-bound names
+as just regular old variables, but changing the way that variables are
+interpreted so that when evaluating a variable that is not bound in
+the local environment, we consult the program definitions and
+construct the function value at that moment.
+
+There will turn out to be a better, more uniform approach, but this we
+will work for now and is simple.
+
+So for now we interpret variables as follows:
+
+@#reader scribble/comment-reader
+(racketblock
+;; Id Env [Listof Defn] -> Answer
+(define (interp-var x r ds)
+  (match (lookup r x)
+    ['err (match (defns-lookup ds x)
+            [(Defn f xs e) (interp-env (Lam f xs e) '() ds)]
+            [#f 'err])]
+    [v v]))
+)
+
+You'll notice that the function is constructed by interpreting a
+@racket[lambda]-expression corresponding to the function definition
+and that this happens in an empty environment; that's because function
+definitions can only occur at the top-level and therefore the only
+variables they can reference are other @racket[define]-bound
+functions, given in @racket[ds].
 
 
 The complete interpreter is:
 
 @codeblock-include["loot/interp.rkt"]
 
-
 We now have the full power of @racket[λ] expressions in our language.
 We can write recursive functions, using only anonymous functions, via
 the Y-combinator:
 
 @ex[
-(interp (parse
-  '(λ (t)
-     ((λ (f) (t (λ (z) ((f f) z))))
-      (λ (f) (t (λ (z) ((f f) z))))))))
+(define (run . p) (interp (parse p)))
+
+(run
+ '(λ (t)
+    ((λ (f) (t (λ (z) ((f f) z))))
+     (λ (f) (t (λ (z) ((f f) z)))))))
 ]
+
 
 For example, computing the triangular function applied to 10:
 
 @ex[
-(interp (parse
-  '(((λ (t)
-       ((λ (f) (t (λ (z) ((f f) z))))
-        (λ (f) (t (λ (z) ((f f) z))))))
-     (λ (tri)
-       (λ (n)
-         (if (zero? n)
-             1
-             (+ n (tri (sub1 n)))))))
-    10)))
+(run
+ '(((λ (t)
+      ((λ (f) (t (λ (z) ((f f) z))))
+       (λ (f) (t (λ (z) ((f f) z))))))
+    (λ (tri)
+      (λ (n)
+        (if (zero? n)
+            0
+            (+ n (tri (sub1 n)))))))
+    36))
 ]
 
 One of the niceties of using Racket functions to represent Loot
@@ -263,30 +446,34 @@ Loot functions:
 
 @ex[
 (define Y
-  (interp (parse
-    '(λ (t)
-       ((λ (f) (t (λ (z) ((f f) z))))
-        (λ (f) (t (λ (z) ((f f) z)))))))))
+  (run
+   '(λ (t)
+      ((λ (f) (t (λ (z) ((f f) z))))
+       (λ (f) (t (λ (z) ((f f) z))))))))
 
 (define tri
-  (interp (parse '(λ (tri)
-                    (λ (n)
-                       (if (zero? n)
-                           1
-                           (+ n (tri (sub1 n)))))))))
+  (run
+   '(λ (tri)
+      (λ (n)
+        (if (zero? n)
+            0
+            (+ n (tri (sub1 n))))))))
 ]
 
 And then use them from within Racket:
 
 @ex[
-((Y tri) 10)
+((Y tri) 36)
 ]
+
 
 We can also ``import'' Racket functions in to Loot:
 
+
 @ex[
-(interp-env (parse '(expt 2 10))
-            `((expt ,expt)))
+(interp-env (parse-e '(expt 2 10))
+            (list (list 'expt expt))
+	    '())
 ]
 
 
@@ -339,29 +526,36 @@ To:
 (racketblock
 ;; type Value =
 ;; | ....
-;; | Closure Formals Expr Env
+;; | (Closure [Listof Id] Expr Env)
 )
 
 When a @racket[λ] is evaluated, a closure is created.  When a function
 is applied, we deconstruct the closure and execute the code that used
 to be in the (Racket) function:
 
+
 @#reader scribble/comment-reader
 (racketblock
-;; Expr REnv -> Answer
-(define (interp-env e r)
+;; Expr REnv Defns -> Answer
+(define (interp-env e r ds)
+  (match e
     ;;...
     [(Lam _ xs e)
      (Closure xs e r)]
     [(App e es)
-     (let ((f (interp-eval e r))
-           (vs (interp-eval* es r)))
-       (match f
-         [(Closure xs e r)
-	  (if (= (length vs) (length xs))
-              (interp-env e (append (zip xs vs) r))
-	      'err)]
-	 [_ 'err]))])
+     (match (interp-env e r ds)
+       ['err 'err]
+       [f
+        (match (interp-env* es r ds)
+          ['err 'err]
+          [vs
+           (match f
+  	     [(Closure xs e r)        
+              ; check arity matches
+              (if (= (length xs) (length vs))           
+                  (interp-env e (append (zip xs vs) r) ds)
+                  'err)]
+             [_ 'err])])])]))
 )
 
 We can give it a try:
@@ -370,8 +564,10 @@ We can give it a try:
 @(ev `(require (file ,(path->string (build-path notes "loot" "interp-defun.rkt")))))
 
 @ex[
-(interp (parse '(λ (x) x)))
-(interp (parse '((λ (x) (λ (y) x)) 8)))
+(define (run . p) (interp (parse p)))
+
+(run '(λ (x) x))
+(run '((λ (x) (λ (y) x)) 8))
 ]
 
 Notice in the second example how the closure contains the body of the
@@ -381,39 +577,51 @@ function and the environment mapping the free variable @racket['x] to
 We can also confirm our larger example works:
 
 @ex[
-(interp (parse
+(run
   '(((λ (t)
        ((λ (f) (t (λ (z) ((f f) z))))
         (λ (f) (t (λ (z) ((f f) z))))))
      (λ (tri)
        (λ (n)
          (if (zero? n)
-             1
+             0
              (+ n (tri (sub1 n)))))))
-    10)))
+    36))
 ]
 
 While can't apply the interpretation of functions in Racket
 like we did previously, we can @racket[apply-function] the
 interpretation of functions:
 
-@ex[
+@#reader scribble/comment-reader
+(ex
 (define Y
-  (interp (parse
+  (run
     '(λ (t)
        ((λ (f) (t (λ (z) ((f f) z))))
-        (λ (f) (t (λ (z) ((f f) z)))))))))
+        (λ (f) (t (λ (z) ((f f) z))))))))
 
 (define tri
-  (interp (parse
-           '(λ (tri)
-             (λ (n)
-               (if (zero? n)
-                   1
-                   (+ n (tri (sub1 n)))))))))
+  (run
+    '(λ (tri)
+       (λ (n)
+         (if (zero? n)
+             0
+             (+ n (tri (sub1 n))))))))
 
-(apply-function (apply-function Y tri) 10)
-]
+;; Value Value ... -> Answer
+(define (apply-function f . vs)
+  (match f
+    [(Closure xs e r)        
+     ; check arity matches
+     (if (= (length xs) (length vs))           
+         (interp-env e (append (zip xs vs) r) '())
+         'err)]
+    [_ 'err]))
+
+(apply-function (apply-function Y tri) 36)
+)
+
 
 The process we used to eliminate function values from the interpreter
 is an instance of a general-purpose whole-program transformation
@@ -460,7 +668,8 @@ Let's give it a try:
 (accepts `(star (char #\a)) "aaaab")
 (accepts `(star (plus (char #\a) (char #\b))) "aaaab")
 ]
-	
+
+
 But what if needed to program this regular expression matching without
 the use of function values?  We can arrive at such code systematically
 by applying defunctionalization.
@@ -477,7 +686,6 @@ And we get the same results:
 (accepts `(star (char #\a)) "aaaab")
 (accepts `(star (plus (char #\a) (char #\b))) "aaaab")
 ]
-
 
 @section[#:tag-prefix "loot"]{Compiling Loot}
 
@@ -513,48 +721,22 @@ bound outside of the @racket[λ]-expression.}
 To deal with the first issue, we first make a pass over the program
 inserting computed names for each @racket[λ]-expression.
 
-This is the reason for the @tt{Name} field in the @racket[Lam] constructor.
+This is the reason for the generated name field in the @racket[Lam] constructor.
 
 @#reader scribble/comment-reader
 (racketblock
 ;; type Expr =
 ;; ....
-;; | Lam Name [Variable] Expr
+;; | (Lam Id [Listof Id] Expr)
 )
 
-Now @racket[λ]-expressions have the form like @racket[(Lam 'fred '(x) (+ x x))].
-The symbol @racket['fred] here is used to give a name to the
-@racket[λ]-expression.
-
-The first step of the compiler will be to label every
-@racket[λ]-expression using the following function:
-
-@#reader scribble/comment-reader
-(racketblock
-;; Expr -> Expr
-(define (label-λ e)
-  (match e
-    [(Prog ds e)     (Prog (map label-λ ds) (label-λ e))]
-    [(Defn f xs e)   (Defn f xs (label-λ e))]
-    [(Prim1 p e)     (Prim1 p (label-λ e))]
-    [(Prim2 p e1 e2) (Prim2 p (label-λ e1) (label-λ e2))]
-    [(If e1 e2 e3)   (If (label-λ e1) (label-λ e2) (label-λ e3))]
-    [(Begin e1 e2)   (Begin (label-λ e1) (label-λ e2))]
-    [(Let x e1 e2)   (Let x (label-λ e1) (label-λ e2))]
-    [(LetRec bs e1)  (LetRec (map (lambda (xs) (map label-λ xs)) bs) (label-λ e1))]
-    [(Lam '() xs e)  (Lam (gensym 'lam) xs (label-λ e))]
-    [(Lam n xs e)    (Lam (gensym n) xs (label-λ e))]
-    [(App f es)      (App (label-λ f) (map label-λ es))]
-    [_               e]))
-)
-
-Here it is at work:
+These labels are inserted by the parser.   Here it is at work:
 
 @ex[
-(label-λ (parse
+(parse-e
   '(λ (t)
     ((λ (f) (t (λ (z) ((f f) z))))
-     (λ (f) (t (λ (z) ((f f) z))))))))
+     (λ (f) (t (λ (z) ((f f) z)))))))
 ]
 
 Now turning to the second issue--@racket[λ]-expression may reference
@@ -577,86 +759,69 @@ the second argument on stack before calling the function's code.
 To implement this, we will need to compute the free variables, which
 we do with the following function:
 
-@#reader scribble/comment-reader
-(racketblock
-;; Expr -> (Listof Variable)
-(define (fvs e)
-  (define (fvs e)
-    (match e
-      [(Prim1 p e)     (fvs e)]
-      [(Prim2 p e1 e2) (append (fvs e1) (fvs e2))]
-      [(If e1 e2 e3)   (append (fvs e1) (fvs e2) (fvs e3))]
-      [(Begin e1 e2)   (append (fvs e1) (fvs e2))]
-      [(Let x e1 e2)   (append (fvs e1) (remq* (list x) (fvs e2)))]
-      [(LetRec bs e1)  (let ((bound (map car bs))
-                             (def-fvs (append-map fvs-bind bs)))
-                            (remq* bound (append def-fvs (fvs e1))))]
-      [(Lam n xs e1)   (remq* xs (fvs e1))]
-      [(Var x)         (list x)]
-      [(App f es)      (append (fvs f) (append-map fvs es))]
-      [_               '()]))
-  (remove-duplicates (fvs e)))
-)
+@codeblock-include["loot/fv.rkt"]
 
 We can now write the function that compiles a labelled
 @racket[λ]-expression into a function in assembly:
 
 @#reader scribble/comment-reader
 (racketblock
-;; Lambda -> Asm
-(define (compile-λ-definition l)
+;; Lam -> Asm
+(define (compile-lambda-define l)
   (match l
-    [(Lam '() xs e) (error "Lambdas must be labelled before code-gen")]
     [(Lam f xs e)
-     (let* ((free (remq* xs (fvs e)))
-            ; leave space for RIP
-            (env (parity (cons #f (cons #f (reverse (append xs free)))))))
-           (seq
-             (Label (symbol->label f))
-             ; we need the #args on the frame, not the length of the entire
-             ; env (which may have padding)
-             ; Ignore tail calls for now
-             (compile-e e env)
-             (Ret)))]))
+     (let ((env (append (fv l) (reverse xs))))
+       (seq (Label (symbol->label f))
+            (compile-e e env #t)
+            (Add rsp (* 8 (length env))) ; pop env
+            (Ret)))]))
 )
+
+Notice how similar it is to our function definition compiler:
+
+@#reader scribble/comment-reader
+(racketblock
+;; Defn -> Asm
+(define (compile-define d)
+  (match d
+    [(Defn f xs e)
+     (seq (Label (symbol->label f))
+          (compile-e e (reverse xs) #t)
+          (Add rsp (* 8 (length xs))) ; pop args
+          (Ret))]))
+)
+
+The only real difference is that the values of the free variables of
+the function will be supplied as addition implicit arguments when the
+function is called.  The values will be retrieved from the
+representation of a closure and placed on the stack before jumping the
+function's code.
+
 
 Here's what's emitted for a @racket[λ]-expression with a free variable:
 @ex[
-(compile-λ-definition (Lam 'f '(x) (Var 'z)))
+(compile-lambda-define (Lam 'f '(x) (Var 'z)))
 ]
 
 Notice that it's identical to a @racket[λ]-expression with an added
 parameter and no free variables:
 @ex[
-(compile-λ-definition (Lam 'f '(x z) (Var 'z)))
+(compile-lambda-define (Lam 'f '(x z) (Var 'z)))
 ]
 
 The compiler will need to generate one such function for each
 @racket[λ]-expression in the program.  So we use a helper function for
-extracting all the @racket[λ]-expressions and another for compiling
-each of them:
+extracting all the @racket[λ]-expressions:
 
+
+@codeblock-include["loot/lambdas.rkt"]
+
+And another for compiling each of them:
 
 @#reader scribble/comment-reader
 (racketblock
-;; LExpr -> (Listof LExpr)
-;; Extract all the lambda expressions
-(define (λs e)
-  (match e
-    [(Prog ds e)     (append (append-map λs ds) (λs e))]
-    [(Defn f xs e)   (λs e)]
-    [(Prim1 p e)     (λs e)]
-    [(Prim2 p e1 e2) (append (λs e1) (λs e2))]
-    [(If e1 e2 e3)   (append (λs e1) (λs e2) (λs e3))]
-    [(Begin e1 e2)   (append (λs e1) (λs e2))]
-    [(Let x e1 e2)   (append (λs e1) (λs e2))]
-    [(LetRec bs e1)  (append (append-map lambda-defs bs) (λs e1))]
-    [(Lam n xs e1)   (cons e (λs e1))]
-    [(App f es)      (append (λs f) (append-map λs es))]
-    [_               '()]))
-
-;; [Lam] -> Asm
-(define (compile-λ-definitions ds)
+;; [Listof Lam] -> Asm
+(define (compile-lambda-defines ds)
   (seq
     (match ds
       ['() (seq)]
@@ -666,31 +831,53 @@ each of them:
 )
 
 
-The top-level @racket[compile] function now labels inserts labels and
-compiles all the @racket[λ]-expressions to functions:
+The top-level @racket[compile] function now extracts and compiles all
+the @racket[λ]-expressions to functions:
 
 @#reader scribble/comment-reader
 (racketblock
 ;; Prog -> Asm
 (define (compile p)
-  (match (label-λ (desugar p))
-    [(Prog '() e)
-     (prog (Extern 'peek_byte)
-           (Extern 'read_byte)
-           (Extern 'write_byte)
-           (Extern 'raise_error)
+  (match p
+    [(Prog ds e)  
+     (prog (externs)
+           (Global 'entry)
            (Label 'entry)
-           (Mov rbx rdi)
-           (compile-e e '(#f))
-           (Mov rdx rbx)
+           (Mov rbx rdi) ; recv heap pointer
+           (compile-e e '() #t)
            (Ret)
-           (compile-λ-definitions (λs e)))]))
+           (compile-defines ds)
+           (compile-lambda-defines (lambdas e))
+           (Label 'raise_error_align)
+           pad-stack
+           (Call 'raise_error))]))
 )
 
 What remains is the issue of compiling @racket[λ]-expressions to code
-to create a closure.
+to create a closure and using closures to provide the appropriate
+value of free variables when called.
 
-@section[#:tag-prefix "loot"]{Save the Environment: Create a Closure!}
+@section[#:tag "closure" #:tag-prefix "loot"]{Save the Environment: Create a Closure!}
+
+
+The basic challenge we are faced with is designing a representation of
+functions as values.  Like other kinds of values, functions will be
+disjoint kind of value, meaning bits representing a function will need
+to be tagged distinctly from other kinds of values.  Functions will
+need to represent all of the run-time information in the
+@racket[Closure] structure used in the interpreter.  Looking back, a
+@racket[Closure] contains the formal parameters of the
+@racket[lambda]-expression, the body, and the environment in place at
+the time the @racket[lambda]-expression was evaluated.
+
+The parameters and body expression are relevant
+@racket[compile-lambda-define].  What's relevant for the closure is
+the label of @racket[lambda]-expression and the environment.  For the
+compiler, the environment can be represented by the sequence of values
+it contains at run-time.
+
+
+@;{
 
 We've already seen how to create a reference to a function pointer,
 enabling functions to be first-class values that can be passed around,
@@ -1039,7 +1226,7 @@ We can give a spin:
 
 
 
-@section[#:tag-prefix "loot"]{Syntactic sugar for function definitions}
+@section[#:tag-prefix "loot" #:tag "sugar"]{Syntactic sugar for function definitions}
 
 The @racket[letrec] form is a generlization of the
 @racket[(begin (define (_f _x ...) _e) ... _e0)] form we started with
@@ -1077,4 +1264,4 @@ The compiler now just desugars before labeling and compiling expressions.
 And here's the complete compiler, including tail calls, @racket[letrec], etc.:
 
 @codeblock-include["loot/compile.rkt"]
-
+}
