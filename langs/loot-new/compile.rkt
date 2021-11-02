@@ -1,6 +1,6 @@
 #lang racket
 (provide (all-defined-out))
-(require "ast.rkt" "types.rkt" "syntax.rkt" "compile-ops.rkt" a86/ast)
+(require "ast.rkt" "types.rkt" "lambdas.rkt" "fv.rkt" "compile-ops.rkt" a86/ast)
 
 ;; Registers used
 (define rax 'rax) ; return
@@ -20,7 +20,6 @@
            (Mov rbx rdi) ; recv heap pointer
            (compile-e e '() #t)
            (Ret)
-           (compile-defines ds)
            (compile-lambda-defines (lambdas e))
            (Label 'raise_error_align)
            pad-stack
@@ -32,23 +31,6 @@
        (Extern 'write_byte)
        (Extern 'raise_error)))
 
-;; [Listof Defn] -> Asm
-(define (compile-defines ds)
-  (match ds
-    ['() (seq)]
-    [(cons d ds)
-     (seq (compile-define d)
-          (compile-defines ds))]))
-
-;; Defn -> Asm
-(define (compile-define d)
-  (match d
-    [(Defn f xs e)
-     (seq (Label (symbol->label f))
-          (compile-e e (reverse xs) #t)
-          (Add rsp (* 8 (length xs))) ; pop args
-          (Ret))]))
-
 ;; [Listof Lam] -> Asm
 (define (compile-lambda-defines ls)
   (match ls
@@ -58,7 +40,6 @@
           (compile-lambda-defines ls))]))
 
 ;; Lam -> Asm
-;; Id [Listof Id] Expr CEnv -> Asm
 (define (compile-lambda-define l)
   (match l
     [(Lam f xs e)
@@ -67,6 +48,16 @@
             (compile-e e env #t)
             (Add rsp (* 8 (length env))) ; pop env
             (Ret)))]))
+
+;; Defn -> Asm
+#;
+(define (compile-define d)
+  (match d
+    [(Defn f xs e)
+     (seq (Label (symbol->label f))
+          (compile-e e (reverse xs) #t)
+          (Add rsp (* 8 (length xs))) ; pop args
+          (Ret))]))
 
 ;; Expr CEnv Bool -> Asm
 (define (compile-e e c t?)
@@ -253,7 +244,8 @@
      (seq 
       (Mov r8 (Offset rsp (lookup x c)))
       (Mov (Offset rbx 0) r8)
-      (Add rbx 8))]))
+      (Add rbx 8)
+      (free-vars-to-heap fvs c))]))
 
 ;; [Listof Expr] CEnv -> Asm
 (define (compile-es es c)

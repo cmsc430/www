@@ -1,5 +1,5 @@
 #lang racket
-(provide interp interp-env)
+(provide interp interp-env (struct-out Closure) zip)
 (require "ast.rkt"
          "env.rkt"
          "interp-prims.rkt")
@@ -17,7 +17,8 @@
 ;; | (box Value)
 ;; | (vector Value ...)
 ;; | (string Char ...)
-;; | (Value ... -> Answer)
+;; | (Closure [Listof Id] Expr Env)
+(struct Closure (xs e r) #:prefab)
 
 ;; type REnv = (Listof (List Id Value))
 ;; type Defns = (Listof Defn)
@@ -75,11 +76,7 @@
        ['err 'err]
        [v (interp-env e2 (ext r x v) ds)])]
     [(Lam _ xs e)
-     (λ vs
-       ; check arity matches
-       (if (= (length xs) (length vs))
-           (interp-env e (append (zip xs vs) r) ds)
-           'err))]
+     (Closure xs e r)]
     [(App e es)
      (match (interp-env e r ds)
        ['err 'err]
@@ -87,9 +84,13 @@
         (match (interp-env* es r ds)
           ['err 'err]
           [vs
-           (if (procedure? f)
-               (apply f vs)
-               'err)])])]))
+           (match f
+  	     [(Closure xs e r)        
+              ; check arity matches
+              (if (= (length xs) (length vs))           
+                  (interp-env e (append (zip xs vs) r) ds)
+                  'err)]
+             [_ 'err])])])]))
 
 ;; Id Env [Listof Defn] -> Answer
 (define (interp-var x r ds)

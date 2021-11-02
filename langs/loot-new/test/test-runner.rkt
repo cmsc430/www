@@ -179,7 +179,7 @@
                  '(f 1))
                 10)
   (check-equal? (run
-                 ' (define (f x)
+                 '(define (f x)
                      10)
                  '(let ((x 2)) (f 1)))
                 10)
@@ -192,7 +192,34 @@
                  '(define (f x y)
                     10)
                  '(let ((z 2)) (f 1 2)))
-                10))
+                10)
+
+
+  ;; Loot examples
+  (check-equal? (run '((λ (x) x) 5))
+                5)
+  (check-equal? (run '(let ((f (λ (x) x))) (f 5)))
+                5)
+  (check-equal? (run '(let ((f (λ (x y) x))) (f 5 7)))
+                5)
+  (check-equal? (run '(let ((f (λ (x y) y))) (f 5 7)))
+                7)
+  (check-equal? (run '(define (adder n)
+                        (λ (x) (+ x n)))
+                     '((adder 5) 10))
+                15)
+  (check-equal? (run '(((λ (t)
+                          ((λ (f) (t (λ (z) ((f f) z))))
+                           (λ (f) (t (λ (z) ((f f) z))))))
+                        (λ (tri)
+                          (λ (n)
+                            (if (zero? n)
+                                0
+                                (+ n (tri (sub1 n)))))))
+                       36))
+                666))
+  
+  
 
 
 (define (test-runner-io run)
