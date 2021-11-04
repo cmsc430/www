@@ -8,19 +8,22 @@
 (define rsp 'rsp) ; stack
 (define rdi 'rdi) ; arg
 
-;; type CEnv = [Listof Variable]
+;; type CEnv = [Listof Id]
 
 ;; Prog -> Asm
 (define (compile p)
   (match p
-    [(Prog ds e)  
+    [(Prog ds e)
      (prog (externs)
            (Global 'entry)
            (Label 'entry)
            (Mov rbx rdi) ; recv heap pointer
-           (compile-e e '() #t)
+           (compile-defines-values ds)
+           (compile-e e (reverse (define-ids ds)) #f)
+           (Add rsp (* 8 (length ds))) ;; pop function definitions
            (Ret)
-           (compile-lambda-defines (lambdas e))
+           (compile-defines ds)
+           (compile-lambda-defines (lambdas p))
            (Label 'raise_error_align)
            pad-stack
            (Call 'raise_error))]))
@@ -30,6 +33,27 @@
        (Extern 'read_byte)
        (Extern 'write_byte)
        (Extern 'raise_error)))
+
+;; [Listof Defn] -> [Listof Id]
+(define (define-ids ds)
+  (match ds
+    ['() '()]
+    [(cons (Defn f xs e) ds)
+     (cons f (define-ids ds))]))
+
+;; [Listof Defn] -> Asm
+(define (compile-defines ds)
+  (match ds
+    ['() (seq)]
+    [(cons d ds)
+     (seq (compile-define d)
+          (compile-defines ds))]))
+
+;; Defn -> Asm
+(define (compile-define d)
+  (match d
+    [(Defn f xs e)
+     (compile-lambda-define (Lam f xs e))]))
 
 ;; [Listof Lam] -> Asm
 (define (compile-lambda-defines ls)
@@ -41,23 +65,27 @@
 
 ;; Lam -> Asm
 (define (compile-lambda-define l)
-  (match l
-    [(Lam f xs e)
-     (let ((env (append (fv l) (reverse xs))))
-       (seq (Label (symbol->label f))
-            (compile-e e env #t)
-            (Add rsp (* 8 (length env))) ; pop env
-            (Ret)))]))
+  (let ((fvs (fv l)))
+    (match l
+      [(Lam f xs e)
+       (let ((env  (append (reverse fvs) (reverse xs) (list #f))))
+         (seq (Label (symbol->label f))              
+              (Mov rax (Offset rsp (* 8 (length xs))))
+              (Xor rax type-proc)
+              (copy-env-to-stack fvs 8)
+              (compile-e e env #t)
+              (Add rsp (* 8 (length env))) ; pop env
+              (Ret)))])))
 
-;; Defn -> Asm
-#;
-(define (compile-define d)
-  (match d
-    [(Defn f xs e)
-     (seq (Label (symbol->label f))
-          (compile-e e (reverse xs) #t)
-          (Add rsp (* 8 (length xs))) ; pop args
-          (Ret))]))
+;; [Listof Id] Int -> Asm
+;; Copy the closure environment at given offset to stack
+(define (copy-env-to-stack fvs off)
+  (match fvs
+    ['() (seq)]
+    [(cons _ fvs)
+     (seq (Mov r9 (Offset rax off))
+          (Push r9)
+          (copy-env-to-stack fvs (+ 8 off)))]))
 
 ;; Expr CEnv Bool -> Asm
 (define (compile-e e c t?)
@@ -162,18 +190,21 @@
 
 ;; Id [Listof Expr] CEnv Bool -> Asm
 (define (compile-app f es c t?)
-  ;; FIXME: turn off tail calls for now
-  (compile-app-nontail f es c)  
-  #;(if t?
+  ;(compile-app-nontail f es c)
+  (if t?
       (compile-app-tail f es c)
       (compile-app-nontail f es c)))
 
 ;; Expr [Listof Expr] CEnv -> Asm
-(define (compile-app-tail f es c)
-  (seq (compile-es es c)
-       (move-args (length es) (length c))
+(define (compile-app-tail e es c)
+  (seq (compile-es (cons e es) c)
+       (move-args (add1 (length es)) (length c))
        (Add rsp (* 8 (length c)))
-       (Jmp (symbol->label f))))
+       (Mov rax (Offset rsp (* 8 (length es))))
+       (assert-proc rax)
+       (Xor rax type-proc)
+       (Mov rax (Offset rax 0))
+       (Jmp rax)))
 
 ;; Integer Integer -> Asm
 (define (move-args i off)
@@ -190,62 +221,75 @@
 (define (compile-app-nontail e es c)
   (let ((r (gensym 'ret))
         (i (* 8 (length es))))
-    (seq (compile-e e c #f)
+    (seq (Lea rax r)
          (Push rax)
-         (compile-es es (cons #f c))
-
+         (compile-es (cons e es) (cons #f c))         
          (Mov rax (Offset rsp i))
          (assert-proc rax)
          (Xor rax type-proc)
-         (Mov r8 (Offset rax 0))
-
-         (Lea r10 r)
-         (Mov (Offset rsp i) r10)
-         
-         ; copy-heap-to-stack
-         (Mov r9 (Offset rax 8))
-         (Add rax 16)
-         (let ((loop (gensym))
-               (done (gensym)))
-           (seq (Label loop)
-                (Cmp r9 0)
-                (Je done)
-                (Mov r10 (Offset rax 0))
-                (Push r10)
-                (Add rax 8)
-                (Sub r9 1)
-                (Jmp loop)
-                (Label done)))
-         
-         (Jmp r8)
+         (Mov rax (Offset rax 0)) ; fetch the code label
+         (Jmp rax)
          (Label r))))
 
+;; Defns -> Asm
+;; Compile the closures for ds and push them on the stack
+(define (compile-defines-values ds)
+  (seq (alloc-defines ds 0)
+       (init-defines ds (reverse (define-ids ds)) 8)
+       (add-rbx-defines ds 0)))
 
+;; Defns Int -> Asm
+;; Allocate closures for ds at given offset, but don't write environment yet
+(define (alloc-defines ds off)
+  (match ds
+    ['() (seq)]
+    [(cons (Defn f xs e) ds)
+     (let ((fvs (fv (Lam f xs e))))
+       (seq (Lea rax (symbol->label f))
+            (Mov (Offset rbx off) rax)         
+            (Mov rax rbx)
+            (Add rax off)
+            (Or rax type-proc)
+            (Push rax)
+            (alloc-defines ds (+ off (* 8 (add1 (length fvs)))))))]))
+
+;; Defns CEnv Int -> Asm
+;; Initialize the environment for each closure for ds at given offset
+(define (init-defines ds c off)
+  (match ds
+    ['() (seq)]
+    [(cons (Defn f xs e) ds)
+     (let ((fvs (fv (Lam f xs e))))
+       (seq (free-vars-to-heap fvs c off)
+            (init-defines ds c (+ off (* 8 (add1 (length fvs)))))))]))
+
+;; Defns Int -> Asm
+;; Compute adjustment to rbx for allocation of all ds
+(define (add-rbx-defines ds n)
+  (match ds
+    ['() (seq (Add rbx (* n 8)))]
+    [(cons (Defn f xs e) ds)
+     (add-rbx-defines ds (+ n (add1 (length (fv (Lam f xs e))))))]))
 
 ;; Id [Listof Id] Expr CEnv -> Asm
-(define (compile-lam f xs e c)
+(define (compile-lam f xs e c) 
   (let ((fvs (fv (Lam f xs e))))
     (seq (Lea rax (symbol->label f))
          (Mov (Offset rbx 0) rax)
-         (Mov rax (length fvs))
-         (Mov (Offset rbx 8) rax)
+         (free-vars-to-heap fvs c 8)
+         (Mov rax rbx) ; return value
+         (Or rax type-proc)         
+         (Add rbx (* 8 (add1 (length fvs)))))))
 
-         (Mov rax rbx)      ; return value
-         (Or rax type-proc)
-         (Add rbx 16)
-         ;; copy values of free vars to heap
-         (free-vars-to-heap fvs c)
-         )))
-
-(define (free-vars-to-heap fvs c)
+;; [Listof Id] CEnv Int -> Asm
+;; Copy the values of given free variables into the heap at given offset
+(define (free-vars-to-heap fvs c off)
   (match fvs
     ['() (seq)]
     [(cons x fvs)
-     (seq 
-      (Mov r8 (Offset rsp (lookup x c)))
-      (Mov (Offset rbx 0) r8)
-      (Add rbx 8)
-      (free-vars-to-heap fvs c))]))
+     (seq (Mov r8 (Offset rsp (lookup x c)))
+          (Mov (Offset rbx off) r8)
+          (free-vars-to-heap fvs c (+ off 8)))]))
 
 ;; [Listof Expr] CEnv -> Asm
 (define (compile-es es c)

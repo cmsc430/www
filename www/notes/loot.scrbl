@@ -415,6 +415,8 @@ We now have the full power of @racket[λ] expressions in our language.
 We can write recursive functions, using only anonymous functions, via
 the Y-combinator:
 
+
+
 @ex[
 (define (run . p) (interp (parse p)))
 
@@ -423,7 +425,6 @@ the Y-combinator:
     ((λ (f) (t (λ (z) ((f f) z))))
      (λ (f) (t (λ (z) ((f f) z)))))))
 ]
-
 
 For example, computing the triangular function applied to 10:
 
@@ -687,6 +688,8 @@ And we get the same results:
 (accepts `(star (plus (char #\a) (char #\b))) "aaaab")
 ]
 
+
+
 @section[#:tag-prefix "loot"]{Compiling Loot}
 
 Compiling a @racket[λ]-expression will involve generating two
@@ -743,18 +746,24 @@ Now turning to the second issue--@racket[λ]-expression may reference
 variables bound outside of the expression---let's consider how to
 compile something like @racket[(λ (x) z)]?
 
-There are many possible solutions, but perhaps the simplest is to
-compile this as a function that takes @emph{two} arguments,
-i.e. compile it as if it were: @racket[(λ (x z) z)].  The idea is that
-a @racket[λ]-expression defines a function of both explicit arguments
-(the parameters) and implicit arguments (the free variables of the
-@racket[λ]-expression).
+There are many possible solutions, but here is one.  Every function
+can be passed an implicit first argument which will point to a section
+of memory that contains all of the values for the free variables.
+
+In other words, the code for functions will accept an additional
+argument that plays the role of the environment for this particular
+instance of the function.
+
+The first thing the function does once called is copies these values
+from memory to the stack and then executes the body of the function in
+an environment that binds both the free variables and the formal
+parameters.
 
 This will have to work in concert with closure creation and function
 calls.  When the @racket[λ]-expression is evaluated, a closure will be
-created storing the value of @racket[z].  When the function is
-applied, the caller will need to retrieve that value and place it as
-the second argument on stack before calling the function's code.
+created storing the value of @racket[z] in memory.  When the function
+is applied, the caller will need to retrieve that value and place it
+as the first argument on stack before calling the function's code.
 
 To implement this, we will need to compute the free variables, which
 we do with the following function:
@@ -768,16 +777,20 @@ We can now write the function that compiles a labelled
 (racketblock
 ;; Lam -> Asm
 (define (compile-lambda-define l)
-  (match l
-    [(Lam f xs e)
-     (let ((env (append (fv l) (reverse xs))))
-       (seq (Label (symbol->label f))
-            (compile-e e env #t)
-            (Add rsp (* 8 (length env))) ; pop env
-            (Ret)))]))
+  (let ((fvs (fv l)))
+    (match l
+      [(Lam f xs e)
+       (let ((env  (append (reverse fvs) (reverse xs) (list #f))))
+         (seq (Label (symbol->label f))              
+              (Mov rax (Offset rsp (* 8 (length xs))))
+              (Xor rax type-proc)
+              (copy-env-to-stack fvs 8)
+              (compile-e e env #t)
+              (Add rsp (* 8 (length env))) ; pop env
+              (Ret)))])))
 )
 
-Notice how similar it is to our function definition compiler:
+Notice how similar it is to our previous function definition compiler:
 
 @#reader scribble/comment-reader
 (racketblock
@@ -791,23 +804,36 @@ Notice how similar it is to our function definition compiler:
           (Ret))]))
 )
 
-The only real difference is that the values of the free variables of
-the function will be supplied as addition implicit arguments when the
-function is called.  The values will be retrieved from the
-representation of a closure and placed on the stack before jumping the
-function's code.
+The key difference here is that we are expecting the caller to leave
+the closure at the top of the stack.  When called, the function
+fetches the closure and copies its environment to the stack, hence the
+body of the function has a static environment which includes the free
+variables followed by the parameters followed by the closure.
 
+The copying of the values from the closure environment to the stack is
+achieved by this helper function:
+
+@#reader scribble/comment-reader
+(racketblock
+;; [Listof Id] Int -> Asm
+;; Copy the closure environment at given offset to stack
+(define (copy-env-to-stack fvs off)
+  (match fvs
+    ['() (seq)]
+    [(cons _ fvs)
+     (seq (Mov r9 (Offset rax off))
+          (Push r9)
+          (copy-env-to-stack fvs (+ 8 off)))]))
+)
+
+When the body of the function completes, all of these elements are
+popped off the stack and the function returns.
 
 Here's what's emitted for a @racket[λ]-expression with a free variable:
 @ex[
 (compile-lambda-define (Lam 'f '(x) (Var 'z)))
 ]
 
-Notice that it's identical to a @racket[λ]-expression with an added
-parameter and no free variables:
-@ex[
-(compile-lambda-define (Lam 'f '(x z) (Var 'z)))
-]
 
 The compiler will need to generate one such function for each
 @racket[λ]-expression in the program.  So we use a helper function for
@@ -821,13 +847,12 @@ And another for compiling each of them:
 @#reader scribble/comment-reader
 (racketblock
 ;; [Listof Lam] -> Asm
-(define (compile-lambda-defines ds)
-  (seq
-    (match ds
-      ['() (seq)]
-      [(cons d ds)
-       (seq (compile-λ-definition d)
-            (compile-λ-definitions ds))])))
+(define (compile-lambda-defines ls)
+  (match ls
+    ['() (seq)]
+    [(cons l ls)
+     (seq (compile-lambda-define l)
+          (compile-lambda-defines ls))]))
 )
 
 
@@ -846,7 +871,6 @@ the @racket[λ]-expressions to functions:
            (Mov rbx rdi) ; recv heap pointer
            (compile-e e '() #t)
            (Ret)
-           (compile-defines ds)
            (compile-lambda-defines (lambdas e))
            (Label 'raise_error_align)
            pad-stack
@@ -855,7 +879,8 @@ the @racket[λ]-expressions to functions:
 
 What remains is the issue of compiling @racket[λ]-expressions to code
 to create a closure and using closures to provide the appropriate
-value of free variables when called.
+environment when called.
+
 
 @section[#:tag "closure" #:tag-prefix "loot"]{Save the Environment: Create a Closure!}
 
@@ -876,192 +901,114 @@ the label of @racket[lambda]-expression and the environment.  For the
 compiler, the environment can be represented by the sequence of values
 it contains at run-time.
 
+So, the way we will represent a closure is by a tagged pointer to a
+sequence in memory that contains the label of the closure's code and a
+sequence of values that were bound to the free variables when the
+@racket[lambda]-expression was evaluated.
 
-@;{
-
-We've already seen how to create a reference to a function pointer,
-enabling functions to be first-class values that can be passed around,
-returned from other functions, stored in data structures, etc.  The
-basic idea was to allocate a location in memory and save the address
-of a function label there.
-
-A closure is just this, plus the environment that needs to be restored
-with the function is called.  So representing a closure is fairly
-straightforward: we will allocate a location in memory and save the
-function label, plus each value that is needed from the environment.
-In order to keep track of how many values there are, we'll also store
-the length of the environment.
+When a @racket[lambda]-expression is evaluated, we allocate a closure
+on the heap, write the @racket[lambda]'s label, followed by the values
+of the free variables.  The result of evaluating the expression is the
+tagged pointer to the memory just written.
 
 Here's the function for emitting closure construction code:
 
 @#reader scribble/comment-reader
 (racketblock
-;; (Listof Variable) Label (Listof Variable) CEnv -> Asm
-(define (compile-λ xs f ys c)
-  (seq
-    ; Save label address
-    (Lea rax (symbol->label f))
-    (Mov (Offset rbx 0) rax)
-
-    ; Save the environment
-    (%% "Begin saving the env")
-    (Mov r8 (length ys))
-
-    (Mov (Offset rbx 8) r8)
-    (Mov r9 rbx)
-    (Add r9 16)
-    (copy-env-to-heap ys c 0)
-    (%% "end saving the env")
-
-    ; Return a pointer to the closure
-    (Mov rax rbx)
-    (Or rax type-proc)
-    (Add rbx (* 8 (+ 2 (length ys))))))
+;; Id [Listof Id] Expr CEnv -> Asm
+(define (compile-lam f xs e c) 
+  (let ((fvs (fv (Lam f xs e))))
+    (seq (Lea rax (symbol->label f))
+         (Mov (Offset rbx 0) rax)
+         (free-vars-to-heap fvs c 8)
+         (Mov rax rbx) ; return value
+         (Or rax type-proc)         
+         (Add rbx (* 8 (add1 (length fvs)))))))
 )
 
-Compared the previous code we say for function pointer references, the
-only difference is the code to store the length and value of the free
-variables of the @racket[λ]-expression.  Also: the amount of memory
-allocated is no longer just a single cell, but depends on the number
-of free variables being closed over.
-
-The @racket[copy-env-to-heap] function generates instructions for
-dereferencing variables and copying them to the appropriate memory
-location where the closure is stored:
+It relies on a helper function for emitting instructions to copy the
+value of free variables, i.e. variables bound in the current
+environment but outside of the @racket[lambda]-expression.  It fetches
+these values just like a variable reference would: it computes the
+variables lexical address and fetches it from the stack, then writes
+it to the heap.
 
 @#reader scribble/comment-reader
 (racketblock
-;; (Listof Variable) CEnv Natural -> Asm
-;; Pointer to beginning of environment in r9
-(define (copy-env-to-heap fvs c i)
+;; [Listof Id] CEnv Int -> Asm
+;; Copy the values of given free variables into the heap at given offset
+(define (free-vars-to-heap fvs c off)
   (match fvs
     ['() (seq)]
     [(cons x fvs)
-     (seq
-       ; Move the stack item  in question to a temp register
-       (Mov r8 (Offset rsp (lookup x c)))
-
-       ; Put the iterm in the heap
-       (Mov (Offset r9 i) r8)
-
-       ; Do it again for the rest of the items, incrementing how
-       ; far away from r9 the next item should be
-       (copy-env-to-heap fvs c (+ 8 i)))]))
+     (seq (Mov r8 (Offset rsp (lookup x c)))
+          (Mov (Offset rbx off) r8)
+          (free-vars-to-heap fvs c (+ off 8)))]))
 )
 
 That's all there is to closure construction!
 
 @section[#:tag-prefix "loot"]{Calling Functions}
 
-The last final peice of the puzzle is making function calls and
-closures work together.  Remember that a @racket[λ]-expression is
-compiled into a function that expects two sets of arguments on the
-stack: the first are the explicit arguments that given at the call
-site; the other arguments are the implicit arguments corresponding to
-free variables the @racket[λ]-expression being called.  The value of
-these arguments are given by the environment saved in the closure of
-the @racket[λ]-expressions.
+The last peice of the puzzle is making function calls and closures
+work together.  Remember that a @racket[λ]-expression is compiled into
+a function that expects a closure @emph{plus} its arguments on the
+stack.
 
 So the code generated for a function call needs to manage running each
-subexpression, the first of which should evaluate to a function (a
-pointer to a closure).  The arguments are saved on the stack, and then
-the values stored in the environment part of the closure need to be
-copied from the heap to the stack:
+subexpression, the first of which should evaluate to a function (i.e.
+a pointer to a label and environment in memory) and then fetching the
+function's label and jumping to it.
+
+Here is the code for the non-tail-calls:
 
 @#reader scribble/comment-reader
 (racketblock
-;; Expr (Listof Expr) CEnv -> Asm
-(define (compile-call f es c)
-  (let* ((cnt (length es))
-         (aligned (even? (+ cnt (length c))))
-         (i (if aligned 1 2))
-         (c+ (if aligned
-                 c
-                 (cons #f c)))
-         (c++ (cons #f c+)))
-    (seq
-
-      (%% "Begin compile-call")
-      ; Adjust the stack for alignment, if necessary
-      (if aligned
-          (seq)
-          (Sub rsp 8))
-
-      ; Generate the code for the thing being called
-      ; and push the result on the stack
-      (compile-e f c+)
-      (%% "Push function on stack")
-      (Push rax)
-
-      ; Generate the code for the arguments
-      ; all results will be put on the stack (compile-es does this)
-      (compile-es es c++)
-  
-      ; Get the function being called off the stack
-      ; Ensure it's a proc and remove the tag
-      ; Remember it points to the _closure_
-      (%% "Get function off stack")
-      (Mov rax (Offset rsp (* 8 cnt)))
-      (assert-proc rax)
-      (Xor rax type-proc)
-
-      (%% "Get closure env")
-      (copy-closure-env-to-stack)
-      (%% "finish closure env")
-
-      ; get the size of the env and save it on the stack
-      (Mov rcx (Offset rax 8))
-      (Push rcx)
-  
-      ; Actually call the function
-      (Call (Offset rax 0))
-  
-      ; Get the size of the env off the stack
-      (Pop rcx)
-      (Sal rcx 3)
-
-      ; pop args
-      ; First the number of arguments + alignment + the closure
-      ; then captured values
-      (Add rsp (* 8 (+ i cnt)))
-      (Add rsp rcx))))
+;; Expr [Listof Expr] CEnv -> Asm
+;; The return address is placed above the arguments, so callee pops
+;; arguments and return address is next frame
+(define (compile-app-nontail e es c)
+  (let ((r (gensym 'ret))
+        (i (* 8 (length es))))
+    (seq (Lea rax r)
+         (Push rax)
+         (compile-es (cons e es) (cons #f c))         
+         (Mov rax (Offset rsp i))
+         (assert-proc rax)
+         (Xor rax type-proc)
+         (Mov rax (Offset rax 0)) ; fetch the code label
+         (Jmp rax)
+         (Label r))))
 )
 
-The main aspect involving lambdas is @racket[copy-closure-env-to-stack].
-Unlike the closure construction code, in which we statically know what
-and how many variables to save in a closure, we must dynamically
-loop over the environment to move values to the stack:
+Compared to the previous version of this code, it additionally
+executes the code for @racket[_e].  After all the subexpression are
+evaluated, it fetches the value of @racket[_e] off the stack, checks
+that it is a function, then fetches the label for the function's code
+and jumps to it.  Notice how the stack naturally has the function as
+the top-most element.  This is used by the code for the function to
+fetch the values stored in the closure.
+
+The code for tail calls is similar, but adapted to avoid pushing a
+return frame and to pop the local environment before jumping:
 
 @#reader scribble/comment-reader
 (racketblock
-;; -> Asm
-;; Copy closure's (in rax) env to stack in rcx
-(define (copy-closure-env-to-stack)
-  (let ((copy-loop (symbol->label (gensym 'copy_closure)))
-        (copy-done (symbol->label (gensym 'copy_done))))
-    (seq
-
-      (Mov r8 (Offset rax 8)) ; length
-      (Mov r9 rax)
-      (Add r9 16)             ; start of env
-      (Label copy-loop)
-      (Cmp r8 0)
-      (Je copy-done)
-      (Mov rcx (Offset r9 0))
-      (Push rcx)              ; Move val onto stack
-      (Sub r8 1)
-      (Add r9 8)
-      (Jmp copy-loop)
-      (Label copy-done))))
+;; Expr [Listof Expr] CEnv -> Asm
+(define (compile-app-tail e es c)
+  (seq (compile-es (cons e es) c)
+       (move-args (add1 (length es)) (length c))
+       (Add rsp (* 8 (length c)))
+       (Mov rax (Offset rsp (* 8 (length es))))
+       (assert-proc rax)
+       (Xor rax type-proc)
+       (Mov rax (Offset rax 0))
+       (Jmp rax)))
 )
 
-Let's try it out:
 
-@ex[
-(asm-interp (compile (parse '((let ((x 8)) (λ (y) x)) 2))))
-(asm-interp (compile (parse '(((λ (x) (λ (y) x)) 8) 2))))
-(asm-interp (compile (parse '((λ (f) (f (f 0))) (λ (x) (add1 x))))))
-]
+
+@;{
 
 @section[#:tag-prefix "loot"]{Recursive Functions}
 
