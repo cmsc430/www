@@ -19,7 +19,7 @@
            (Label 'entry)
            (Mov rbx rdi) ; recv heap pointer
            (compile-defines-values ds)
-           (compile-e e (reverse (define-ids ds)) #f)
+           (compile-e e (reverse (define-ids ds)) #t)
            (Add rsp (* 8 (length ds))) ;; pop function definitions
            (Ret)
            (compile-defines ds)
