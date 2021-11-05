@@ -206,17 +206,21 @@
   (match* (ps es)
     [('() '()) (seq)]
     [((cons p ps) (cons e es))
-     (let ((next (gensym)))
-       (match (compile-pattern p '() next)
-         [(list i f cm)
-          (seq (Mov rax (Offset rsp 0)) ; restore value being matched
-               i
-               (compile-e e (append cm c) t?)
-               (Add rsp (* 8 (length cm)))
-               (Jmp done)
-               f
-               (Label next)
-               (compile-match-clauses ps es c done t?))]))]))
+     (seq (compile-match-clause p e c done t?)
+          (compile-match-clauses ps es c done t?))]))
+
+;; Pat Expr CEnv Symbol Bool -> Asm
+(define (compile-match-clause p e c done t?)
+  (let ((next (gensym)))
+    (match (compile-pattern p '() next)
+      [(list i f cm)
+       (seq (Mov rax (Offset rsp 0)) ; restore value being matched
+            i
+            (compile-e e (append cm c) t?)
+            (Add rsp (* 8 (length cm)))
+            (Jmp done)
+            f
+            (Label next))])))
 
 ;; Pat CEnv Symbol -> (list Asm Asm CEnv)
 (define (compile-pattern p cm next)
