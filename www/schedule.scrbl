@@ -65,8 +65,8 @@
 		                    
                (list @wk{10/26}
                      ""
-                     @elem{@secref["Jig"], cont.}
-                     @elem{@secref["Knock"]})
+		     @elem{Cancelled}
+                     @elem{@secref["Jig"], cont.})
                
                (list @wk{11/2}
                      @seclink["Assignment 5"]{A5}                     
