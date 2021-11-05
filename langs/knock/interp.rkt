@@ -1,5 +1,5 @@
 #lang racket
-(provide interp interp-env)
+(provide interp interp-env interp-match-pat interp-match)
 (require "ast.rkt"
          "env.rkt"
          "interp-prims.rkt")

@@ -12,13 +12,13 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(define (shellbox . s)
-   (parameterize ([current-directory (build-path notes "jig")]) ;; FIXME
+   (parameterize ([current-directory (build-path notes "knock")])
      (filebox (emph "shell")
               (fancyverbatim "fish" (apply shell s)))))
 
 
 @(ev '(require rackunit a86))
-@(ev `(current-directory ,(path->string (build-path notes "jig")))) ;; FIXME
+@(ev `(current-directory ,(path->string (build-path notes "knock"))))
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 @(for-each (λ (f) (ev `(require (file ,f))))
 	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt" "unload-bits-asm.rkt"))
@@ -153,6 +153,24 @@ The first clause matches when @racket[_e] evaluates to @racket[(cons 1
 @racket[1] in the scope of @racket[_e1].
 
 
+Here are some complete examples and how they are parsed:
+
+@ex[
+(parse-e '(match z [x x]))
+(parse-e '(match z [_ #t]))
+(parse-e '(match z [1 #t]))
+(parse-e '(match z [1 #t] [2 #f]))
+(parse-e '(match z [(cons x y) #t]))
+(parse-e '(match z [(cons 1 2) #t]))
+(parse-e '(match z [(and (cons x 2) (cons 1 y)) #t]))
+(parse-define
+  '(define (length xs)
+     (match xs
+       ['() 0]
+       [(cons x xs)
+        (add1 (length xs))])))
+]
+
 @section[#:tag-prefix "knock"]{An Interpreter for Pattern Matching}
 
 At the heart of interpreter for @this-lang is the function:
@@ -174,12 +192,84 @@ function produces @racket[r] extended to bind @racket[x] to
 @racket[v].  If the pattern is a wildcard, it produces @racket[r],
 indicating a match, but with no new bindings.  Likewise, if the
 pattern is a literal, it produces @racket[r] when the value is the
-same as the literal.
+same as the literal.  The more interesting cases are of @racket[cons]-
+and @racket[and]-patterns which recursively match the sub-patterns.
 
-The more interesting cases are of @racket[cons]- and
-@racket[and]-patterns which recursively match the sub-patterns.
 
-This function is then used by:
+It's important to see that this function's return type is
+communicating multiple things at the same time.  If the pattern
+doesn't match, it produces @racket[#f].  If it produces an
+environment, it means the pattern matched @emph{and} the environment
+communicates the binding of the pattern variables to values.
+
+Let's consider some examples:
+@ex[
+(interp-match-pat (PWild) 99 '())
+]
+
+Here the pattern matches, but binds no variables so the result is the
+same environment as given.
+
+@ex[
+(interp-match-pat (PVar 'x) 99 '())
+]
+
+Here the pattern matches and binds @racket[x] to @racket[99], which is
+reflected in the output environment.
+
+@ex[
+(interp-match-pat (PLit 99) 99 '())
+]
+
+Here the pattern matches but binds nothing.
+
+@ex[
+(interp-match-pat (PLit 100) 99 '())
+]
+
+Here the pattern doesn't match.
+
+
+@ex[
+(interp-match-pat (PAnd (PLit 99) (PVar 'x)) 99 '())
+]
+
+Here the pattern matches and binds @racket[x] to @racket[99].
+
+@ex[
+(interp-match-pat (PAnd (PLit 100) (PVar 'x)) 99 '())
+]
+
+Here the pattern doesn't match.
+
+@ex[
+(interp-match-pat (PCons (PVar 'x) (PVar 'y)) 99 '())
+]
+
+Here the pattern doesn't match.
+
+@ex[
+(interp-match-pat (PCons (PVar 'x) (PVar 'y)) (cons 99 100) '())
+]
+
+Here the pattern matches and binds @racket[x] to @racket[99] and
+@racket[y] to @racket[100].
+
+As you can see, the patterns can be nested arbitrarily deep but the
+environment produced will bind each variable to the appropriate
+sub-part of the given value:
+
+@ex[
+(interp-match-pat (PCons (PCons (PVar 'x) (PVar 'y))
+                         (PCons (PVar 'p) (PVar 'q)))
+                  (cons (cons 99 100)
+                        (cons #t #f))
+                  '())
+]
+
+
+With @racket[interp-match-pat], we can then build up the function for
+interpreting a @racket[match] expression:
 
 @#reader scribble/comment-reader
 (racketblock
