@@ -808,7 +808,7 @@ void print_char(val_char_t c)
 
 void print_codepoint(val_char_t c)
 {
-  static char buffer[5] = {0};
+  char buffer[5] = {0};
   utf8_encode_char(c, buffer);
   printf("%s", buffer);
 }
