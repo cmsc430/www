@@ -117,7 +117,10 @@
           (Mov (Offset rbx 8) rax)
           (Mov rax rbx)
           (Or rax type-cons)
-          (Add rbx 16))]))
+          (Add rbx 16))]
+    ['eq?
+     (seq (Pop r8)
+          (eq r8 rax))]))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -172,6 +175,14 @@
 (define (eq-imm imm)
   (let ((l1 (gensym)))
     (seq (Cmp rax imm)
+         (Mov rax val-true)
+         (Je l1)
+         (Mov rax val-false)
+         (Label l1))))
+
+(define (eq ir1 ir2)
+  (let ((l1 (gensym)))
+    (seq (Cmp ir1 ir2)
          (Mov rax val-true)
          (Je l1)
          (Mov rax val-false)

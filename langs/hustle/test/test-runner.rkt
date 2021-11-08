@@ -98,7 +98,11 @@
   (check-equal? (run '(let ((x (cons 1 2)))
                         (let ((y (box 3)))
                           (unbox y))))
-                3))
+                3)
+  (check-equal? (run '(eq? 1 1)) #t)
+  (check-equal? (run '(eq? 1 2)) #f)
+  (check-equal? (run '(eq? (cons 1 2) (cons 1 2))) #f)
+  (check-equal? (run '(let ((x (cons 1 2))) (eq? x x))) #t))
 
 (define (test-runner-io run)
   ;; Evildoer examples

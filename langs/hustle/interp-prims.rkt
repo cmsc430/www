@@ -30,6 +30,7 @@
     [(list '< (? integer?) (? integer?))  (< v1 v2)]
     [(list '= (? integer?) (? integer?))  (= v1 v2)]    
     [(list 'cons v1 v2)                   (cons v1 v2)]
+    [(list 'eq? v1 v2)                    (eq? v1 v2)]
     [_                                    'err]))
 
 ;; Any -> Boolean

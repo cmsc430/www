@@ -30,7 +30,7 @@
          integer->char char->integer
          box unbox empty? cons? box? car cdr))
 (define op2
-  '(+ - < = cons))
+  '(+ - < = cons eq?))
 
 (define (op? ops)
   (λ (x)
