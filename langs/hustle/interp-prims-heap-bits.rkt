@@ -28,7 +28,7 @@
     [(list '- (? int-bits? i1) (? int-bits? i2)) (cons h (- i1 i2))]
     [(list '< (? int-bits? i1) (? int-bits? i2)) (cons h (imm->bits (< i1 i2)))]
     [(list '= (? int-bits? i1) (? int-bits? i2)) (cons h (imm->bits (= i1 i2)))]
-    [(list 'eq? v1 v2)                           (cons h (= v1 v2))]
+    [(list 'eq? v1 v2)                           (cons h (imm->bits (= v1 v2)))]
     [(list 'cons v1 v2)                          (alloc-cons v1 v2 h)]
     [_  'err]))
 
