@@ -7,7 +7,7 @@
 
 @title{Midterm 2}
 
-@bold{Due: @m2-date 11:59PM}
+@bold{Due: @m2-date 3:15PM}
 
 @(define repo "https://github.com/cmsc430/Midterm2-prog")
 
