@@ -14,6 +14,13 @@
       (error n "expects symbol; given ~v" x))
     x))
 
+(define check:label-symbol+integer
+  (λ (x c n)
+    (check:label-symbol x n)
+    (unless (integer? c)
+      (error n "expects integer constant; given ~v" c))
+    (values x c)))
+
 (define check:target
   (λ (x n)
     (unless (or (symbol? x) (offset? x)); either register or label
@@ -38,8 +45,8 @@
   (λ (a1 a2 n)
     (unless (or (register? a1) (offset? a1))
       (error n "expects register or offset; given ~v" a1))
-    (unless (or (register? a2) (offset? a2) (exact-integer? a2))
-      (error n "expects register, offset, or exact integer; given ~v" a2))
+    (unless (or (register? a2) (offset? a2) (exact-integer? a2) (Const? a2))
+      (error n "expects register, offset, exact integer, or defined constant; given ~v" a2))
     (when (and (offset? a1) (offset? a2))
       (error n "cannot use two memory locations; given ~v, ~v" a1 a2))
     (when (and (offset? a1) (exact-integer? a2))
@@ -72,8 +79,8 @@
   (λ (dst x n)
     (unless (or (register? dst) (offset? dst))
       (error n "expects register or offset; given ~v" dst))
-    (unless (or (label? x) (offset? x))
-      (error n "expects label or offset; given ~v" x))
+    (unless (or (label? x) (offset? x) (exp? x))
+      (error n "expects label, offset, or expression; given ~v" x))
     (values dst x)))
 
 (define check:none
@@ -109,6 +116,9 @@
            #:transparent
            #:guard guard)))
 
+(instruct Text   ()        check:none)
+(instruct Data   ()        check:none)
+
 (instruct Global (x)       check:label-symbol)
 (instruct Label  (x)       check:label-symbol)
 (instruct Call   (x)       check:target)
@@ -134,6 +144,25 @@
 (instruct Offset (r i)     check:offset)
 (instruct Extern (x)       check:label-symbol)
 
+(instruct Equ    (x v)     check:label-symbol+integer)
+(instruct Const  (x)       check:label-symbol)
+
+;; IMPROVE: do more checking
+(instruct Dd (x) (lambda (x n) x))
+(instruct Dq (x) (lambda (x n) x))
+
+(provide (struct-out Plus))
+(struct Plus (e1 e2) #:transparent)
+
+(provide exp?)
+(define (exp? x)
+  (or (Offset? x)
+      (and (Plus? x)
+           (exp? (Plus-e1 x))
+           (exp? (Plus-e2 x)))
+      (symbol? x)
+      (integer? x)))
+
 (provide offset? register? instruction? label?)
 
 (define offset? Offset?)
@@ -147,7 +176,9 @@
        (not (register? x))))
 
 (define (instruction? x)
-  (or (Global? x)
+  (or (Text? x)
+      (Data? x)
+      (Global? x)
       (Label? x)
       (Extern? x)
       (Call? x)
@@ -169,7 +200,11 @@
       (Push? x)
       (Pop? x)
       (Lea? x)
-      (Comment? x)))
+      (Comment? x)
+      (Equ? x)
+      (Dd? x)
+      (Dq? x)
+      ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Instruction sequencing and program error checking

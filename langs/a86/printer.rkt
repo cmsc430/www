@@ -10,16 +10,6 @@
 
 (require "ast.rkt")
 
-;; Arg -> String
-(define (arg->string a)
-  (match a
-    [(? reg?) (reg->string a)]
-    [(? integer?) (number->string a)]
-    [(Offset (? reg? r) i)
-     (string-append "[" (reg->string r) " + " (number->string i) "]")]
-    [(Offset (? label? l) i)
-     (string-append "[" (symbol->string l) " + " (number->string i) "]")]))
-
 ;; Any -> Boolean
 (define (reg? x)
   (register? x))
@@ -56,11 +46,34 @@
        (string-append "[" (reg->string r) " + " (number->string i) "]")]
       [_ (label-symbol->string t)]))
 
+  ;; Arg -> String
+  (define (arg->string a)
+    (match a
+      [(? reg?) (reg->string a)]
+      [(? integer?) (number->string a)]
+      [(Offset (? reg? r) i)
+       (string-append "[" (reg->string r) " + " (number->string i) "]")]
+      [(Offset (? label? l) i)
+       (string-append "[" (symbol->string l) " + " (number->string i) "]")]
+      [(Const l)
+       (symbol->string l)]
+      [(? exp?) (exp->string a)]))
+
+  ;; Exp -> String
+  (define (exp->string e)
+    (match e
+      [(? integer?) (number->string e)]
+      [(Plus e1 e2)
+       (string-append "(" (exp->string e1) " + " (exp->string e2) ")")]
+      [_ (label-symbol->string e)]))
+  
   (define tab (make-string 8 #\space))
   
   ;; Instruction -> String
   (define (instr->string i)
     (match i
+      [(Text)      (string-append tab "section .text")]
+      [(Data)      (string-append tab "section .data align=8")] ; 8-byte aligned data
       [(Ret)       (string-append tab "ret")]
       [(Label l)   (string-append (label-symbol->string l) ":")]
       [(Global x)  (string-append tab "global "  (label-symbol->string x))]
@@ -133,7 +146,18 @@
       [(Lea d x)
        (string-append tab "lea "
                       (arg->string d) ", [rel "
-                      (label-symbol->string x) "]")]))
+                      (exp->string x) "]")]
+      [(Equ x c)
+       (string-append tab
+                      (symbol->string x)
+                      " equ "
+                      (number->string c))]
+
+      [(Dd x)
+       (string-append tab "dd " (arg->string x))]
+      [(Dq x)
+       (string-append tab "dq " (arg->string x))]
+      ))
 
   (define (comment->string c)
     (match c
