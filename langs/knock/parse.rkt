@@ -72,11 +72,7 @@
     [(list 'cons p1 p2)
      (PCons (parse-pat p1) (parse-pat p2))]
     [(list 'and p1 p2)
-     (PAnd (parse-pat p1) (parse-pat p2))]
-    [(list 'list)
-     (PLit '())]
-    [(cons 'list (cons p ps))
-     (PCons (parse-pat p) (parse-pat (cons 'list ps)))]))
+     (PAnd (parse-pat p1) (parse-pat p2))]))
 
 (define op0
   '(read-byte peek-byte void))
