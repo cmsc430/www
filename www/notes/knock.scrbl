@@ -20,6 +20,7 @@
 @(ev '(require rackunit a86))
 @(ev `(current-directory ,(path->string (build-path notes "knock"))))
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
+@(ev '(current-objs '("runtime.o")))
 @(for-each (λ (f) (ev `(require (file ,f))))
 	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt" "unload-bits-asm.rkt"))
 
@@ -671,6 +672,21 @@ expression:
          (Label done)
          (Add rsp 8)))) ; pop the saved value being matched
 )
+
+We can check that the compiler works for a complete example:
+
+@ex[
+(define (run p)
+  (unload/free (asm-interp (compile (parse p)))))
+
+(run
+ '[(define (length xs)
+     (match xs
+       ['() 0]
+       [(cons x xs) (add1 (length xs))]))
+   (length (cons 7 (cons 8 (cons 9 '()))))])
+]
+
 
 
 With these pieces in place, here's the complete compiler:
