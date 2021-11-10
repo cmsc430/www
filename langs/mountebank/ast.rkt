@@ -23,6 +23,7 @@
 ;;            | Char
 ;;            | Boolean
 ;;            | String
+;;            | Symbol
 ;;            | (Boxof Datum)
 ;;            | (Listof Datum)
 ;;            | (Vectorof Datum)
@@ -35,6 +36,7 @@
 ;;            | 'empty? | 'cons? | 'box?
 ;;            | 'vector? | vector-length
 ;;            | 'string? | string-length
+;;            | 'symbol? | string->symbol | symbol->string
 ;; type Op2   = '+ | '- | '< | '=
 ;;            | 'cons | 'eq?
 ;;            | 'make-vector | 'vector-ref

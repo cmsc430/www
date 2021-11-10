@@ -20,6 +20,7 @@ typedef enum type_t {
   T_CONS,
   T_VECT,
   T_STR,
+  T_SYMB,
   T_PROC,
 } type_t;
 
@@ -39,6 +40,10 @@ typedef struct val_str_t {
   uint64_t len;
   val_char_t codepoints[];
 } val_str_t;
+typedef struct val_symb_t {
+  uint64_t len;
+  val_char_t codepoints[];
+} val_symb_t;
 
 /* return the type of x */
 type_t val_typeof(val_t x);
@@ -72,5 +77,8 @@ val_t val_wrap_vect(val_vect_t* c);
 
 val_str_t* val_unwrap_str(val_t x);
 val_t val_wrap_str(val_str_t* c);
+
+val_symb_t* val_unwrap_symb(val_t x);
+val_t val_wrap_symb(val_symb_t* c);
 
 #endif

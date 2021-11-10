@@ -21,7 +21,11 @@
                      unpad-stack)]
     ['peek-byte (seq pad-stack
                      (Call 'peek_byte)
-                     unpad-stack)]))
+                     unpad-stack)]
+    ['gensym    (seq pad-stack
+                     (Call 'gensym)
+                     unpad-stack
+                     (Or rax type-symb))]))
 
 ;; Op1 -> Asm
 (define (compile-op1 p)
@@ -80,6 +84,8 @@
      (type-pred ptr-mask type-vect)]
     ['string?
      (type-pred ptr-mask type-str)]
+    ['symbol?
+     (type-pred ptr-mask type-symb)]
     ['vector-length
      (let ((zero (gensym))
            (done (gensym)))
@@ -105,7 +111,24 @@
             (Jmp done)
             (Label zero)
             (Mov rax 0)
-            (Label done)))]))
+            (Label done)))]
+    ['string->symbol
+     (seq (assert-string rax)
+          (Xor rax type-str)
+          (Mov rdi rax)
+          pad-stack
+          (Call 'intern_symbol)
+          unpad-stack
+          (Or rax type-symb))]
+    ['symbol->string
+     (seq (assert-symbol rax)
+          (Xor rax type-symb)
+          (Mov rdi rax)
+          pad-stack
+          ;; FIXME: this allocates off-heap
+          (Call 'str_dup)
+          unpad-stack
+          (Or rax type-str))]))
 
 ;; Op2 -> Asm
 (define (compile-op2 p)
@@ -140,7 +163,7 @@
           (let ((true (gensym)))
             (seq (Je true)
                  (Mov rax val-false)
-                 (Label true))))]    
+                 (Label true))))]
     ['cons
      (seq (Mov (Offset rbx 0) rax)
           (Pop rax)
@@ -150,7 +173,7 @@
           (Add rbx 16))]
     ['eq?
      (seq (Pop r8)
-          (eq r8 rax))]    
+          (eq r8 rax))]
     ['make-vector
      (let ((loop (gensym))
            (done (gensym))
@@ -304,6 +327,8 @@
   (assert-type ptr-mask type-vect))
 (define assert-string
   (assert-type ptr-mask type-str))
+(define assert-symbol
+  (assert-type ptr-mask type-symb))
 (define assert-proc
   (assert-type ptr-mask type-proc))
 

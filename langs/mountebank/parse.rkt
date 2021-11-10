@@ -56,6 +56,7 @@
     [(cons d1 d2)
      (cons (parse-datum d1) (parse-datum d2))]
     ['() '()]
+    [(? symbol? s) s]
     [(? integer? i) i]
     [(? boolean? b) b]
     [(? string? s) s]
@@ -73,13 +74,14 @@
       (vector? x)))
 
 (define op0
-  '(read-byte peek-byte void))
+  '(read-byte peek-byte void gensym))
 
 (define op1
   '(add1 sub1 zero? char? write-byte eof-object?
          integer->char char->integer
          box unbox empty? cons? box? car cdr
-         vector? vector-length string? string-length))
+         vector? vector-length string? string-length
+         symbol->string string->symbol symbol?))
 (define op2
   '(+ - < = cons eq? make-vector vector-ref make-string string-ref))
 (define op3

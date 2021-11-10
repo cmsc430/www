@@ -4,6 +4,7 @@
          "types.rkt"
          "lambdas.rkt"
          "fv.rkt"
+         "intern.rkt"
          "compile-ops.rkt"
          "compile-datum.rkt"
          a86/ast)
@@ -18,12 +19,13 @@
 
 ;; Prog -> Asm
 (define (compile p)
-  (match p
-    [(Prog ds e)
+  (match (intern p)
+    [(cons (Prog ds e) q)
      (prog (externs)
            (Global 'entry)
            (Label 'entry)
            (Mov rbx rdi) ; recv heap pointer
+           (init-symbol-table q)
            (compile-defines-values ds)
            (compile-e e (reverse (define-ids ds)) #t)
            (Add rsp (* 8 (length ds))) ;; pop function definitions
@@ -32,13 +34,18 @@
            (compile-lambda-defines (lambdas p))
            (Label 'raise_error_align)
            pad-stack
-           (Call 'raise_error))]))
+           (Call 'raise_error)
+           (Data)
+           (compile-literals q))]))
 
 (define (externs)
   (seq (Extern 'peek_byte)
        (Extern 'read_byte)
        (Extern 'write_byte)
-       (Extern 'raise_error)))
+       (Extern 'raise_error)
+       (Extern 'gensym)
+       (Extern 'intern_symbol)
+       (Extern 'str_dup)))
 
 ;; [Listof Defn] -> [Listof Id]
 (define (define-ids ds)
@@ -288,6 +295,21 @@
      (match (eq? x y)
        [#t 0]
        [#f (+ 8 (lookup x rest))])]))
+
+;; QEnv -> Asm
+;; Call intern_symbol on every symbol in the program
+(define (init-symbol-table q)
+  (seq pad-stack
+       (append-map init-symbol q)
+       unpad-stack))
+
+;; (cons (U String Symbol) Ref) -> Asm
+(define (init-symbol qb)
+  (match qb
+    [(cons (? symbol? s) (Ref l _))
+     (seq (Lea rdi l)
+          (Call 'intern_symbol))]
+    [_ (seq)]))
 
 ;; Symbol -> Label
 ;; Produce a symbol that is a valid Nasm label

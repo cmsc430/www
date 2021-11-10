@@ -7,6 +7,7 @@ void print_codepoint(val_char_t);
 void print_cons(val_cons_t *);
 void print_vect(val_vect_t*);
 void print_str(val_str_t*);
+void print_symb(val_symb_t*);
 void print_str_char(val_char_t);
 void print_result_interior(val_t);
 int utf8_encode_char(val_char_t, char *);
@@ -40,12 +41,21 @@ void print_result(val_t x)
     print_str(val_unwrap_str(x));
     putchar('"');
     break;
+  case T_SYMB:
+    printf("'");
+    print_result_interior(x);
+    break;
   case T_PROC:
     printf("#<procedure>");
     break;
   case T_INVALID:
     printf("internal error");
   }
+}
+
+void print_symb(val_symb_t *s)
+{
+  print_str((val_str_t*) s);
 }
 
 void print_result_interior(val_t x)
@@ -62,6 +72,9 @@ void print_result_interior(val_t x)
     printf("(");
     print_cons(val_unwrap_cons(x));
     printf(")");
+    break;
+  case T_SYMB:
+    print_symb(val_unwrap_symb(x));
     break;
   case T_VECT:
     print_vect(val_unwrap_vect(x));

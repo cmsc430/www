@@ -11,6 +11,7 @@ objs = \
 	main.o \
 	values.o \
 	print.o \
+	symbol.o \
 	io.o
 
 default: runtime.o
