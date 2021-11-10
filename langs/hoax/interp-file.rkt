@@ -9,7 +9,7 @@
   (let ((p (open-input-file fn)))
     (begin
       (read-line p) ; ignore #lang racket line
-      (let ((r (interp (parse (read-all p)))))
+      (let ((r (interp (parse (read p)))))
         (unless (void? r)
           (println r)))
       (close-input-port p))))
