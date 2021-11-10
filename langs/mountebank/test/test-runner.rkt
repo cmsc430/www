@@ -234,6 +234,21 @@
                        36))
                 666)
 
+  ;; Mug examples
+  (check-equal? (run '(symbol? 'foo)) #t)
+  (check-equal? (run '(symbol? (string->symbol "foo"))) #t)
+  (check-equal? (run '(eq? 'foo 'foo)) #t)
+  (check-equal? (run '(eq? (string->symbol "foo")
+                           (string->symbol "foo")))
+                #t)
+  (check-equal? (run '(eq? 'foo (string->symbol "foo")))
+                #t)
+  (check-equal? (run '(eq? 'fff (string->symbol (make-string 3 #\f))))
+                #t)
+  (check-equal? (run '(eq? 'g0 (gensym))) #f)
+  (check-equal? (run '(eq? (gensym) (gensym))) #f)
+  (check-equal? (run '(eq? (symbol->string 'foo) (symbol->string 'foo))) #f)
+
   ;; Mountebank examples
   (check-equal? (run '#())
                 #())
@@ -255,23 +270,9 @@
   (check-equal? (run '(define (f) '(1 . 2))
                      '(eq? (f) (f)))
                 #t)
-
-  (check-equal? (run '(symbol? 'foo)) #t)
-  (check-equal? (run '(symbol? (string->symbol "foo"))) #t)
-  (check-equal? (run '(eq? 'foo 'foo)) #t)
-  (check-equal? (run '(eq? (string->symbol "foo")
-                           (string->symbol "foo")))
-                #t)
-  (check-equal? (run '(eq? 'foo (string->symbol "foo")))
-                #t)
-  (check-equal? (run '(eq? 'fff (string->symbol (make-string 3 #\f))))
-                #t)
   (check-equal? (run '(let ((x '(foo . foo)))
                         (eq? (car x) (cdr x))))
-                #t)
-  (check-equal? (run '(eq? 'g0 (gensym))) #f)
-  (check-equal? (run '(eq? (gensym) (gensym))) #f)
-  (check-equal? (run '(eq? (symbol->string 'foo) (symbol->string 'foo))) #f))
+                #t))
 
 (define (test-runner-io run)
   ;; Evildoer examples
