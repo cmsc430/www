@@ -25,7 +25,7 @@
 ;;           | 'vector? | vector-length
 ;;           | 'string? | string-length
 ;; type Op2  = '+ | '- | '< | '=
-;;           | 'cons
+;;           | 'cons | 'eq?
 ;;           | 'make-vector | 'vector-ref
 ;;           | 'make-string | 'string-ref
 ;; type Op3  = 'vector-set!
