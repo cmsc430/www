@@ -33,7 +33,7 @@
     [(Eof)    eof]
     [(Empty)  '()]
     [(Var x)  (lookup r x)]
-    [(Str s)  (string-copy s)]
+    [(Str s)  s]
     [(Prim0 'void) (void)]
     [(Prim0 'read-byte) (read-byte)]
     [(Prim0 'peek-byte) (peek-byte)]
