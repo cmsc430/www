@@ -7,7 +7,7 @@
 static uint64_t gensym_ctr = 0;
 
 val_str_t *str_from_cstr(const char *);
-int str_cmp(const val_str_t *, const val_str_t *);
+int symb_cmp(const val_symb_t *, const val_symb_t *);
 val_str_t *str_dup(const val_str_t *);
 
 // binary tree node
@@ -25,8 +25,9 @@ val_symb_t *intern_symbol(val_symb_t* symb)
 
   while (*curr) {
     struct Node *t = *curr;
-    int r = str_cmp((val_str_t*)symb, (val_str_t*)t->elem);
+    int r = symb_cmp(symb, t->elem);
     if (r == 0) {
+      // found it, so return saved pointer
       return t->elem;
     } else if (r < 0) {
       curr = &t->left;
@@ -35,14 +36,10 @@ val_symb_t *intern_symbol(val_symb_t* symb)
     }
   }
 
-  // wasn't found, so insert it
-
+  // wasn't found, so insert it and return pointer
   *curr = calloc(1, sizeof(struct Node));
-
-  struct Node* t = *curr;
-  t->elem = symb; // str_dup(str);
-
-  return t->elem;
+  (*curr)->elem = symb;
+  return (*curr)->elem;
 }
 
 val_symb_t *str_to_symbol(const val_str_t *str)
@@ -61,6 +58,10 @@ val_symb_t *gensym(void)
 val_str_t *str_from_cstr(const char *s)
 {
   int64_t len = strlen(s);
+
+  if (len == 0)
+    return NULL;
+  
   val_str_t *str =
     malloc(sizeof(int64_t) + len * sizeof(val_char_t));
 
@@ -75,7 +76,7 @@ val_str_t *str_from_cstr(const char *s)
   return str;
 }
 
-int str_cmp(const val_str_t *s1, const val_str_t *s2)
+int symb_cmp(const val_symb_t *s1, const val_symb_t *s2)
 {
   int64_t len1 = s1->len;
   int64_t len2 = s2->len;
