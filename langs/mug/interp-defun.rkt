@@ -10,7 +10,6 @@
 ;; | Integer
 ;; | Boolean
 ;; | Character
-;; | Symbol
 ;; | Eof
 ;; | Void
 ;; | '()
@@ -93,7 +92,44 @@
               (if (= (length xs) (length vs))           
                   (interp-env e (append (zip xs vs) r) ds)
                   'err)]
-             [_ 'err])])])]))
+             [_ 'err])])])]
+    [(Match e ps es)
+     (match (interp-env e r ds)
+       ['err 'err]
+       [v
+        (interp-match v ps es r ds)])]))
+
+;; Value [Listof Pat] [Listof Expr] Env Defns -> Answer
+(define (interp-match v ps es r ds)
+  (match* (ps es)
+    [('() '()) 'err]
+    [((cons p ps) (cons e es))
+     (match (interp-match-pat p v r)
+       [#f (interp-match v ps es r ds)]
+       [r  (interp-env e r ds)])]))
+
+;; Pat Value Env -> [Maybe Env]
+(define (interp-match-pat p v r)
+  (match p
+    [(PWild) r]
+    [(PVar x) (ext r x v)]
+    [(PLit l) (and (eqv? l v) r)]
+    [(PBox p)
+     (match v
+       [(box v)
+        (interp-match-pat p v r)]
+       [_ #f])]
+    [(PCons p1 p2)
+     (match v
+       [(cons v1 v2)
+        (match (interp-match-pat p1 v1 r)
+          [#f #f]
+          [r1 (interp-match-pat p2 v2 r1)])]
+       [_ #f])]
+    [(PAnd p1 p2)
+     (match (interp-match-pat p1 v r)
+       [#f #f]
+       [r1 (interp-match-pat p2 v r1)])]))
 
 ;; Id Env [Listof Defn] -> Answer
 (define (interp-var x r ds)
