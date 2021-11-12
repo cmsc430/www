@@ -6,7 +6,6 @@
          "fv.rkt"
          "intern.rkt"
          "compile-ops.rkt"
-         "compile-datum.rkt"
          a86/ast)
 
 ;; Registers used
@@ -25,7 +24,9 @@
            (Global 'entry)
            (Label 'entry)
            (Mov rbx rdi) ; recv heap pointer
+           (Sub 'rsp 8)
            (init-symbol-table q)
+           (Add 'rsp 8)
            (compile-defines-values ds)
            (compile-e e (reverse (define-ids ds)) #t)
            (Add rsp (* 8 (length ds))) ;; pop function definitions
@@ -46,6 +47,44 @@
        (Extern 'gensym)
        (Extern 'intern_symbol)
        (Extern 'str_dup)))
+
+;; DEnv -> Asm
+(define (compile-literals q)
+  (match q
+    ['() (seq)]
+    [(cons (cons s l) q)
+     (seq (compile-literal (to-string s) l)
+          (compile-literals q))]))
+
+;; String Label -> Asm
+(define (compile-literal s l)
+  (seq (Label l)
+       (Dq (string-length s))
+       (compile-string-chars (string->list s))
+       (if (odd? (string-length s))
+           (seq (Dd 0))
+           (seq))))
+
+;; [Listof Char] -> Asm
+(define (compile-string-chars cs)
+  (match cs
+    ['() (seq)]
+    [(cons c cs)
+     (seq (Dd (char->integer c))
+          (compile-string-chars cs))]))
+
+;; DEnv -> Asm
+;; Call intern_symbol on every symbol in the program
+(define (init-symbol-table q)
+  (append-map init-symbol q))
+
+;; (cons (U String Symbol) Symbol) -> Asm
+(define (init-symbol qb)
+  (match qb
+    [(cons (? symbol? s) l)
+     (seq (Lea rdi l)
+          (Call 'intern_symbol))]
+    [_ (seq)]))
 
 ;; [Listof Defn] -> [Listof Id]
 (define (define-ids ds)
@@ -304,20 +343,11 @@
        [#t 0]
        [#f (+ 8 (lookup x rest))])]))
 
-;; QEnv -> Asm
-;; Call intern_symbol on every symbol in the program
-(define (init-symbol-table q)
-  (seq pad-stack
-       (append-map init-symbol q)
-       unpad-stack))
-
-;; (cons (U String Symbol) Ref) -> Asm
-(define (init-symbol qb)
-  (match qb
-    [(cons (? symbol? s) (Ref l _))
-     (seq (Lea rdi l)
-          (Call 'intern_symbol))]
-    [_ (seq)]))
+;; (U String Symbol) -> String
+(define (to-string s)
+  (if (symbol? s)
+      (symbol->string s)
+      s))
 
 ;; Symbol -> Label
 ;; Produce a symbol that is a valid Nasm label

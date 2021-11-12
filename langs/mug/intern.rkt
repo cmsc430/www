@@ -22,10 +22,9 @@
   (match (lookup s q)
     [#f
      (let ((l (gensym 'lit)))
-       (let ((r (Ref l type)))
-         (cons r
-               (cons (cons s r) q))))]
-    [r (cons r q)]))
+       (cons (Ref l type)
+             (cons (cons s l) q)))]
+    [l (cons (Ref l type) q)]))
 
 ;; Prog -> (cons Prog QEnv)
 (define (intern p)
