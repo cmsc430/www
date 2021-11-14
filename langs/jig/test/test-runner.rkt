@@ -143,6 +143,9 @@
   (check-equal? (run '(string-ref "fred" 4)) 'err)
   (check-equal? (run '(string? "fred")) #t)
   (check-equal? (run '(string? (cons 1 2))) #f)
+  (check-equal? (run '(begin (make-string 3 #\f)
+                             (make-string 3 #\f)))
+                "fff")
 
   ;; Iniquity tests
   (check-equal? (run

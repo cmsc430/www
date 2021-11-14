@@ -239,9 +239,9 @@
 
             (Sar rax char-shift)
 
-            (Add r9 1) ; adds 1
-            (Sar r9 1) ; when
-            (Sal r9 1) ; len is odd
+            (Add r8 1) ; adds 1
+            (Sar r8 1) ; when
+            (Sal r8 1) ; len is odd
 
             (Label loop)
             (Mov (Offset rbx 0) eax)
