@@ -26,7 +26,7 @@
 ;;           | (App Expr (Listof Expr))
 ;;           | (Lam Id (Listof Id) Expr)
 ;; type Id   = Symbol
-;; type Op0  = 'read-byte | 'gensym
+;; type Op0  = 'read-byte
 ;; type Op1  = 'add1 | 'sub1 | 'zero?
 ;;           | 'char? | 'integer->char | 'char->integer
 ;;           | 'write-byte | 'eof-object?
@@ -34,7 +34,8 @@
 ;;           | 'empty? | 'cons? | 'box?
 ;;           | 'vector? | 'vector-length
 ;;           | 'string? | 'string-length
-;;           | 'symbol? | 'symbol->string | 'string->symbol
+;;           | 'symbol? | 'symbol->string
+;;           | 'string->symbol | 'string->uninterned-symbol
 ;; type Op2  = '+ | '- | '< | '=
 ;;           | 'cons
 ;;           | 'make-vector | 'vector-ref

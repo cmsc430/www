@@ -81,14 +81,13 @@
      (PAnd (parse-pat p1) (parse-pat p2))]))
 
 (define op0
-  '(read-byte peek-byte void gensym))
-
+  '(read-byte peek-byte void))
 (define op1
   '(add1 sub1 zero? char? write-byte eof-object?
          integer->char char->integer
          box unbox empty? cons? box? car cdr
          vector? vector-length string? string-length
-         symbol? symbol->string string->symbol))
+         symbol? symbol->string string->symbol string->uninterned-symbol))
 (define op2
   '(+ - < = cons eq? make-vector vector-ref make-string string-ref))
 (define op3
