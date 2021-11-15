@@ -35,9 +35,10 @@
 ;;            | 'write-byte | 'eof-object?
 ;;            | 'box | 'car | 'cdr | 'unbox
 ;;            | 'empty? | 'cons? | 'box?
-;;            | 'vector? | vector-length
-;;            | 'string? | string-length
-;;            | 'symbol? | string->symbol | symbol->string
+;;            | 'vector? | 'vector-length
+;;            | 'string? | 'string-length
+;;            | 'symbol? | 'string->symbol
+;;            | 'string->symbol | 'string->uninterned-symbol
 ;; type Op2   = '+ | '- | '< | '=
 ;;            | 'cons | 'eq?
 ;;            | 'make-vector | 'vector-ref

@@ -1,46 +1,37 @@
 #lang racket
-(provide compile-datum compile-literals)
+(provide compile-datum)
 (require "types.rkt"
-         "intern.rkt"
+         "utils.rkt"
          a86/ast)
 
 ;; Registers used
 (define rax 'rax) ; return
 
-;; QEnv -> Asm
-(define (compile-literals q)
-  (match q
-    ['() (seq)]
-    [(cons (cons s (Ref l _)) q)
-     (seq (compile-literal (to-string s) l)
-          (compile-literals q))]))
+(define (load-symbol s)
+  (Plus (symbol->data-label s) type-symb))
 
-;; String Label -> Asm
-(define (compile-literal s l)
-  (seq (Label l)
-       (Dq (string-length s))
-       (compile-string-chars (string->list s))
-       (if (odd? (string-length s))
-           (seq (Dd 0))
-           (seq))))
+(define (load-string s)
+  (Plus (symbol->data-label (string->symbol s)) type-str))
 
-(define (compound? x)
-  (or ;(string? x)
-      ;(symbol? x)
-      (cons? x)
-      (vector? x)
-      (box? x)))
+;; Value -> Asm
+(define (compile-atom v)
+  (seq (Mov rax (imm->bits v))))
+
+;; Datum -> Boolean
+(define (compound? d)
+  (or (box? d)
+      (cons? d)
+      (vector? d)))
 
 ;; Datum -> Asm
 (define (compile-datum d)
   (cond
-    [(compound? d)
-     (compile-compound-datum d)]
-    [(Ref? d)
-     (seq (Lea rax (Plus (Ref-label d) (Ref-type-tag d))))]
-    [else
-     (seq (Mov rax (imm->bits d)))]))
+    [(string? d)   (seq (Lea rax (load-string d)))]
+    [(symbol? d)   (seq (Lea rax (load-symbol d)))]
+    [(compound? d) (compile-compound-datum d)]
+    [else          (compile-atom d)]))
 
+;; Datum -> Asm
 (define (compile-compound-datum d)
   (match (compile-quoted d)
     [(cons l is)
@@ -52,50 +43,12 @@
 ;; Datum -> (cons AsmExpr Asm)
 (define (compile-quoted c)
   (cond
-    ;[(string? c) (compile-datum-string c)]
-    ;[(symbol? c) (compile-datum-symbol (symbol->string c))]
     [(vector? c) (compile-datum-vector (vector->list c))]
     [(box? c)    (compile-datum-box (unbox c))]
     [(cons? c)   (compile-datum-cons (car c) (cdr c))]
-    [(Ref? c)    (cons (Plus (Ref-label c) (Ref-type-tag c)) '())]
+    [(symbol? c) (cons (load-symbol c) '())]
+    [(string? c) (cons (load-string c) '())]
     [else        (cons (imm->bits c) '())]))
-
-;; String -> (cons AsmExpr Asm)
-#;
-(define (compile-datum-string c)
-  (let ((l (gensym 'string)))
-    (cons (Plus l type-str)
-          (seq (Label l)
-               (Dq (string-length c))
-               (compile-string-chars (string->list c))
-               (if (odd? (string-length c))
-                   (seq (Dd 0))
-                   (seq))))))
-
-;; String -> (cons AsmExpr Asm)
-#;
-(define (compile-datum-symbol c)
-  (let ((l (gensym 'symbol)))
-    (cons (Plus l type-symb)
-          (seq (Label l)
-               (Dq (string-length c))
-               (compile-string-chars (string->list c))
-               (if (odd? (string-length c))
-                   (seq (Dd 0))
-                   (seq))))))
-
-;; [Listof Datum] -> (cons AsmExpr Asm)
-(define (compile-datum-vector ds)
-  (match ds
-    ['() (cons type-vect '())]
-    [_
-     (let ((l (gensym 'vector))
-           (cds (map compile-quoted ds)))
-       (cons (Plus l type-vect)
-             (seq (Label l)
-                  (Dq (length ds))
-                  (map (λ (cd) (Dq (car cd))) cds)
-                  (append-map cdr cds))))]))
 
 ;; Datum -> (cons AsmExpr Asm)
 (define (compile-datum-box c)
@@ -121,16 +74,15 @@
                      is1
                      is2)))])]))
 
-;; [Listof Char] -> Asm
-(define (compile-string-chars cs)
-  (match cs
-    ['() (seq)]
-    [(cons c cs)
-     (seq (Dd (char->integer c))
-          (compile-string-chars cs))]))
-
-;; (U String Symbol) -> String
-(define (to-string s)
-  (if (symbol? s)
-      (symbol->string s)
-      s))
+;; [Listof Datum] -> (cons AsmExpr Asm)
+(define (compile-datum-vector ds)
+  (match ds
+    ['() (cons type-vect '())]
+    [_
+     (let ((l (gensym 'vector))
+           (cds (map compile-quoted ds)))
+       (cons (Plus l type-vect)
+             (seq (Label l)
+                  (Dq (length ds))
+                  (map (λ (cd) (Dq (car cd))) cds)
+                  (append-map cdr cds))))]))

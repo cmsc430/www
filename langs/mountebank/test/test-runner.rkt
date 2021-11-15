@@ -143,6 +143,9 @@
   (check-equal? (run '(string-ref "fred" 4)) 'err)
   (check-equal? (run '(string? "fred")) #t)
   (check-equal? (run '(string? (cons 1 2))) #f)
+  (check-equal? (run '(begin (make-string 3 #\f)
+                             (make-string 3 #\f)))
+                "fff")
 
   ;; Iniquity tests  
   (check-equal? (run
@@ -279,11 +282,20 @@
                 #t)
   (check-equal? (run '(eq? 'fff (string->symbol (make-string 3 #\f))))
                 #t)
-  (check-equal? (run '(eq? 'g0 (gensym))) #f)
-  (check-equal? (run '(eq? (gensym) (gensym))) #f)
+  (check-equal? (run '(symbol? 'g0)) #t)
+  (check-equal? (run '(symbol? "g0")) #f)
+  (check-equal? (run '(symbol? (string->symbol "g0"))) #t)
+  (check-equal? (run '(symbol? (string->uninterned-symbol "g0"))) #t)
+  (check-equal? (run '(eq? 'g0 (string->symbol "g0"))) #t)
+  (check-equal? (run '(eq? 'g0 (string->uninterned-symbol "g0"))) #f)
+  (check-equal? (run '(eq? (string->uninterned-symbol "g0") (string->uninterned-symbol "g0")))
+                #f)
   (check-equal? (run '(eq? (symbol->string 'foo) (symbol->string 'foo))) #f)
+  (check-equal? (run '(string? (symbol->string 'foo))) #t)
+  (check-equal? (run '(eq? (symbol->string 'foo) "foo")) #f)
+  (check-equal? (run ''foo) 'foo)
 
-  ;; Mountebank examples
+  ;; Mountebank examples  
   (check-equal? (run '#())
                 #())
   (check-equal? (run ''#())
@@ -297,7 +309,7 @@
   (check-equal? (run ''(1 . 2))
                 '(1 . 2))
   (check-equal? (run ''(("1") (#() #(1 #(2))) (#&(1)) (#f) (4) (5)))
-                '(("1") (#() #(1 #(2))) (#&(1)) (#f) (4) (5)))
+                '(("1") (#() #(1 #(2))) (#&(1)) (#f) (4) (5)))  
   (check-equal? (run '(define (f) (cons 1 2))
                      '(eq? (f) (f)))
                 #f)

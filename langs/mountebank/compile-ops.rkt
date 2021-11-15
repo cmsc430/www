@@ -1,14 +1,17 @@
 #lang racket
 (provide (all-defined-out))
-(require "ast.rkt" "types.rkt" a86/ast)
+(require "ast.rkt" "types.rkt" "utils.rkt" a86/ast)
 
 (define rax 'rax) ; return
 (define eax 'eax) ; 32-bit load/store
 (define rbx 'rbx) ; heap
-(define rdi 'rdi) ; arg
+(define rdi 'rdi) ; arg1
+(define rsi 'rsi) ; arg2
+(define rdx 'rdx) ; arg3
 (define r8  'r8)  ; scratch
 (define r9  'r9)  ; scratch
 (define r10 'r10) ; scratch
+(define r12 'r12) ; save across call to memcpy
 (define r15 'r15) ; stack pad (non-volatile)
 (define rsp 'rsp) ; stack
 
@@ -21,11 +24,7 @@
                      unpad-stack)]
     ['peek-byte (seq pad-stack
                      (Call 'peek_byte)
-                     unpad-stack)]
-    ['gensym    (seq pad-stack
-                     (Call 'gensym)
-                     unpad-stack
-                     (Or rax type-symb))]))
+                     unpad-stack)]))
 
 ;; Op1 -> Asm
 (define (compile-op1 p)
@@ -123,12 +122,31 @@
     ['symbol->string
      (seq (assert-symbol rax)
           (Xor rax type-symb)
-          (Mov rdi rax)
-          pad-stack
-          ;; FIXME: this allocates off-heap
-          (Call 'str_dup)
-          unpad-stack
-          (Or rax type-str))]))
+          char-array-copy
+          (Or rax type-str))]
+    ['string->uninterned-symbol
+     (seq (assert-string rax)
+          (Xor rax type-str)
+          char-array-copy
+          (Or rax type-symb))]))
+
+;; Asm
+;; Copy sized array of characters pointed to by rax
+(define char-array-copy
+  (seq (Mov rdi rbx)            ; dst
+       (Mov rsi rax)            ; src
+       (Mov rdx (Offset rax 0)) ; len
+       (Add rdx 1)              ; #words = 1 + (len+1)/2
+       (Sar rdx 1)
+       (Add rdx 1)
+       (Sal rdx 3)              ; #bytes = 8*#words
+       (Mov r12 rdx)            ; save rdx before destroyed
+       pad-stack
+       (Call 'memcpy)
+       unpad-stack
+       ; rbx should be preserved by memcpy
+       ;(Mov rbx rax) ; dst is returned, install as heap pointer
+       (Add rbx r12)))                   
 
 ;; Op2 -> Asm
 (define (compile-op2 p)
@@ -239,9 +257,9 @@
 
             (Sar rax char-shift)
 
-            (Add r9 1) ; adds 1
-            (Sar r9 1) ; when
-            (Sal r9 1) ; len is odd
+            (Add r8 1) ; adds 1
+            (Sar r8 1) ; when
+            (Sal r8 1) ; len is odd
 
             (Label loop)
             (Mov (Offset rbx 0) eax)
@@ -374,15 +392,3 @@
          (Je l1)
          (Mov rax val-false)
          (Label l1))))
-
-;; Asm
-;; Dynamically pad the stack to be aligned for a call
-(define pad-stack
-  (seq (Mov r15 rsp)
-       (And r15 #b1000)
-       (Sub rsp r15)))
-
-;; Asm
-;; Undo the stack alignment after a call
-(define unpad-stack
-  (seq (Add rsp r15)))
