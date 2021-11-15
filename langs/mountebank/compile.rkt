@@ -4,6 +4,7 @@
          "types.rkt"
          "lambdas.rkt"
          "fv.rkt"
+         "intern.rkt"
          "compile-ops.rkt"
          "compile-datum.rkt"
          a86/ast)
@@ -18,12 +19,13 @@
 
 ;; Prog -> Asm
 (define (compile p)
-  (match p
-    [(Prog ds e)
+  (match (intern p)
+    [(cons (Prog ds e) q)
      (prog (externs)
            (Global 'entry)
            (Label 'entry)
            (Mov rbx rdi) ; recv heap pointer
+           (init-symbol-table q)
            (compile-defines-values ds)
            (compile-e e (reverse (define-ids ds)) #t)
            (Add rsp (* 8 (length ds))) ;; pop function definitions
@@ -32,13 +34,18 @@
            (compile-lambda-defines (lambdas p))
            (Label 'raise_error_align)
            pad-stack
-           (Call 'raise_error))]))
+           (Call 'raise_error)
+           (Data)
+           (compile-literals q))]))
 
 (define (externs)
   (seq (Extern 'peek_byte)
        (Extern 'read_byte)
        (Extern 'write_byte)
-       (Extern 'raise_error)))
+       (Extern 'raise_error)
+       (Extern 'gensym)
+       (Extern 'intern_symbol)
+       (Extern 'str_dup)))
 
 ;; [Listof Defn] -> [Listof Id]
 (define (define-ids ds)
@@ -107,7 +114,8 @@
     [(Begin e1 e2)      (compile-begin e1 e2 c t?)]
     [(Let x e1 e2)      (compile-let x e1 e2 c t?)]
     [(App e es)         (compile-app e es c t?)]
-    [(Lam f xs e)       (compile-lam f xs e c)]))
+    [(Lam f xs e)       (compile-lam f xs e c)]
+    [(Match e ps es)    (compile-match e ps es c t?)]))
 
 ;; Value -> Asm
 (define (compile-value v)
@@ -280,6 +288,108 @@
           (Push rax)
           (compile-es es (cons #f c)))]))
 
+;; Expr [Listof Pat] [Listof Expr] CEnv Bool -> Asm
+(define (compile-match e ps es c t?)
+  (let ((done (gensym)))
+    (seq (compile-e e c t?)
+         (Push rax) ; save away to be restored by each clause
+         (compile-match-clauses ps es (cons #f c) done t?)
+         (Jmp 'raise_error_align)
+         (Label done)
+         (Add rsp 8)))) ; pop the saved value being matched
+
+;; [Listof Pat] [Listof Expr] CEnv Symbol Bool -> Asm
+(define (compile-match-clauses ps es c done t?)
+  (match* (ps es)
+    [('() '()) (seq)]
+    [((cons p ps) (cons e es))
+     (seq (compile-match-clause p e c done t?)
+          (compile-match-clauses ps es c done t?))]))
+
+;; Pat Expr CEnv Symbol Bool -> Asm
+(define (compile-match-clause p e c done t?)
+  (let ((next (gensym)))
+    (match (compile-pattern p '() next)
+      [(list i f cm)
+       (seq (Mov rax (Offset rsp 0)) ; restore value being matched
+            i
+            (compile-e e (append cm c) t?)
+            (Add rsp (* 8 (length cm)))
+            (Jmp done)
+            f
+            (Label next))])))
+
+;; Pat CEnv Symbol -> (list Asm Asm CEnv)
+(define (compile-pattern p cm next)
+  (match p
+    [(PWild)
+     (list (seq) (seq) cm)]
+    [(PVar x)
+     (list (seq (Push rax))
+           (seq)
+           (cons x cm))]
+    [(PLit l)
+     (let ((fail (gensym)))
+       (list (seq (Cmp rax (imm->bits l))
+                  (Jne fail))
+             (seq (Label fail)
+                  (Add rsp (* 8 (length cm)))
+                  (Jmp next))
+             cm))]
+    [(PAnd p1 p2)
+     (match (compile-pattern p1 (cons #f cm) next)
+       [(list i1 f1 cm1)
+        (match (compile-pattern p2 cm1 next)
+          [(list i2 f2 cm2)
+           (list
+            (seq (Push rax)
+                 i1
+                 (Mov rax (Offset rsp (* 8 (- (sub1 (length cm1)) (length cm)))))
+                 i2)
+            (seq f1 f2)
+            cm2)])])]
+    [(PBox p)
+     (match (compile-pattern p cm next)
+       [(list i1 f1 cm1)
+        (let ((fail (gensym)))
+          (list
+           (seq (Mov r8 rax)
+                (And r8 ptr-mask)
+                (Cmp r8 type-box)
+                (Jne fail)
+                (Xor rax type-box)
+                (Mov rax (Offset rax 0))
+                i1)
+           (seq f1
+                (Label fail)
+                (Add rsp (* 8 (length cm))) ; haven't pushed anything yet
+                (Jmp next))
+           cm1))])]
+    [(PCons p1 p2)
+     (match (compile-pattern p1 (cons #f cm) next)
+       [(list i1 f1 cm1)
+        (match (compile-pattern p2 cm1 next)
+          [(list i2 f2 cm2)
+           (let ((fail (gensym)))
+             (list
+              (seq (Mov r8 rax)
+                   (And r8 ptr-mask)
+                   (Cmp r8 type-cons)
+                   (Jne fail)
+                   (Xor rax type-cons)
+                   (Mov r8 (Offset rax 0))
+                   (Push r8)                ; push cdr
+                   (Mov rax (Offset rax 8)) ; mov rax car
+                   i1
+                   (Mov rax (Offset rsp (* 8 (- (sub1 (length cm1)) (length cm)))))
+                   i2)
+              (seq f1
+                   f2
+                   (Label fail)
+                   (Add rsp (* 8 (length cm))) ; haven't pushed anything yet
+                   (Jmp next))
+              cm2))])])]))
+
 ;; Id CEnv -> Integer
 (define (lookup x cenv)
   (match cenv
@@ -288,6 +398,21 @@
      (match (eq? x y)
        [#t 0]
        [#f (+ 8 (lookup x rest))])]))
+
+;; QEnv -> Asm
+;; Call intern_symbol on every symbol in the program
+(define (init-symbol-table q)
+  (seq pad-stack
+       (append-map init-symbol q)
+       unpad-stack))
+
+;; (cons (U String Symbol) Ref) -> Asm
+(define (init-symbol qb)
+  (match qb
+    [(cons (? symbol? s) (Ref l _))
+     (seq (Lea rdi l)
+          (Call 'intern_symbol))]
+    [_ (seq)]))
 
 ;; Symbol -> Label
 ;; Produce a symbol that is a valid Nasm label

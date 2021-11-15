@@ -9,6 +9,7 @@
 (define type-vect      #b011)
 (define type-str       #b100)
 (define type-proc      #b101)
+(define type-symb      #b110)
 (define int-shift  (+ 1 imm-shift))
 (define char-shift (+ 2 imm-shift))
 (define type-int      #b0000)

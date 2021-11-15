@@ -39,6 +39,8 @@
      (If (parse-e e1) (parse-e e2) (parse-e e3))]
     [(list 'let (list (list (? symbol? x) e1)) e2)
      (Let x (parse-e e1) (parse-e e2))]
+    [(cons 'match (cons e ms))
+     (parse-match (parse-e e) ms)]    
     [(list (or 'lambda 'λ) xs e)
      (if (and (list? xs)
               (andmap symbol? xs))
@@ -48,6 +50,32 @@
      (App (parse-e e) (map parse-e es))]    
     [_ (error "Parse error" s)]))
 
+(define (parse-match e ms)
+  (match ms
+    ['() (Match e '() '())]
+    [(cons (list p r) ms)
+     (match (parse-match e ms)
+       [(Match e ps es)
+        (Match e
+               (cons (parse-pat p) ps)
+               (cons (parse-e r) es))])]))
+
+(define (parse-pat p)
+  (match p
+    [(? boolean?) (PLit p)]
+    [(? integer?) (PLit p)]
+    [(? char?)    (PLit p)]
+    ['_           (PWild)]
+    [(? symbol?)  (PVar p)]
+    [(list 'quote (list))
+     (PLit '())]
+    [(list 'box p)
+     (PBox (parse-pat p))]
+    [(list 'cons p1 p2)
+     (PCons (parse-pat p1) (parse-pat p2))]
+    [(list 'and p1 p2)
+     (PAnd (parse-pat p1) (parse-pat p2))]))
+
 ;; Datum -> Datum
 (define (parse-datum d)
   (match d
@@ -56,6 +84,7 @@
     [(cons d1 d2)
      (cons (parse-datum d1) (parse-datum d2))]
     ['() '()]
+    [(? symbol? s) s]
     [(? integer? i) i]
     [(? boolean? b) b]
     [(? string? s) s]
@@ -73,13 +102,14 @@
       (vector? x)))
 
 (define op0
-  '(read-byte peek-byte void))
+  '(read-byte peek-byte void gensym))
 
 (define op1
   '(add1 sub1 zero? char? write-byte eof-object?
          integer->char char->integer
          box unbox empty? cons? box? car cdr
-         vector? vector-length string? string-length))
+         vector? vector-length string? string-length
+         symbol->string string->symbol symbol?))
 (define op2
   '(+ - < = cons eq? make-vector vector-ref make-string string-ref))
 (define op3

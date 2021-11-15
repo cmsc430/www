@@ -80,7 +80,7 @@
                                     
                (list @wk{11/16}
 	             ""
-                     @elem{Mountebank} @;{Match}
+                     @elem{@secref["Mug"]}
 		     @elem{Neerdowell} @;{ ?? }
                      )
 

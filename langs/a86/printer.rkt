@@ -54,7 +54,7 @@
       [(Offset (? reg? r) i)
        (string-append "[" (reg->string r) " + " (number->string i) "]")]
       [(Offset (? label? l) i)
-       (string-append "[" (symbol->string l) " + " (number->string i) "]")]
+       (string-append "[" (label-symbol->string l) " + " (number->string i) "]")]
       [(Const l)
        (symbol->string l)]
       [(? exp?) (exp->string a)]))
@@ -127,8 +127,14 @@
       [(Jl l)
        (string-append tab "jl "
                       (jump-target->string l))]
+      [(Jle l)
+       (string-append tab "jle "
+                      (jump-target->string l))]
       [(Jg l)
        (string-append tab "jg "
+                      (jump-target->string l))]
+      [(Jge l)
+       (string-append tab "jge "
                       (jump-target->string l))]
       [(Call l)
        (string-append tab "call "

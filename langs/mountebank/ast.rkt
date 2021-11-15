@@ -17,12 +17,14 @@
 ;;            | (Begin Expr Expr)
 ;;            | (Let Id Expr Expr)
 ;;            | (Var Id)
+;;            | (Match Expr (Listof Pat) (Listof Expr))
 ;;            | (App Expr (Listof Expr))
 ;;            | (Lam Id (Listof Id) Expr)
 ;; type Datum = Integer
 ;;            | Char
 ;;            | Boolean
 ;;            | String
+;;            | Symbol
 ;;            | (Boxof Datum)
 ;;            | (Listof Datum)
 ;;            | (Vectorof Datum)
@@ -35,11 +37,22 @@
 ;;            | 'empty? | 'cons? | 'box?
 ;;            | 'vector? | vector-length
 ;;            | 'string? | string-length
+;;            | 'symbol? | string->symbol | symbol->string
 ;; type Op2   = '+ | '- | '< | '=
 ;;            | 'cons | 'eq?
 ;;            | 'make-vector | 'vector-ref
 ;;            | 'make-string | 'string-ref
 ;; type Op3   = 'vector-set!
+;; type Pat  = (PVar Id)
+;;           | (PWild)
+;;           | (PLit Lit)
+;;           | (PBox Pat)
+;;           | (PCons Pat Pat)
+;;           | (PAnd Pat Pat)
+;; type Lit  = Boolean
+;;           | Character
+;;           | Integer
+;;           | '()
 
 (struct Eof   ()           #:prefab)
 (struct Prim0 (p)          #:prefab)
@@ -53,3 +66,11 @@
 (struct App   (e es)       #:prefab)
 (struct Lam   (f xs e)     #:prefab)
 (struct Quote (d)          #:prefab)
+(struct Match (e ps es)    #:prefab)
+
+(struct PVar  (x)          #:prefab)
+(struct PWild ()           #:prefab)
+(struct PLit  (x)          #:prefab)
+(struct PBox  (p)          #:prefab)
+(struct PCons (p1 p2)      #:prefab)
+(struct PAnd  (p1 p2)      #:prefab)

@@ -24,6 +24,9 @@
     [(list 'vector-length (? vector?))    (vector-length v)]
     [(list 'string? v)                    (string? v)]
     [(list 'string-length (? string?))    (string-length v)]
+    [(list 'symbol? v)                    (symbol? v)]    
+    [(list 'string->symbol (? string?))    (string->symbol v)]
+    [(list 'symbol->string (? symbol?))    (symbol->string v)]
     [_                                    'err]))
 
 ;; Op2 Value Value -> Answer
