@@ -336,7 +336,45 @@
                 #t)
   (check-equal? (run '(let ((x '(foo . foo)))
                         (eq? (car x) (cdr x))))
-                #t))
+                #t)
+  (check-equal?
+   (run '(define (eval e r)
+           (match e
+             [(list 'zero? e)
+              (zero? (eval e r))]
+             [(list 'sub1 e)
+              (sub1 (eval e r))]
+             [(list '+ e1 e2)
+              (+ (eval e1 r) (eval e2 r))]
+             [(list 'if e1 e2 e3)
+              (if (eval e1 r)
+                  (eval e2 r)
+                  (eval e3 r))]
+             [(list 'λ (list x) e)
+              (lambda (v) (eval e (cons (cons x v) r)))]
+             [(list e1 e2)
+              ((eval e1 r) (eval e2 r))]
+             [_
+              (if (symbol? e)
+                  (lookup r e)
+                  e)]))
+        '(define (lookup r x)
+           (match r
+             [(cons (cons y v) r)
+              (if (eq? x y)
+                  v
+                  (lookup r x))]))
+        '(eval '(((λ (t)
+                    ((λ (f) (t (λ (z) ((f f) z))))
+                     (λ (f) (t (λ (z) ((f f) z))))))
+                  (λ (tri)
+                    (λ (n)
+                      (if (zero? n)
+                          0
+                          (+ n (tri (sub1 n)))))))
+                 36)
+               '()))
+   666))
 
 (define (test-runner-io run)
   ;; Evildoer examples
