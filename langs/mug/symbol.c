@@ -1,7 +1,5 @@
 #include <stdlib.h>
 #include <inttypes.h>
-#include <stdio.h>
-#include <string.h>
 #include "values.h"
 
 int symb_cmp(const val_symb_t *, const val_symb_t *);
@@ -14,13 +12,6 @@ struct Node {
 };
 
 static struct Node *symbol_tbl = NULL;
-
-void *my_memcpy(void *dest, const void *src, size_t n) {
-  printf("memcpy(%" PRId64 ", %" PRId64 ", %" PRId64 ")", (int64_t)dest, (int64_t)src, (int64_t)n);
-  void * r = memcpy(dest, src, n);
-  printf(" = %" PRId64 "\n", (int64_t)r);
-  return r;
-}
 
 val_symb_t *intern_symbol(val_symb_t* symb)
 {

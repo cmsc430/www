@@ -44,4 +44,4 @@
        (Extern 'write_byte)
        (Extern 'raise_error)
        (Extern 'intern_symbol)
-       (Extern 'my_memcpy)))
+       (Extern 'memcpy)))

@@ -146,7 +146,7 @@
 
        (Mov 'r12 rdx)            ; save rdx before destroyed
        pad-stack
-       (Call 'my_memcpy)
+       (Call 'memcpy)
        unpad-stack
        (Mov rbx rax) ; dst is returned, install as heap pointer
        (Add rbx 'r12)))
