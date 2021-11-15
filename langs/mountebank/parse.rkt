@@ -67,6 +67,7 @@
     [(? char?)    (PLit p)]
     ['_           (PWild)]
     [(? symbol?)  (PVar p)]
+    [(list 'quote s) (PSymb s)]
     [(list 'quote (list))
      (PLit '())]
     [(list 'box p)
@@ -74,7 +75,12 @@
     [(list 'cons p1 p2)
      (PCons (parse-pat p1) (parse-pat p2))]
     [(list 'and p1 p2)
-     (PAnd (parse-pat p1) (parse-pat p2))]))
+     (PAnd (parse-pat p1) (parse-pat p2))]
+    [(cons 'list '())
+     (PLit '())]
+    [(cons 'list (cons p1 ps))
+     (PCons (parse-pat p1)
+            (parse-pat (cons 'list ps)))]))
 
 ;; Datum -> Datum
 (define (parse-datum d)

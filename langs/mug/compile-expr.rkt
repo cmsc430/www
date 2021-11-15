@@ -248,6 +248,15 @@
      (list (seq (Push rax))
            (seq)
            (cons x cm))]
+    [(PSymb s)
+     (let ((fail (gensym)))
+       (list (seq (Lea r9 (Plus (symbol->data-label s) type-symb))
+                  (Cmp rax r9)
+                  (Jne fail))
+             (seq (Label fail)
+                  (Add rsp (* 8 (length cm)))
+                  (Jmp next))
+             cm))]
     [(PLit l)
      (let ((fail (gensym)))
        (list (seq (Cmp rax (imm->bits l))
