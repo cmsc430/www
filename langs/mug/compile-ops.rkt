@@ -143,11 +143,12 @@
        (Sar rdx 1)
        (Add rdx 1)
        (Sal rdx 3)              ; #bytes = 8*#words
+       (Mov r15 rbx)            ; save what will be rax in non-volatile register
+       (Add rbx rdx)            ; increment before rdx is destroyed
        pad-stack
        (Call 'memcpy)
        unpad-stack
-       (Mov rax rbx)
-       (Add rbx rdx)))
+       (Mov rax r15)))
 
 ;; Op2 -> Asm
 (define (compile-op2 p)
