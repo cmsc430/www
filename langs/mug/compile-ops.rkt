@@ -142,13 +142,16 @@
        (Add rdx 1)              ; #words = 1 + (len+1)/2
        (Sar rdx 1)
        (Add rdx 1)
-       (Sal rdx 3)              ; #bytes = 8*#words
-       (Mov r15 rbx)            ; save what will be rax in non-volatile register
-       (Add rbx rdx)            ; increment before rdx is destroyed
+       (Sal rdx 3)              ; #bytes = 8*#words       
+
+       (Mov 'r12 rdx)            ; save rdx before destroyed
        pad-stack
-       (Call 'memcpy)
+       (Call 'my_memcpy)
        unpad-stack
-       (Mov rax r15)))
+       (Mov rbx rax) ; dst is returned, install as heap pointer
+       (Add rbx 'r12)))
+       
+            
 
 ;; Op2 -> Asm
 (define (compile-op2 p)
