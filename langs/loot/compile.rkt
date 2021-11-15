@@ -304,7 +304,7 @@
 ;; Expr [Listof Pat] [Listof Expr] CEnv Bool -> Asm
 (define (compile-match e ps es c t?)
   (let ((done (gensym)))
-    (seq (compile-e e c t?)
+    (seq (compile-e e c #f)
          (Push rax) ; save away to be restored by each clause
          (compile-match-clauses ps es (cons #f c) done t?)
          (Jmp 'raise_error_align)
