@@ -11,6 +11,7 @@
 (define r8  'r8)  ; scratch
 (define r9  'r9)  ; scratch
 (define r10 'r10) ; scratch
+(define r12 'r12) ; save across call to memcpy
 (define r15 'r15) ; stack pad (non-volatile)
 (define rsp 'rsp) ; stack
 
@@ -23,11 +24,7 @@
                      unpad-stack)]
     ['peek-byte (seq pad-stack
                      (Call 'peek_byte)
-                     unpad-stack)]
-    ['gensym    (seq pad-stack
-                     (Call 'gensym)
-                     unpad-stack
-                     (Or rax type-symb))]))
+                     unpad-stack)]))
 
 ;; Op1 -> Asm
 (define (compile-op1 p)
@@ -142,16 +139,14 @@
        (Add rdx 1)              ; #words = 1 + (len+1)/2
        (Sar rdx 1)
        (Add rdx 1)
-       (Sal rdx 3)              ; #bytes = 8*#words       
-
-       (Mov 'r12 rdx)            ; save rdx before destroyed
+       (Sal rdx 3)              ; #bytes = 8*#words
+       (Mov r12 rdx)            ; save rdx before destroyed
        pad-stack
        (Call 'memcpy)
        unpad-stack
-       (Mov rbx rax) ; dst is returned, install as heap pointer
-       (Add rbx 'r12)))
-       
-            
+       ; rbx should be preserved by memcpy
+       ;(Mov rbx rax) ; dst is returned, install as heap pointer
+       (Add rbx r12)))                   
 
 ;; Op2 -> Asm
 (define (compile-op2 p)
