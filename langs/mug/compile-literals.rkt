@@ -80,6 +80,8 @@
      (append (literals-e e1) (append-map literals-e es))]
     [(Lam f xs e)
      (literals-e e)]
+    [(Match e ps es)
+     (append (literals-e e) (append-map literals-match-clause ps es))]
     [_ '()]))
 
 ;; [Listof Char] -> Asm
@@ -89,3 +91,16 @@
     [(cons c cs)
      (seq (Dd (char->integer c))
           (compile-string-chars cs))]))
+
+;; Pat Expr -> [Listof Symbol]
+(define (literals-match-clause p e)
+  (append (literals-pat p) (literals-e e)))
+
+;; Pat -> [Listof Symbol]
+(define (literals-pat p)
+  (match p
+    [(PSymb s) (list s)]
+    [(PBox p) (literals-pat p)]
+    [(PCons p1 p2) (append (literals-pat p1) (literals-pat p2))]
+    [(PAnd p1 p2) (append (literals-pat p1) (literals-pat p2))]
+    [_ '()]))

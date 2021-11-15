@@ -308,6 +308,8 @@
   (check-equal? (run '(string? (symbol->string 'foo))) #t)
   (check-equal? (run '(eq? (symbol->string 'foo) "foo")) #f)
   (check-equal? (run ''foo) 'foo)
+  (check-equal? (run '(eq? (match #t [_ "foo"]) "bar")) #f)
+  (check-equal? (run '(eq? (match #t [_ 'foo]) 'bar)) #f)
 
   ;; Mountebank examples  
   (check-equal? (run '#())
