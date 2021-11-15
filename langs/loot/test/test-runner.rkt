@@ -269,7 +269,21 @@
                                 0
                                 (+ n (tri (sub1 n)))))))
                        36))
-                666))
+                666)
+  (check-equal? (run '(define (tri n)
+                        (if (zero? n)
+                            0
+                            (+ n (tri (sub1 n)))))
+                     '(tri 36))
+                666)
+  (check-equal? (run '(define (tri n)
+                        (match n
+                          [0 0]
+                          [m (+ m (tri (sub1 m)))]))
+                     '(tri 36))
+                666)
+  (check-equal? (run '((match 8 [8 (lambda (x) x)]) 12))
+                12))
 
 (define (test-runner-io run)
   ;; Evildoer examples
