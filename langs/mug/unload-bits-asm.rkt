@@ -30,7 +30,14 @@
          (string)
          (build-string (heap-ref i)
                        (lambda (j)
-                         (char-ref (+ i 8) j))))]))
+                         (char-ref (+ i 8) j))))]
+    [(? symb-bits? i)
+     (string->symbol
+      (if (zero? (untag i))
+          (string)
+          (build-string (heap-ref i)
+                        (lambda (j)
+                          (char-ref (+ i 8) j)))))]))
 
 (define (untag i)
   (arithmetic-shift (arithmetic-shift i (- (integer-length ptr-mask)))

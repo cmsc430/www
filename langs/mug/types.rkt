@@ -69,3 +69,6 @@
 
 (define (proc-bits? v)
   (zero? (bitwise-xor (bitwise-and v imm-mask) type-proc)))
+
+(define (symb-bits? v)
+  (zero? (bitwise-xor (bitwise-and v imm-mask) type-symb)))
