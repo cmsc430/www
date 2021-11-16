@@ -72,7 +72,8 @@
     ['_           (PWild)]
     [(? symbol?)  (PVar p)]
     [(? string?)  (PStr p)]
-    [(list 'quote s) (PSymb s)]
+    [(list 'quote (? symbol? s))
+     (PSymb s)]
     [(list 'quote (list))
      (PLit '())]
     [(list 'box p)
