@@ -317,7 +317,7 @@
   (check-equal? (run '(match (cons '+ (cons 1 (cons 2 '())))
                         [(cons '+ (cons x (cons y '())))
                          (+ x y)]))
-                3))
+                3)
 
   ;; Mountebank examples  
   (check-equal? (run '#())
