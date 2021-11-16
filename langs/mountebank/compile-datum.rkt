@@ -7,6 +7,14 @@
 ;; Registers used
 (define rax 'rax) ; return
 
+;; Datum -> Asm
+(define (compile-datum d)
+  (cond
+    [(string? d)   (seq (Lea rax (load-string d)))]
+    [(symbol? d)   (seq (Lea rax (load-symbol d)))]
+    [(compound? d) (compile-compound-datum d)]
+    [else          (compile-atom d)]))
+
 (define (load-symbol s)
   (Plus (symbol->data-label s) type-symb))
 
@@ -22,14 +30,6 @@
   (or (box? d)
       (cons? d)
       (vector? d)))
-
-;; Datum -> Asm
-(define (compile-datum d)
-  (cond
-    [(string? d)   (seq (Lea rax (load-string d)))]
-    [(symbol? d)   (seq (Lea rax (load-symbol d)))]
-    [(compound? d) (compile-compound-datum d)]
-    [else          (compile-atom d)]))
 
 ;; Datum -> Asm
 (define (compile-compound-datum d)

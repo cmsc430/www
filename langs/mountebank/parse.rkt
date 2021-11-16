@@ -24,8 +24,8 @@
 ;; S-Expr -> Expr
 (define (parse-e s)
   (match s
-    [(? self-quoting?)             (Quote (parse-datum s))]
-    [(list 'quote d)               (Quote (parse-datum d))]
+    [(? self-quoting?)             (Quote s)]
+    [(list 'quote d)               (Quote d)]
     ['eof                          (Eof)]
     [(? symbol?)                   (Var s)]
     [(list (? (op? op0) p0))       (Prim0 p0)]
@@ -83,23 +83,6 @@
     [(cons 'list (cons p1 ps))
      (PCons (parse-pat p1)
             (parse-pat (cons 'list ps)))]))
-
-;; Datum -> Datum
-(define (parse-datum d)
-  (match d
-    [(box d)
-     (box (parse-datum d))]    
-    [(cons d1 d2)
-     (cons (parse-datum d1) (parse-datum d2))]
-    ['() '()]
-    [(? symbol? s) s]
-    [(? integer? i) i]
-    [(? boolean? b) b]
-    [(? string? s) s]
-    [(? char? c) c]
-    [(? vector? v)
-     (apply vector (map parse-datum (vector->list v)))]
-    [_ (error "parse datum error")]))
 
 (define (self-quoting? x)
   (or (integer? x)
