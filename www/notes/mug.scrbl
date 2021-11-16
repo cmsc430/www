@@ -230,7 +230,6 @@ Now, while this does allocate string literals statically, using memory
 within to the program to store the string, it doesn't alone solve the
 problem with string literals being represented uniquely.
 
-
 @section[#:tag-prefix "mug"]{Static Interning}
 
 We've seen static memory, but we still need to make sure every string
@@ -383,50 +382,36 @@ returned.
 Using @racket[literals], we can write a function that compiles all of
 the string literals into static data as follows:
 
+@(ev '(require mug/compile-literals))
+
 @#reader scribble/comment-reader
-(racketblock
+(ex
 ;; Prog -> Asm
 (define (compile-literals p)
-  (seq (Data)
-       (compile-literals-data (literals p))
-       (Text)))
+  (append-map compile-literal (literals p)))
 
-;; [Listof Symbol] -> Asm
-(define (compile-literals-data ss)
-  (append-map compile-literal-data ss))
+;; [Listof Char] -> Asm
+(define (compile-string-chars cs)
+  (match cs
+    ['() (seq)]
+    [(cons c cs)
+     (seq (Dd (char->integer c))
+          (compile-string-chars cs))]))
 
 ;; Symbol -> Asm
-(define (compile-literal-data s)
+(define (compile-literal s)
   (let ((str (symbol->string s)))
     (seq (Label (symbol->label s))
-	 (Dq (string-length str))
-	 (map Dq (map char->integer (string->list str))))))
-)
+         (Dq (string-length str))
+         (compile-string-chars (string->list str))
+         (if (odd? (string-length str))
+             (seq (Dd 0))
+             (seq)))))
 
-@(ev
-'(define (compile-literals p)
-  (seq (Data)
-       (compile-literals-data (strings p))
-       (Text))))
-
-@(ev
-'(define (compile-literals-data ss)
-  (append-map compile-literal-data ss)))
-
-@(ev
-'(define (compile-literal-data s)
-  (let ((str (symbol->string s)))
-    (seq (Label (symbol->label s))
-	 (Dq (string-length str))
-	 (map Dq (map char->integer (string->list str)))))))
-
-So now we can reconstruct our example with:
-
-@ex[
 (seq (compile-string "Hello!")
      (compile-string "Hello!")
-     (compile-literals-data '(Hello!)))
-]
+     (compile-literal 'Hello!))
+)
 
 We've seemingly reached our goal.  However, there is a fairly nasty
 little bug with our approach.  Can you spot it?
@@ -474,7 +459,7 @@ considered @racket[eq?] to each other:
 @ex[
 (seq (compile-string "Hello!")
      (compile-string "Hello!")
-     (compile-literals-data '(Hello!)))
+     (compile-literal 'Hello!))
 ]
 
 We can try it out to confirm some examples.
@@ -603,7 +588,7 @@ only returns a single literal:
 (literals (parse '[(begin "Hello!" 'Hello!)]))
 ]
 
-But actually this is just fine.  What happens is that only a signle
+But actually this is just fine.  What happens is that only a single
 chunk of memory is allocated to hold the character data @tt{H},
 @tt{e}, @tt{l}, @tt{l}, @tt{o}, @tt{!}, but the @emph{symbol}
 @racket['Hello] is represented as a pointer to this data tagged as a
@@ -613,7 +598,7 @@ pointer, but tagged as a string.  So this program compiles to:
 @ex[
 (seq (compile-string "Hello!")
      (compile-symbol 'Hello!)
-     (compile-literals-data '(Hello!)))
+     (compile-literal 'Hello!))
 ]
 
 We have now added a symbol data type and have implement static
@@ -868,6 +853,91 @@ We can confirm this works as expected:
 
 With that, we have completed the implementation of symbols and strings
 with the proper interning behavior.
+
+
+@section[#:tag-prefix "mug"]{Matching symbols and strings}
+
+Since we have @racket[match] in our language, we should probably add
+the ability to match against strings and symbols.
+
+We can extend the AST definition for patterns:
+
+@filebox-include-fake[codeblock "mug/ast.rkt"]{
+;; type Pat = ...
+;;          | (PSymb Symbol)
+;;          | (PStr String)
+(struct PSymb (s) #:prefab)
+(struct PStr (s)  #:prefab)
+}
+
+Extending the interpreter is straightforward:
+
+@filebox-include-fake[codeblock "mug/interp.rkt"]{
+;; Pat Value Env -> [Maybe Env]
+(define (interp-match-pat p v r)
+  (match p
+    ; ...
+    [(PSymb s) (and (eq? s v) r)]
+    [(PStr s)  (and (string? v) (string=? s v) r)]))
+}
+
+Extending the compiler is more involved, but essentially boils down to
+doing exactly what the interpreter is doing above:
+
+@filebox-include-fake[codeblock "mug/compile-expr.rkt"]{
+;; Pat CEnv Symbol -> (list Asm Asm CEnv)
+(define (compile-pattern p cm next)
+  (match p
+    ; ...
+    [(PStr s)
+     (let ((fail (gensym)))
+       (list (seq (Lea rdi (symbol->data-label (string->symbol s)))
+                  (Mov r8 rax)
+                  (And r8 ptr-mask)
+                  (Cmp r8 type-str)
+                  (Jne fail)
+                  (Xor rax type-str)
+                  (Mov rsi rax)
+                  pad-stack
+                  (Call 'symb_cmp)
+                  unpad-stack
+                  (Cmp rax 0)
+                  (Jne fail))
+             (seq (Label fail)
+                  (Add rsp (* 8 (length cm)))
+                  (Jmp next))
+             cm))]
+    [(PSymb s)
+     (let ((fail (gensym)))
+       (list (seq (Lea r9 (Plus (symbol->data-label s) type-symb))
+                  (Cmp rax r9)
+                  (Jne fail))
+             (seq (Label fail)
+                  (Add rsp (* 8 (length cm)))
+                  (Jmp next))
+             cm))]))
+}
+
+The implementation of string matching uses the @tt{symb_cmp} function
+from the run-time system, checking whether it returns @racket[0] to
+indicate the strings are the same.  (Although the function is
+concerned with comparing symbols, symbols and strings are represented
+the same, so it works just as well to compare strings.)
+
+We can confirm some examples:
+
+@ex[
+(run '(match 'foo
+        ['foo  1]
+        ["foo" 2]))
+(run '(match "foo"
+        ['foo  1]
+        ["foo" 2]))
+(run '(match (cons '+ (cons 1 (cons 2 '())))
+        [(cons '+ (cons x (cons y '())))
+	 (+ x y)]))
+]
+
 
 @section[#:tag-prefix "mug"]{Compiling Symbols and Strings}
 
