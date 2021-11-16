@@ -1,5 +1,5 @@
 #lang racket
-(provide compile-literals init-symbol-table literals)
+(provide compile-literals init-symbol-table literals compile-string-chars)
 (require "ast.rkt"
          "utils.rkt"
          a86/ast)
