@@ -38,6 +38,8 @@ val_symb_t *intern_symbol(val_symb_t* symb)
 
 int symb_cmp(const val_symb_t *s1, const val_symb_t *s2)
 {
+  if (s1 == s2) return 0;
+
   int64_t len1 = s1->len;
   int64_t len2 = s2->len;
 

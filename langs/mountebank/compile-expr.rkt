@@ -232,6 +232,24 @@
      (list (seq (Push rax))
            (seq)
            (cons x cm))]
+    [(PStr s)
+     (let ((fail (gensym)))
+       (list (seq (Lea rdi (symbol->data-label (string->symbol s)))
+                  (Mov r8 rax)
+                  (And r8 ptr-mask)
+                  (Cmp r8 type-str)
+                  (Jne fail)
+                  (Xor rax type-str)
+                  (Mov rsi rax)
+                  pad-stack
+                  (Call 'symb_cmp)
+                  unpad-stack
+                  (Cmp rax 0)
+                  (Jne fail))
+             (seq (Label fail)
+                  (Add rsp (* 8 (length cm)))
+                  (Jmp next))
+             cm))]
     [(PSymb s)
      (let ((fail (gensym)))
        (list (seq (Lea r9 (Plus (symbol->data-label s) type-symb))

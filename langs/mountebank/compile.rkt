@@ -44,4 +44,5 @@
        (Extern 'write_byte)
        (Extern 'raise_error)
        (Extern 'intern_symbol)
+       (Extern 'symb_cmp)
        (Extern 'memcpy)))

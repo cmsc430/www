@@ -51,6 +51,7 @@
 ;;           | (PCons Pat Pat)
 ;;           | (PAnd Pat Pat)
 ;;           | (PSymb Symbol)
+;;           | (PStr String)
 ;; type Lit  = Boolean
 ;;           | Character
 ;;           | Integer
@@ -77,3 +78,4 @@
 (struct PCons (p1 p2)      #:prefab)
 (struct PAnd  (p1 p2)      #:prefab)
 (struct PSymb (s)          #:prefab)
+(struct PStr (s)           #:prefab)

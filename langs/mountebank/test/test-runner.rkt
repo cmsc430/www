@@ -312,6 +312,8 @@
   (check-equal? (run '(eq? (match #t [_ 'foo]) 'bar)) #f)
   (check-equal? (run '(match 'foo ['bar #t] [_ #f])) #f)
   (check-equal? (run '(match 'foo ['foo #t] [_ #f])) #t)
+  (check-equal? (run '(match "foo" ["foo" #t] [_ #f])) #t)
+  (check-equal? (run '(match "foo" ["bar" #t] [_ #f])) #f)
 
   ;; Mountebank examples  
   (check-equal? (run '#())

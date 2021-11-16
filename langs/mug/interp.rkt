@@ -112,6 +112,7 @@
     [(PWild) r]
     [(PVar x) (ext r x v)]
     [(PSymb s) (and (eq? s v) r)]
+    [(PStr s) (and (string? v) (string=? s v) r)]
     [(PLit l) (and (eqv? l v) r)]
     [(PBox p)
      (match v

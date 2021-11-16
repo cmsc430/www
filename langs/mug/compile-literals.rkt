@@ -55,11 +55,13 @@
     [(Prog ds e)
      (append (append-map literals-d ds) (literals-e e))]))
 
+;; Defn -> [Listof (U Symbol String)]
 (define (literals-d d)
   (match d
     [(Defn f xs e)
      (literals-e e)]))
 
+;; Expr -> [Listof (U Symbol String)]
 (define (literals-e e)
   (match e
     [(Str s)  (list s)]
@@ -84,6 +86,20 @@
      (append (literals-e e) (append-map literals-match-clause ps es))]
     [_ '()]))
 
+;; Pat Expr -> [Listof (U Symbol String)]
+(define (literals-match-clause p e)
+  (append (literals-pat p) (literals-e e)))
+
+;; Pat -> [Listof (U Symbol String)]
+(define (literals-pat p)
+  (match p
+    [(PSymb s) (list s)]
+    [(PStr s)  (list s)]
+    [(PBox p) (literals-pat p)]
+    [(PCons p1 p2) (append (literals-pat p1) (literals-pat p2))]
+    [(PAnd p1 p2) (append (literals-pat p1) (literals-pat p2))]
+    [_ '()]))
+
 ;; [Listof Char] -> Asm
 (define (compile-string-chars cs)
   (match cs
@@ -91,16 +107,3 @@
     [(cons c cs)
      (seq (Dd (char->integer c))
           (compile-string-chars cs))]))
-
-;; Pat Expr -> [Listof Symbol]
-(define (literals-match-clause p e)
-  (append (literals-pat p) (literals-e e)))
-
-;; Pat -> [Listof Symbol]
-(define (literals-pat p)
-  (match p
-    [(PSymb s) (list s)]
-    [(PBox p) (literals-pat p)]
-    [(PCons p1 p2) (append (literals-pat p1) (literals-pat p2))]
-    [(PAnd p1 p2) (append (literals-pat p1) (literals-pat p2))]
-    [_ '()]))
