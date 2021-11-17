@@ -20,7 +20,7 @@
 ;; type REnv = (Listof (List Id Value))
 ;; type Defns = (Listof Defn)
 
-;; Prog Defns -> Answer
+;; Prog -> Answer
 (define (interp p)
   (match p
     [(Prog ds e)
