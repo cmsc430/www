@@ -1,87 +1,94 @@
 #lang scribble/manual
-@title[#:tag "Assignment 6" #:style 'unnumbered]{Assignment 6: Arities!}
+@title[#:tag "Assignment 6" #:style 'unnumbered]{Assignment 6: Syntax Checking}
 
 @(require (for-label (except-in racket ...)))
-@(require redex/pict)
+@(require "../notes/ev.rkt"
+          "../notes/utils.rkt")
 
-@(require "../notes/ev.rkt")
+@bold{Due: Tuesday, November 23nd, 11:59PM EDT}
 
-@bold{Due: Thursday, April 29th, 11:59PM EST}
-
-@(define repo "https://github.com/cmsc430/assign06")
-
-The goal of this assignment is (1) to implement arity checking in a
-language with functions, and (2) to implement the @racket[procedure-arity]
-operation for accessing the arity of a function.
-
-Assignment repository:
-@centered{@link[repo repo]}
+The goal of this assignment is to add syntax checking to our compiler.
 
 You are given a repository with a starter compiler similar to the
-@seclink["Loot"]{Loot} language we studied in class. The only change
-has been the addition of parsing code for the unary
-@racket[procedure-arity] primitive.
+@seclink["Mountebank"]{Mountebank} language we studied in class.  You
+are tasked with:
 
-@section[#:tag-prefix "a6-" #:style 'unnumbered]{Arity-check yourself, before you wreck yourself}
+@itemlist[
 
-When we started looking at functions and function applications, we
-wrote an interpreter that did arity checking, i.e. just before making
-a function call, it confirmed that the function definition had as many
-parameters as the call had arguments.
+@item{implementing compile-time syntax checking.}
 
-The compiler, however, does no such checking.  This means that
-arguments will silently get dropped when too many are supplied and
-(much worse!) parameters will be bound to junk values when too few are
-supplied; the latter has the very unfortunate effect of possibly
-leaking local variable's values to expressions out of the scope of
-those variables.  (This has important security ramifications.)
+]
 
-The challenge here is that the arity needs to be checked at run-time,
-since we have first class functions. But at run-time, we don't have
-access to the syntax of the function definition or the call.  So in
-order to check the arity of a call, we must emit code to do the
-checking and to compute the relevant information for carrying out the
-check.
+@section[#:tag-prefix "a6-" #:style 'unnumbered #:tag "checking"]{Syntax Checking}
 
-The main high-level idea is that: when compiling a function
-definition, the arity of the function is clear from the number of
-parameters of the definition; when compiling a call, the number of
-arguments is also obvious. Therefore, what's needed is a way for the
-the function and the call to communicate and check their corresponding
-arity information.
 
-We recommend storing the arity of the function as an additional piece
-of information in the closure during its compilation. Then, during a
-call you can access that arity and check it before making the call.
-Bonus: it makes implementing @racket[procedure-arity] really
-straightforward: you just have to access that number.
+Up until now, we've written our compiler assuming that programs are
+well-formed, but there has never been any code that actually checks
+this assumption.  The assumptions go beyond the properties checked
+during parsing.  For example, our parser will happily accept a program
+like @racket[(lambda (x x) x)], and the compiler will emit code for it
+even though this is not a well-formed program.
 
-Just like we've been saying all semester, there are multiple other
-ways of going about this, feel free to design and implement a solution
-that works correctly - and consider the trade-offs! For example,
-another approach would be to treat the arity of the function as if it
-were the first argument of the function. A function of @math{n}
-arguments would then be compiled as a function of @math{n+1}
-arguments.  A call with @math{m} arguments would be compiled as a call
-with @math{m+1} arguments, where the value of the first argument is
-@math{m}.  The emitted code for a function should then check that the
-value of the first argument is equal to @math{n} and signal an error
-when it is not. But how would you implement @racket[procedure-arity]
-in this case? (This is not a rhetorical question, if you have a
-realistic solution to this, send us an e-mail!)
+The idea of this assignment is to implement a function, defined in
+@tt{check-syntax.rkt}:
 
-Your job is to modify @racket[compile.rkt] and to implement this arity
-checking protocol and the @racket[procedure-arity] primitive. It might
-help to implement the primitive before compiling the calls themselves,
-to partially test your implementation. Unlike previous assignments,
-there are no explicitly marked TODOs (with the exception of
-@racket[procedure-arity]). You have to make sure you modify all places
-where closures are created/accessed to ensure that your changes work
-correctly!
+@#reader scribble/comment-reader
+(racketblock
+;; Prog -> Prog
+(define (check-syntax p) ...)
+)
 
-As always, remember to test your code using both the testcases
-provided and by adding your own!
+If the program is well-formed, it should behave like the identity
+function, returning the same program it was given as input.  On
+ill-formed programs, it should signal an error using @racket[error].
+
+For the purposes of this assignment, the quality of the error messages
+doesn't matter, although in real programming language implementations,
+good error messages are crucial.
+
+Here are the properties that should be checked of each program:
+
+@itemlist[
+
+@item{Every @racket[define]d function should have a distinct name.}
+
+@item{Every function parameter should be distinct from the other
+parameters of that function.}
+
+@item{Every function's name should be distinct from all of its
+parameters' names.}
+
+@item{Every function name and variable should not clash with any of
+the keywords of our language, e.g. @racket[lambda], @racket[if], etc.
+(Note this is not a restriction Racket puts on programs; the following
+is a perfectly reasonable expression: @racket[(λ (λ) λ)], but we'll
+consider this a syntax error.)}
+
+@item{Every pattern variable in a pattern should be distinct.  (Racket
+also allows this, but it has a complicated run-time semantics which we
+don't implement so instead we just rule out these programs.)}
+
+]
+
+The starter code calls @racket[check-syntax] in both
+@tt{compile-file.rkt} and @tt{interp-file.rkt}.  The definition of
+@racket[check-syntax] is stubbed out in @tt{check-syntax.rkt}.
+
+There are a few tests included in @tt{test/check-syntax.rkt}.  For
+this assignment, very few tests are included so you should write your
+own.
+
+@section[#:tag-prefix "a6-" #:style 'unnumbered #:tag "update"]{Update a86}
+
+There have been some changes to a86 that you'll need.  You can update
+the @tt{langs} package with the following:
+
+@verbatim|{raco pkg update langs}|
+
 
 @section[#:tag-prefix "a6-" #:style 'unnumbered]{Submitting}
 
-Submit just the @tt{compile.rkt} file on Gradescope.
+You should submit on Gradescope. You should submit a zip file that has
+exactly the same structure that the stub contains. We will only use
+the @tt{check-syntax.rkt} files for grading, so make sure all your
+work is contained there!
