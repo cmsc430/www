@@ -1,4 +1,4 @@
-course = assignments/6
+course = main
 
 .PHONY : all clean test
 
