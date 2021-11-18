@@ -92,7 +92,7 @@
                      @elem{No class, Thanksgiving.})
 
                (list @wk{11/30}
-                     @tbaseclink["Assignment 6"]{A6}
+                     @seclink["Assignment 6"]{A6}
 		     @elem{GC}
 		     @elem{GC}
 		     )
