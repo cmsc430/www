@@ -50,6 +50,9 @@ Here are the properties that should be checked of each program:
 
 @itemlist[
 
+@item{Programs are @emph{closed}; there are no unbound variables in
+the program.}
+
 @item{Every @racket[define]d function should have a distinct name.}
 
 @item{Every function parameter should be distinct from the other

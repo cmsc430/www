@@ -30,4 +30,5 @@
     [(PCons p1 p2) (append (bv-pat* p1) (bv-pat* p2))]
     [(PAnd p1 p2) (append (bv-pat* p1) (bv-pat* p2))]
     [(PBox p) (bv-pat* p)]
+    [(PStruct n ps) (append-map bv-pat* ps)]
     [_ '()]))

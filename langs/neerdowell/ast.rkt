@@ -55,6 +55,7 @@
 ;;            | (PAnd Pat Pat)
 ;;            | (PSymb Symbol)
 ;;            | (PStr String)
+;;            | (PStruct Id (Listof Pat))
 ;; type Lit   = Boolean
 ;;            | Character
 ;;            | Integer

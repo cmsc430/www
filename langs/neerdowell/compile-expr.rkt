@@ -310,4 +310,42 @@
                    (Label fail)
                    (Add rsp (* 8 (length cm))) ; haven't pushed anything yet
                    (Jmp next))
-              cm2))])])]))
+              cm2))])])]
+    [(PStruct n ps)
+     (match (compile-struct-patterns ps (cons #f cm) next 1)
+       [(list i f cm)
+        (let ((fail (gensym)))
+          (list
+           (seq (Mov r8 rax)
+                (And r8 ptr-mask)
+                (Cmp r8 type-struct)
+                (Jne fail)
+                (Xor rax type-struct)
+                (Mov r8 (Offset rax 0))
+                (Lea r9 (Plus (symbol->data-label n) type-symb))
+                (Cmp r8 r9)
+                (Jne fail)
+                (Push rax)
+                i)
+           (seq f
+                (Label fail)
+                (Add rsp (* 8 (length cm)))
+                (Jmp next))
+           cm))])]))
+
+;; [Listof Pat] CEnv Symbol Nat -> (list Asm Asm CEnv)
+(define (compile-struct-patterns ps cm next i)
+  (match ps
+    ['() (list '() '() cm)]
+    [(cons p ps)
+     (match (compile-pattern p cm next)
+       [(list i1 f1 cm1)
+        (match (compile-struct-patterns ps cm1 next (add1 i))
+          [(list is fs cmn)
+           (list
+            (seq (Mov rax (Offset rax (* 8 i)))
+                 i1
+                 (Mov rax (Offset rsp (* 8 (sub1 (length cm1)))))
+                 is)
+            (seq f1 fs)
+            cmn)])])]))

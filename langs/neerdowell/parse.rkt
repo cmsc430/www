@@ -126,7 +126,9 @@
      (PLit '())]
     [(cons 'list (cons p1 ps))
      (PCons (parse-pat p1)
-            (parse-pat (cons 'list ps)))]))    
+            (parse-pat (cons 'list ps)))]
+    [(cons (? symbol? n) ps)
+     (PStruct n (map parse-pat ps))]))
 
 (define (self-quoting? x)
   (or (integer? x)
