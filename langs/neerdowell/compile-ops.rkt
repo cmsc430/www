@@ -313,7 +313,7 @@
      (seq (Pop r8)
           (Pop 'r11)
           (assert-struct rax)
-          (assert-integer r8)
+          ;(assert-integer r8)
           (Xor rax type-struct)
           (Mov r10 (Offset rax 0))
           (Cmp 'r11 r10)
