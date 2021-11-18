@@ -1,4 +1,4 @@
-course = project
+course = main
 
 .PHONY : all clean test
 
