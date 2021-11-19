@@ -2,8 +2,10 @@
 (require "ast.rkt")
 (provide interp-prim)
 
+;; type Struct = (StructVal Symbol (Vectorof Value))
 (struct StructVal (name vals))
 
+;; Op [Listof Value] -> Answer
 (define (interp-prim p vs)
   (match (cons p vs)
     ;; Op0
@@ -58,7 +60,7 @@
      (if (<= 0 v2 (sub1 (string-length v1)))
          (string-ref v1 v2)
          'err)]
-    [(list 'struct? (? symbol? s) v)
+    [(list 'struct? s v)
      (match v
        [(StructVal n _) (eq? s n)]
        [_ #f])]
@@ -67,7 +69,7 @@
      (if (<= 0 v2 (sub1 (vector-length v1)))
          (vector-set! v1 v2 v3)
          'err)]
-    [(list 'struct-ref (? symbol? s) (? integer? i) (StructVal n vs))
+    [(list 'struct-ref s i (StructVal n vs))
      (if (and (eq? s n) (<= 0 i (sub1 (vector-length vs))))
          (vector-ref vs i)
          'err)]

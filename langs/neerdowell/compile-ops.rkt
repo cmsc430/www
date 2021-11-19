@@ -324,12 +324,17 @@
           (Add rax r8)
           (Mov rax (Offset rax 0)))]))
 
+;; Nat -> Asm
+;; Emit instructions for creating a structure of length n
+;; using values on top of stack
 (define (compile-make-struct n)
   (seq (compile-make-struct/a n 1)
        (Mov rax rbx)
        (Or rax type-struct)
        (Add rbx (* 8 n))))
 
+;; Nat Nat -> Asm
+;; Pop elements off stack, writing them to heap
 (define (compile-make-struct/a n i)
   (if (= n i)
       (seq (Mov (Offset rbx (* 8 (- n i))) rax))

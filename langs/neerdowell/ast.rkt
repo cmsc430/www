@@ -7,9 +7,6 @@
 ;; type Defn = (Defn Id (Listof Id) Expr)
 (struct Defn (f xs e) #:prefab)
 
-;; type StructDefn = (Struct Id (Listof Id))
-(struct Struct (name flds) #:prefab)
-
 ;; type Expr  = (Eof)
 ;;            | (Quote Datum)
 ;;            | (Prim Op (Listof Expr))
