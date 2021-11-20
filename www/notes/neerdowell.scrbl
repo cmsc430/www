@@ -18,7 +18,7 @@
 @(for-each (λ (f) (ev `(require (file ,f))))
 	   '("interp.rkt" "compile.rkt" "compile-expr.rkt" "compile-literals.rkt" "compile-datum.rkt" "utils.rkt" "ast.rkt" "parse.rkt" "types.rkt" "unload-bits-asm.rkt"))
 
-@title[#:tag "Neerdowell"]{Neerdowell: Structures}
+@title[#:tag "Neerdowell"]{Neerdowell: structures}
 
 @emph{Structures don't march in the streets.}
 

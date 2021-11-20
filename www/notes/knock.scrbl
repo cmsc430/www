@@ -26,7 +26,7 @@
 
 @(define this-lang "Knock")
 
-@title[#:tag this-lang]{@|this-lang|: Pattern matching}
+@title[#:tag this-lang]{@|this-lang|: pattern matching}
 
 @table-of-contents[]
 

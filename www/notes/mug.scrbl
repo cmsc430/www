@@ -18,7 +18,7 @@
 @(for-each (λ (f) (ev `(require (file ,f))))
 	   '("interp.rkt" "compile.rkt" "compile-expr.rkt" "compile-literals.rkt" "utils.rkt" "ast.rkt" "parse.rkt" "types.rkt" "unload-bits-asm.rkt"))
 
-@title[#:tag "Mug"]{Mug: Symbols and Interned String Literals}
+@title[#:tag "Mug"]{Mug: symbols and interned string literals}
 
 @table-of-contents[]
 
