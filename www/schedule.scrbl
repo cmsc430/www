@@ -83,7 +83,7 @@
                      @itemlist[
 		       @item{@secref["Mug"]}
 		       @item{@secref["Mountebank"]}]
-		     @elem{Neerdowell} @;{ ?? }
+		     @secref["Neerdowell"]
                      )
 
                (list @wk{11/23}
