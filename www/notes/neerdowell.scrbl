@@ -60,13 +60,13 @@ Each structure definition creates four kinds of things:
 
 @itemlist[
 
-@item{A constructor, e.g. @racket[foo].}
+@item{A constructor, e.g. @racket[posn].}
 
-@item{A predicate, e.g. @racket[foo?].}
+@item{A predicate, e.g. @racket[posn?].}
 
-@item{A set of accessor functions, e.g. @racket[foo-x] and @racket[foo-y].}
+@item{A set of accessor functions, e.g. @racket[posn-x] and @racket[posn-y].}
 
-@item{A pattern constructor, e.g. @racket[foo].}
+@item{A pattern constructor, e.g. @racket[posn].}
 ]
 
 The constructor is a function that takes as many arguments as fields
@@ -104,7 +104,7 @@ Here the @tt{Symbol} argument represents the name of the structure
 type.  So for example, to create an instance of the @racket[posn]
 structure type, you'd call @racket[(make-struct 'posn 1 2)].  To check
 if @racket[_x] is an instance of a @racket[posn] structure, you'd call
-@racket[(struct? 'foo _x)].  To access the first field of an instance
+@racket[(struct? 'posn _x)].  To access the first field of an instance
 of a @racket[posn] structure type @racket[_x], you'd call @racket[(struct-ref
 'posn 0 _x)].
 
@@ -158,7 +158,7 @@ and @racket['struct-ref] as keywords.  If you write a program that
 uses these names, they will be treated as variables, not primitives:
 
 @ex[
-(parse-e '(struct? 'foo x))
+(parse-e '(struct? 'posn x))
 ]
 
 The @racket[parse-struct] function is defined as follows:
