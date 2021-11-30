@@ -153,6 +153,9 @@
        (string-append tab "lea "
                       (arg->string d) ", [rel "
                       (exp->string x) "]")]
+      [(Div r)
+       (string-append tab "div "
+                      (arg->string r))]
       [(Equ x c)
        (string-append tab
                       (symbol->string x)

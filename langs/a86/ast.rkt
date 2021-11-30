@@ -57,7 +57,8 @@
   (λ (a1 a2 n)
     (unless (register? a1)
       (error n "expects register; given ~v" a1))
-    (unless (and (exact-integer? a2) (<= 0 a2 63))
+    (unless (or (and (exact-integer? a2) (<= 0 a2 63))
+                (eq? 'cl a2))
       (error n "expects exact integer in [0,63]; given ~v" a2))
     (values a1 a2)))      
 
@@ -142,6 +143,7 @@
 (instruct Push   (a1)      check:push)
 (instruct Pop    (a1)      check:register)
 (instruct Lea    (dst x)   check:lea)
+(instruct Div    (den)     check:register)
 
 (instruct Offset (r i)     check:offset)
 (instruct Extern (x)       check:label-symbol)
@@ -170,7 +172,7 @@
 (define offset? Offset?)
 
 (define (register? x)
-  (and (memq x '(eax rax rbx rcx rdx rbp rsp rsi rdi r8 r9 r10 r11 r12 r13 r14 r15))
+  (and (memq x '(cl eax rax rbx rcx rdx rbp rsp rsi rdi r8 r9 r10 r11 r12 r13 r14 r15))
        #t))
 
 (define (label? x)
@@ -204,6 +206,7 @@
       (Push? x)
       (Pop? x)
       (Lea? x)
+      (Div? x)
       (Comment? x)
       (Equ? x)
       (Dd? x)
