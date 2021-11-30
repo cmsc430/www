@@ -15,69 +15,74 @@
 (define rsp 'rsp) ; stack
 (define rdi 'rdi) ; arg
 
-;; Expr CEnv Bool -> Asm
-(define (compile-e e c t?)
+;; Expr CEnv GEnv Bool -> Asm
+(define (compile-e e c g t?)
   (match e
     [(Quote d)          (compile-datum d)]
     [(Eof)              (seq (Mov rax (imm->bits eof)))]
-    [(Var x)            (compile-variable x c)]
-    [(Prim p es)        (compile-prim p es c)]
-    [(If e1 e2 e3)      (compile-if e1 e2 e3 c t?)]
-    [(Begin e1 e2)      (compile-begin e1 e2 c t?)]
-    [(Let x e1 e2)      (compile-let x e1 e2 c t?)]
-    [(App e es)         (compile-app e es c t?)]
-    [(Lam f xs e)       (compile-lam f xs e c)]
-    [(Match e ps es)    (compile-match e ps es c t?)]))
+    [(Var x)            (compile-variable x c g)]
+    [(Prim p es)        (compile-prim p es c g)]
+    [(If e1 e2 e3)      (compile-if e1 e2 e3 c g t?)]
+    [(Begin e1 e2)      (compile-begin e1 e2 c g t?)]
+    [(Let x e1 e2)      (compile-let x e1 e2 c g t?)]
+    [(App e es)         (compile-app e es c g t?)]
+    [(Apply e es el)    (compile-apply e es el c g t?)]
+    [(Lam _ _ _)        (compile-lam e c g)]
+    [(LamRest _ _ _ _)  (compile-lam e c g)]
+    [(LamCase _ _)      (compile-lam e c g)]
+    [(Match e ps es)    (compile-match e ps es c g t?)]))
 
-;; Id CEnv -> Asm
-(define (compile-variable x c)
+;; Id CEnv GEnv -> Asm
+(define (compile-variable x c g)
   (match (lookup x c)
-    ;[#f (error "unbound variable")]
-    [#f (seq (Lea rax (Plus (symbol->label x) type-proc)))]
+    [#f (if (memq x g)
+            (seq (Mov rax (Offset (symbol->label x) 0)))
+            (error "unbound variable"))]
     [i  (seq (Mov rax (Offset rsp i)))]))
 
-;; Op (Listof Expr) CEnv -> Asm
-(define (compile-prim p es c)
-  (seq (compile-es* es c)  
+;; Op (Listof Expr) CEnv GEnv -> Asm
+(define (compile-prim p es c g)
+  (seq (compile-es* es c g)
        (match p
          ['make-struct (compile-make-struct (length es))]
          [_ (compile-op p)])))
 
-;; Expr Expr Expr CEnv Bool -> Asm
-(define (compile-if e1 e2 e3 c t?)
+;; Expr Expr Expr CEnv GEnv Bool -> Asm
+(define (compile-if e1 e2 e3 c g t?)
   (let ((l1 (gensym 'if))
         (l2 (gensym 'if)))
-    (seq (compile-e e1 c #f)
+    (seq (compile-e e1 c g #f)
          (Cmp rax val-false)
          (Je l1)
-         (compile-e e2 c t?)
+         (compile-e e2 c g t?)
          (Jmp l2)
          (Label l1)
-         (compile-e e3 c t?)
+         (compile-e e3 c g t?)
          (Label l2))))
 
-;; Expr Expr CEnv Bool -> Asm
-(define (compile-begin e1 e2 c t?)
-  (seq (compile-e e1 c #f)
-       (compile-e e2 c t?)))
+;; Expr Expr CEnv GEnv Bool -> Asm
+(define (compile-begin e1 e2 c g t?)
+  (seq (compile-e e1 c g #f)
+       (compile-e e2 c g t?)))
 
-;; Id Expr Expr CEnv Bool -> Asm
-(define (compile-let x e1 e2 c t?)
-  (seq (compile-e e1 c #f)
+;; Id Expr Expr CEnv GEnv Bool -> Asm
+(define (compile-let x e1 e2 c g t?)
+  (seq (compile-e e1 c g #f)
        (Push rax)
-       (compile-e e2 (cons x c) t?)
+       (compile-e e2 (cons x c) g t?)
        (Add rsp 8)))
 
-;; Id [Listof Expr] CEnv Bool -> Asm
-(define (compile-app f es c t?)
-  ;(compile-app-nontail f es c)
+;; Id [Listof Expr] CEnv GEnv Bool -> Asm
+(define (compile-app f es c g t?)
+  (compile-app-nontail f es c g)
+  #;
   (if t?
       (compile-app-tail f es c)
       (compile-app-nontail f es c)))
 
-;; Expr [Listof Expr] CEnv -> Asm
-(define (compile-app-tail e es c)
-  (seq (compile-es (cons e es) c)
+;; Expr [Listof Expr] CEnv GEnv -> Asm
+(define (compile-app-tail e es c g)
+  (seq (compile-es (cons e es) c g)
        (move-args (add1 (length es)) (length c))
        (Add rsp (* 8 (length c)))
        (Mov rax (Offset rsp (* 8 (length es))))
@@ -95,31 +100,73 @@
               (Mov (Offset rsp (* 8 (+ off (sub1 i)))) r8)
               (move-args (sub1 i) off))]))
 
-;; Expr [Listof Expr] CEnv -> Asm
+;; Expr [Listof Expr] CEnv GEnv -> Asm
 ;; The return address is placed above the arguments, so callee pops
 ;; arguments and return address is next frame
-(define (compile-app-nontail e es c)
+(define (compile-app-nontail e es c g)
   (let ((r (gensym 'ret))
         (i (* 8 (length es))))
     (seq (Lea rax r)
          (Push rax)
-         (compile-es (cons e es) (cons #f c))
+         (compile-es (cons e es) (cons #f c) g)
          (Mov rax (Offset rsp i))
          (assert-proc rax)
          (Xor rax type-proc)
+         (Mov r15 (length es))
          (Mov rax (Offset rax 0)) ; fetch the code label
          (Jmp rax)
          (Label r))))
 
-;; Id [Listof Id] Expr CEnv -> Asm
-(define (compile-lam f xs e c)
-  (let ((fvs (fv (Lam f xs e))))
-    (seq (Lea rax (symbol->label f))
+;; Expr [Listof Expr] Expr CEnv GEnv Boolean -> Asm
+(define (compile-apply e es el c g t?)
+  ;; FIXME: should have tail recursive version too
+  (let ((r (gensym 'ret)))
+    (seq (Lea rax r)
+         (Push rax)
+         (compile-es (cons e es) (cons #f c) g)
+         (compile-e el (append (make-list (add1 (length es)) #f) (cons #f c)) g #f)
+
+         (Mov r10 (Offset rsp (* 8 (length es))))
+         
+         (Mov r15 (length es))
+         (let ((loop (gensym))
+               (done (gensym)))
+           (seq (Label loop)
+                (Cmp rax val-empty)
+                (Je done)
+                (assert-cons rax)
+                (Add r15 1)
+                (Xor rax type-cons)
+                (Mov r9 (Offset rax 8))
+                (Push r9)
+                (Mov rax (Offset rax 0))
+                (Jmp loop)
+                (Label done)))
+
+
+         (assert-proc r10)
+         (Xor r10 type-proc)
+         (Mov r10 (Offset r10 0))
+         
+         (Jmp r10)
+         (Label r))))
+
+;; Lambda CEnv GEnv -> Asm
+(define (compile-lam l c g)
+  (let ((fvs (fv- l g)))
+    (seq (Lea rax (symbol->label (lambda-name l)))
          (Mov (Offset rbx 0) rax)
          (free-vars-to-heap fvs c 8)
          (Mov rax rbx) ; return value
-         (Or rax type-proc)
+         (Or rax type-proc)         
          (Add rbx (* 8 (add1 (length fvs)))))))
+
+;; Lambda -> Id
+(define (lambda-name l)
+  (match l
+    [(Lam f _ _) f]
+    [(LamRest f _ _ _) f]
+    [(LamCase f _) f]))
 
 ;; [Listof Id] CEnv Int -> Asm
 ;; Copy the values of given free variables into the heap at given offset
@@ -127,31 +174,12 @@
   (match fvs
     ['() (seq)]
     [(cons x fvs)
-     (seq (Mov r8 (Offset rsp (lookup x c)))
-          (Mov (Offset rbx off) r8)
-          (free-vars-to-heap fvs c (+ off 8)))]))
-
-;; [Listof Lam] -> Asm
-(define (compile-lambda-defines ls)
-  (match ls
-    ['() (seq)]
-    [(cons l ls)
-     (seq (compile-lambda-define l)
-          (compile-lambda-defines ls))]))
-
-;; Lam -> Asm
-(define (compile-lambda-define l)
-  (let ((fvs (fv l)))
-    (match l
-      [(Lam f xs e)
-       (let ((env  (append (reverse fvs) (reverse xs) (list #f))))
-         (seq (Label (symbol->label f))
-              (Mov rax (Offset rsp (* 8 (length xs))))
-              (Xor rax type-proc)
-              (copy-env-to-stack fvs 8)
-              (compile-e e env #t)
-              (Add rsp (* 8 (length env))) ; pop env
-              (Ret)))])))
+     (match (lookup x c)
+       [#f (error "unbound variable" x)]
+       [i
+        (seq (Mov r8 (Offset rsp i))
+             (Mov (Offset rbx off) r8)
+             (free-vars-to-heap fvs c (+ off 8)))])]))
 
 ;; [Listof Id] Int -> Asm
 ;; Copy the closure environment at given offset to stack
@@ -163,53 +191,53 @@
           (Push r9)
           (copy-env-to-stack fvs (+ 8 off)))]))
 
-;; [Listof Expr] CEnv -> Asm
-(define (compile-es es c)
+;; [Listof Expr] CEnv GEnv -> Asm
+(define (compile-es es c g)
   (match es
     ['() '()]
     [(cons e es)
-     (seq (compile-e e c #f)
+     (seq (compile-e e c g #f)
           (Push rax)
-          (compile-es es (cons #f c)))]))
+          (compile-es es (cons #f c) g))]))
 
-;; [Listof Expr] CEnv -> Asm
+;; [Listof Expr] CEnv GEnv -> Asm
 ;; Like compile-es, but leave last subexpression in rax (if exists)
-(define (compile-es* es c)
+(define (compile-es* es c g)
   (match es
     ['() '()]
     [(cons e '())
-     (compile-e e c #f)]
+     (compile-e e c g #f)]
     [(cons e es)
-     (seq (compile-e e c #f)
+     (seq (compile-e e c g #f)
           (Push rax)
-          (compile-es* es (cons #f c)))]))
+          (compile-es* es (cons #f c) g))]))
 
-;; Expr [Listof Pat] [Listof Expr] CEnv Bool -> Asm
-(define (compile-match e ps es c t?)
+;; Expr [Listof Pat] [Listof Expr] CEnv GEnv Bool -> Asm
+(define (compile-match e ps es c g t?)
   (let ((done (gensym)))
-    (seq (compile-e e c #f)
+    (seq (compile-e e c g #f)
          (Push rax) ; save away to be restored by each clause
-         (compile-match-clauses ps es (cons #f c) done t?)
+         (compile-match-clauses ps es (cons #f c) g done t?)
          (Jmp 'raise_error_align)
          (Label done)
          (Add rsp 8)))) ; pop the saved value being matched
 
-;; [Listof Pat] [Listof Expr] CEnv Symbol Bool -> Asm
-(define (compile-match-clauses ps es c done t?)
+;; [Listof Pat] [Listof Expr] CEnv GEnv Symbol Bool -> Asm
+(define (compile-match-clauses ps es c g done t?)
   (match* (ps es)
     [('() '()) (seq)]
     [((cons p ps) (cons e es))
-     (seq (compile-match-clause p e c done t?)
-          (compile-match-clauses ps es c done t?))]))
+     (seq (compile-match-clause p e c g done t?)
+          (compile-match-clauses ps es c g done t?))]))
 
-;; Pat Expr CEnv Symbol Bool -> Asm
-(define (compile-match-clause p e c done t?)
+;; Pat Expr CEnv GEnv Symbol Bool -> Asm
+(define (compile-match-clause p e c g done t?)
   (let ((next (gensym)))
     (match (compile-pattern p '() next)
       [(list i f cm)
        (seq (Mov rax (Offset rsp 0)) ; restore value being matched
             i
-            (compile-e e (append cm c) t?)
+            (compile-e e (append cm c) g t?)
             (Add rsp (* 8 (length cm)))
             (Jmp done)
             f

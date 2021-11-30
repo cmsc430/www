@@ -26,6 +26,7 @@
     ['peek-byte (seq pad-stack
                      (Call 'peek_byte)
                      unpad-stack)]
+
     ;; Op1
     ['add1
      (seq (assert-integer rax)
@@ -127,7 +128,18 @@
           (Xor rax type-str)
           char-array-copy
           (Or rax type-symb))]
-
+    ['open-input-file
+     (seq (assert-string rax)
+          (Mov rdi rax)
+          pad-stack
+          (Call 'open_input_file)
+          unpad-stack)]
+    ['read-byte-port
+     (seq (Mov rdi rax) ; assert port
+          pad-stack
+          (Call 'read_byte_port)
+          unpad-stack)]
+    
     ;; Op2
     ['+
      (seq (Pop r8)
@@ -271,6 +283,32 @@
           (Sal rax char-shift)
           (Or rax type-char))]
 
+    ['string-append
+     (seq (Pop r8)
+          (assert-string r8)
+          (assert-string rax)
+          (Xor r8 type-str)
+          (Xor rax type-str)
+          (Mov 'rdi r8)
+          (Mov 'rsi rax)
+          (Mov rdx rbx)
+          pad-stack
+          (Call 'string_append)
+          unpad-stack
+          (Mov r8 rax)
+          (Cmp r8 0)
+          (let ((empty (gensym))
+                (done (gensym)))
+            (seq  (Je empty)          
+                  (Sal r8 2)
+                  (Mov rax rbx)
+                  (Or rax type-str)
+                  (Add rbx r8)
+                  (Jmp done)
+                  (Label empty)
+                  (Mov rax type-str)
+                  (Label done))))]
+
     ['struct?
      (let ((f (gensym))
            (t (gensym)))
@@ -289,7 +327,51 @@
             (Label f)
             (Mov rax (imm->bits #f))
             (Label t)))]
-      
+    ['set-box!
+     (seq (Pop r8)
+          (assert-box r8)
+          (Xor r8 type-box)
+          (Mov (Offset r8 0) rax)
+          (Mov rax val-void))]
+    ['quotient
+     (seq (Pop r8)
+          (assert-integer r8)
+          (Mov r10 rax)
+          (assert-integer r10)
+
+          (Mov rdx 0)
+          (Mov rax r8)
+          (Sar rax int-shift)
+          (Sar r10 int-shift)
+          (Div r10)
+          (Sal rax int-shift))]
+    ['remainder
+     (seq (Pop r8)
+          (assert-integer r8)
+          (Mov r10 rax)
+          (assert-integer r10)
+
+          (Mov rdx 0)
+          (Mov rax r8)
+          (Sar rax int-shift)
+          (Sar r10 int-shift)
+          (Div r10)
+          (Mov rax rdx)
+          (Sal rax int-shift))]
+    ['bitwise-and
+     (seq (Pop r8)
+          (assert-integer r8)
+          (assert-integer rax)
+          (And rax r8))]
+    ['arithmetic-shift
+     (seq (Pop r8)
+          (assert-integer r8)
+          (assert-integer rax)
+          (Sar rax int-shift)
+          (Mov 'rcx rax)
+          (Sal r8 'cl)
+          (Mov rax r8))]
+    
     ;; Op3
     ['vector-set!
      (seq (Pop r10)
@@ -309,6 +391,15 @@
           (Mov (Offset r8 8) rax)
           (Mov rax val-void))]
 
+    ['peek-byte-port
+     (seq (Pop r8) ; assert port
+          (Mov rdi r8)
+          (assert-integer rax)
+          (Mov rsi rax)
+          pad-stack
+          (Call 'peek_byte_port)
+          unpad-stack)]
+    
     ['struct-ref ; symbol, int, struct
      (seq (Pop r8)
           (Pop 'r11)

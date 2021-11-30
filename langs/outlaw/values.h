@@ -1,6 +1,7 @@
 #ifndef VALUES_H
 #define VALUES_H
 
+#include <stdio.h>
 #include <stdint.h>
 
 /* any abstract value */
@@ -49,6 +50,15 @@ typedef struct val_struct_t {
   val_t name;
   val_t* vals;
 } val_struct_t;
+typedef struct val_port_t {
+  val_t symbol;
+  FILE *fp;
+  uint8_t len;
+  uint8_t offset;
+  int8_t closed;
+  char buf[];
+} val_port_t;
+
 /* return the type of x */
 type_t val_typeof(val_t x);
 
@@ -87,5 +97,8 @@ val_t val_wrap_symb(val_symb_t* c);
 
 val_struct_t* val_unwrap_struct(val_t x);
 val_t val_wrap_struct(val_struct_t* c);
+
+val_port_t* val_unwrap_port(val_t x);
+val_t val_wrap_port(val_port_t* c);
 
 #endif

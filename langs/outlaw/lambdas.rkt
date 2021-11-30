@@ -1,6 +1,6 @@
 #lang racket
 (require "ast.rkt")
-(provide lambdas)
+(provide lambdas lambdas-ds)
 
 ;; Prog -> [Listof Lam]
 ;; List all of the lambda expressions in p
@@ -14,8 +14,8 @@
 (define (lambdas-ds ds)
   (match ds
     ['() '()]
-    [(cons (Defn f xs e) ds)
-     (append (lambdas-e e)
+    [(cons (Defn f l) ds)
+     (append (lambdas-e l)
              (lambdas-ds ds))]))
 
 ;; Expr -> [Listof Lam]
@@ -27,6 +27,20 @@
     [(Begin e1 e2)      (append (lambdas-e e1) (lambdas-e e2))]
     [(Let x e1 e2)      (append (lambdas-e e1) (lambdas-e e2))]
     [(App e1 es)        (append (lambdas-e e1) (append-map lambdas-e es))]
-    [(Lam f xs e1)      (cons e (lambdas-e e1))]
+    [(Lam f xs e1)       (cons e (lambdas-e e1))]
+    [(LamRest f xs x e1) (cons e (lambdas-e e1))]
+    [(LamCase f cs)      (cons e (lambdas-cs cs))]
+    [(Apply e es el)     (append (lambdas-e e) (append-map lambdas-e es) (lambdas-e el))]
     [(Match e ps es)    (append (lambdas-e e) (append-map lambdas-e es))]
     [_                  '()]))
+
+;; [Listof LamCaseClause] -> [Listof Lam]
+(define (lambdas-cs cs)
+  (match cs
+    ['() '()]
+    [(cons (Lam f xs e) cs)
+     (append (lambdas-e e)
+             (lambdas-cs cs))]
+    [(cons (LamRest f xs x e) cs)
+     (append (lambdas-e e)
+             (lambdas-cs cs))]))

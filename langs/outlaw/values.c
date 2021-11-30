@@ -130,3 +130,12 @@ val_t val_wrap_struct(val_struct_t* v)
 {
   return ((val_t)v) | struct_type_tag;
 }
+
+val_port_t* val_unwrap_port(val_t x)
+{
+  return (val_port_t *)(x ^ struct_type_tag);
+}
+val_t val_wrap_port(val_port_t* v)
+{
+  return ((val_t)v) | struct_type_tag;
+}

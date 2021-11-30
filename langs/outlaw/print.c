@@ -12,6 +12,7 @@ void print_struct(val_struct_t *);
 void print_str_char(val_char_t);
 void print_result_interior(val_t);
 int utf8_encode_char(val_char_t, char *);
+void utf8_encode_string(val_str_t *, char *);
 
 void print_result(val_t x)
 {
@@ -862,4 +863,13 @@ int utf8_encode_char(val_char_t c, char *buffer)
     buffer[3] = ((char)        c & 63) | 128;
     return 4;
   }
+}
+
+void utf8_encode_string(val_str_t *s, char *buffer)
+{
+  uint64_t i;
+  for (i = 0; i < s->len; i++) {
+    buffer += utf8_encode_char(s->codepoints[i], buffer);
+  }
+  *buffer = '\0';
 }

@@ -7,63 +7,108 @@
          "compile-expr.rkt"
          a86/ast)
 
+(define r9 'r9)
+(define r15 'r15)
+
 ;; [Listof Defn] -> [Listof Id]
 (define (define-ids ds)
   (match ds
     ['() '()]
-    [(cons (Defn f xs e) ds)
+    [(cons (Defn f l) ds)
      (cons f (define-ids ds))]))
 
-;; [Listof Defn] -> Asm
-(define (compile-defines ds)
+;; [Listof Defn] GEnv -> Asm
+(define (compile-defines ds g)
   (match ds
     ['() (seq)]
     [(cons d ds)
-     (seq (compile-define d)
-          (compile-defines ds))]))
+     (seq (compile-define d g)
+          (compile-defines ds g))]))
 
-;; Defn -> Asm
-(define (compile-define d)
+;; Defn GEnv -> Asm
+(define (compile-define d g)
   (match d
-    [(Defn f xs e)
-     (compile-lambda-define (Lam f xs e))]))
+    [(Defn f e)
+     (seq (%%% (symbol->string f))
+          (Data)
+          (Label (symbol->label f))
+          (Dq 0)
+          (Text)
+          (compile-e e '() g #f)
+          (Mov (Offset (symbol->label f) 0) rax))]))
 
-;; Defns -> Asm
-;; Compile the closures for ds and push them on the stack
-(define (compile-defines-values ds)
-  (seq (alloc-defines ds 0)
-       (init-defines ds (reverse (define-ids ds)) 8)
-       (add-rbx-defines ds 0)))
-
-;; Defns Int -> Asm
-;; Allocate closures for ds at given offset, but don't write environment yet
-(define (alloc-defines ds off)
-  (match ds
+;; [Listof Lam] GEnv -> Asm
+(define (compile-lambda-defines ls g)
+  (match ls
     ['() (seq)]
-    [(cons (Defn f xs e) ds)
-     (let ((fvs (fv (Lam f xs e))))
-       (seq (Lea rax (symbol->label f))
-            (Mov (Offset rbx off) rax)
-            (Mov rax rbx)
-            (Add rax off)
-            (Or rax type-proc)
-            (Push rax)
-            (alloc-defines ds (+ off (* 8 (add1 (length fvs)))))))]))
+    [(cons l ls)
+     (seq (compile-lambda-define l g)
+          (compile-lambda-defines ls g))]))
 
-;; Defns CEnv Int -> Asm
-;; Initialize the environment for each closure for ds at given offset
-(define (init-defines ds c off)
-  (match ds
-    ['() (seq)]
-    [(cons (Defn f xs e) ds)
-     (let ((fvs (fv (Lam f xs e))))
-       (seq (free-vars-to-heap fvs c off)
-            (init-defines ds c (+ off (* 8 (add1 (length fvs)))))))]))
+;; Lambda GEnv -> Asm
+(define (compile-lambda-define l g)
+  (let ((fvs (fv- l g)))    
+    (match l
+      [(Lam f xs e)
+       (let ((env (append (reverse fvs) (reverse xs) (list #f))))
+         (seq (Label (symbol->label f))
+              (Cmp r15 (length xs))
+              (Jne 'raise_error_align)              
+              (Mov rax (Offset rsp (* 8 (length xs))))
+              (Xor rax type-proc)
+              (copy-env-to-stack fvs 8)              
+              (compile-e e env g #t)
+              (Add rsp (* 8 (length env))) ; pop env
+              (Ret)))]
+      [(LamRest f xs x e)
+       (let ((env (append (reverse fvs) (cons x (reverse xs)) (list #f))))
+         (seq (Label (symbol->label f))
+              (Cmp r15 (length xs))
+              (Jl 'raise_error_align)
+              
+              (Sub r15 (length xs))
+              (Mov rax val-empty)
+              (let ((loop (gensym))
+                    (done (gensym)))
+                (seq (Label loop)
+                     (Cmp r15 0)
+                     (Je done)
+                     (Mov (Offset rbx 0) rax)
+                     (Pop rax)
+                     (Mov (Offset rbx 8) rax)
+                     (Mov rax rbx)
+                     (Or rax type-cons)
+                     (Add rbx 16)
+                     (Sub r15 1)
+                     (Jmp loop)
+                     (Label done)))
+              (Push rax)
+              
+              (Mov rax (Offset rsp (* 8 (add1 (length xs)))))
+              (Xor rax type-proc)
+              (copy-env-to-stack fvs 8)              
+              (compile-e e env g #t)
+              (Add rsp (* 8 (length env))) ; pop env
+              (Ret)))]
+    [(LamCase f cs)
+     (seq (%%% "lamcase code")
+          (Label (symbol->label f))
+          (compile-fun-case-select cs)
+          (Jmp 'raise_error_align)
+          (compile-fun-case-clauses cs g))])))
 
-;; Defns Int -> Asm
-;; Compute adjustment to rbx for allocation of all ds
-(define (add-rbx-defines ds n)
-  (match ds
-    ['() (seq (Add rbx (* n 8)))]
-    [(cons (Defn f xs e) ds)
-     (add-rbx-defines ds (+ n (add1 (length (fv (Lam f xs e))))))]))
+(define (compile-fun-case-clauses cs g)
+  (append-map (lambda (c) (compile-lambda-define c g)) cs))
+
+(define (compile-fun-case-select cs)
+  (append-map compile-fun-case-selector cs))
+
+(define (compile-fun-case-selector c)
+  (match c
+    [(Lam f xs e)
+     (seq (Cmp r15 (length xs))
+          (Je (symbol->label f)))]
+    [(LamRest f xs x e)
+     (seq (Mov r9 (sub1 (length xs)))
+          (Cmp r9 r15)
+          (Jl (symbol->label f)))]))

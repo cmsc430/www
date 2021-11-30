@@ -12,7 +12,9 @@ objs = \
 	values.o \
 	print.o \
 	symbol.o \
-	io.o
+	string.o \
+	io.o \
+	stdlib.o
 
 default: runtime.o
 
@@ -27,6 +29,9 @@ runtime.o: $(objs)
 
 .s.o:
 	nasm -g -f $(format) -o $@ $<
+
+stdlib.s: stdlib.rkt
+	racket -t compile-library.rkt -m stdlib.rkt > stdlib.s
 
 %.s: %.rkt
 	racket -t compile-file.rkt -m $< > $@

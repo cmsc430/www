@@ -58,8 +58,8 @@
 ;; Defn -> [Listof (U Symbol String)]
 (define (literals-d d)
   (match d
-    [(Defn f xs e)
-     (literals-e e)]))
+    [(Defn f l)
+     (literals-e l)]))
 
 ;; Expr -> [Listof (U Symbol String)]
 (define (literals-e e)
@@ -77,6 +77,10 @@
      (append (literals-e e1) (append-map literals-e es))]
     [(Lam f xs e)
      (literals-e e)]
+    [(LamRest f xs x e1)
+     (literals-e e1)]
+    [(LamCase f cs)
+     (append-map literals-e cs)]
     [(Match e ps es)
      (append (literals-e e) (append-map literals-match-clause ps es))]
     [_ '()]))
