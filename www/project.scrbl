@@ -14,6 +14,73 @@ Submissions should be made on Gradescope.
 
 There are several projects to choose from, described below.
 
+In addition the source code for your project, you must write a 2-page
+document which gives a summary of your work and describes how your
+project is implemented.
+
+
+@section{Multiple return values}
+
+Racket, Scheme, and even x86 support returning more than one value
+from a function call.  Implement Racket's @racket[let-values] and
+@racket[values] forms to add multiple return values.
+
+You may choose to implement this feature for any language that is 
+@seclink["Iniquity"]{Iniquity} or later for a maximum 95% of the
+possible points.  For 100% you'll need to implement the feature for
+Loot or later.
+
+Here are the key features that need to be added:
+
+@itemlist[
+
+@item{@racket[(values _e1 ... _en)] will evaluate @racket[_e1] through
+@racket[_en] and then ``return'' all of their values.}
+
+@item{@racket[(let-values ([(_x1 ... _xn) _e]) _e0)] will evaluate
+@racket[_e], which is expected to be an expression that produces
+@racket[_n] values, which are bound to @racket[_x1] through
+@racket[_xn] in the body expression @racket[_e0].}
+
+]
+
+
+Here are some examples to help illustrate:
+
+@ex[
+
+(let-values ([(x y) (values 1 2)]) (+ x y))
+
+(let-values ([(x) (values 1)]) (add1 x))
+
+(let-values ([() (values)]) 7)
+
+(define (f x)
+  (values x (+ x 1) (+ x 2)))
+  
+(let-values ([(x y z) (f 5)])
+  (cons x (cons y (cons z '()))))
+
+(add1 (values 5))
+
+(let ((x (values 5)))
+  (add1 x))
+
+]
+
+Any time an expression produces a number of values that doesn't match
+what the surrounding context expects, an error should be signalled.
+
+@ex[
+
+(eval:error (add1 (values 1 2)))
+
+(eval:error (let-values ([(x y) 2]) x))
+
+]
+
+
+
 @section{Exceptions and Exception Handling}
 
 Exceptions and exception handling mechanisms are widely used in modern
@@ -23,7 +90,7 @@ programming languages.  Implement Racket's @racket[raise] and
 You may choose to implement this feature for any language that is
 @seclink["Iniquity"]{Iniquity} or later for a maximum 95% of the
 possible points.  For 100% you'll need to implement the feature for
-Perp and do the additional requirements below.
+Loot or later.
 
 @subsection{Requirements}
 
@@ -105,6 +172,7 @@ stack.  If the body expression returns normally, the top-most handler
 should be removed.  When a raise happens, the top-most handler is
 popped and used.
 
+@;{
 @subsection{Additional requirements}
 
 To receive full credit, you will to add the above features to Perp and
@@ -126,17 +194,9 @@ This enables user-programs to handle run-time errors like this:
 (The @racket[cm] field can be ignored; you can always populate it with
 @racket[#f] if you'd like.  It's there just for consistency with
 Racket's @racket[exn:fail].)
+}
 
 
-
-
-
-There will be a final course project to be completed over the last
-several weeks of the course.  The project will involve extending the
-design and implementation of the programming language and its compiler
-that we will develop throughout the semester.
-
-Details of the project will be released later in the semester.
 
 @;{
 For your project you should turn in your extension code, a directory
