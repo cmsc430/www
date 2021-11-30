@@ -21,7 +21,8 @@
          ;; Op3
          vector-set!)
 
-(require (prefix-in % racket))
+(require (prefix-in % racket)
+         (rename-in racket [read-byte %read-byte-port]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Op0
