@@ -47,7 +47,7 @@
     [_ (error "Parse error" s)]))
 
 (define op0
-  '(read-byte peek-byte void))
+  '(read-byte peek-byte void dump-memory-stats))
 
 (define op1
   '(add1 sub1 zero? char? write-byte eof-object?
