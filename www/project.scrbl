@@ -277,8 +277,6 @@ You may choose to implement this feature for any language that is
 possible points.  For 100% you'll need to implement the feature for
 Loot or later.
 
-@subsection{Requirements}
-
 Here are the key features that need to be added:
 
 @itemlist[
