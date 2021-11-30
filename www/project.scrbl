@@ -18,6 +18,169 @@ In addition the source code for your project, you must write a 2-page
 document which gives a summary of your work and describes how your
 project is implemented.
 
+@section{a86 optimizer}
+
+Our compiler is designed to be simple and easy to maintain.  That
+comes at the cost of emitting code that often does needless work.
+Write an a86 optimizer, i.e., a program that takes in a list of a86
+instructions and produces an alternative list of instructions that
+have the same behavior, but will execute more efficiently.
+
+This is a fairly open-ended project, which means you can take a simple
+approach, or you can do a deep-dive on assembly code optimization and
+try to do something very sophisticated.
+
+For a maximum of 95% of the possible points, your optimizer should
+work on any a86 instructions produced by the
+@seclink["Iniquity"]{Iniquity} compiler.  For 100%, your optimizer
+should work on any a86 instructions produced by the
+@seclink["Loot"]{Loot} compiler.
+
+The most important aspect of the optimizer is it must preserve the
+meaning of the original source program.  If running a program with or
+without optimization can produce different results, you will lose
+significant points.
+
+The second important aspect of the optimizer is that it produces more
+efficient code (but this should never come at the expense of
+correctness---otherwise it's trivial to optimize every program!).  You
+should design some experiments demonstrating the impact of your
+optimizations and measure the performance improvement of your optimizer.
+
+Here are some ideas for what you can optimize:
+
+@itemlist[
+
+@item{Avoid stack references where possible.
+
+For example, you might push something and immediately reference it:
+@racket[(seq (Push _r1) (Mov _r2 (Offset rsp 0)))], which is
+equivalent to @racket[(seq (Push _r1) (Mov _r2 _r1))].  The
+register-to-register move will be faster than accessing the memory on
+the stack.}
+
+@item{Avoid stack pushes where possible.
+
+In the previous example, it may be tempting to delete the
+@racket[Push], but that is only valid if that stack element is not
+referenced later before being popped.  And even if the element is not
+referenced, we have to be careful about how the element is popped.
+
+But if you know where the pop occurs and there's no intervening
+references in to the stack or other stack changes, then you can
+improve the code further, e.g. @racket[(seq (Push _r1) (Mov _r2
+(Offset rsp 0)) (Add rsp 8))] can become @racket[(seq (Mov _r2 _r1))].
+}
+
+@item{Statically compute.
+
+Sometimes the compiler emits code for computing something at run-time
+which can instead be computed at compile time.  For example, the
+compiler might emit @racket[(seq (Mov _r 42) (Add _r 12))], but this
+can be simplified to @racket[(seq (Mov _r 54))].}
+
+]
+
+There are many, many other kinds of optimizations you might consider.
+To get a sense of the opportunities for optimization, try compiling
+small examples and looking at the assembly code produces.  Try
+hand-optimizing the code, then try to abstract what you did by hand
+and do it programmatically.
+
+@section{Source optimizer}
+
+Another complimentary approach to making programs compute more
+efficiently is to optimize them at the level of source code.  Write a
+source code optimizer, i.e. a program that takes in a program AST and
+produces an alternative AST that has the same behavior, but will
+execute more efficiently.
+
+This is another fairly open-ended project, which means you can take a
+simple approach, or you can do a deep-dive on source code optimization
+and try to do something very sophisticated.
+
+For a maximum of 95% of the possible points, your optimizer should
+work for the @seclink["Iniquity"]{Iniquity} language.  For 100%, your
+optimizer should work for the @seclink["Loot"]{Loot} language (or later).
+
+The most important aspect of the optimizer is it must preserve the
+meaning of the original source program. If running a program with or
+without optimization can produce different results, you will lose
+significant points.
+
+The second important aspect of the optimizer is that it produces more
+efficient code (but this should never come at the expense of
+correctness—otherwise it’s trivial to optimize every program!). You
+should design some experiments demonstrating the impact of your
+optimizations and measure the performance improvement of your
+optimizer.
+
+Here are some ideas for where you can optimize:
+
+@itemlist[
+
+@item{Avoid variable bindings where possible.
+
+Sometimes a program may bind a variable to a value, but then use the
+variable only once, e.g. @racket[(let ((x (add1 7))) (add1 x))].  We
+can instead replace the variable occurrence with it's definition to
+get: @racket[(add1 (add1 7))].  Note that can must be taken to
+@emph{not} do this optimization if it changes the order in which
+effects may happen.  For example, consider
+
+@racketblock[
+(let ((x (read-byte)))
+  (begin (read-byte)
+         (add1 x)))
+]
+
+This is not the same as:
+
+@racketblock[
+(begin (read-byte)
+       (add1 (read-byte)))
+]
+
+because the latter adds one to the second byte of the input stream rather than the first.}
+
+@item{Statically compute.
+
+Sometimes parts of a program can be computed at compile-time rather
+than run-time.  For example, @racket[(add1 41)] can be replaced with
+@racket[42].  Likewise, expressions like @racket[(if #f _e1 _e2)] can
+be replaced by @racket[_e2].}
+
+@item{Inline function calls.
+
+Suppose you have:
+
+@racketblock[
+(define (f x) (add1 x))
+(if (zero? (f 5)) _e1 _e2)
+]
+
+Since the expression @racket[(f 5)] is calling a known function, you
+should be able to transform this call into @racket[(let ((x 5)) (add1
+x))].  Using the previously described optimization, you can further
+optimize this to @racket[(add1 5)], which in turn can be simiplified
+to @racket[6].  You can keep going and notice that @racket[(zero? 6)]
+is just @racket[#f], so the whole program can be simplified to:
+
+@racketblock[
+(define (f x) (add1 x))
+_e2
+]
+}
+
+]
+
+Note that the last example can get considerably more complicated in a
+language with first-class functions since it may not be possible to
+know statically which function is being called.
+
+There are many other optimziations you might consider.  Think about
+the kinds of expressions you might write and how they can be
+simplified, then figure out how to do it programmatically.
 
 @section{Multiple return values}
 
@@ -79,7 +242,29 @@ what the surrounding context expects, an error should be signalled.
 
 ]
 
+The top-level expression may produce any number of values and the
+run-time system should print each of them out, followed by a newline:
 
+@ex[
+(values 1 2 3)
+]
+
+Note there is some symmetry here between function arity checking where
+we make sure the number of arguments matches the number of parameters
+of the function being called and the ``result arity'' checking that is
+required to implement this feature.  This suggests a similiar approach
+to implementing this feature, namely designating a register to
+communicate the arity of the result, which should be checked by the
+surrounding context.
+
+You will also need to design an alternative mechanism for
+communicating return values.  Using a single register (@racket['rax])
+works when every expression produces a single result, but now
+expressions may produce an arbitrary number of results and using
+registers will no longer suffice.  (Although you may want to continue
+to use @racket['rax] for the common case of a single result.)  The
+solution for this problem with function parameters was to use the
+stack and a similar approach can work for results too.
 
 @section{Exceptions and Exception Handling}
 
@@ -361,3 +546,10 @@ will grade the latest submission that occurs before the deadline.
 }
 
 }
+
+@section{Design your own}
+
+You may also design your own project, however, you will need to submit
+a one-page write-up that documents what you plan to do and how you
+will evaluate whether it is successful.  You must submit this document
+and have it approved by the instructor by Dec 7.
