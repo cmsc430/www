@@ -17,7 +17,6 @@
      (prog (externs)
            (Global 'entry)
            (Label 'entry)
-           (Mov 'rbp 'rsp) ; save stack base pointer
            (Mov rbx rdi)   ; recv heap pointer
            (compile-e e '())
            (Ret)
@@ -30,8 +29,7 @@
   (seq (Extern 'peek_byte)
        (Extern 'read_byte)
        (Extern 'write_byte)
-       (Extern 'raise_error)
-       (Extern 'print_memory)))
+       (Extern 'raise_error)))
 
 ;; [Listof Defn] -> Asm
 (define (compile-defines ds)

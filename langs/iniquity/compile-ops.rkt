@@ -21,15 +21,7 @@
                      unpad-stack)]
     ['peek-byte (seq pad-stack
                      (Call 'peek_byte)
-                     unpad-stack)]
-    ['dump-memory-stats
-     (seq (Mov rdi rsp)
-          (Mov 'rsi 'rbp)
-          (Mov 'rdx rbx)
-          pad-stack
-          (Call 'print_memory)
-          (Mov rax 0)
-          unpad-stack)]))
+                     unpad-stack)]))
 
 ;; Op1 -> Asm
 (define (compile-op1 p)
