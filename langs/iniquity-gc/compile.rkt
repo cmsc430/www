@@ -34,7 +34,8 @@
        (Extern 'write_byte)
        (Extern 'raise_error)
        (Extern 'print_memory)
-       (Extern 'collect_garbage)))
+       (Extern 'collect_garbage)
+       (Extern 'alloc_val)))
 
 ;; [Listof Defn] -> Asm
 (define (compile-defines ds)

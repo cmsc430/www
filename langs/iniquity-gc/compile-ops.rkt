@@ -6,11 +6,16 @@
 (define eax 'eax) ; 32-bit load/store
 (define rbx 'rbx) ; heap
 (define rdi 'rdi) ; arg
+(define rsi 'rsi) ; arg
+(define rdx 'rdx) ; arg
+(define rcx 'rcx) ; arg
 (define r8  'r8)  ; scratch
 (define r9  'r9)  ; scratch
 (define r10 'r10) ; scratch
+(define r14 'r14) ; stack pad (non-volatile)
 (define r15 'r15) ; stack pad (non-volatile)
 (define rsp 'rsp) ; stack
+(define rbp 'rbp) ; base stack
 
 ;; Op0 -> Asm
 (define (compile-op0 p)
@@ -24,22 +29,21 @@
                      unpad-stack)]
     ['dump-memory-stats
      (seq (Mov rdi rsp)
-          (Mov 'rsi 'rbp)
-          (Mov 'rdx rbx)
+          (Mov rsi rbp)
+          (Mov rdx rbx)
           pad-stack
           (Call 'print_memory)
-          (Mov rax 0)
-          unpad-stack)]
+          unpad-stack
+          (Mov rax val-void))]
     ['collect-garbage
      (seq (Mov rdi rsp)
-          (Mov 'rsi 'rbp)
-          (Mov 'rdx rbx)
+          (Mov rsi rbp)
+          (Mov rdx rbx)
           pad-stack
           (Call 'collect_garbage)
           unpad-stack
           (Mov rbx rax)
           (Mov rax val-void))]))
-           
 
 ;; Op1 -> Asm
 (define (compile-op1 p)
@@ -73,7 +77,8 @@
           unpad-stack
           (Mov rax val-void))]
     ['box
-     (seq (Mov (Offset rbx 0) rax)
+     (seq (allocate 1)
+          (Mov (Offset rbx 0) rax)
           (Mov rax rbx)
           (Or rax type-box)
           (Add rbx 8))]
@@ -125,6 +130,20 @@
             (Mov rax 0)
             (Label done)))]))
 
+(define (allocate n)
+  (seq)
+  #;
+  (seq (Mov r15 rax) ; save rax
+       (Mov rdi rsp)
+       (Mov rsi rbp)
+       (Mov rdx rbx)
+       (Mov rcx n)
+       pad-stack
+       (Call 'alloc_val)
+       unpad-stack
+       ;(Mov rbx rax)
+       (Mov rax r15)))
+         
 ;; Op2 -> Asm
 (define (compile-op2 p)
   (match p
@@ -160,7 +179,8 @@
                  (Mov rax val-false)
                  (Label true))))]    
     ['cons
-     (seq (Mov (Offset rbx 0) rax)
+     (seq (allocate 2)
+          (Mov (Offset rbx 0) rax) ;; ALLOCATE
           (Pop rax)
           (Mov (Offset rbx 8) rax)
           (Mov rax rbx)
@@ -173,23 +193,28 @@
      (let ((loop (gensym))
            (done (gensym))
            (empty (gensym)))
-       (seq (Pop r8)
-            (assert-natural r8)
-            (Cmp r8 0) ; special case empty vector
+       (seq (Pop r14)
+            (assert-natural r14)
+            (Cmp r14 0) ; special case empty vector
             (Je empty)
+            
+            (Sar r14 int-shift)
+
+            (Add r14 1)
+            (allocate r14)
+            (Sub r14 1)
 
             (Mov r9 rbx)
             (Or r9 type-vect)
-
-            (Sar r8 int-shift)
-            (Mov (Offset rbx 0) r8)
-            (Add rbx 8)
+            
+            (Mov (Offset rbx 0) r14)
+            (Add rbx 8)  ;; ALLOCATE
 
             (Label loop)
             (Mov (Offset rbx 0) rax)
-            (Add rbx 8)
-            (Sub r8 1)
-            (Cmp r8 0)
+            (Add rbx 8)  ;; ALLOCATE
+            (Sub r14 1)
+            (Cmp r14 0)
             (Jne loop)
 
             (Mov rax r9)
@@ -230,7 +255,7 @@
 
             (Sar r8 int-shift)
             (Mov (Offset rbx 0) r8)
-            (Add rbx 8)
+            (Add rbx 8) ;; ALLOCATE
 
             (Sar rax char-shift)
 
@@ -240,7 +265,7 @@
 
             (Label loop)
             (Mov (Offset rbx 0) eax)
-            (Add rbx 4)
+            (Add rbx 4) ;; ALLOCATE
             (Sub r8 1)
             (Cmp r8 0)
             (Jne loop)

@@ -9,6 +9,8 @@ FILE* in;
 FILE* out;
 void (*error_handler)();
 val_t *heap;
+val_t *to;
+val_t *from;
 type_t *types;
 
 void error_exit()
@@ -28,6 +30,8 @@ int main(int argc, char** argv)
   out = stdout;
   error_handler = &error_exit;
   heap = malloc(2 * 8 * heap_size);
+  from = heap;
+  to = heap + heap_size;
   types = malloc(sizeof(type_t) * heap_size);
 
   val_t result;

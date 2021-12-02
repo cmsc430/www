@@ -21,7 +21,7 @@ const char* val_typeof_string(int64_t t) {
   }
 }
 
-void step(val_t* to, val_t* from, val_t** to_curr, val_t** to_next, int count, int* t_back) {
+void step(val_t** to_curr, val_t** to_next, int count, int* t_back) {
   type_t t;
   int i;
   int size;
@@ -72,9 +72,7 @@ void step(val_t* to, val_t* from, val_t** to_curr, val_t** to_next, int count, i
 int64_t* collect_garbage(int64_t* rsp, int64_t *rbp, int64_t* rbx) {
   int stack_count = rbp - rsp;
 
-  val_t *from = heap + ((rbx < (heap + heap_size)) ? 0 : heap_size);
-  val_t *to   = heap + ((rbx < (heap + heap_size)) ? heap_size : 0);
-
+  val_t *tmp;
   val_t *to_next = to;
   val_t *to_curr = to;
 
@@ -82,10 +80,8 @@ int64_t* collect_garbage(int64_t* rsp, int64_t *rbp, int64_t* rbx) {
   int t_front = 0;
 
   // Step through everything on the stack
-  val_t * rsp_curr = rsp;
-  step(to, from, &rsp_curr, &to_next, stack_count, &t_back);
-
-  printf("DONE STACK\n");
+  val_t *rsp_curr = rsp;
+  step(&rsp_curr, &to_next, stack_count, &t_back);
 
   int vi;
   // now play catch up between to_curr and to_next
@@ -94,13 +90,13 @@ int64_t* collect_garbage(int64_t* rsp, int64_t *rbp, int64_t* rbx) {
     case T_VECT:
       vi = to_curr[0];
       to_curr++;
-      step(to, from, &to_curr, &to_next, vi, &t_back);
+      step(&to_curr, &to_next, vi, &t_back);
       break;
     case T_BOX:
-      step(to, from, &to_curr, &to_next, 1, &t_back);
+      step(&to_curr, &to_next, 1, &t_back);
       break;
     case T_CONS:
-      step(to, from, &to_curr, &to_next, 2, &t_back);
+      step(&to_curr, &to_next, 2, &t_back);
       break;
     case T_STR:
       to_curr = to_curr + 1 + ((*to_curr + 1) / 2);
@@ -110,16 +106,18 @@ int64_t* collect_garbage(int64_t* rsp, int64_t *rbp, int64_t* rbx) {
       break;
     }
   }
+
+  tmp = from;
+  from = to;
+  to = tmp;
   return to_next;
 }
 
 
 void print_memory(int64_t* rsp, int64_t* rbp, int64_t* rbx) {
 
-  val_t* h = heap + ((rbx < (heap + heap_size)) ? 0 : heap_size);
-
   int stack_count = rbp - rsp;
-  int heap_count  = rbx - h;
+  int heap_count  = rbx - from;
 
   printf("----------------------------------------------------------------\n");
   int i;
@@ -132,6 +130,17 @@ void print_memory(int64_t* rsp, int64_t* rbp, int64_t* rbx) {
   printf("HEAP:\n");
   for (i = 0; i < heap_count; i++) {
     printf("[%" PRIx64 "] = %016" PRIx64 ", %s\n",
-	   (int64_t)h + 8*i, h[i], val_typeof_string(h[i]));
+	   (int64_t)from + 8*i, from[i], val_typeof_string(from[i]));
   }
+}
+
+int64_t* alloc_val(int64_t* rsp, int64_t* rbp, int64_t* rbx, int words) {
+  if (rbx + words >= from + heap_size) {
+    rbx = collect_garbage(rsp, rbp, rbx);
+    if (rbx + words >= from + heap_size) {
+      printf("OUT OF MEMORY!!\n");
+      exit(1);
+    }
+  }
+  return rbx;
 }
