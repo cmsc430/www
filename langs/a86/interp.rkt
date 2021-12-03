@@ -5,7 +5,7 @@
  [asm-interp/io (-> (listof instruction?) string? any/c)])
 
 (require "printer.rkt" "ast.rkt" "callback.rkt"
-         (rename-in ffi/unsafe [-> _->]))         
+         (rename-in ffi/unsafe [-> _->]))
 (require (submod "printer.rkt" private))
 
 ;; Assembly code is linked with object files in this parameter
@@ -47,7 +47,7 @@
 
   (nasm t.s t.o)
   (ld t.o t.so)
-    
+
   (define libt.so (ffi-lib t.so))
 
   (define init-label
@@ -67,14 +67,24 @@
                   (function-ptr (λ () (raise 'err)) (_fun _-> _void))))
 
 
-  (define current-heap #f)  
+  (define current-heap #f)
+
   ;; allocate a heap
   (when (ffi-obj-ref "heap" libt.so (thunk #f))
     (set! current-heap (make-c-parameter "heap" libt.so _pointer))
-    (current-heap
-     ; IMPROVE ME: hard-coded heap size
-     (malloc _int64 10000 'raw)))
-  
+
+    (if (ffi-obj-ref "from" libt.so (thunk #f))
+        (begin
+          (current-heap
+           ; IMPROVE ME: hard-coded heap size
+           (malloc _int64 20000 'raw))
+          (set-ffi-obj! "from" libt.so _pointer (current-heap))
+          (set-ffi-obj! "to" libt.so _pointer (ptr-add (current-heap) 10000 _int64))
+          (set-ffi-obj! "types" libt.so _pointer (malloc _int32 10000)))
+        (current-heap
+         ; IMPROVE ME: hard-coded heap size
+         (malloc _int64 10000 'raw))))
+
   (delete-file t.s)
   (delete-file t.o)
   (delete-file t.so)
@@ -96,9 +106,9 @@
         (current-out (fopen t.out "w"))
 
         (define result
-          (begin0           
+          (begin0
             (with-handlers ((symbol? identity))
-              (guard-foreign-escape                
+              (guard-foreign-escape
                (if current-heap
                    (cons (current-heap) (entry (current-heap)))
                    (entry #f))))
@@ -114,10 +124,10 @@
         (delete-file t.in)
         (delete-file t.out)
         (cons result output))
-      
+
       (begin0
         (with-handlers ((symbol? identity))
-          (guard-foreign-escape            
+          (guard-foreign-escape
            (if current-heap
                (cons (current-heap) (entry (current-heap)))
                (entry #f))))
@@ -157,7 +167,7 @@
 
 (define (ld:undef-symbol s)
   (ld:error
-   (string-append 
+   (string-append
     (format "symbol ~a not defined in linked objects: ~a\n" s (current-objs))
     "use `current-objs` to link in object containing symbol definition.")))
 
@@ -169,7 +179,7 @@
     (if (eq? (system-type 'os) 'macosx)
         ""
         "-z defs "))
-  (unless (parameterize ((current-error-port err-port))  
+  (unless (parameterize ((current-error-port err-port))
             (system (format "gcc ~a-v -shared ~a ~a -o ~a"
                             -z-defs-maybe
                             t.o objs t.so)))
