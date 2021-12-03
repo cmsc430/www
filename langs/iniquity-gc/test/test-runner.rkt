@@ -107,7 +107,7 @@
   (check-equal? (run '(eq? (cons 1 2) (cons 1 2))) #f)
   (check-equal? (run '(let ((x (cons 1 2))) (eq? x x))) #t)
 
-  ;; Hoax examples
+  ;; Hoax examples 
   (check-equal? (run '(make-vector 0 0)) #())
   (check-equal? (run '(make-vector 1 0)) #(0))
   (check-equal? (run '(make-vector 3 0)) #(0 0 0))
@@ -126,9 +126,9 @@
   (check-equal? (run '(let ((x (make-vector 3 5)))
                         (begin (vector-set! x 1 4)
                                x)))
-                #(5 4 5))
+                #(5 4 5))  
   (check-equal? (run '(vector-length (make-vector 3 #f))) 3)
-  (check-equal? (run '(vector-length (make-vector 0 #f))) 0)
+  (check-equal? (run '(vector-length (make-vector 0 #f))) 0)  
   (check-equal? (run '"") "")
   (check-equal? (run '"fred") "fred")
   (check-equal? (run '"wilma") "wilma")
@@ -179,7 +179,38 @@
                         (cons (add1 (car xs))
                               (map-add1 (cdr xs)))))
                  '(map-add1 (cons 1 (cons 2 (cons 3 '())))))
-                '(2 3 4)))
+                '(2 3 4))  
+
+  (check-equal? (run '(collect-garbage)) (void))
+  (check-equal? (run '(begin (box 0) (collect-garbage))) (void))
+  (check-equal? (run '(begin (collect-garbage) (box 0))) (box 0))
+  (check-equal? (run '(let ((x (box 0))) (collect-garbage))) (void))  
+  (check-equal? (run '(let ((x (box 0)))
+                        (begin (collect-garbage)
+                               x)))
+                (box 0))
+  ;; GC tests
+  (check-equal? (run
+                 '(define (n-boxes n)
+                    (if (zero? n)
+                        (void)
+                        (begin (box 0)
+                               (n-boxes (sub1 n)))))
+                 '(n-boxes 10001)) 
+                (void))
+
+  ;; can't test this in the interpreter, because it doesn't exhaust the heap there.
+  #;
+  (check-equal? (run
+                 '(define (nested-boxes n)
+                    (if (zero? n)
+                        (void)
+                        (box (nested-boxes (sub1 n)))))
+                 '(begin (nested-boxes 10001) (void)))
+                'err)
+  )
+
+                 
 
 (define (test-runner-io run)
   ;; Evildoer examples

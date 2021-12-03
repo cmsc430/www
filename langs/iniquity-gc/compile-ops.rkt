@@ -77,7 +77,9 @@
           unpad-stack
           (Mov rax val-void))]
     ['box
-     (seq (allocate 1)
+     (seq (Push rax)
+          (allocate 1)
+          (Pop rax)
           (Mov (Offset rbx 0) rax)
           (Mov rax rbx)
           (Or rax type-box)
@@ -131,19 +133,15 @@
             (Label done)))]))
 
 (define (allocate n)
-  (seq)
-  #;
-  (seq (Mov r15 rax) ; save rax
-       (Mov rdi rsp)
-       (Mov rsi rbp)
-       (Mov rdx rbx)
-       (Mov rcx n)
-       pad-stack
-       (Call 'alloc_val)
-       unpad-stack
-       ;(Mov rbx rax)
-       (Mov rax r15)))
-         
+ (seq (Mov rdi rsp)
+      (Mov rsi rbp)
+      (Mov rdx rbx)
+      (Mov rcx n)
+      pad-stack
+      (Call 'alloc_val)
+      unpad-stack
+      (Mov rbx rax)))
+
 ;; Op2 -> Asm
 (define (compile-op2 p)
   (match p
@@ -177,10 +175,14 @@
           (let ((true (gensym)))
             (seq (Je true)
                  (Mov rax val-false)
-                 (Label true))))]    
+                 (Label true))))]
+    ;; tricky: if you have a pointer in a register, GC might collect
+    ;; what it points to and create a dangling reference
     ['cons
-     (seq (allocate 2)
-          (Mov (Offset rbx 0) rax) ;; ALLOCATE
+     (seq (Push rax)
+          (allocate 2)
+          (Pop rax)
+          (Mov (Offset rbx 0) rax)
           (Pop rax)
           (Mov (Offset rbx 8) rax)
           (Mov rax rbx)
@@ -188,33 +190,37 @@
           (Add rbx 16))]
     ['eq?
      (seq (Pop r8)
-          (eq r8 rax))]     
+          (eq r8 rax))]
     ['make-vector
      (let ((loop (gensym))
            (done (gensym))
            (empty (gensym)))
-       (seq (Pop r14)
-            (assert-natural r14)
-            (Cmp r14 0) ; special case empty vector
+       (seq (Pop r8)
+            (assert-natural r8)
+            (Cmp r8 0) ; special case empty vector
             (Je empty)
-            
-            (Sar r14 int-shift)
 
-            (Add r14 1)
-            (allocate r14)
-            (Sub r14 1)
+
+            (Push rax)
+            (Mov rax r8)
+            (Sar rax int-shift)
+            (Add rax 1)
+            (allocate rax)
+            (Pop rax)
+
 
             (Mov r9 rbx)
             (Or r9 type-vect)
-            
-            (Mov (Offset rbx 0) r14)
-            (Add rbx 8)  ;; ALLOCATE
+
+            (Sar r8 int-shift)
+            (Mov (Offset rbx 0) r8)
+            (Add rbx 8)
 
             (Label loop)
             (Mov (Offset rbx 0) rax)
-            (Add rbx 8)  ;; ALLOCATE
-            (Sub r14 1)
-            (Cmp r14 0)
+            (Add rbx 8)
+            (Sub r8 1)
+            (Cmp r8 0)
             (Jne loop)
 
             (Mov rax r9)
@@ -223,7 +229,6 @@
             (Label empty)
             (Mov rax type-vect)
             (Label done)))]
-
     ['vector-ref
      (seq (Pop r8)
           (assert-vector r8)
@@ -250,12 +255,23 @@
             (Cmp r8 0) ; special case empty string
             (Je empty)
 
+            (Push rax)
+            (Mov rax r8)
+            (Sar rax int-shift)
+            (Add rax 1) ; adds 1
+            (Sar rax 1) ; when
+            (Sal rax 1) ; len is odd
+            (Add rax 1)
+            (allocate rax)
+            (Pop rax)
+
+
             (Mov r9 rbx)
             (Or r9 type-str)
 
             (Sar r8 int-shift)
             (Mov (Offset rbx 0) r8)
-            (Add rbx 8) ;; ALLOCATE
+            (Add rbx 8)
 
             (Sar rax char-shift)
 
@@ -265,7 +281,7 @@
 
             (Label loop)
             (Mov (Offset rbx 0) eax)
-            (Add rbx 4) ;; ALLOCATE
+            (Add rbx 4)
             (Sub r8 1)
             (Cmp r8 0)
             (Jne loop)
@@ -276,6 +292,7 @@
             (Label empty)
             (Mov rax type-str)
             (Label done)))]
+
 
     ['string-ref
      (seq (Pop r8)

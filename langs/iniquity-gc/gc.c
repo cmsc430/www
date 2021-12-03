@@ -29,17 +29,17 @@ void step(val_t** to_curr, val_t** to_next, int count, int* t_back) {
   val_t *ptr_v;
   for (i = 0; i < count; i++) {
     v = **to_curr;
-    ptr_v = val_unwrap(v);
     t = val_typeof(v);
     switch (t) {
     case T_BOX:
     case T_CONS:
     case T_VECT:
     case T_STR:
+      ptr_v = val_unwrap(v);
       if (ptr_v >= from && ptr_v < from + heap_size) {
 	// this is a pointer to from space so we need to deal with it
-	if (val_unwrap(*ptr_v) >= to &&
-	    val_unwrap(*ptr_v) < to + heap_size) {
+	if  (val_unwrap(*ptr_v) >= to &&
+	     val_unwrap(*ptr_v) < to + heap_size) {
 	  // it points to a fwd pointer (points in to to-space), so just set
 	  // curr to what it points to.
 	  **to_curr = *ptr_v;
@@ -70,6 +70,10 @@ void step(val_t** to_curr, val_t** to_next, int count, int* t_back) {
 
 
 int64_t* collect_garbage(int64_t* rsp, int64_t *rbp, int64_t* rbx) {
+
+  printf("Collect garbage: rsp = %" PRIx64 ", rbp = %" PRIx64 ", rbx = %" PRIx64 "\n",
+	 (int64_t)rsp, (int64_t)rbp, (int64_t)rbx);
+
   int stack_count = rbp - rsp;
 
   val_t *tmp;
@@ -82,7 +86,6 @@ int64_t* collect_garbage(int64_t* rsp, int64_t *rbp, int64_t* rbx) {
   // Step through everything on the stack
   val_t *rsp_curr = rsp;
   step(&rsp_curr, &to_next, stack_count, &t_back);
-
   int vi;
   // now play catch up between to_curr and to_next
   while (to_curr != to_next) {
@@ -139,8 +142,9 @@ int64_t* alloc_val(int64_t* rsp, int64_t* rbp, int64_t* rbx, int words) {
     rbx = collect_garbage(rsp, rbp, rbx);
     if (rbx + words >= from + heap_size) {
       printf("OUT OF MEMORY!!\n");
-      exit(1);
+      error_handler();
     }
   }
+  // printf("returning %" PRIx64 "\n", (int64_t)rbx);
   return rbx;
 }

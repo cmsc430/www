@@ -40,6 +40,8 @@
     [(Prim0 'void) (void)]
     [(Prim0 'read-byte) (read-byte)]
     [(Prim0 'peek-byte) (peek-byte)]
+    [(Prim0 'dump-memory-stats) (dump-memory-stats)]
+    [(Prim0 'collect-garbage) (collect-garbage)]
     [(Prim1 p e)
      (match (interp-env e r ds)
        ['err 'err]
