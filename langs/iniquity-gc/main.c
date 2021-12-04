@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <inttypes.h>
 #include "values.h"
 #include "print.h"
 #include "runtime.h"
