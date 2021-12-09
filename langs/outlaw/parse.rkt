@@ -4,13 +4,35 @@
 
 ;; [Listof S-Expr] -> Prog
 (define (parse s)
-  (match s
-    [(cons (and (cons (or 'define 'struct) _) d) s)
-     (match (parse s)
-       [(Prog ds e)
-        (Prog (append (parse-define d) ds) e)])]
-    [(cons e '()) (Prog '() (parse-e e))]
-    [_ (error "program parse error")]))
+  (let ((loaded (box '())))
+    (match s
+      ['() (Prog '())]
+      [(cons (and (cons (? def-keyword?) _) d) '())
+       (Prog (append (parse-define d)
+                     (list (Defn (gensym) (parse-e '(void))))))]    
+      [(cons (and (cons (? def-keyword?) _) d) s)
+       (match (parse s)
+         [(Prog ds)
+          (Prog (append (parse-define d) ds))])]
+      [(cons (cons 'provide _) s) ; ignore provides for now    
+       (parse s)]
+      [(cons (cons 'require _) s) ; ignore provides for now    
+       (parse s)]      
+      ;; Doesn't quite work and will make parse depend on read
+      #;
+      [(cons (cons 'require fs) s)
+       (match (parse s)
+         [(Prog ds)
+          (Prog (append (load-files loaded fs) ds))])]              
+      [(cons e s)
+        (match (parse s)
+          [(Prog ds)
+           (Prog (cons (Defn (gensym) (parse-e e)) ds))])]
+      [_ (error "program parse error" s)])))
+
+(define (def-keyword? x)
+  (or (eq? x 'define)
+      (eq? x 'struct)))
 
 ;; [Listof S-Expr] -> Lib
 (define (parse-library s)
@@ -110,7 +132,9 @@
      (parse-let bs (parse-e e))]
     [(cons 'match (cons e ms))
      (parse-match (parse-e e) ms)]    
-    [(list (or 'lambda 'λ) xs e)
+    [(list 'λ xs e)
+     (parse-param-list xs e)]
+    [(list 'lambda xs e)
      (parse-param-list xs e)]
     [(cons 'case-lambda cs)
      (LamCase (gensym 'lamcase)
@@ -128,6 +152,14 @@
      (let ((x (gensym 'or)))
        (Let (list x) (list (parse-e e))
             (If (Var x) (Var x) (parse-e (cons 'or es)))))]
+    [(cons 'and '())
+     (Quote #t)]
+    [(cons 'and (cons e '()))
+     (parse-e e)]
+    [(cons 'and (cons e es))
+     (If (parse-e e)
+         (parse-e (cons 'and es))
+         (Quote #f))]
     [(cons e es)
      (App (parse-e e) (map parse-e es))]    
     [_ (error "Parse error" s)]))
@@ -179,13 +211,20 @@
      (PBox (parse-pat p))]
     [(list 'cons p1 p2)
      (PCons (parse-pat p1) (parse-pat p2))]
-    [(list 'and p1 p2)
-     (PAnd (parse-pat p1) (parse-pat p2))]
+    [(list 'and) (PWild)]
+    [(list 'and p) (parse-pat p)]
+    [(cons 'and (cons p ps))
+     (PAnd (parse-pat p) (parse-pat (cons 'and ps)))]
     [(cons 'list '())
      (PLit '())]
     [(cons 'list (cons p1 ps))
      (PCons (parse-pat p1)
-            (parse-pat (cons 'list ps)))]    
+            (parse-pat (cons 'list ps)))]
+    [(list '? e)
+     (PPred (parse-e e))]
+    [(cons '? (cons e ps))
+     (PAnd (parse-pat (list '? e))
+           (parse-pat (cons 'and ps)))]
     [(cons (? symbol? n) ps)
      (PStruct n (map parse-pat ps))]))    
 
@@ -283,9 +322,4 @@
 
 (define (drop-% x)
   (string->symbol  (substring (symbol->string x) 1)))
-
-#|
-(define op% op?)
-(define (drop-% x) x)
-|#
 

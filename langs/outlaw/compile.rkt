@@ -19,7 +19,7 @@
 
 (define (compile p)
   (match p
-    [(Prog ds e)
+    [(Prog ds)
      (let ((gs (append stdlib-ids (define-ids ds))))
        (seq (externs)
             (map (lambda (i) (Extern (symbol->label i))) stdlib-ids)
@@ -30,7 +30,7 @@
             (init-lib)
             
             (compile-defines ds gs)
-            (compile-e e '() gs #t)
+            (compile-variable (last-define-id ds) '() gs)
             (Ret)
             (compile-lambda-defines (lambdas p) gs)
             (Global 'raise_error_align)
@@ -45,6 +45,11 @@
           (Data)
           (compile-literals p)))]))
 
+(define (last-define-id ds)
+  (match ds
+    [(cons (Defn x _) '()) x]
+    [(cons d ds) (last-define-id ds)]))
+
 (define (init-lib)
   (let ((r (gensym))) ; call init_lib
     (seq (Extern 'init_lib)
@@ -54,7 +59,7 @@
          (Label r))))
 
 (define stdlib-ids
-  '(list make-list list? foldr map length append
+  '(list list* make-list list? foldr map filter length append
          memq member append-map vector->list
          reverse
          number->string gensym read read-char
@@ -63,6 +68,8 @@
          list->string string->list
          char<=?
          remove-duplicates remq* remove* remove
+         andmap vector list->vector boolean?
+         substring odd?
          ;; Op0
          read-byte peek-byte void
          ;; Op1
@@ -134,4 +141,4 @@
             
             (compile-lambda-defines (lambdas-ds ds) g)
             (Data)
-            (compile-literals (Prog ds (Quote #t)))))]))
+            (compile-literals (Prog ds))))]))

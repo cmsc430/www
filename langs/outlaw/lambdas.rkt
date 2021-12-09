@@ -6,8 +6,8 @@
 ;; List all of the lambda expressions in p
 (define (lambdas p)
   (match p
-    [(Prog ds e)
-     (append (lambdas-ds ds) (lambdas-e e))]))
+    [(Prog ds)
+     (lambdas-ds ds)]))
 
 ;; Defns -> [Listof Lam]
 ;; List all of the lambda expressions in ds
@@ -31,7 +31,9 @@
     [(LamRest f xs x e1) (cons e (lambdas-e e1))]
     [(LamCase f cs)      (cons e (lambdas-cs cs))]
     [(Apply e es el)     (append (lambdas-e e) (append-map lambdas-e es) (lambdas-e el))]
-    [(Match e ps es)    (append (lambdas-e e) (append-map lambdas-e es))]
+    [(Match e ps es)    (append (lambdas-e e)
+                                (append-map lambdas-pat ps)
+                                (append-map lambdas-e es))]
     [_                  '()]))
 
 ;; [Listof LamCaseClause] -> [Listof Lam]
@@ -44,3 +46,13 @@
     [(cons (LamRest f xs x e) cs)
      (append (lambdas-e e)
              (lambdas-cs cs))]))
+
+;; Pat -> [Listof Lam]
+(define (lambdas-pat p)
+  (match p
+    [(PBox p) (lambdas-pat p)]
+    [(PCons p1 p2) (append (lambdas-pat p1) (lambdas-pat p2))]
+    [(PAnd p1 p2) (append (lambdas-pat p1) (lambdas-pat p2))]
+    [(PStruct n ps) (append-map lambdas-pat ps)]
+    [(PPred e) (lambdas-e e)]
+    [_ '()]))

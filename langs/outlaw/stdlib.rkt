@@ -1,6 +1,6 @@
 #lang racket
 (provide #;%provides
-         list make-list list? map foldr length append
+         list list* make-list list? map foldr filter length append
          memq member append-map vector->list
          number->string gensym read read-char
          > <= >= void?
@@ -8,6 +8,8 @@
          list->string string->list
          reverse
          remove-duplicates remq* remove* remove
+         andmap vector list->vector boolean? substring
+         odd?
          ;; Op0
          read-byte peek-byte void
          ;; Op1
@@ -210,6 +212,46 @@
          xs
          (cons y (remove x xs eq)))]))
 
+(define (andmap f xs)
+  (match xs
+    ['() #t]
+    [(cons x xs)
+     (and (f x)
+          (andmap f xs))]))
+
+(define (list->vector xs)
+  (list->vector/a (make-vector (length xs) 0) 0 xs))
+
+(define (list->vector/a v i xs)
+  (match xs
+    ['() v]
+    [(cons x xs)
+     (begin
+       (vector-set! v i x)
+       (list->vector/a v (add1 i) xs))]))
+
+(define (vector . xs)
+  (list->vector xs))
+
+(define (boolean? x)
+  (or (eq? x #t)
+      (eq? x #f)))
+
+(define substring
+  (case-lambda
+    [(str start) (substring str start (string-length str))]
+    [(str start end)
+     (substring/a str start end '())]))
+
+(define (substring/a str start end cs)
+  (if (= start end)
+      (list->string cs)
+      (substring/a str start (sub1 end)
+                   (cons (string-ref str (sub1 end)) cs))))
+
+(define (odd? x)
+  (= (remainder x 2) 1))
+
 (define (char<=? c . cs)
   (char<=/a? (char->integer c) cs))
 
@@ -244,6 +286,15 @@
 
 (define (list . xs) xs)
 
+(define (list* x . xs)
+  (dot-last x xs))
+
+(define (dot-last x xs)
+  (match xs
+    ['() x]
+    [(cons y xs)
+     (cons x (dot-last y xs))]))
+
 (define (make-list n x)
   (if (zero? n)
       '()
@@ -267,6 +318,14 @@
     ['() b]
     [(cons x xs)
      (f x (foldr f b xs))]))
+
+(define (filter p xs)
+  (match xs
+    ['() '()]
+    [(cons x xs)
+     (if (p x)
+         (cons x (filter p xs))
+         (filter p xs))]))
 
 (define map
   (case-lambda

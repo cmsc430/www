@@ -1,10 +1,26 @@
 #lang racket
 
+;; ast.rkt
+;; parse.rkt
+;; types.rkt
+;; fv.rkt
+;; lambdas.rkt
+;; a86/ast.rkt
+;; utils.rkt
+;; compile-ops.rkt
+;; compile-datum.rkt
+;; compile-expr.rkt
+;; compile-define.rkt
+;; compile-literals.rkt
+;; compile.rkt
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ast.rkt
 
-;; type Prog = (Prog (Listof Defn) Expr)
-(struct Prog (ds e))
+(provide (all-defined-out))
+
+;; type Prog = (Prog (Listof Defn))
+(struct Prog (ds))
 
 ;; type Lib = (Lib (Listof Id) (Listof Defn))
 (struct Lib (ids ds))
@@ -65,6 +81,7 @@
 ;;            | (PSymb Symbol)
 ;;            | (PStr String)
 ;;            | (PStruct Id (Listof Pat))
+;;            | (PPred Expr)
 ;; type Lit   = Boolean
 ;;            | Character
 ;;            | Integer
@@ -74,7 +91,7 @@
 (struct Prim    (p es))
 (struct If      (e1 e2 e3))
 (struct Begin   (e1 e2))
-(struct Let     (xs es e2))
+(struct Let     (xs es e))
 (struct Var     (x))
 (struct App     (e es))
 (struct Lam     (f xs e))
@@ -93,11 +110,325 @@
 (struct PSymb (s))
 (struct PStr (s))
 (struct PStruct (n ps))
+(struct PPred (e))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; parse.rkt
 
+(provide parse parse-define parse-e parse-library)
+(require "ast.rkt")
+
+;; [Listof S-Expr] -> Prog
+(define (parse s)
+  (let ((loaded (box '())))
+    (match s
+      ['() (Prog '())]
+      [(cons (and (cons (? def-keyword?) _) d) '())
+       (Prog (append (parse-define d)
+                     (list (Defn (gensym) (parse-e '(void))))))]    
+      [(cons (and (cons (? def-keyword?) _) d) s)
+       (match (parse s)
+         [(Prog ds)
+          (Prog (append (parse-define d) ds))])]
+      [(cons (cons 'provide _) s) ; ignore provides for now    
+       (parse s)]
+      ;; Doesn't quite work and will make parse depend on read
+      #;
+      [(cons (cons 'require fs) s)
+       (match (parse s)
+         [(Prog ds)
+          (Prog (append (load-files loaded fs) ds))])]              
+      [(cons e s)
+        (match (parse s)
+          [(Prog ds)
+           (Prog (cons (Defn (gensym) (parse-e e)) ds))])]
+      [_ (error "program parse error" s)])))
+
+(define (def-keyword? x)
+  (or (eq? x 'define)
+      (eq? x 'struct)))
+
+;; [Listof S-Expr] -> Lib
+(define (parse-library s)
+  (match s
+    [(cons (cons 'provide ids)
+           (cons (cons 'require _) ds))
+     (Lib ids (parse-ds ds))]))
+   
+;; [Listof S-Expr] -> [Listof Defn]
+(define (parse-ds s)
+  (match s
+    ['() '()]
+    [(cons d ds)
+     (append (parse-define d)
+             (parse-ds ds))]))
+
+;; S-Expr -> [Listof Defn]
+(define (parse-define s)
+  (match s
+    [(list 'define (cons f xs) e)
+     (match (parse-param-list xs e)
+       [(Lam l xs e)
+        (list (Defn f (Lam l xs e)))]
+       [(LamRest l xs x e)
+        (list (Defn f (LamRest l xs x e)))])]
+    [(list 'define f (cons 'case-lambda cs))
+     (list (Defn f (LamCase (gensym 'lamcase)
+                            (parse-case-lambda-clauses cs))))]
+    [(list 'define (? symbol? x) e)
+     (match (parse-e e)
+       [e (list (Defn x e))])]
+    [(cons 'struct _)
+     (parse-struct s)]     
+    [_ (error "Parse defn error" s)]))
+
+  ;; S-Expr -> [Listof Defn]
+(define (parse-struct s)
+  (match s
+    [(list 'struct (? symbol? n) flds)
+     (if (andmap symbol? flds)
+         (list* (make-struct-defn-construct n flds)
+                (make-struct-defn-predicate n)
+                (make-struct-defn-accessors n (reverse flds)))
+         (error "parse struct definition error"))]
+    [_ (error "parse struct definition error")]))
+
+;; Id [Listof Id] -> [Listof Defn]
+(define (make-struct-defn-construct n flds)
+  (Defn n
+    (Lam (gensym 'lam)
+         flds
+         (Prim 'make-struct (cons (Quote n) (map Var flds))))))
+
+;; Id -> [Listof Defn]
+(define (make-struct-defn-predicate n)
+  (Defn (symbol-append n '?)
+    (Lam (gensym 'lam)
+         (list 'x)
+         (Prim 'struct? (list (Quote n) (Var 'x))))))
+
+;; Id [Listof Id] -> [Listof Defn]
+(define (make-struct-defn-accessors n flds)
+  (match flds
+    ['() '()]
+    [(cons f flds)
+     (cons (Defn (symbol-append n '- f)
+             (Lam (gensym 'lam)
+                  (list 'x)
+                  (Prim 'struct-ref
+                        (list (Quote n)
+                              (Quote (length flds))
+                              (Var 'x)))))
+           (make-struct-defn-accessors n flds))]))
+
+;; Symbol ... -> Symbol
+(define (symbol-append . ss)
+  (string->symbol
+   (apply string-append (map symbol->string ss))))
+
+;; S-Expr -> Expr
+(define (parse-e s)
+  (match s
+    [(? self-quoting?)             (Quote (parse-datum s))]
+    [(list 'quote d)               (Quote (parse-datum d))]
+    ['eof                          (Eof)]
+    [(? symbol?)                   (Var s)]
+    ;[(list (? (op% op0) p0))       (Prim (drop-% p0) '())]
+    ;[(list (? (op% op1) p1) e)     (Prim (drop-% p1) (list (parse-e e)))]
+    ;[(list (? (op% op2) p2) e1 e2) (Prim (drop-% p2) (list (parse-e e1) (parse-e e2)))]
+    ;[(list (? (op% op3) p3) e1 e2 e3)
+    ; (Prim (drop-% p3) (list (parse-e e1) (parse-e e2) (parse-e e3)))]
+    [(list 'begin e1 e2)
+     (Begin (parse-e e1) (parse-e e2))]
+    [(list 'if e1 e2 e3)
+     (If (parse-e e1) (parse-e e2) (parse-e e3))]
+    [(list 'let bs e)
+     (parse-let bs (parse-e e))]
+    [(cons 'match (cons e ms))
+     (parse-match (parse-e e) ms)]    
+    [(list 'λ xs e)
+     (parse-param-list xs e)]
+    [(list 'lambda xs e)
+     (parse-param-list xs e)]
+    [(cons 'case-lambda cs)
+     (LamCase (gensym 'lamcase)
+              (parse-case-lambda-clauses cs))]
+    [(cons 'apply (cons e es))
+     (parse-apply (parse-e e) es)]
+    [(list 'cond (list 'else e)) (parse-e e)]
+    [(cons 'cond (cons (list e1 e2) r))
+     (If (parse-e e1)
+         (parse-e e2)
+         (parse-e (cons 'cond r)))]
+    [(cons 'or '())
+     (Quote #f)]
+    [(cons 'or (cons e es))
+     (let ((x (gensym 'or)))
+       (Let (list x) (list (parse-e e))
+            (If (Var x) (Var x) (parse-e (cons 'or es)))))]
+    [(cons e es)
+     (App (parse-e e) (map parse-e es))]    
+    [_ (error "Parse error" s)]))
+
+;; S-Expr Expr -> Expr
+(define (parse-let bs e)
+  (match bs
+    ['() (Let '() '() e)]
+    [(cons (list x e0) bs)
+     (match (parse-let bs e)
+       [(Let xs es e)
+        (Let (cons x xs) (cons (parse-e e0) es) e)])]
+    [_
+     (error "Parse let error")]))     
+
+;; Expr S-Expr -> Expr
+(define (parse-apply e es)
+  (match es
+    [(list el) (Apply e '() (parse-e el))]
+    [(cons e0 es)
+     (match (parse-apply e es)
+       [(Apply e es el)
+        (Apply e (cons (parse-e e0) es) el)])]
+    [_ (error "parse apply error")]))
+
+(define (parse-match e ms)
+  (match ms
+    ['() (Match e '() '())]
+    [(cons (list p r) ms)
+     (match (parse-match e ms)
+       [(Match e ps es)
+        (Match e
+               (cons (parse-pat p) ps)
+               (cons (parse-e r) es))])]))
+
+(define (parse-pat p)
+  (match p
+    [(? boolean?) (PLit p)]
+    [(? integer?) (PLit p)]
+    [(? char?)    (PLit p)]
+    ['_           (PWild)]
+    [(? symbol?)  (PVar p)]
+    [(? string?)  (PStr p)]
+    [(list 'quote (? symbol? s))
+     (PSymb s)]
+    [(list 'quote (list))
+     (PLit '())]
+    [(list 'box p)
+     (PBox (parse-pat p))]
+    [(list 'cons p1 p2)
+     (PCons (parse-pat p1) (parse-pat p2))]
+    [(list 'and) (PWild)]
+    [(list 'and p) (parse-pat p)]
+    [(cons 'and (cons p ps))
+     (PAnd (parse-pat p) (parse-pat (cons 'and ps)))]
+    [(cons 'list '())
+     (PLit '())]
+    [(cons 'list (cons p1 ps))
+     (PCons (parse-pat p1)
+            (parse-pat (cons 'list ps)))]
+    [(list '? e)
+     (PPred (parse-e e))]
+    [(cons '? (cons e ps))
+     (PAnd (parse-pat (list '? e))
+           (parse-pat (cons 'and ps)))]
+    [(cons (? symbol? n) ps)
+     (PStruct n (map parse-pat ps))]))    
+
+;; S-Expr -> [Listof LamCaseClause]
+(define (parse-case-lambda-clauses cs)
+  (match cs
+    ['() '()]
+    [(cons c cs)
+     (cons (parse-case-lambda-clause c)
+           (parse-case-lambda-clauses cs))]
+     [_
+      (error "parse case-lambda error")]))
+
+;; S-Expr -> LamCaseClause
+(define (parse-case-lambda-clause c)
+  (match c
+    [(list xs e)
+     (parse-param-list xs e)]))
+
+;; S-Expr S-Expr -> Lam or LamRest
+(define (parse-param-list xs e)
+  (match xs
+    ['() (Lam (gensym 'lam) '() (parse-e e))]
+    [(cons x xs)
+     (match (parse-param-list xs e)
+       [(Lam f xs e) (Lam f (cons x xs) e)]
+       [(LamRest f xs y e) (LamRest f (cons x xs) y e)])]
+    [(? symbol? xs)
+     (LamRest (gensym 'lamrest) '() xs (parse-e e))]
+    [_
+     (error "parse parameter list error")]))
+
+;; Datum -> Datum
+(define (parse-datum d)
+  (match d
+    [(box d)
+     (box (parse-datum d))]    
+    [(cons d1 d2)
+     (cons (parse-datum d1) (parse-datum d2))]
+    ['() '()]
+    [(? symbol? s) s]
+    [(? integer? i) i]
+    [(? boolean? b) b]
+    [(? string? s) s]
+    [(? char? c) c]
+    [(? vector? v)
+     (apply vector (map parse-datum (vector->list v)))]
+    [_ (error "parse datum error")]))
+
+(define (self-quoting? x)
+  (or (integer? x)
+      (boolean? x)
+      (char? x)
+      (string? x)
+      (box? x)
+      (vector? x)))
+
+(define op0
+  '(read-byte peek-byte void read-char peek-char))
+
+(define op1
+  '(add1 sub1 zero? char? write-byte eof-object?
+         integer->char char->integer
+         box unbox empty? cons? box? car cdr
+         vector? vector-length string? string-length
+         symbol->string string->symbol symbol?
+         number->string string->uninterned-symbol
+         open-input-file
+         read-byte-port
+         write-char
+         error integer?
+         eq-hash-code))
+(define op2
+  '(+ - < = cons eq? make-vector vector-ref make-string string-ref
+      string-append set-box! quotient remainder
+      bitwise-and bitwise-ior bitwise-xor arithmetic-shift
+      peek-byte-port
+      ))
+(define op3
+  '(vector-set!))
+
+(define (op? ops)
+  (λ (x)
+    (and (symbol? x)
+         (memq x ops))))
+
+
+(define (op% ops)
+  (λ (x)
+    (and (symbol? x)
+         (eq? #\% (string-ref (symbol->string x) 0))
+         (let ((x* (drop-% x)))
+           (and (memq x* ops)
+                x*)))))
+
+(define (drop-% x)
+  (string->symbol  (substring (symbol->string x) 1)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -181,10 +512,10 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; fvs.rkt
+;; fv.rkt
 
-;; (require "ast.rkt")
-;; (provide fv fv-)
+(require "ast.rkt")
+(provide fv fv-)
 
 ;; Expr -> [Listof Id]
 ;; List all of the free variables in e
@@ -212,7 +543,7 @@
 
 ;; Pat Expr -> [Listof Id]
 (define (fv-clause* p e)
-  (remq* (bv-pat* p) (fv* e)))
+  (remq* (bv-pat* p) (append (fv-pat* e) (fv* e))))
 
 ;; Pat -> [Listof Id]
 (define (bv-pat* p)
@@ -222,6 +553,78 @@
     [(PAnd p1 p2) (append (bv-pat* p1) (bv-pat* p2))]
     [(PBox p) (bv-pat* p)]
     [(PStruct n ps) (append-map bv-pat* ps)]
+    [_ '()]))
+
+;; Pat -> [Listof Id]
+(define (fv-pat* p)
+  (match p
+    [(PBox p) (fv-pat* p)]
+    [(PCons p1 p2) (append (fv-pat* p1) (fv-pat* p2))]
+    [(PAnd p1 p2) (append (fv-pat* p1) (fv-pat* p2))]
+    [(PStruct n ps) (append-map fv-pat* ps)]
+    [(PPred e) (fv* e)]
+    [_ '()]))
+  
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; lambdas.rkt
+
+(require "ast.rkt")
+(provide lambdas lambdas-ds)
+
+;; Prog -> [Listof Lam]
+;; List all of the lambda expressions in p
+(define (lambdas p)
+  (match p
+    [(Prog ds)
+     (lambdas-ds ds)]))
+
+;; Defns -> [Listof Lam]
+;; List all of the lambda expressions in ds
+(define (lambdas-ds ds)
+  (match ds
+    ['() '()]
+    [(cons (Defn f l) ds)
+     (append (lambdas-e l)
+             (lambdas-ds ds))]))
+
+;; Expr -> [Listof Lam]
+;; List all of the lambda expressions in e
+(define (lambdas-e e)
+  (match e
+    [(Prim p es)        (append-map lambdas-e es)]
+    [(If e1 e2 e3)      (append (lambdas-e e1) (lambdas-e e2) (lambdas-e e3))]
+    [(Begin e1 e2)      (append (lambdas-e e1) (lambdas-e e2))]
+    [(Let xs es e)      (append (append-map lambdas-e es) (lambdas-e e))]
+    [(App e1 es)        (append (lambdas-e e1) (append-map lambdas-e es))]
+    [(Lam f xs e1)       (cons e (lambdas-e e1))]
+    [(LamRest f xs x e1) (cons e (lambdas-e e1))]
+    [(LamCase f cs)      (cons e (lambdas-cs cs))]
+    [(Apply e es el)     (append (lambdas-e e) (append-map lambdas-e es) (lambdas-e el))]
+    [(Match e ps es)    (append (lambdas-e e)
+                                (append-map lambdas-pat ps)
+                                (append-map lambdas-e es))]
+    [_                  '()]))
+
+;; [Listof LamCaseClause] -> [Listof Lam]
+(define (lambdas-cs cs)
+  (match cs
+    ['() '()]
+    [(cons (Lam f xs e) cs)
+     (append (lambdas-e e)
+             (lambdas-cs cs))]
+    [(cons (LamRest f xs x e) cs)
+     (append (lambdas-e e)
+             (lambdas-cs cs))]))
+
+;; Pat -> [Listof Lam]
+(define (lambdas-pat p)
+  (match p
+    [(PBox p) (lambdas-pat p)]
+    [(PCons p1 p2) (append (lambdas-pat p1) (lambdas-pat p2))]
+    [(PAnd p1 p2) (append (lambdas-pat p1) (lambdas-pat p2))]
+    [(PStruct n ps) (append-map lambdas-pat ps)]
+    [(PPred e) (lambdas-e e)]
     [_ '()]))
 
 
@@ -331,6 +734,9 @@
 (define unpad-stack
   (seq (Add rsp r15)))
 
+(define (*8 n)
+  (arithmetic-shift n 3))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; compile-ops.rkt
@@ -420,8 +826,6 @@
      (type-pred ptr-mask type-str)]
     ['symbol?
      (type-pred ptr-mask type-symb)]
-    ;;; FIXME let
-    #;
     ['vector-length
      (let ((zero (gensym))
            (done (gensym)))
@@ -435,8 +839,6 @@
             (Label zero)
             (Mov rax 0)
             (Label done)))]
-    ;;; FIXME let
-    #;
     ['string-length
      (let ((zero (gensym))
            (done (gensym)))
@@ -531,8 +933,6 @@
     ['eq?
      (seq (Pop r8)
           (eq r8 rax))]
-    ;;; FIXME let
-    #;    
     ['make-vector     
      (let ((loop (gensym))
            (done (gensym))
@@ -579,8 +979,6 @@
           (Add r8 rax)
           (Mov rax (Offset r8 8)))]
 
-    ;;; FIXME let
-    #;
     ['make-string
      (let ((loop (gensym))
            (done (gensym))
@@ -636,8 +1034,6 @@
           (Sal rax char-shift)
           (Or rax type-char))]
 
-    ;;; FIXME let
-    #;
     ['string-append
      (seq (Pop r8)
           (assert-string r8)
@@ -664,8 +1060,6 @@
                   (Mov rax type-str)
                   (Label done))))]
 
-    ;;; FIXME let
-    #;
     ['struct?
      (let ((f (gensym))
            (t (gensym)))
@@ -898,9 +1292,6 @@
          (Label l1))))
 
 
-(define (*8 n)
-  (arithmetic-shift n 3))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; compile-datum.rkt
 
@@ -991,6 +1382,7 @@
                   (Dq (length ds))
                   (map (λ (cd) (Dq (car cd))) cds)
                   (append-map cdr cds))))]))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; compile-expr.rkt
@@ -1493,6 +1885,278 @@
           (Jl (symbol->label f)))]))
 
 
-(compile-quoted '(add1 (add1 8)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; compile-literals.rkt
+
+(provide compile-literals init-symbol-table literals)
+(require "ast.rkt"
+         "utils.rkt"
+         a86/ast)
+
+;; (define rdi 'rdi)
+
+;; Prog -> Asm
+(define (compile-literals p)
+  (append-map compile-literal (literals p)))
+
+;; Symbol -> Asm
+(define (compile-literal s)
+  (let ((str (symbol->string s)))
+    (seq (Label (symbol->data-label s))
+         (Dq (string-length str))
+         (compile-string-chars (string->list str))
+         (if (odd? (string-length str))
+             (seq (Dd 0))
+             (seq)))))
+
+;; Prog -> Asm
+;; Call intern_symbol on every symbol in the program
+(define (init-symbol-table p)
+  (match (symbols p)
+    ['() (seq)]
+    [ss  (seq (Sub 'rsp 8)
+              (append-map init-symbol ss)
+              (Add 'rsp 8))]))
+
+;; Symbol -> Asm
+(define (init-symbol s)
+  (seq (Lea rdi (symbol->data-label s))
+       (Call 'intern_symbol)))
+
+;; Prog -> [Listof Symbol]
+(define (literals p)
+  (remove-duplicates
+   (map to-symbol (literals* p))))
+
+;; Prog -> [Listof Symbol]
+(define (symbols p)
+  (remove-duplicates (filter symbol? (literals* p))))
+
+;; (U String Symbol) -> Symbol
+(define (to-symbol s)
+  (if (string? s)
+      (string->symbol s)
+      s))
+
+;; Prog -> [Listof (U Symbol String)]
+(define (literals* p)
+  (match p
+    [(Prog ds)
+     (append-map literals-d ds)]))
+
+;; Defn -> [Listof (U Symbol String)]
+(define (literals-d d)
+  (match d
+    [(Defn f l)
+     (literals-e l)]))
+
+;; Expr -> [Listof (U Symbol String)]
+(define (literals-e e)
+  (match e
+    [(Quote d) (literals-datum d)]
+    [(Prim p es)
+     (append-map literals-e es)]
+    [(If e1 e2 e3)
+     (append (literals-e e1) (literals-e e2) (literals-e e3))]
+    [(Begin e1 e2)
+     (append (literals-e e1) (literals-e e2))]
+    [(Let xs es e)
+     (append (append-map literals-e es) (literals-e e))]
+    [(App e1 es)
+     (append (literals-e e1) (append-map literals-e es))]
+    [(Lam f xs e)
+     (literals-e e)]
+    [(LamRest f xs x e1)
+     (literals-e e1)]
+    [(LamCase f cs)
+     (append-map literals-e cs)]
+    [(Match e ps es)
+     (append (literals-e e) (append-map literals-match-clause ps es))]
+    [_ '()]))
+
+;; Pat Expr -> [Listof Symbol]
+(define (literals-match-clause p e)
+  (append (literals-pat p) (literals-e e)))
+
+;; Pat -> [Listof (U Symbol String)]
+(define (literals-pat p)
+  (match p
+    [(PSymb s) (list s)]
+    [(PStr s) (list s)]
+    [(PBox p) (literals-pat p)]
+    [(PCons p1 p2) (append (literals-pat p1) (literals-pat p2))]
+    [(PAnd p1 p2) (append (literals-pat p1) (literals-pat p2))]
+    [(PPred e) (literals-e e)]
+    [_ '()]))
+
+;; Datum -> [Listof (U Symbol String)]
+(define (literals-datum d)
+  (cond
+    [(string? d) (list d)]
+    [(symbol? d) (list d)]
+    [(cons? d)
+     (append (literals-datum (car d))
+             (literals-datum (cdr d)))]
+    [(box? d)
+     (literals-datum (unbox d))]
+    [(vector? d)
+     (append-map literals-datum (vector->list d))]
+    [else '()]))
+
+;; [Listof Char] -> Asm
+(define (compile-string-chars cs)
+  (match cs
+    ['() (seq)]
+    [(cons c cs)
+     (seq (Dd (char->integer c))
+          (compile-string-chars cs))]))
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; compile.rkt
+
+(provide (all-defined-out))
+(require "ast.rkt"
+         "types.rkt"
+         "lambdas.rkt"
+         "fv.rkt"
+         "utils.rkt"
+         "compile-define.rkt"
+         "compile-expr.rkt"
+         "compile-literals.rkt"
+         a86/ast)
+
+;; Registers used
+;; (define rbx 'rbx) ; heap
+;; (define rsp 'rsp) ; stack
+;; (define rdi 'rdi) ; arg
+
+;; type CEnv = [Listof Id]
+
+(define (compile p)
+  (match p
+    [(Prog ds)
+     (let ((gs (append stdlib-ids (define-ids ds))))
+       (seq (externs)
+            (map (lambda (i) (Extern (symbol->label i))) stdlib-ids)
+            (Global 'entry)
+            (Label 'entry)
+            (Mov rbx rdi) ; recv heap pointer
+            (init-symbol-table p)
+            (init-lib)
+            
+            (compile-defines ds gs)
+            (compile-variable (last-define-id ds) '() gs)
+            (Ret)
+            (compile-lambda-defines (lambdas p) gs)
+            (Global 'raise_error_align)
+            (Label 'raise_error_align)
+            pad-stack
+            (Mov rdi 0) ; null arg
+            (Call 'raise_error)
+
+          ;; one way to make `cons' a function instead of a primitive
+          ;;cons-function
+          
+          (Data)
+          (compile-literals p)))]))
+
+(define (last-define-id ds)
+  (match ds
+    [(cons (Defn x _) '()) x]
+    [(cons d ds) (last-define-id ds)]))
+
+(define (init-lib)
+  (let ((r (gensym))) ; call init_lib
+    (seq (Extern 'init_lib)
+         (Lea rax r)
+         (Push rax)
+         (Jmp 'init_lib)
+         (Label r))))
+
+(define stdlib-ids
+  '(list list* make-list list? foldr map filter length append
+         memq member append-map vector->list
+         reverse
+         number->string gensym read read-char
+         > <= >=
+         void?
+         list->string string->list
+         char<=?
+         remove-duplicates remq* remove* remove
+         andmap vector list->vector boolean?
+         substring odd?
+         ;; Op0
+         read-byte peek-byte void
+         ;; Op1
+         add1 sub1 zero? char? write-byte eof-object?
+         integer->char char->integer
+         box unbox box? empty? cons? car cdr
+         vector? vector-length string? string-length
+         symbol->string string->symbol symbol?
+         string->uninterned-symbol
+         open-input-file
+         write-char error integer?
+         eq-hash-code
+         ;; Op2
+         + - < = cons eq? make-vector vector-ref
+         make-string string-ref string-append
+         quotient remainder set-box!
+         bitwise-and bitwise-ior bitwise-xor arithmetic-shift         
+         ;; Op3
+         vector-set!))
+
+(define (externs)
+  (map Extern
+       '(peek_byte
+         read_byte
+         write_byte
+         raise_error
+         intern_symbol
+         symb_cmp
+         string_append
+         memcpy
+         open_input_file
+         read_byte_port
+         peek_byte_port)))
+
+(define cons-function
+  (let ((code (gensym 'cons_code))
+        (clos (gensym 'cons_closure)))
+    (seq (Data)
+         (Label (symbol->label 'cons))
+         (Dq (Plus (symbol->label clos) type-proc))
+         (Label (symbol->label clos))
+         (Dq (symbol->label code))
+         (Text)
+         (Label (symbol->label code))
+         (Pop rax)
+         (Mov (Offset rbx 0) rax)
+         (Pop rax)
+         (Mov (Offset rbx 8) rax)
+         (Add rsp 8) ; pop function
+         (Mov rax rbx)
+         (Or rax type-cons)
+         (Add rbx 16)
+         (Ret))))
+
+
+;; Lib -> Asm
+(define (compile-library l)
+  (match l
+    [(Lib ids ds)
+     (let ((g (define-ids ds)))
+       (seq (externs)
+            (map (lambda (i) (Global (symbol->label i))) ids)
+            (Extern 'raise_error_align)
+            
+            (Global 'init_lib)
+            (Label 'init_lib)
+            (compile-defines ds g)
+            (Ret)
+            
+            (compile-lambda-defines (lambdas-ds ds) g)
+            (Data)
+            (compile-literals (Prog ds))))]))
+
+;(parse-e '(add1 x))

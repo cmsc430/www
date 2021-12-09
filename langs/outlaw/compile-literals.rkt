@@ -52,8 +52,8 @@
 ;; Prog -> [Listof (U Symbol String)]
 (define (literals* p)
   (match p
-    [(Prog ds e)
-     (append (append-map literals-d ds) (literals-e e))]))
+    [(Prog ds)
+     (append-map literals-d ds)]))
 
 ;; Defn -> [Listof (U Symbol String)]
 (define (literals-d d)
@@ -97,6 +97,7 @@
     [(PBox p) (literals-pat p)]
     [(PCons p1 p2) (append (literals-pat p1) (literals-pat p2))]
     [(PAnd p1 p2) (append (literals-pat p1) (literals-pat p2))]
+    [(PPred e) (literals-e e)]
     [_ '()]))
 
 ;; Datum -> [Listof (U Symbol String)]

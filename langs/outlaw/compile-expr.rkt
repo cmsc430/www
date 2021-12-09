@@ -232,7 +232,7 @@
 ;; Pat Expr CEnv GEnv Symbol Bool -> Asm
 (define (compile-match-clause p e c g done t?)
   (let ((next (gensym)))
-    (match (compile-pattern p '() next)
+    (match (compile-pattern p c g '() next)
       [(list i f cm)
        (seq (Mov rax (Offset rsp 0)) ; restore value being matched
             i
@@ -242,8 +242,8 @@
             f
             (Label next))])))
 
-;; Pat CEnv Symbol -> (list Asm Asm CEnv)
-(define (compile-pattern p cm next)
+;; Pat CEnv GEnv CEnv Symbol -> (list Asm Asm CEnv)
+(define (compile-pattern p c g cm next)
   (match p
     [(PWild)
      (list (seq) (seq) cm)]
@@ -287,9 +287,9 @@
                   (Jmp next))
              cm))]
     [(PAnd p1 p2)
-     (match (compile-pattern p1 (cons #f cm) next)
+     (match (compile-pattern p1 c g (cons #f cm) next)
        [(list i1 f1 cm1)
-        (match (compile-pattern p2 cm1 next)
+        (match (compile-pattern p2 c g cm1 next)
           [(list i2 f2 cm2)
            (list
             (seq (Push rax)
@@ -299,7 +299,7 @@
             (seq f1 f2)
             cm2)])])]
     [(PBox p)
-     (match (compile-pattern p cm next)
+     (match (compile-pattern p c g cm next)
        [(list i1 f1 cm1)
         (let ((fail (gensym)))
           (list
@@ -316,9 +316,9 @@
                 (Jmp next))
            cm1))])]
     [(PCons p1 p2)
-     (match (compile-pattern p1 (cons #f cm) next)
+     (match (compile-pattern p1 c g (cons #f cm) next)
        [(list i1 f1 cm1)
-        (match (compile-pattern p2 cm1 next)
+        (match (compile-pattern p2 c g cm1 next)
           [(list i2 f2 cm2)
            (let ((fail (gensym)))
              (list
@@ -340,7 +340,7 @@
                    (Jmp next))
               cm2))])])]
     [(PStruct n ps)
-     (match (compile-struct-patterns ps (cons #f cm) next 1)
+     (match (compile-struct-patterns ps c g (cons #f cm) next 1)
        [(list i f cm)
         (let ((fail (gensym)))
           (list
@@ -359,16 +359,41 @@
                 (Label fail)
                 (Add rsp (*8 (length cm)))
                 (Jmp next))
-           cm))])]))
+           cm))])]
+    
+    [(PPred e)
+     (list
+      (let ((r (gensym 'ret)))                     
+        (seq (Lea r15 r)
+             (Push r15) ; rp
+             (Push rax) ; arg (saved for the moment)
+             (compile-e e (list* #f #f c) g #f)
+             (Pop r15)
+             (Push rax)
+             (Push r15)
+             
+             (assert-proc rax)
+             (Xor rax type-proc)
+             (Mov r15 1)
+             (Mov rax (Offset rax 0))
+             (Jmp rax)
+             (Label r)
+             (Cmp rax val-false)
+             (Je next)))
+      (seq)
+      cm)]))
+
+                      
+     
 
 ;; [Listof Pat] CEnv Symbol Nat -> (list Asm Asm CEnv)
-(define (compile-struct-patterns ps cm next i)
+(define (compile-struct-patterns ps c g cm next i)
   (match ps
     ['() (list '() '() cm)]
     [(cons p ps)
-     (match (compile-pattern p cm next)
+     (match (compile-pattern p c g cm next)
        [(list i1 f1 cm1)
-        (match (compile-struct-patterns ps cm1 next (add1 i))
+        (match (compile-struct-patterns ps c g cm1 next (add1 i))
           [(list is fs cmn)
            (list
             (seq (Mov rax (Offset rax (*8 i)))

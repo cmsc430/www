@@ -166,15 +166,15 @@
                  '(g 5))
                 5)
   (check-equal? (run
-                 '(define (even? x)
+                 '(define (my-even? x)
                     (if (zero? x)
                         #t
-                        (odd? (sub1 x))))
-                 '(define (odd? x)
+                        (my-odd? (sub1 x))))
+                 '(define (my-odd? x)
                     (if (zero? x)
                         #f
-                        (even? (sub1 x))))
-                 '(even? 101))
+                        (my-even? (sub1 x))))
+                 '(my-even? 101))
                 #f)
   (check-equal? (run
                  '(define (map-add1 xs)
@@ -551,6 +551,41 @@
   (check-equal? (run '(remq* '(x y) '(p q x r x))) '(p q r))
   (check-equal? (run '(make-list 0 #\a)) '())
   (check-equal? (run '(make-list 3 #\a)) '(#\a #\a #\a))
+  (check-equal? (run '(match 8
+                        [(? integer?) 1]
+                        [_ 2]))
+                1)
+  (check-equal? (run '(match 8
+                        [(? string?) 1]
+                        [_ 2]))
+                2)
+  (check-equal? (run '(match (cons 8 "8")
+                        [(cons (? integer?) (? string?)) 1]
+                        [_ 2]))
+                1)
+  (check-equal? (run '(match 8
+                        [(? (lambda (x) (eq? x 8))) 1]
+                        [_ 2]))
+                1)
+  (check-equal? (run '(match 8
+                        [(? integer? x) x]
+                        [_ 2]))
+                8)
+
+  (check-equal? (run '(vector)) #())
+  (check-equal? (run '(vector 1 2 3)) #(1 2 3))
+  (check-equal? (run '(list->vector '())) #())
+  (check-equal? (run '(list->vector '(1 2 3))) #(1 2 3))
+  (check-equal? (run '(boolean? #t)) #t)
+  (check-equal? (run '(boolean? #f)) #t)
+  (check-equal? (run '(boolean? 8)) #f)
+  (check-equal? (run '(substring "hello" 0)) "hello")
+  (check-equal? (run '(substring "hello" 1)) "ello")
+  (check-equal? (run '(substring "hello" 1 4)) "ell")
+  (check-equal? (run '(odd? 7)) #t)
+  (check-equal? (run '(odd? 8)) #f)
+  (check-equal? (run '(filter odd? '())) '())
+  (check-equal? (run '(filter odd? '(1 2 3 4))) '(1 3))
   )
                  
 

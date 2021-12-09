@@ -28,7 +28,7 @@
 
 ;; Pat Expr -> [Listof Id]
 (define (fv-clause* p e)
-  (remq* (bv-pat* p) (fv* e)))
+  (remq* (bv-pat* p) (append (fv-pat* e) (fv* e))))
 
 ;; Pat -> [Listof Id]
 (define (bv-pat* p)
@@ -39,3 +39,14 @@
     [(PBox p) (bv-pat* p)]
     [(PStruct n ps) (append-map bv-pat* ps)]
     [_ '()]))
+
+;; Pat -> [Listof Id]
+(define (fv-pat* p)
+  (match p
+    [(PBox p) (fv-pat* p)]
+    [(PCons p1 p2) (append (fv-pat* p1) (fv-pat* p2))]
+    [(PAnd p1 p2) (append (fv-pat* p1) (fv-pat* p2))]
+    [(PStruct n ps) (append-map fv-pat* ps)]
+    [(PPred e) (fv* e)]
+    [_ '()]))
+  
