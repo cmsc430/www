@@ -139,6 +139,15 @@
           pad-stack
           (Call 'read_byte_port)
           unpad-stack)]
+    ['error
+     (seq (assert-string rax)
+          (Mov rdi rax)
+          pad-stack
+          (Call 'raise_error))]
+    ['integer?
+     (type-pred mask-int type-int)]
+    ['eq-hash-code
+     (seq (Sal rax int-shift))]
     
     ;; Op2
     ['+
@@ -363,6 +372,17 @@
           (assert-integer r8)
           (assert-integer rax)
           (And rax r8))]
+    ['bitwise-ior
+     (seq (Pop r8)
+          (assert-integer r8)
+          (assert-integer rax)
+          (Or rax r8))]    
+    ['bitwise-xor
+     (seq (Pop r8)
+          (assert-integer r8)
+          (assert-integer rax)
+          (Xor rax r8)
+          (Or rax type-int))]    
     ['arithmetic-shift
      (seq (Pop r8)
           (assert-integer r8)

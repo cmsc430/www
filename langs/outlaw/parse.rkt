@@ -106,8 +106,8 @@
      (Begin (parse-e e1) (parse-e e2))]
     [(list 'if e1 e2 e3)
      (If (parse-e e1) (parse-e e2) (parse-e e3))]
-    [(list 'let (list (list (? symbol? x) e1)) e2)
-     (Let x (parse-e e1) (parse-e e2))]
+    [(list 'let bs e)
+     (parse-let bs (parse-e e))]
     [(cons 'match (cons e ms))
      (parse-match (parse-e e) ms)]    
     [(list (or 'lambda 'λ) xs e)
@@ -117,9 +117,31 @@
               (parse-case-lambda-clauses cs))]
     [(cons 'apply (cons e es))
      (parse-apply (parse-e e) es)]
+    [(list 'cond (list 'else e)) (parse-e e)]
+    [(cons 'cond (cons (list e1 e2) r))
+     (If (parse-e e1)
+         (parse-e e2)
+         (parse-e (cons 'cond r)))]
+    [(cons 'or '())
+     (Quote #f)]
+    [(cons 'or (cons e es))
+     (let ((x (gensym 'or)))
+       (Let (list x) (list (parse-e e))
+            (If (Var x) (Var x) (parse-e (cons 'or es)))))]
     [(cons e es)
      (App (parse-e e) (map parse-e es))]    
     [_ (error "Parse error" s)]))
+
+;; S-Expr Expr -> Expr
+(define (parse-let bs e)
+  (match bs
+    ['() (Let '() '() e)]
+    [(cons (list x e0) bs)
+     (match (parse-let bs e)
+       [(Let xs es e)
+        (Let (cons x xs) (cons (parse-e e0) es) e)])]
+    [_
+     (error "Parse let error")]))     
 
 ;; Expr S-Expr -> Expr
 (define (parse-apply e es)
@@ -148,6 +170,9 @@
     [(? char?)    (PLit p)]
     ['_           (PWild)]
     [(? symbol?)  (PVar p)]
+    [(? string?)  (PStr p)]
+    [(list 'quote (? symbol? s))
+     (PSymb s)]
     [(list 'quote (list))
      (PLit '())]
     [(list 'box p)
@@ -230,12 +255,15 @@
          number->string string->uninterned-symbol
          open-input-file
          read-byte-port
-         write-char))
+         write-char
+         error integer?
+         eq-hash-code))
 (define op2
   '(+ - < = cons eq? make-vector vector-ref make-string string-ref
       string-append set-box! quotient remainder
-      bitwise-and arithmetic-shift
-      peek-byte-port))
+      bitwise-and bitwise-ior bitwise-xor arithmetic-shift
+      peek-byte-port
+      ))
 (define op3
   '(vector-set!))
 

@@ -14,6 +14,7 @@ objs = \
 	symbol.o \
 	string.o \
 	io.o \
+	error.o \
 	stdlib.o
 
 default: runtime.o

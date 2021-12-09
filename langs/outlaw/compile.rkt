@@ -36,6 +36,7 @@
             (Global 'raise_error_align)
             (Label 'raise_error_align)
             pad-stack
+            (Mov rdi 0) ; null arg
             (Call 'raise_error)
 
           ;; one way to make `cons' a function instead of a primitive
@@ -53,25 +54,32 @@
          (Label r))))
 
 (define stdlib-ids
-  '(list map length append memq append-map vector->list
+  '(list make-list list? foldr map length append
+         memq member append-map vector->list
+         reverse
          number->string gensym read read-char
          > <= >=
+         void?
+         list->string string->list
+         char<=?
+         remove-duplicates remq* remove* remove
          ;; Op0
          read-byte peek-byte void
          ;; Op1
          add1 sub1 zero? char? write-byte eof-object?
          integer->char char->integer
-         box unbox empty? cons? box? car cdr
+         box unbox box? empty? cons? car cdr
          vector? vector-length string? string-length
          symbol->string string->symbol symbol?
          string->uninterned-symbol
          open-input-file
-         write-char
+         write-char error integer?
+         eq-hash-code
          ;; Op2
          + - < = cons eq? make-vector vector-ref
          make-string string-ref string-append
          quotient remainder set-box!
-         bitwise-and arithmetic-shift
+         bitwise-and bitwise-ior bitwise-xor arithmetic-shift         
          ;; Op3
          vector-set!))
 

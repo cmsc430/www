@@ -1,8 +1,13 @@
 #lang racket
 (provide #;%provides
-         list map length append memq append-map vector->list
+         list make-list list? map foldr length append
+         memq member append-map vector->list
          number->string gensym read read-char
-         > <= >=
+         > <= >= void?
+         char<=?
+         list->string string->list
+         reverse
+         remove-duplicates remq* remove* remove
          ;; Op0
          read-byte peek-byte void
          ;; Op1
@@ -12,12 +17,13 @@
          vector? vector-length string? string-length
          symbol->string string->symbol symbol?
          string->uninterned-symbol open-input-file
-         write-char
+         write-char error integer?
+         eq-hash-code
          ;; Op2
          + - < = cons eq? make-vector vector-ref
          make-string string-ref string-append
          quotient remainder set-box!
-         bitwise-and arithmetic-shift
+         bitwise-and bitwise-ior bitwise-xor arithmetic-shift
          ;; Op3
          vector-set!)
 
@@ -48,6 +54,7 @@
 (define (integer->char i) (%integer->char i))
 (define (char->integer c) (%char->integer c))
 (define (box x) (%box x))
+(define (box? x) (%box? x))
 (define (unbox x) (%unbox x))
 (define (empty? x) (%empty? x))
 (define (cons? x) (%cons? x))
@@ -62,6 +69,9 @@
 (define (symbol? x) (%symbol? x))
 (define (string->uninterned-symbol x) (%string->uninterned-symbol x))
 (define (open-input-file x) (%open-input-file x))
+(define (error x) (%error x))
+(define (integer? x) (%integer? x))
+(define (eq-hash-code x) (%eq-hash-code x))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Op2
@@ -147,7 +157,9 @@
 (define (quotient x y) (%quotient x y))
 (define (remainder x y) (%remainder x y))
 (define (set-box! x y) (%set-box! x y))
-(define (bitwise-and x y) (%bitwise-and x y))
+(define (bitwise-and x y) (%bitwise-and x y)) ;; should be n-ary
+(define (bitwise-ior x y) (%bitwise-ior x y)) ;; should be n-ary
+(define (bitwise-xor x y) (%bitwise-xor x y)) ;; should be n-ary
 (define (arithmetic-shift x y) (%arithmetic-shift x y))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -158,13 +170,103 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  
+
+(define remove-duplicates
+  (case-lambda
+    [(xs) (remove-duplicates xs equal?)]
+    [(xs eq)
+     (remove-duplicates/a xs eq '())]))
+
+(define (remove-duplicates/a xs eq seen)
+  (match xs
+    ['() (reverse seen)]
+    [(cons x xs)
+     (if (member x seen eq)
+         (remove-duplicates/a xs eq seen)
+         (remove-duplicates/a xs eq (cons x seen)))]))         
+
+(define (remq* v-list lst)
+  (match v-list
+    ['() lst]
+    [(cons v v-list)
+     (remq* v-list (remove* v lst eq?))]))
+
+(define remove*
+  (case-lambda
+    [(x xs) (remove* x xs equal?)]     
+    [(x xs eq)
+     (match xs
+       ['() '()]
+       [(cons y xs)
+        (if (eq x y)
+            (remove* x xs eq)
+            (cons y (remove* x xs eq)))])]))
+
+(define (remove x xs eq)
+  (match xs
+    ['() '()]
+    [(cons y xs)
+     (if (eq x y)
+         xs
+         (cons y (remove x xs eq)))]))
+
+(define (char<=? c . cs)
+  (char<=/a? (char->integer c) cs))
+
+(define (char<=/a? d cs)
+  (match cs
+    ['() #t]
+    [(cons c cs)
+     (let ((d1 (char->integer c)))
+       (if (<= d d1)
+           #t
+           (char<=/a? d1 cs)))]))
+
+(define (list->string xs)
+  (match xs
+    ['() ""]
+    [(cons c cs)
+     (string-append (make-string 1 c)
+                    (list->string cs))]))
+
+(define (string->list s)
+  (string->list/a s (string-length s) '()))
+
+(define (string->list/a s n xs)
+  (if (zero? n)
+      xs
+      (string->list/a s (sub1 n)
+                      (cons (string-ref s (sub1 n)) xs))))
+                            
+
+(define (void? x)
+  (eq? x (void)))
+
 (define (list . xs) xs)
+
+(define (make-list n x)
+  (if (zero? n)
+      '()
+      (cons x (make-list (sub1 n) x))))
+
+(define (list? xs)
+  (match xs
+    ['() #t]
+    [(cons x xs)
+     (list? xs)]
+    [_ #f]))
 
 (define (length xs)
   (match xs
     ['() 0]
     [(cons _ xs) (add1 (length xs))]))
+
+;; should really take any number of xss
+(define (foldr f b xs)
+  (match xs
+    ['() b]
+    [(cons x xs)
+     (f x (foldr f b xs))]))
 
 (define map
   (case-lambda
@@ -192,13 +294,32 @@
      (cons x
            (apply append xs xss))]))
 
+
+(define (reverse xs)
+  (reverse/a xs '()))
+
+(define (reverse/a xs ys)
+  (match xs
+    ['() ys]
+    [(cons x xs)
+     (reverse/a xs (cons x ys))]))
+
 (define (memq v lst)
-  (match lst
-    ['() #f]
-    [(cons l lst1)
-     (if (eq? v l)
-         lst
-         (memq v lst1))]))
+  (member v lst eq?))
+
+(define member
+  (case-lambda
+    [(v lst) (member v lst equal?)]
+    [(v lst is-equal?)
+     (match lst
+       ['() #f]
+       [(cons l lst1)
+        (if (is-equal? v l)
+            lst
+            (member v lst1 is-equal?))])]))
+
+(define (equal? x y)
+  (error "equal? is not defined"))
 
 (define append-map
   (case-lambda
@@ -239,7 +360,10 @@
      (let ((i (unbox gensym-counter)))
        (begin (set-box! gensym-counter (add1 i))
               (string->uninterned-symbol
-               (string-append s (number->string i)))))]))
+               (string-append (if (string? s)
+                                  s
+                                  (symbol->string s))
+                              (number->string i)))))]))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -294,10 +418,6 @@
         r)))
 
 (struct err (port msg))
-
-
-(define (error str)
-  (add1 #f))
 
 (define (<start> p)
   100)

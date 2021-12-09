@@ -1,5 +1,5 @@
 #lang racket
-(provide symbol->label symbol->data-label lookup pad-stack unpad-stack)
+(provide symbol->label symbol->data-label lookup pad-stack unpad-stack *8)
 (require a86/ast)
 
 (define rsp 'rsp)
@@ -51,3 +51,6 @@
 ;; Undo the stack alignment after a call
 (define unpad-stack
   (seq (Add rsp r15)))
+
+(define (*8 n)
+  (arithmetic-shift n 3))
