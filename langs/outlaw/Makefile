@@ -11,7 +11,7 @@ ifeq ($(UNAME), Darwin)
   libs='-lunistring'
 else
   format=elf64
-  libs='-l:libunistring.a'
+  libs='-L/usr/lib/x86_64-linux-gnu -l:libunistring.a'
 endif
 
 objs = \
@@ -27,7 +27,7 @@ objs = \
 default: runtime.o
 
 runtime.o: $(objs)
-	gcc -r $(objs) $(libs) -o runtime.o
+	ld -r $(objs) $(libs) -o runtime.o
 
 %.run: %.o runtime.o
 	gcc runtime.o $< -o $@
