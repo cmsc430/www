@@ -15,6 +15,10 @@ jobs:
       uses: actions/checkout@main
     - name: Install nasm
       run: sudo apt-get install nasm
+    - name: Install libunistring
+      run: |
+        sudo apt-get install libunistring2
+        sudo apt-get install libunistring-dev
     - name: Install Racket
       uses: Bogdanp/setup-racket@v1.5
       with:
