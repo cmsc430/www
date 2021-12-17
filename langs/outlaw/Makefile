@@ -27,7 +27,7 @@ objs = \
 default: runtime.o
 
 runtime.o: $(objs)
-	ld -r $(objs) $(libs) -o runtime.o
+	gcc -r $(objs) $(libs) -o runtime.o
 
 %.run: %.o runtime.o
 	gcc runtime.o $< -o $@
