@@ -7,4 +7,5 @@
 (define (main)
   (begin
     (read-line) ; ignore #lang racket line
+    (current-shared? #t)
     (displayln (asm-string (compile-library (parse-library (read-all)))))))
