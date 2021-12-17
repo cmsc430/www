@@ -1,6 +1,12 @@
 #lang racket
-(provide asm-string)
+(provide asm-string current-shared?)
 (require "ast.rkt")
+
+(define current-shared?
+  (let ((x (box #f)))
+    (case-lambda
+      [() (unbox x)]
+      [(y) (set-box! x y)])))
 
 ;; Any -> Boolean
 (define (reg? x)
@@ -17,7 +23,14 @@
     ['macosx
      (λ (s) (string-append "_" (symbol->string s)))]
     [_
-     symbol->string]))
+     (if (current-shared?)
+         (λ (s)
+           (if (memq s external-labels)
+               ; hack for ELF64 shared libraries in service of
+               ; calling external functions in asm-interp
+               (string-append (symbol->string s) " wrt ..plt")
+               (symbol->string s)))
+         symbol->string)]))
 
 ;; (U Label Reg) -> String
 (define (jump-target->string t)
@@ -50,6 +63,9 @@
 
 (define tab (make-string 8 #\space))
 
+
+(define external-labels (box '()))
+
 ;; Instruction -> String
 (define (instr->string i)
   (match i
@@ -58,7 +74,10 @@
     [(Ret)       (string-append tab "ret")]
     [(Label l)   (string-append (label-symbol->string l) ":")]
     [(Global x)  (string-append tab "global "  (label-symbol->string x))]
-    [(Extern l)  (string-append tab "extern " (label-symbol->string l))]
+    [(Extern l)  (let ((r (string-append tab "extern " (label-symbol->string l))))
+                   (begin 
+                     (set-box! external-labels (cons l (unbox external-labels)))
+                     r))]
     [(Mov a1 a2)
      (string-append tab "mov "
                     (arg->string a1) ", "
@@ -154,16 +173,18 @@
      (string-append (instr->string i) "\n" (instrs->string a))]))
 
 ;; Asm -> String
-(define (asm-string a)  
-  ;; entry point will be first label
-  (match (findf Label? a)
-    [(Label g)
-     (string-append
-      tab "global " (label-symbol->string g) "\n"
-      tab "default rel\n"
-      tab "section .text\n"
-      (instrs->string a))]
-    [_
-     (instrs->string a)
-     #;
-     (error "program does not have an initial label")]))
+(define (asm-string a)
+  (begin
+    (set-box! external-labels '())
+    ;; entry point will be first label
+    (match (findf Label? a)
+      [(Label g)
+       (string-append
+        tab "global " (label-symbol->string g) "\n"
+        tab "default rel\n"
+        tab "section .text\n"
+        (instrs->string a))]
+      [_
+       (instrs->string a)
+       #;
+       (error "program does not have an initial label")])))

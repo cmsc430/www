@@ -7,7 +7,6 @@
 (require "printer.rkt" "ast.rkt" "callback.rkt"
          (rename-in ffi/unsafe [-> _->]))
 
-
 ;; Assembly code is linked with object files in this parameter
 (define current-objs
   (make-parameter '()))
@@ -42,8 +41,8 @@
   (with-output-to-file t.s
     #:exists 'truncate
     (λ ()
-      ; (parameterize ((current-shared? #t))
-      (displayln (asm-string a))))
+      (begin (current-shared? #t)
+             (displayln (asm-string a)))))
 
   (nasm t.s t.o)
   (ld t.o t.so)
