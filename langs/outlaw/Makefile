@@ -8,8 +8,10 @@ UNAME := $(shell uname)
 
 ifeq ($(UNAME), Darwin)
   format=macho64
+  libs='-lunistring'
 else
   format=elf64
+  libs='-l:libunistring.a'
 endif
 
 objs = \
@@ -25,7 +27,7 @@ objs = \
 default: runtime.o
 
 runtime.o: $(objs)
-	ld -r $(objs) -lunistring -o runtime.o
+	ld -r $(objs) $(libs) -o runtime.o
 
 %.run: %.o runtime.o
 	gcc runtime.o $< -o $@
