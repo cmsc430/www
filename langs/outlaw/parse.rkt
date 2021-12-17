@@ -4,31 +4,32 @@
 
 ;; [Listof S-Expr] -> Prog
 (define (parse s)
-  (let ((loaded (box '())))
-    (match s
-      ['() (Prog '())]
-      [(cons (and (cons (? def-keyword?) _) d) '())
-       (Prog (append (parse-define d)
-                     (list (Defn (gensym) (parse-e '(void))))))]    
-      [(cons (and (cons (? def-keyword?) _) d) s)
-       (match (parse s)
-         [(Prog ds)
-          (Prog (append (parse-define d) ds))])]
-      [(cons (cons 'provide _) s) ; ignore provides for now    
-       (parse s)]
-      [(cons (cons 'require _) s) ; ignore provides for now    
-       (parse s)]      
-      ;; Doesn't quite work and will make parse depend on read
-      #;
-      [(cons (cons 'require fs) s)
-       (match (parse s)
-         [(Prog ds)
-          (Prog (append (load-files loaded fs) ds))])]              
-      [(cons e s)
-        (match (parse s)
-          [(Prog ds)
-           (Prog (cons (Defn (gensym) (parse-e e)) ds))])]
-      [_ (error "program parse error" s)])))
+  (match s
+    ['() (Prog '())]
+    [(cons (and (cons (? def-keyword?) _) d) '())
+     (Prog (append (parse-define d)
+                   (list (Defn (gensym) (parse-e '(void))))))]
+    [(cons (and (cons (? def-keyword?) _) d) s)
+     (match (parse s)
+       [(Prog ds)
+        (Prog (append (parse-define d) ds))])]
+    [(cons (cons 'provide _) s) ; ignore provides for now
+     (parse s)]
+    [(cons (cons 'require _) s) ; ignore requires for now
+     (parse s)]
+    [(cons (cons 'module+ _) s) ; ignore submodules for now
+     (parse s)]
+    ;; Doesn't quite work and will make parse depend on read
+    #;
+    [(cons (cons 'require fs) s)
+     (match (parse s)
+       [(Prog ds)
+        (Prog (append (load-files loaded fs) ds))])]
+    [(cons e s)
+     (match (parse s)
+       [(Prog ds)
+        (Prog (cons (Defn (gensym) (parse-e e)) ds))])]
+    [_ (error "program parse error" s)]))
 
 (define (def-keyword? x)
   (or (eq? x 'define)
@@ -39,8 +40,10 @@
   (match s
     [(cons (cons 'provide ids)
            (cons (cons 'require _) ds))
-     (Lib ids (parse-ds ds))]))
-   
+     (match (parse ds)
+       [(Prog ds)
+        (Lib ids ds)])]))
+
 ;; [Listof S-Expr] -> [Listof Defn]
 (define (parse-ds s)
   (match s
@@ -65,7 +68,7 @@
      (match (parse-e e)
        [e (list (Defn x e))])]
     [(cons 'struct _)
-     (parse-struct s)]     
+     (parse-struct s)]
     [_ (error "Parse defn error" s)]))
 
   ;; S-Expr -> [Listof Defn]
@@ -124,14 +127,12 @@
     [(list (? (op% op2) p2) e1 e2) (Prim (drop-% p2) (list (parse-e e1) (parse-e e2)))]
     [(list (? (op% op3) p3) e1 e2 e3)
      (Prim (drop-% p3) (list (parse-e e1) (parse-e e2) (parse-e e3)))]
-    [(list 'begin e1 e2)
-     (Begin (parse-e e1) (parse-e e2))]
+    [(cons 'begin es)
+     (Begin (parse-es es))]
     [(list 'if e1 e2 e3)
      (If (parse-e e1) (parse-e e2) (parse-e e3))]
-    [(list 'let bs e)
-     (parse-let bs (parse-e e))]
-    [(cons 'match (cons e ms))
-     (parse-match (parse-e e) ms)]    
+    [(cons 'let s)   (parse-let s)]
+    [(cons 'match s) (parse-match s)]
     [(list 'λ xs e)
      (parse-param-list xs e)]
     [(list 'lambda xs e)
@@ -161,19 +162,39 @@
          (parse-e (cons 'and es))
          (Quote #f))]
     [(cons e es)
-     (App (parse-e e) (map parse-e es))]    
+     (App (parse-e e) (map parse-e es))]
     [_ (error "Parse error" s)]))
 
-;; S-Expr Expr -> Expr
-(define (parse-let bs e)
-  (match bs
-    ['() (Let '() '() e)]
-    [(cons (list x e0) bs)
-     (match (parse-let bs e)
-       [(Let xs es e)
-        (Let (cons x xs) (cons (parse-e e0) es) e)])]
+(define (parse-es es)
+  (match es
+    ['() '()]
+    [(cons e es)
+     (cons (parse-e e) (parse-es es))]
+    [_ (error "parse es")]))
+
+;; S-Expr -> Expr
+(define (parse-let s)
+  (match s
+    ['() (error "parse error (let)")]
+    [(cons s1 s2)
+     (parse-let-bindings s1 s2 '() '())]
+    [_ (error "parse error let" s)]))
+
+;; S-Expr S-Expr [Listof Id] [Listof Expr] -> Expr
+(define (parse-let-bindings s1 s2 xs es)
+  (match s1
+    ['() (parse-let-body s2 (reverse xs) (reverse es))]
+    [(cons (list (? symbol? x) e) s1)
+     (parse-let-bindings s1 s2 (cons x xs) (cons (parse-e e) es))]))
+
+;; S-Expr [Listof Id] [Listof Expr] -> Expr
+(define (parse-let-body s xs es)
+  (match s
+    ['() (error "parse error let-body")]
+    [(cons e '())
+     (Let xs es (parse-e e))]
     [_
-     (error "Parse let error")]))     
+     (Let xs es (Begin (parse-es s)))]))
 
 ;; Expr S-Expr -> Expr
 (define (parse-apply e es)
@@ -185,15 +206,30 @@
         (Apply e (cons (parse-e e0) es) el)])]
     [_ (error "parse apply error")]))
 
-(define (parse-match e ms)
-  (match ms
-    ['() (Match e '() '())]
-    [(cons (list p r) ms)
-     (match (parse-match e ms)
-       [(Match e ps es)
-        (Match e
-               (cons (parse-pat p) ps)
-               (cons (parse-e r) es))])]))
+
+;; S-Expr -> Expr
+(define (parse-match s)
+  (match s
+    ['() (error "parse error match")]
+    [(cons e s)
+     (parse-match-clauses s (parse-e e) '() '())]))
+
+;; S-Expr Expr [Listof Pat] [Listof Expr] -> Expr
+(define (parse-match-clauses s e ps es)
+  (match s
+    ['() (Match e (reverse ps) (reverse es))]
+    [(cons c s)
+     (parse-match-clause c s e ps es)]
+    [_ (error "parse error match clause")]))
+
+(define (parse-match-clause c s e ps es)
+  (match c
+    [(list p e1)
+     (parse-match-clauses s e (cons (parse-pat p) ps) (cons (parse-e e1) es))]
+    [(list* p es1)
+     (parse-match-clauses s e (cons (parse-pat p) ps) (cons (Begin (parse-es es1)) es))]
+    [_
+     (error "parse error clause")]))
 
 (define (parse-pat p)
   (match p
@@ -226,7 +262,7 @@
      (PAnd (parse-pat (list '? e))
            (parse-pat (cons 'and ps)))]
     [(cons (? symbol? n) ps)
-     (PStruct n (map parse-pat ps))]))    
+     (PStruct n (map parse-pat ps))]))
 
 ;; S-Expr -> [Listof LamCaseClause]
 (define (parse-case-lambda-clauses cs)
@@ -255,13 +291,14 @@
     [(? symbol? xs)
      (LamRest (gensym 'lamrest) '() xs (parse-e e))]
     [_
+     (eprintf "xs: ~a e: ~a\n" xs e)
      (error "parse parameter list error")]))
 
 ;; Datum -> Datum
 (define (parse-datum d)
   (match d
     [(box d)
-     (box (parse-datum d))]    
+     (box (parse-datum d))]
     [(cons d1 d2)
      (cons (parse-datum d1) (parse-datum d2))]
     ['() '()]
@@ -283,7 +320,9 @@
       (vector? x)))
 
 (define op0
-  '(read-byte peek-byte void read-char peek-char))
+  '(read-byte void read-char peek-char
+              current-input-port ; hack, doesn't actually exist
+              ))
 
 (define op1
   '(add1 sub1 zero? char? write-byte eof-object?
@@ -296,13 +335,13 @@
          read-byte-port
          write-char
          error integer?
-         eq-hash-code))
+         eq-hash-code
+         char-alphabetic?))
 (define op2
   '(+ - < = cons eq? make-vector vector-ref make-string string-ref
       string-append set-box! quotient remainder
       bitwise-and bitwise-ior bitwise-xor arithmetic-shift
-      peek-byte-port
-      ))
+      peek-byte))
 (define op3
   '(vector-set!))
 
@@ -322,4 +361,3 @@
 
 (define (drop-% x)
   (string->symbol  (substring (symbol->string x) 1)))
-

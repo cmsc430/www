@@ -7,13 +7,8 @@
          "utils.rkt"
          "compile-ops.rkt"
          "compile-datum.rkt"
-         a86/ast)
-
-;; Registers used
-(define rax 'rax) ; return
-(define rbx 'rbx) ; heap
-(define rsp 'rsp) ; stack
-(define rdi 'rdi) ; arg
+         "a86/ast.rkt"
+         "registers.rkt")
 
 ;; Expr CEnv GEnv Bool -> Asm
 (define (compile-e e c g t?)
@@ -23,7 +18,7 @@
     [(Var x)            (compile-variable x c g)]
     [(Prim p es)        (compile-prim p es c g)]
     [(If e1 e2 e3)      (compile-if e1 e2 e3 c g t?)]
-    [(Begin e1 e2)      (compile-begin e1 e2 c g t?)]
+    [(Begin es)         (compile-begin es c g t?)]
     [(Let xs es e)      (compile-let xs es e c g t?)]
     [(App e es)         (compile-app e es c g t?)]
     [(Apply e es el)    (compile-apply e es el c g t?)]
@@ -60,10 +55,14 @@
          (compile-e e3 c g t?)
          (Label l2))))
 
-;; Expr Expr CEnv GEnv Bool -> Asm
-(define (compile-begin e1 e2 c g t?)
-  (seq (compile-e e1 c g #f)
-       (compile-e e2 c g t?)))
+;; [Listof Expr] CEnv GEnv Bool -> Asm
+(define (compile-begin es c g t?)
+  (match es
+    ['() '()]
+    [(cons e '()) (compile-e e c g t?)]
+    [(cons e es)
+     (seq (compile-e e c g #f)
+          (compile-begin es c g t?))]))
 
 ;; [Listof Id] [Listof Expr] Expr CEnv GEnv Bool -> Asm
 (define (compile-let xs es e c g t?)
@@ -126,7 +125,7 @@
          (compile-e el (append (make-list (add1 (length es)) #f) (cons #f c)) g #f)
 
          (Mov r10 (Offset rsp (*8 (length es))))
-         
+
          (Mov r15 (length es))
          (let ((loop (gensym))
                (done (gensym)))
@@ -146,7 +145,7 @@
          (assert-proc r10)
          (Xor r10 type-proc)
          (Mov r10 (Offset r10 0))
-         
+
          (Jmp r10)
          (Label r))))
 
@@ -157,7 +156,7 @@
          (Mov (Offset rbx 0) rax)
          (free-vars-to-heap fvs c 8)
          (Mov rax rbx) ; return value
-         (Or rax type-proc)         
+         (Or rax type-proc)
          (Add rbx (*8 (add1 (length fvs)))))))
 
 ;; Lambda -> Id
@@ -260,9 +259,9 @@
                   (Jne fail)
                   (Xor rax type-str)
                   (Mov rsi rax)
-                  pad-stack
+                  (pad-stack)
                   (Call 'symb_cmp)
-                  unpad-stack
+                  (unpad-stack)
                   (Cmp rax 0)
                   (Jne fail))
              (seq (Label fail)
@@ -360,31 +359,34 @@
                 (Add rsp (*8 (length cm)))
                 (Jmp next))
            cm))])]
-    
-    [(PPred e)
-     (list
-      (let ((r (gensym 'ret)))                     
-        (seq (Lea r15 r)
-             (Push r15) ; rp
-             (Push rax) ; arg (saved for the moment)
-             (compile-e e (list* #f #f c) g #f)
-             (Pop r15)
-             (Push rax)
-             (Push r15)
-             
-             (assert-proc rax)
-             (Xor rax type-proc)
-             (Mov r15 1)
-             (Mov rax (Offset rax 0))
-             (Jmp rax)
-             (Label r)
-             (Cmp rax val-false)
-             (Je next)))
-      (seq)
-      cm)]))
 
-                      
-     
+    [(PPred e)
+     (let ((fail (gensym 'fail)))
+       (list
+        (let ((r (gensym 'ret)))
+          (seq (Lea r15 r)
+               (Push r15) ; rp
+               (Push rax) ; arg (saved for the moment)
+               (compile-e e (list* #f #f c) g #f)
+               (Pop r15)  ;; HERE
+               (Push rax)
+               (Push r15)
+
+               (assert-proc rax)
+               (Xor rax type-proc)
+               (Mov r15 1)
+               (Mov rax (Offset rax 0)) ; fetch code label
+               (Jmp rax)
+               (Label r)
+               (Cmp rax val-false)
+               (Je fail)))
+        (seq (Label fail)
+             (Add rsp (*8 (length cm)))
+             (Jmp next))
+        cm))]))
+
+
+
 
 ;; [Listof Pat] CEnv Symbol Nat -> (list Asm Asm CEnv)
 (define (compile-struct-patterns ps c g cm next i)

@@ -1,13 +1,8 @@
 #lang racket
-(provide main)
-(require "parse.rkt" "compile.rkt" "read-all.rkt" a86/printer)
+(require "parse.rkt" "compile.rkt" "read-all.rkt" "a86/printer.rkt")
 
-;; String -> Void
-;; Compile contents of given file name,
+;; Compile contents of stdin
 ;; emit asm code on stdout
-(define (main fn)
-  (let ((p (open-input-file fn)))
-    (begin
-      (read-line p) ; ignore #lang racket line
-      (displayln (asm-string (compile-library (parse-library (read-all p)))))
-      (close-input-port p))))
+(begin
+  (void (read-line)) ; ignore #lang racket line
+  (display (asm-string (compile-library (parse-library (read-all))))))

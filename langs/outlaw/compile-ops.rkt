@@ -1,31 +1,17 @@
 #lang racket
 (provide (all-defined-out))
-(require "ast.rkt" "types.rkt" "utils.rkt" a86/ast)
-
-(define rax 'rax) ; return
-(define eax 'eax) ; 32-bit load/store
-(define rbx 'rbx) ; heap
-(define rdi 'rdi) ; arg1
-(define rsi 'rsi) ; arg2
-(define rdx 'rdx) ; arg3
-(define r8  'r8)  ; scratch
-(define r9  'r9)  ; scratch
-(define r10 'r10) ; scratch
-(define r12 'r12) ; save across call to memcpy
-(define r15 'r15) ; stack pad (non-volatile)
-(define rsp 'rsp) ; stack
+(require "ast.rkt" "registers.rkt" "types.rkt" "utils.rkt" "a86/ast.rkt")
 
 ;; Op -> Asm
 (define (compile-op p)
   (match p
     ;; Op0
     ['void      (seq (Mov rax val-void))]
-    ['read-byte (seq pad-stack
+    ['read-byte (seq (pad-stack)
                      (Call 'read_byte)
-                     unpad-stack)]
-    ['peek-byte (seq pad-stack
-                     (Call 'peek_byte)
-                     unpad-stack)]
+                     (unpad-stack))]
+    ['current-input-port ; hack, doesn't actually exist
+     (seq (Mov rax val-void))]
 
     ;; Op1
     ['add1
@@ -51,10 +37,10 @@
     ['eof-object? (eq-imm eof)]
     ['write-byte
      (seq (assert-byte rax)
-          pad-stack
+          (pad-stack)
           (Mov rdi rax)
           (Call 'write_byte)
-          unpad-stack
+          (unpad-stack)
           (Mov rax val-void))]
     ['box
      (seq (Mov (Offset rbx 0) rax)
@@ -114,9 +100,9 @@
      (seq (assert-string rax)
           (Xor rax type-str)
           (Mov rdi rax)
-          pad-stack
+          (pad-stack)
           (Call 'intern_symbol)
-          unpad-stack
+          (unpad-stack)
           (Or rax type-symb))]
     ['symbol->string
      (seq (assert-symbol rax)
@@ -131,24 +117,31 @@
     ['open-input-file
      (seq (assert-string rax)
           (Mov rdi rax)
-          pad-stack
+          (pad-stack)
           (Call 'open_input_file)
-          unpad-stack)]
+          (unpad-stack))]
     ['read-byte-port
      (seq (Mov rdi rax) ; assert port
-          pad-stack
+          (pad-stack)
           (Call 'read_byte_port)
-          unpad-stack)]
+          (unpad-stack))]
     ['error
      (seq (assert-string rax)
           (Mov rdi rax)
-          pad-stack
+          (pad-stack)
           (Call 'raise_error))]
     ['integer?
      (type-pred mask-int type-int)]
     ['eq-hash-code
      (seq (Sal rax int-shift))]
-    
+    ['char-alphabetic?
+     (seq (assert-char rax)
+          (Sar rax char-shift)
+          (Mov rdi rax)
+          (pad-stack)
+          (Call 'is_char_alphabetic)
+          (unpad-stack))]
+
     ;; Op2
     ['+
      (seq (Pop r8)
@@ -301,14 +294,14 @@
           (Mov 'rdi r8)
           (Mov 'rsi rax)
           (Mov rdx rbx)
-          pad-stack
+          (pad-stack)
           (Call 'string_append)
-          unpad-stack
+          (unpad-stack)
           (Mov r8 rax)
           (Cmp r8 0)
           (let ((empty (gensym))
                 (done (gensym)))
-            (seq  (Je empty)          
+            (seq  (Je empty)
                   (Sal r8 2)
                   (Mov rax rbx)
                   (Or rax type-str)
@@ -376,13 +369,13 @@
      (seq (Pop r8)
           (assert-integer r8)
           (assert-integer rax)
-          (Or rax r8))]    
+          (Or rax r8))]
     ['bitwise-xor
      (seq (Pop r8)
           (assert-integer r8)
           (assert-integer rax)
           (Xor rax r8)
-          (Or rax type-int))]    
+          (Or rax type-int))]
     ['arithmetic-shift
      (seq (Pop r8)
           (assert-integer r8)
@@ -391,7 +384,18 @@
           (Mov 'rcx rax)
           (Sal r8 'cl)
           (Mov rax r8))]
-    
+
+    ['peek-byte
+     (seq (Pop r8)
+          (assert-integer rax)
+          (Sar rax int-shift)
+          ; 'rdi argument is an ignored port value
+          ;; HERE
+          (Mov rsi rax) ; offset
+          (pad-stack)
+          (Call 'peek_byte)
+          (unpad-stack))]
+
     ;; Op3
     ['vector-set!
      (seq (Pop r10)
@@ -416,10 +420,10 @@
           (Mov rdi r8)
           (assert-integer rax)
           (Mov rsi rax)
-          pad-stack
+          (pad-stack)
           (Call 'peek_byte_port)
-          unpad-stack)]
-    
+          (unpad-stack))]
+
     ['struct-ref ; symbol, int, struct
      (seq (Pop r8)
           (Pop 'r11)
@@ -442,14 +446,14 @@
   (seq (compile-make-struct/a n 1)
        (Mov rax rbx)
        (Or rax type-struct)
-       (Add rbx (* 8 n))))
+       (Add rbx (*8 n))))
 
 ;; Nat Nat -> Asm
 ;; Pop elements off stack, writing them to heap
 (define (compile-make-struct/a n i)
   (if (= n i)
-      (seq (Mov (Offset rbx (* 8 (- n i))) rax))
-      (seq (Mov (Offset rbx (* 8 (- n i))) rax)
+      (seq (Mov (Offset rbx (*8 (- n i))) rax))
+      (seq (Mov (Offset rbx (*8 (- n i))) rax)
            (Pop rax)
            (compile-make-struct/a n (add1 i)))))
 
@@ -464,12 +468,12 @@
        (Add rdx 1)
        (Sal rdx 3)              ; #bytes = 8*#words
        (Mov r12 rdx)            ; save rdx before destroyed
-       pad-stack
+       (pad-stack)
        (Call 'memcpy)
-       unpad-stack
+       (unpad-stack)
        ; rbx should be preserved by memcpy
        ;(Mov rbx rax) ; dst is returned, install as heap pointer
-       (Add rbx r12)))                   
+       (Add rbx r12)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

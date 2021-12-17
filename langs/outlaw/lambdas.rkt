@@ -24,7 +24,7 @@
   (match e
     [(Prim p es)        (append-map lambdas-e es)]
     [(If e1 e2 e3)      (append (lambdas-e e1) (lambdas-e e2) (lambdas-e e3))]
-    [(Begin e1 e2)      (append (lambdas-e e1) (lambdas-e e2))]
+    [(Begin es)         (append-map lambdas-e es)]
     [(Let xs es e)      (append (append-map lambdas-e es) (lambdas-e e))]
     [(App e1 es)        (append (lambdas-e e1) (append-map lambdas-e es))]
     [(Lam f xs e1)       (cons e (lambdas-e e1))]

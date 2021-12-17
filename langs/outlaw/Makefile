@@ -1,3 +1,8 @@
+# NOTES:
+# - You will need a static version of libunistring to link against; on Mac
+#   ld will always choose .dylib over .a to link, so either rename or remove
+#   the .dylib versions.
+
 UNAME := $(shell uname)
 .PHONY: test
 
@@ -20,7 +25,7 @@ objs = \
 default: runtime.o
 
 runtime.o: $(objs)
-	ld -r $(objs) -o runtime.o
+	ld -r $(objs) -lunistring -o runtime.o
 
 %.run: %.o runtime.o
 	gcc runtime.o $< -o $@
@@ -32,10 +37,10 @@ runtime.o: $(objs)
 	nasm -g -f $(format) -o $@ $<
 
 stdlib.s: stdlib.rkt
-	racket -t compile-library.rkt -m stdlib.rkt > stdlib.s
+	cat stdlib.rkt | racket -t compile-library.rkt > stdlib.s
 
 %.s: %.rkt
-	racket -t compile-file.rkt -m $< > $@
+	cat $< | racket -t compile-stdin.rkt > $@
 
 clean:
 	rm *.o *.s *.run

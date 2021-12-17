@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <inttypes.h>
+#include <unictype.h>
 #include "values.h"
 
 void print_char(val_char_t);
@@ -13,6 +14,12 @@ void print_str_char(val_char_t);
 void print_result_interior(val_t);
 int utf8_encode_char(val_char_t, char *);
 void utf8_encode_string(val_str_t *, char *);
+
+val_t is_char_alphabetic(val_char_t c) {
+  return val_wrap_bool(uc_is_property_alphabetic(c));
+}
+
+
 
 void print_result(val_t x)
 {

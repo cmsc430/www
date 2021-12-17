@@ -146,7 +146,7 @@
   (check-equal? (run '(begin (make-string 3 #\f)
                              (make-string 3 #\f)))
                 "fff")
-  
+
   ;; Iniquity tests
   (check-equal? (run
                  '(define (f x) x)
@@ -285,7 +285,7 @@
                 12)
 
   ;; Mug examples
-  (check-equal? (run '(symbol? 'foo)) #t)  
+  (check-equal? (run '(symbol? 'foo)) #t)
   (check-equal? (run '(symbol? (string->symbol "foo"))) #t)
   (check-equal? (run '(eq? 'foo 'foo)) #t)
   (check-equal? (run '(eq? (string->symbol "foo")
@@ -307,12 +307,12 @@
   (check-equal? (run '(string? (symbol->string 'foo))) #t)
   (check-equal? (run '(eq? (symbol->string 'foo) "foo")) #f)
   (check-equal? (run ''foo) 'foo)
-  (check-equal? (run '(eq? (match #t [_ "foo"]) "bar")) #f)  
-  (check-equal? (run '(eq? (match #t [_ 'foo]) 'bar)) #f) 
-  (check-equal? (run '(match 'foo ['bar #t] [_ #f])) #f)  
-  (check-equal? (run '(match 'foo ['foo #t] [_ #f])) #t)  
-  (check-equal? (run '(match "foo" ["foo" #t] [_ #f])) #t) 
-  (check-equal? (run '(match "foo" ["bar" #t] [_ #f])) #f)  
+  (check-equal? (run '(eq? (match #t [_ "foo"]) "bar")) #f)
+  (check-equal? (run '(eq? (match #t [_ 'foo]) 'bar)) #f)
+  (check-equal? (run '(match 'foo ['bar #t] [_ #f])) #f)
+  (check-equal? (run '(match 'foo ['foo #t] [_ #f])) #t)
+  (check-equal? (run '(match "foo" ["foo" #t] [_ #f])) #t)
+  (check-equal? (run '(match "foo" ["bar" #t] [_ #f])) #f)
   (check-equal? (run '(match (cons '+ (cons 1 (cons 2 '())))
                         [(cons '+ (cons x (cons y '())))
                          (+ x y)]))
@@ -454,11 +454,11 @@
   (check-equal? (run '(append '(1 2 3))) '(1 2 3))
   (check-equal? (run '(append '(1 2 3) '())) '(1 2 3))
   (check-equal? (run '(append '() '(1 2 3))) '(1 2 3))
-  (check-equal? (run '(append '(1 2 3) '(4 5 6))) '(1 2 3 4 5 6))  
+  (check-equal? (run '(append '(1 2 3) '(4 5 6))) '(1 2 3 4 5 6))
   (check-equal? (run '(memq 'x '())) #f)
   (check-equal? (run '(memq 'x '(p x y))) '(x y))
   (check-equal? (run '(member 'x '() eq?)) #f)
-  (check-equal? (run '(member 'x '(p x y) eq?)) '(x y))  
+  (check-equal? (run '(member 'x '(p x y) eq?)) '(x y))
   (check-equal? (run '(append-map list '(1 2 3))) '(1 2 3))
   (check-equal? (run '(vector->list #())) '())
   (check-equal? (run '(vector->list #(1 2 3))) '(1 2 3))
@@ -488,7 +488,7 @@
   (check-equal? (run '(let ((x (gensym))) (eq? x x))) #t)
   (check-pred symbol? (run '(gensym 'fred)))
   (check-equal? (run '(eq? (gensym 'fred) (gensym 'fred))) #f)
-  (check-equal? (run '(let ((x (gensym 'fred))) (eq? x x))) #t) 
+  (check-equal? (run '(let ((x (gensym 'fred))) (eq? x x))) #t)
   (check-pred symbol? (run '(gensym "fred")))
   (check-equal? (run '(eq? (gensym "fred") (gensym "fred"))) #f)
   (check-equal? (run '(let ((x (gensym "fred"))) (eq? x x))) #t)
@@ -524,7 +524,7 @@
   (check-equal? (run '(char<=? #\a #\b)) #t)
   (check-equal? (run '(char<=? #\a #\b #\c)) #t)
   (check-equal? (run '(char<=? #\a #\b #\b)) #t)
-  (check-equal? (run '(char<=? #\a #\b #\a)) #t)
+  (check-equal? (run '(char<=? #\a #\b #\a)) #f)
   (check-equal? (run '(= (eq-hash-code 'x) (eq-hash-code 'x))) #t)
   (check-equal? (run '(= (eq-hash-code 'x) (eq-hash-code 'y))) #f)
   (check-equal? (run '(foldr + #f '())) #f)
@@ -571,6 +571,10 @@
                         [(? integer? x) x]
                         [_ 2]))
                 8)
+  (check-equal? (run '(match (box #\a)
+                        [(box (and x (? integer?))) 1]
+                        [(box (and x (? char?))) x]))
+                #\a)
 
   (check-equal? (run '(vector)) #())
   (check-equal? (run '(vector 1 2 3)) #(1 2 3))
@@ -586,8 +590,19 @@
   (check-equal? (run '(odd? 8)) #f)
   (check-equal? (run '(filter odd? '())) '())
   (check-equal? (run '(filter odd? '(1 2 3 4))) '(1 3))
+  (check-equal? (run '(findf odd? '())) #f)
+  (check-equal? (run '(findf odd? '(2 4 3 7))) 3)
+  (check-equal? (run '(char-alphabetic? #\a)) #t)
+  (check-equal? (run '(char-alphabetic? #\space)) #f)
+  (check-equal? (run '(begin 1)) 1)
+  (check-equal? (run '(begin 1 2)) 2)
+  (check-equal? (run '(begin 1 2 3)) 3)
+  (check-equal? (run '(let () 1 2)) 2)
+  (check-equal? (run '(let ((x 1)) x x)) 1)
+  (check-equal? (run '(let ((x 1)) x x x)) 1)
+  (check-equal? (run '(match 1 [1 2 3])) 3)
   )
-                 
+
 
 (define (test-runner-io run)
   ;; Evildoer examples
@@ -601,7 +616,6 @@
   (check-equal? (run "a" '(eof-object? (read-byte))) (cons #f ""))
   (check-equal? (run "" '(begin (write-byte 97) (write-byte 98)))
                 (cons (void) "ab"))
-
   (check-equal? (run "ab" '(peek-byte)) (cons 97 ""))
   (check-equal? (run "ab" '(begin (peek-byte) (read-byte))) (cons 97 ""))
   ;; Extort examples
@@ -638,7 +652,7 @@
                         (begin (write-byte 97)
                                (car x))))
                 (cons 1 "a"))
-  ;; Iniquity examples 
+  ;; Iniquity examples
   (check-equal? (run ""
                      '(define (print-alphabet i)
                         (if (zero? i)
@@ -646,4 +660,15 @@
                             (begin (write-byte (- 123 i))
                                    (print-alphabet (sub1 i)))))
                      '(print-alphabet 26))
-                (cons (void) "abcdefghijklmnopqrstuvwxyz")))
+                (cons (void) "abcdefghijklmnopqrstuvwxyz"))
+
+  ;; Outlaw examples
+  (check-equal? (run "" '(read-char))
+                (cons eof ""))
+  (check-equal? (run "a" '(read-char))
+                (cons #\a ""))
+  (check-equal? (run "ab" '(read-char))
+                (cons #\a ""))
+  (check-equal? (run "ab" '(cons (read-char) (read-char)))
+                (cons '(#\a . #\b) ""))
+  )

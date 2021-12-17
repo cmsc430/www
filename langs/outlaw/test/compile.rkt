@@ -3,7 +3,7 @@
          "../parse.rkt"
          "../compile.rkt"
          "../unload-bits-asm.rkt"
-         a86/interp)
+         "../a86/interp.rkt")
 
 ;; link with runtime for IO operations
 (unless (file-exists? "../runtime.o")

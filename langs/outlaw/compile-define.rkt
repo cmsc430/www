@@ -5,10 +5,8 @@
          "fv.rkt"
          "utils.rkt"
          "compile-expr.rkt"
-         a86/ast)
-
-(define r9 'r9)
-(define r15 'r15)
+         "a86/ast.rkt"
+         "registers.rkt")
 
 ;; [Listof Defn] -> [Listof Id]
 (define (define-ids ds)
@@ -29,7 +27,7 @@
 (define (compile-define d g)
   (match d
     [(Defn f e)
-     (seq (%%% (symbol->string f))
+     (seq ; (%%% (symbol->string f))
           (Data)
           (Label (symbol->label f))
           (Dq 0)
@@ -54,11 +52,11 @@
          (seq (Label (symbol->label f))
               (Cmp r15 (length xs))
               (Jne 'raise_error_align)              
-              (Mov rax (Offset rsp (* 8 (length xs))))
+              (Mov rax (Offset rsp (*8 (length xs))))
               (Xor rax type-proc)
               (copy-env-to-stack fvs 8)              
               (compile-e e env g #t)
-              (Add rsp (* 8 (length env))) ; pop env
+              (Add rsp (*8 (length env))) ; pop env
               (Ret)))]
       [(LamRest f xs x e)
        (let ((env (append (reverse fvs) (cons x (reverse xs)) (list #f))))
@@ -84,14 +82,14 @@
                      (Label done)))
               (Push rax)
               
-              (Mov rax (Offset rsp (* 8 (add1 (length xs)))))
+              (Mov rax (Offset rsp (*8 (add1 (length xs)))))
               (Xor rax type-proc)
               (copy-env-to-stack fvs 8)              
               (compile-e e env g #t)
-              (Add rsp (* 8 (length env))) ; pop env
+              (Add rsp (*8 (length env))) ; pop env
               (Ret)))]
     [(LamCase f cs)
-     (seq (%%% "lamcase code")
+     (seq ; (%%% "lamcase code")
           (Label (symbol->label f))
           (compile-fun-case-select cs)
           (Jmp 'raise_error_align)

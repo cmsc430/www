@@ -1,200 +1,121 @@
 #lang racket
 (provide read)
+(require "stdlib.rkt")
+;(require (only-in "stdlib.rkt" read-char))
 
-;; Port -> Any
+;; read.rkt
+
+;; -> Any
 ;; Read an s-expression from given port
-(define (read p)
-  (let ((r (<start> p)))
+(define (read)
+  (let ((r (<start>)))
     (if (err? r)
         (error (err-msg r))
         r)))
 
-(struct err (port msg))
+(struct err (msg))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Start
 
-(module+ test
-  (define (p s)
-    (<start> (open-input-string s)))
-
-  (check-equal? (p "") eof)
-  (check-equal? (p "  ") eof)
-  (check-equal? (p ";123") eof)
-  (check-equal? (p "#;123 ") eof)
-  (check-equal? (p "#;123") eof)
-  (check-equal? (p "#|123|# ") eof)
-  (check-equal? (p "#;#|123|#1 ") eof)
-  (check-equal? (p "#;#;1 2") eof)
-  (check-equal? (p "123") 123)
-  (check-equal? (p "#t") #t)
-  (check-equal? (p "#f") #f)
-  (check-equal? (p "#T") #t)
-  (check-equal? (p "#F") #f)
-  (check-equal? (p "#b0") 0)
-  (check-equal? (p "#b1") 1)
-  (check-equal? (p "#b101") #b101)
-  (check-equal? (p "#B101") #b101)
-  (check-equal? (p "#o0") 0)
-  (check-equal? (p "#o1") 1)
-  (check-equal? (p "#o701") #o701)
-  (check-equal? (p "#O701") #o701)
-  (check-equal? (p "#d0") 0)
-  (check-equal? (p "#d1") 1)
-  (check-equal? (p "#d901") 901)
-  (check-equal? (p "#D901") 901)
-  (check-equal? (p "#x0") 0)
-  (check-equal? (p "#x1") 1)
-  (check-equal? (p "#xF01") #xF01)
-  (check-equal? (p "#XF01") #xF01)
-  (check-equal? (p ";123\n1") 1)
-  (check-equal? (p "()") '())
-  (check-equal? (p "[]") '())
-  (check-equal? (p "{}") '())
-  (check-equal? (p "(#t)") '(#t))
-  (check-equal? (p "[#t]") '(#t))
-  (check-equal? (p "{#t}") '(#t))
-  (check-equal? (p "((#t))") '((#t)))
-  (check-pred err? (p "#|"))
-  (check-pred err? (p "#;")) 
-  (check-pred err? (p "(}"))
-  (check-pred err? (p "(]"))
-  (check-pred err? (p "[)"))
-  (check-pred err? (p "(x}"))
-  (check-pred err? (p "(x]"))
-  (check-pred err? (p "[x)"))
-  (check-pred err? (p "(x . y}"))
-  (check-pred err? (p "(x . y]"))
-  (check-pred err? (p "[x . y)")))
-
-(define (<start> p)
-  (match (peek-char p)
-    [(? eof-object?) (read-char p)]
-    [(? char-whitespace?) (read-char p) (<start> p)]
-    [#\; (<line-comment> p) (<start> p)]
-    [#\# (read-char p)
-         (match (peek-char p)
-           [#\| (read-char p)
-                (let ((r (<block-comment> p)))
-                  (if (err? r) r (<start> p)))]
-           [#\; (read-char p)
-                (let ((r (<elem> p)))
-                  (if (err? r) r (<start> p)))]
-           [_ (<octo> p)])]
-    [_   (<elem> p)]))
+(define (<start>)
+  (match (peek-char)
+    [(? eof-object?) (read-char)]
+    [(? char-whitespace?) (begin (read-char) (<start>))]
+    [#\; (begin (<line-comment>) (<start>))]
+    [#\# (begin (read-char)
+                (match (peek-char)
+                  [#\|
+                   (begin (read-char)
+                          (let ((r (<block-comment>)))
+                            (if (err? r) r (<start>))))]
+                  [#\; (read-char)
+                   (let ((r (<elem>)))
+                     (if (err? r) r (<start>)))]
+                  [_ (<octo>)]))]
+    [_   (<elem>)]))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Elem
 
-(module+ test
-  (define (pe s)
-    (<elem> (open-input-string s)))
+(define (<elem>)
+  (match (read-char)
+    [(? eof-object?) (err "eof")]
+    [(? char-whitespace?) (<elem>)]
+    [#\| (<symbol-escape>)]
+    [#\" (<string-start-chars> '())]
+    [#\# (<octo-elem>)]
+    [(? open-paren? c) (<list-or-pair> c)]
+    [#\; (<line-comment>) (<elem>)]
+    [#\' (<quote> 'quote)]
+    [#\` (<quote> 'quasiquote)]
+    [#\, (match (peek-char)
+           [#\@ (read-char) (<quote> 'unquote-splicing)]
+           [_ (<quote> 'unquote)])]
+    [c   (<number-or-symbol> c)]))
 
-  (check-equal? (pe "1") 1)
-  (check-equal? (pe "x") 'x)
-  (check-equal? (pe "|x|") 'x)
-  (check-equal? (pe "'x") ''x)
-  (check-equal? (pe "`x") '`x)
-  (check-equal? (pe ",x") ',x)
-  (check-equal? (pe ",@x") ',@x)
-  (check-equal? (pe "\"x\"") "x")
-  (check-equal? (pe "(x)") '(x))
-  (check-equal? (pe "('x)") '('x))
-  (check-equal? (pe ";f\n1") 1)
-  (check-equal? (pe "#'x") '#'x)
-  (check-equal? (pe "#`x") '#`x)
-  (check-equal? (pe "#,x") '#,x)
-  (check-equal? (pe "#,@x") '#,@x)
-  (check-equal? (pe "#true") #t)
-  (check-equal? (pe "#false") #f)
-  (check-equal? (pe "#\\a") #\a)
-  (check-equal? (pe "#:a") '#:a)
- 
-  (check-pred err? (pe "'(."))
-  (check-pred err? (pe "#"))
-  (check-pred err? (pe "#z"))
-  (check-pred err? (pe "#|"))
-  (check-pred err? (pe "|"))
-  (check-pred err? (pe "#;")))
-
-(define (<elem> p)
-  (match (read-char p)
-    [(? eof-object?) (err p "eof")]
-    [(? char-whitespace?) (<elem> p)]
-    [#\| (<symbol-escape> p)]
-    [#\" (<string-start-chars> '() p)]
-    [#\# (<octo-elem> p)]
-    [(? open-paren? c) (<list-or-pair> c p)]
-    [#\; (<line-comment> p) (<elem> p)]
-    [#\' (<quote> 'quote p)]
-    [#\` (<quote> 'quasiquote p)]
-    [#\, (match (peek-char p)
-           [#\@ (read-char p) (<quote> 'unquote-splicing p)]
-           [_ (<quote> 'unquote p)])]
-    [c   (<number-or-symbol> c p)]))
-
-(define (<quote> q p)
-  (let ((r (<elem> p)))
+(define (<quote> q)
+  (let ((r (<elem>)))
     (if (err? r)
         r
         (list q r))))
 
-(define (<octo-elem> p)
-  (match (peek-char p)
-    [#\| (read-char p)
-         (let ((r (<block-comment> p)))
-           (if (err? r) r (<elem> p)))]
-    [#\; (read-char p)
-         (let ((r (<elem> p)))
-           (if (err? r) r (<elem> p)))]
-    [_ (<octo> p)]))
+(define (<octo-elem>)
+  (match (peek-char)
+    [#\| (read-char)
+         (let ((r (<block-comment>)))
+           (if (err? r) r (<elem>)))]
+    [#\; (read-char)
+         (let ((r (<elem>)))
+           (if (err? r) r (<elem>)))]
+    [_ (<octo>)]))
 
-(define (<octo> p)
-  (match (read-char p)
-    [(? eof-object?) (err p "bad syntax `#`")]
-    [#\T (committed-delim '() #t p)]
-    [#\F (committed-delim '() #f p)]  ; could also be #Fl  
-    [#\t (if (delim? p) #t (committed-delim '(#\r #\u #\e) #t p))]
+(define (<octo>)
+  (match (read-char)
+    [(? eof-object?) (err "bad syntax `#`")]
+    [#\T (committed-delim '() #t)]
+    [#\F (committed-delim '() #f)]  ; could also be #Fl
+    [#\t (if (delim?) #t (committed-delim '(#\r #\u #\e) #t))]
     ;; could also be #fl
-    [#\f (if (delim? p) #f (committed-delim '(#\a #\l #\s #\e) #f p))] 
-    [#\( (<vector> #\( p)]
-    [#\[ (<vector> #\[ p)]
-    [#\{ (<vector> #\{ p)]
+    [#\f (if (delim?) #f (committed-delim '(#\a #\l #\s #\e) #f))]
+    [#\( (<vector> #\()]
+    [#\[ (<vector> #\[)]
+    [#\{ (<vector> #\{)]
     [#\s (unimplemented "structure")]
-    [#\\ (<char-start> p)]
-    [#\: (<keyword> p)]
+    [#\\ (<char-start>)]
+    [#\: (<keyword>)]
     [#\& (unimplemented "boxes")] ; FIXME
-    [#\' (<quote> 'syntax p)]
+    [#\' (<quote> 'syntax)]
     [#\! (unimplemented "shebang comment")]
-    [#\` (<quote> 'quasisyntax p)]
-    [#\, (match (peek-char p)
-           [#\@ (read-char p) (<quote> 'unsyntax-splicing p)]
-           [_ (<quote> 'unsyntax p)])]
+    [#\` (<quote> 'quasisyntax)]
+    [#\, (match (peek-char)
+           [#\@ (read-char) (<quote> 'unsyntax-splicing)]
+           [_ (<quote> 'unsyntax)])]
     [#\~ (unimplemented "compiled code")]
     [#\i (unimplemented "inexact number")]
     [#\I (unimplemented "inexact number")]
     [#\e (unimplemented "exact number")]
     [#\E (unimplemented "exact number")]
-    [#\b (<general-numbern> char-digit2? char-digit2s->number p)]
-    [#\B (<general-numbern> char-digit2? char-digit2s->number p)]
-    [#\o (<general-numbern> char-digit8? char-digit8s->number p)]
-    [#\O (<general-numbern> char-digit8? char-digit8s->number p)]
-    [#\d (<general-numbern> char-digit10? char-digit10s->number p)]
-    [#\D (<general-numbern> char-digit10? char-digit10s->number p)]
-    [#\x (<general-numbern> char-digit16? char-digit16s->number p)]
-    [#\X (<general-numbern> char-digit16? char-digit16s->number p)]
-    [#\< (<here-string> p)]
+    [#\b (<general-numbern> char-digit2? char-digit2s->number)]
+    [#\B (<general-numbern> char-digit2? char-digit2s->number)]
+    [#\o (<general-numbern> char-digit8? char-digit8s->number)]
+    [#\O (<general-numbern> char-digit8? char-digit8s->number)]
+    [#\d (<general-numbern> char-digit10? char-digit10s->number)]
+    [#\D (<general-numbern> char-digit10? char-digit10s->number)]
+    [#\x (<general-numbern> char-digit16? char-digit16s->number)]
+    [#\X (<general-numbern> char-digit16? char-digit16s->number)]
+    [#\< (<here-string>)]
     [#\r (unimplemented "regexp or reader")]
     [#\p (unimplemented "pregexp")]
     [#\c (unimplemented "case switch")]
     [#\C (unimplemented "case switch")]
     [#\h (unimplemented "hash")]
     [(? char-digit10?) (unimplemented "vector or graph")]
-    [_ (err p "bad syntax")]))
-    
+    [_ (err "bad syntax")]))
 
-(define (<here-string> p)
+
+(define (<here-string>)
   (unimplemented "here string"))
 
 
@@ -203,27 +124,29 @@
 
 ;; have seen '#b', '#o', etc.
 ;; simplified to just digits
-(define (<general-numbern> char-digitn? char-digitsn->number p)
-  (local [(define (<digitn>+ p)
-            (match (read-char p)
-              [(? char-digitn? c)  (<digitn>* p (list c))]
-              [_ (err p "error")]))
-          (define (<digitn>* p ds)
-            (if (delim? p)
-                (char-digitsn->number ds)
-                (match (read-char p)
-                  [(? char-digitn? c) (<digitn>* p (cons c ds))]
-                  [_ (err p "error")])))]
-    (match (read-char p)
-      [#\#
-       (match (read-char p)
-         [#\e (<digitn>+ p)]
-         [#\i (unimplemented "inexact")]
-         [_ (err p "error")])]
-      [#\+ (read-char p) (<digitn>+ p)]
-      [#\- (read-char p) (- (<digitn>+ p))]
-      [(? char-digitn? c) (<digitn>* p (list c))]
-      [_ (err p "error")])))
+(define (<general-numbern> char-digitn? char-digitsn->number)
+  (match (read-char)
+    [#\#
+     (match (read-char)
+       [#\e (<digitn>+ char-digitn?)]
+       [#\i (unimplemented "inexact")]
+       [_ (err "error")])]
+    [#\+ (read-char) (<digitn>+)]
+    [#\- (read-char) (- (<digitn>+ char-digitn?))]
+    [(? char-digitn? c) (<digitn>* (list c) char-digitn? char-digitsn->number)]
+    [_ (err "error")]))
+
+(define (<digitn>+ char-digitn?)
+  (match (read-char)
+    [(? char-digitn? c)  (<digitn>* (list c))]
+    [_ (err "error")]))
+
+(define (<digitn>* ds char-digitn? char-digitsn->number)
+  (if (delim?)
+      (char-digitsn->number ds)
+      (match (read-char)
+        [(? char-digitn? c) (<digitn>* (cons c ds) char-digitn? char-digitsn->number)]
+        [_ (err "error")])))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -237,74 +160,42 @@
 
 ;; whenver something else is encounter, parse as a symbol
 
-(module+ test
-  (define (pn s)
-    (<number-or-symbol> (string-ref s 0) (open-input-string (substring s 1))))
-
-  (check-equal? (pn "+") '+)
-  (check-equal? (pn "-") '-)
-  (check-equal? (pn "5") 5)
-  (check-equal? (pn "123") 123)
-  (check-equal? (pn "123 ") 123)
-  (check-equal? (pn "0123") 123)
-  (check-equal? (pn "-123") -123)
-  (check-equal? (pn "+123") 123)
-  ; removed frac
-  (check-equal? (pn "5.") 5.0)
-  (check-equal? (pn ".5") 0.5)
-  (check-equal? (pn ".5 ") 0.5)
-  (check-equal? (pn "+.5") 0.5)
-  (check-equal? (pn "-.5") -0.5)
-  (check-equal? (pn "+1.5") 1.5)
-  (check-equal? (pn "-1.5") -1.5)
-  (check-equal? (pn "+.5") 0.5)
-  (check-equal? (pn "-.") '-.)
-  (check-equal? (pn "+.") '+.)
-  (check-equal? (pn "+.x") '+.x)
-  (check-equal? (pn "+x") '+x)
-  (check-equal? (pn "-x") '-x)
-  ; removed frac
-  (check-equal? (pn ".x") '.x)
-  (check-equal? (pn "1..") '1..)
-  (check-equal? (pn "1.1.") '1.1.)  
-  (check-pred err? (pn ".")))
-
-(define (<number-or-symbol> c p)
+(define (<number-or-symbol> c)
   (match c
-    [#\+ (if (delim? p) '+ (<unsigned-or-symbol> #\+ '() p))]
-    [#\- (if (delim? p) '- (<unsigned-or-symbol> #\- '() p))]
-    [#\. (if (delim? p) (err p ".") (<frac> #f '() '() p))]
-    [(? char-digit10?) (<unsigned-or-symbol> #f (list c) p)]
-    [_   (<symbol> (list c) p)]))
+    [#\+ (if (delim?) '+ (<unsigned-or-symbol> #\+ '()))]
+    [#\- (if (delim?) '- (<unsigned-or-symbol> #\- '()))]
+    [#\. (if (delim?) (err ".") (<frac> #f '() '()))]
+    [(? char-digit10?) (<unsigned-or-symbol> #f (list c))]
+    [_   (<symbol> (list c))]))
 
-(define (<unsigned-or-symbol> signed? whole p)
-  (match (peek-char p)
+(define (<unsigned-or-symbol> signed? whole)
+  (match (peek-char)
     [(? eof-object?) (make-whole signed? whole)]
     [(? char-delim?) (make-whole signed? whole)]
-    [#\. (read-char p) (<frac> signed? whole '() p)]
+    [#\. (read-char) (<frac> signed? whole '())]
     [(? char-digit10? d)
-     (read-char p)
-     (<unsigned-or-symbol> signed? (cons d whole) p)]    
-    [_ (<symbol> (cons (read-char p)
+     (read-char)
+     (<unsigned-or-symbol> signed? (cons d whole))]
+    [_ (<symbol> (cons (read-char)
                        (append whole (if signed? (list signed?) '())))
-                 p)]))
+                )]))
 
-(define (<frac> signed? whole frac p)
-  (match (peek-char p)
+(define (<frac> signed? whole frac)
+  (match (peek-char)
     [(? eof-object?) (make-frac signed? whole frac)]
     [(? char-delim?) (make-frac signed? whole frac)]
-    [(? char-digit10?) (<frac> signed? whole (cons (read-char p) frac) p)]
-    [_ (<symbol> (cons (read-char p)
+    [(? char-digit10?) (<frac> signed? whole (cons (read-char) frac))]
+    [_ (<symbol> (cons (read-char)
                        (append frac
                                (list #\.)
                                whole
                                (if signed? (list signed?) '())))
-                 p)]))
+                )]))
 
 (define (make-frac signed? whole frac)
-  (match* (whole frac)
-    [('() '()) (chars->symbol (list #\. signed?))]
-    [(_ _)
+  (match (cons whole frac)
+    [(cons '() '()) (chars->symbol (list #\. signed?))]
+    [(cons _ _)
      (exact->inexact
       (match signed?
         [#\- (- (frac->number whole frac))]
@@ -315,7 +206,7 @@
   (+ (char-digit10s->number whole)
      (/ (char-digit10s->number frac)
         (expt 10 (length frac)))))
-  
+
 (define (make-whole signed? ds)
   (match signed?
     [#\- (- (char-digit10s->number ds))]
@@ -326,294 +217,158 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Line comment
 
-(module+ test
-  (define (pl s)
-    (let ((p (open-input-string s))
-          (o (open-output-string)))
-      (<line-comment> p)
-      (copy-port p o)
-      (get-output-string o)))
-
-  (check-equal? (pl "foo") "")
-  (check-equal? (pl "foo\n") "")
-  (check-equal? (pl "foo\u20291") "1")
-  (check-equal? (pl "foo\u20281") "1")
-  (check-equal? (pl "foo\r1") "1")
-  (check-equal? (pl "foo\n1") "1"))
-
-(define (<line-comment> p)
-  (let ((c (read-char p)))
+(define (<line-comment>)
+  (let ((c (read-char)))
     (or (eof-object? c)
-        (and (memv c '(#\newline #\return #\u0085 #\u2028 #\u2029)) #t)
-        (<line-comment> p))))
+        (and (memq c '(#\newline #\return #\u0085 #\u2028 #\u2029)) #t)
+        (<line-comment>))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Block comment
 
-(module+ test
-  (define (pb s)
-    (<block-comment> (open-input-string s)))
-
-  (check-equal? (pb "|#") #t)
-  (check-equal? (pb "aadsfa|#") #t)
-  (check-equal? (pb "aadsfa|#adsf") #t)
-  (check-equal? (pb "aad# |#") #t)
-  (check-equal? (pb "aadsfa|#|#") #t)
-  (check-equal? (pb "aads#|fa|#adsf|#") #t)
-
-  (check-pred err? (pb ""))
-  (check-pred err? (pb "#|"))
-  (check-pred err? (pb "#||#")))
-
-(define (<block-comment> p)
-  (match (read-char p)
-    [(? eof-object?) (err p "unbalanced |#")]
-    [#\# (match (peek-char p)
-           [#\| (let ((r (<block-comment> p)))
-                  (if (err? r) r (<block-comment> p)))]
-           [_ (<block-comment> p)])]
-    [#\| (match (peek-char p)
-           [#\# (read-char p) #t]
-           [_ (<block-comment> p)])]
-    [_ (<block-comment> p)]))
+(define (<block-comment>)
+  (match (read-char)
+    [(? eof-object?) (err (string-append "unbalanced |" "#"))]
+    [#\# (match (peek-char)
+           [#\| (let ((r (<block-comment>)))
+                  (if (err? r) r (<block-comment>)))]
+           [_ (<block-comment>)])]
+    [#\| (match (peek-char)
+           [#\# (read-char) #t]
+           [_ (<block-comment>)])]
+    [_ (<block-comment>)]))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Vectors
 
-(module+ test
-  (define (pv s)
-    (<vector> #\( (open-input-string s)))
-
-  (check-equal? (pv ")") #())
-  (check-equal? (pv "x)") #(x))
-  (check-equal? (pv "x y z)") #(x y z))
-  (check-equal? (pv "#;() x y z)") #(x y z))
-  (check-equal? (pv "x #;() y z)") #(x y z))
-  (check-equal? (pv "x y z #;())") #(x y z))
-  (check-equal? (pv ";f\nx y z #;())") #(x y z))
-  (check-equal? (pv ";f\nx y z #;();\n)") #(x y z))
-  (check-pred err? (pv "x . y)"))
-  (check-pred err? (pv "x y . z)"))
-  (check-pred err? (pv "#;() x y . z)"))
-  (check-pred err? (pv "x #;() y . z)"))
-  (check-pred err? (pv "x y #;() . z)"))
-  (check-pred err? (pv "x y . #;() z)"))
-  (check-pred err? (pv "x y . z #;())"))
-  (check-pred err? (pv "#||# x y . z)"))
-  (check-pred err? (pv "x #||# y . z)"))
-  (check-pred err? (pv "x y #||# . z)"))
-  (check-pred err? (pv "x y . #||# z)"))
-  (check-pred err? (pv "x y . z #||#)"))
-  (check-pred err? (pv "x y . z ;f\n)")))
-
-(define (<vector> paren p)
-  (let ((r (<list-or-pair> paren p)))
+(define (<vector> paren)
+  (let ((r (<list-or-pair> paren)))
     (if (err? r)
         r
         (if (list? r)
             (list->vector r)
-            (err p "dotted list in vector")))))
+            (err "dotted list in vector")))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Lists or pairs
 
-(module+ test
-  (define (pd s)
-    (<list-or-pair> #\( (open-input-string s)))
-
-  (check-equal? (pd ")") '())
-  (check-equal? (pd "x)") '(x))
-  (check-equal? (pd "x y z)") '(x y z))
-  (check-equal? (pd "#;() x y z)") '(x y z))
-  (check-equal? (pd "x #;() y z)") '(x y z))
-  (check-equal? (pd "x y z #;())") '(x y z))
-  (check-equal? (pd ";f\nx y z #;())") '(x y z))
-  (check-equal? (pd ";f\nx y z #;();\n)") '(x y z))
-  (check-equal? (pd "x . y)") '(x . y))
-  (check-equal? (pd "x y . z)") '(x y . z))
-  (check-equal? (pd "#;() x y . z)") '(x y . z))
-  (check-equal? (pd "x #;() y . z)") '(x y . z))
-  (check-equal? (pd "x y #;() . z)") '(x y . z))
-  (check-equal? (pd "x y . #;() z)") '(x y . z))
-  (check-equal? (pd "x y . z #;())") '(x y . z))
-  (check-equal? (pd "#||# x y . z)") '(x y . z))
-  (check-equal? (pd "x #||# y . z)") '(x y . z))
-  (check-equal? (pd "x y #||# . z)") '(x y . z))
-  (check-equal? (pd "x y . #||# z)") '(x y . z))
-  (check-equal? (pd "x y . z #||#)") '(x y . z))
-  (check-equal? (pd "x y . z ;f\n)") '(x y . z))  
-  (check-equal? (pd "x #t)") '(x #t))
-  (check-equal? (pd "x .y)") '(x .y))
-  ; removed frac
-  ;(check-equal? (pd "x .0)") '(x 0.0))
-  (check-equal? (pd "x .y)") '(x .y))
-  (check-equal? (pd "[] 0)") '(() 0))
-
-  (check-pred err? (pd ""))
-  (check-pred err? (pd "#|"))
-  (check-pred err? (pd "#;"))
-  (check-pred err? (pd ";"))
-  (check-pred err? (pd "#z"))
-  (check-pred err? (pd "1"))
-  (check-pred err? (pd "1 ."))
-  (check-pred err? (pd "1 #|"))
-  (check-pred err? (pd "1 #;"))
-  (check-pred err? (pd "1 #z"))
-  (check-pred err? (pd "1 ("))
-  (check-pred err? (pd "x . y #t"))
-  (check-pred err? (pd "x . y #|"))
-  (check-pred err? (pd "x . y #;"))
-  (check-pred err? (pd "x . y 1")))
-
-
-(define (<list-or-pair> paren p)
-  (match (peek-char p)
-    [(? eof-object?) (err p "missing! )")]
-    [(? char-whitespace?) (read-char p) (<list-or-pair> paren p)]    
-    [#\; (<line-comment> p) (<list-or-pair> paren p)]
+(define (<list-or-pair> paren)
+  (match (peek-char)
+    [(? eof-object?) (err "missing! )")]
+    [(? char-whitespace?) (read-char) (<list-or-pair> paren)]
+    [#\; (<line-comment>) (<list-or-pair> paren)]
     [(? close-paren? c)
-     (read-char p)
-     (if (opposite? paren c) '() (err p "mismatched paren"))]
-    [#\# (read-char p)
-         (match (peek-char p)
-           [#\| (read-char p)
-                (let ((r (<block-comment> p)))
-                  (if (err? r) r (<list-or-pair> paren p)))]
-           [#\; (read-char p)
-                (let ((r (<elem> p)))
-                  (if (err? r) r (<list-or-pair> paren p)))]           
-           [_ (let ((r (<octo> p)))
-                (if (err? r) r (<elem><list-or-pair> paren (list r) p)))])]    
-    [_  (let ((r (<elem> p)))
+     (read-char)
+     (if (opposite? paren c) '() (err "mismatched paren"))]
+    [#\# (read-char)
+         (match (peek-char)
+           [#\| (read-char)
+                (let ((r (<block-comment>)))
+                  (if (err? r) r (<list-or-pair> paren)))]
+           [#\; (read-char)
+                (let ((r (<elem>)))
+                  (if (err? r) r (<list-or-pair> paren)))]
+           [_ (let ((r (<octo>)))
+                (if (err? r) r (<elem><list-or-pair> paren (list r))))])]
+    [_  (let ((r (<elem>)))
           (if (err? r)
               r
-              (<elem><list-or-pair> paren (list r) p)))]))
+              (<elem><list-or-pair> paren (list r))))]))
 
-(define (<elem><list-or-pair> paren xs p)
-  (match (peek-char p)
-    [(? eof-object?) (err p "missing!! )")]
-    [(? char-whitespace?) (read-char p) (<elem><list-or-pair> paren xs p)]    
-    [#\; (<line-comment> p) (<elem><list-or-pair> paren xs p)]
+(define (<elem><list-or-pair> paren xs)
+  (match (peek-char)
+    [(? eof-object?) (err "missing!! )")]
+    [(? char-whitespace?) (read-char) (<elem><list-or-pair> paren xs)]
+    [#\; (<line-comment>) (<elem><list-or-pair> paren xs)]
     [(? close-paren? c)
-     (read-char p)
-     (if (opposite? paren c) (reverse xs) (err p "mismatched paren"))]
-    [#\# (read-char p)
-         (match (peek-char p)
-           [#\| (read-char p)
-                (let ((r (<block-comment> p)))
-                  (if (err? r) r (<elem><list-or-pair> paren xs p)))]
-           [#\; (read-char p)
-                (let ((r (<elem> p)))
-                  (if (err? r) r (<elem><list-or-pair> paren xs p)))]           
-           [_ (let ((r (<octo> p)))
-                (if (err? r) r (<elem><list-or-pair> paren (cons r xs) p)))])]
-    [#\. (read-char p)
-         (if (delim? p)
-             (<dotted-list> paren xs p)
-             (<elem><list-or-pair> paren (cons (<frac> #f '() '() p) xs) p))]
-    [_  (let ((r (<elem> p)))
+     (read-char)
+     (if (opposite? paren c) (reverse xs) (err "mismatched paren"))]
+    [#\# (read-char)
+         (match (peek-char)
+           [#\| (read-char)
+                (let ((r (<block-comment>)))
+                  (if (err? r) r (<elem><list-or-pair> paren xs)))]
+           [#\; (read-char)
+                (let ((r (<elem>)))
+                  (if (err? r) r (<elem><list-or-pair> paren xs)))]
+           [_ (let ((r (<octo>)))
+                (if (err? r) r (<elem><list-or-pair> paren (cons r xs))))])]
+    [#\. (read-char)
+         (if (delim?)
+             (<dotted-list> paren xs)
+             (<elem><list-or-pair> paren (cons (<frac> #f '() '()) xs)))]
+    [_  (let ((r (<elem>)))
           (if (err? r)
               r
-              (<elem><list-or-pair> paren (cons r xs) p)))]))
+              (<elem><list-or-pair> paren (cons r xs))))]))
 
-(define (<dotted-list> paren xs p)
-  (let ((r (<elem> p)))
+(define (<dotted-list> paren xs)
+  (let ((r (<elem>)))
     (if (err? r)
         r
-        (<dotted-list-close> paren (append* (reverse xs) (list r)) p))))
+        (<dotted-list-close> paren (append* (reverse xs) (list r))))))
 
-(define (<dotted-list-close> paren xs p)
-  (match (read-char p)
-    [(? char-whitespace?) (<dotted-list-close> paren xs p)]
-    [#\; (<line-comment> p) (<dotted-list-close> paren xs p)]
-    [#\# (match (peek-char p)
-           [#\| (read-char p)
-                (let ((r (<block-comment> p)))
-                  (if (err? r) r (<dotted-list-close> paren xs p)))]
-           [#\; (read-char p)
-                (let ((r (<elem> p)))
-                  (if (err? r) r (<dotted-list-close> paren xs p)))]
-           [_ (err p "unexpected")])]
+(define (<dotted-list-close> paren xs)
+  (match (read-char)
+    [(? char-whitespace?) (<dotted-list-close> paren xs)]
+    [#\; (<line-comment>) (<dotted-list-close> paren xs)]
+    [#\# (match (peek-char)
+           [#\| (read-char)
+                (let ((r (<block-comment>)))
+                  (if (err? r) r (<dotted-list-close> paren xs)))]
+           [#\; (read-char)
+                (let ((r (<elem>)))
+                  (if (err? r) r (<dotted-list-close> paren xs)))]
+           [_ (err "unexpected")])]
     [(? close-paren? c)
-     (if (opposite? paren c) xs (err p "mismatched paren"))]
-    [_ (err p "uneasdfasdxpected")]))
+     (if (opposite? paren c) xs (err "mismatched paren"))]
+    [_ (err "uneasdfasdxpected")]))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Symbols and Keywords
 
-(module+ test
-  (define (py s)
-    (<symbol> '() (open-input-string s)))
-
-  (check-equal? (py "") '||)
-  (check-equal? (py "x") 'x)
-  (check-equal? (py "xyz") 'xyz)
-  (check-equal? (py "x(") 'x)
-  (check-equal? (py "|x|") 'x)
-  (check-equal? (py "| |") '| |)
-  (check-equal? (py "\\x") 'x)
-  (check-equal? (py "\\ ") '| |)
-  (check-equal? (py "|\\|") '|\|)
-  (check-pred err? (py "|"))
-  (check-pred err? (py "\\"))
-
-  (define (pk s)
-    (<keyword> (open-input-string s)))
-
-  (check-equal? (pk "") '#:||)
-  (check-equal? (pk "x") '#:x)
-  (check-equal? (pk "xyz") '#:xyz)
-  (check-equal? (pk "x(") '#:x)
-  (check-equal? (pk "|x|") '#:x)
-  (check-equal? (pk "| |") '#:| |)
-  (check-equal? (pk "\\x") '#:x)
-  (check-equal? (pk "\\ ") '#:| |)
-  (check-equal? (pk "|\\|") '#:|\|)
-  (check-pred err? (pk "|"))
-  (check-pred err? (pk "\\")))
-
-(define (<symbol> cs p)
-  (let ((r (<symbol-chars> cs p)))
+(define (<symbol> cs)
+  (let ((r (<symbol-chars> cs)))
     (if (err? r)
         r
         (chars->symbol r))))
 
-(define (<keyword> p)
-  (let ((r (<symbol-chars> '() p)))
+(define (<keyword>)
+  (let ((r (<symbol-chars> '())))
     (if (err? r)
         r
         (chars->keyword r))))
 
-(define (<symbol-escape> p)
-  (let ((r (<symbol-escape-chars> '() p)))
+(define (<symbol-escape>)
+  (let ((r (<symbol-escape-chars> '())))
     (if (err? r)
         r
         (chars->symbol r))))
 
 ;; Assume: what we've seen tells us this is a symbol, cs are the chars of the
 ;; symbol seen so far in reverse order
-(define (<symbol-chars> cs p)
-  (if (delim? p)
+(define (<symbol-chars> cs)
+  (if (delim?)
       cs
-      (match (peek-char p)        
-        [#\\ (read-char p) (<symbol-single-escape-chars> cs p)]
-        [#\| (read-char p) (<symbol-escape-chars> cs p)]        
-        [_ (<symbol-chars> (cons (read-char p) cs) p)])))
+      (match (peek-char)
+        [#\\ (read-char) (<symbol-single-escape-chars> cs)]
+        [#\| (read-char) (<symbol-escape-chars> cs)]
+        [_ (<symbol-chars> (cons (read-char) cs))])))
 
-(define (<symbol-single-escape-chars> cs p)
-  (match (read-char p)
-    [(? eof-object?) (err p "read: end-of-file following `\\` in symbol")]
-    [c (<symbol-chars> (cons c cs) p)]))
+(define (<symbol-single-escape-chars> cs)
+  (match (read-char)
+    [(? eof-object?) (err "read: end-of-file following `\\` in symbol")]
+    [c (<symbol-chars> (cons c cs))]))
 
-(define (<symbol-escape-chars> cs p)
-  (match (read-char p)
-    [(? eof-object?) (err p "read: end-of-file following `|` in symbol")]
-    [#\| (<symbol-chars> cs p)]
-    [c (<symbol-escape-chars> (cons c cs) p)]))
+(define (<symbol-escape-chars> cs)
+  (match (read-char)
+    [(? eof-object?) (err "read: end-of-file following `|` in symbol")]
+    [#\| (<symbol-chars> cs)]
+    [c (<symbol-escape-chars> (cons c cs))]))
 
 (define (chars->symbol cs)
   (string->symbol (list->string (reverse cs))))
@@ -625,186 +380,128 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Characters
 
-(module+ test
-  (require rackunit)
-  (define (pc s)
-    (<char-start> (open-input-string s)))
-
-  (check-equal? (pc "nul") #\nul)
-  (check-equal? (pc "null") #\nul)
-  (check-equal? (pc "backspace") #\backspace)
-  (check-equal? (pc "tab") #\tab)
-  (check-equal? (pc "newline") #\newline)
-  (check-equal? (pc "linefeed") #\linefeed)
-  (check-equal? (pc "vtab") #\vtab)
-  (check-equal? (pc "page") #\page)
-  (check-equal? (pc "return") #\return)
-  (check-equal? (pc "space") #\space)
-  (check-equal? (pc "rubout") #\rubout)
-  (check-equal? (pc "000") #\000)
-  (check-equal? (pc "123") #\123)
-  (check-equal? (pc "uABCD") #\uABCD)
-  (check-equal? (pc "uABC") #\uABC)
-  (check-equal? (pc "uAB") #\uAB)
-  (check-equal? (pc "uA") #\uA)
-  (check-equal? (pc "uabcd") #\uabcd)
-  (check-equal? (pc "uabcd7") #\uabcd)
-  (check-equal? (pc "uabc") #\uabc)
-  (check-equal? (pc "uab") #\uab)
-  (check-equal? (pc "ua") #\ua)
-  (check-equal? (pc "uag") #\ua)
-  (check-equal? (pc "UABCD") #\uABCD)
-  (check-equal? (pc "UABC") #\uABC)
-  (check-equal? (pc "UAB") #\uAB)
-  (check-equal? (pc "UA") #\uA)
-  (check-equal? (pc "Uabcd") #\uabcd)
-  (check-equal? (pc "Uabc") #\uabc)
-  (check-equal? (pc "Uab") #\uab)
-  (check-equal? (pc "Ua") #\ua)  
-  (check-equal? (pc "UABCDE") #\UABCDE)
-  (check-equal? (pc "U000DEF") #\U000DEF)  
-  (check-equal? (pc "u") #\u)
-  (check-equal? (pc "7") #\7)
-  (check-equal? (pc "78") #\7)  
-  (check-equal? (pc "a7") #\a)
-  (check-equal? (pc " 8") #\space)
-  (check-pred err? (pc ""))
-  (check-pred err? (pc "aa"))
-  (check-pred err? (pc "newlines"))
-  (check-pred err? (pc "777"))
-  (check-pred err? (pc "UABCDEF"))
-  (check-pred err? (pc "spo"))
-  (check-pred err? (pc "nub"))
-  (check-pred err? (pc "nula"))
-  (check-pred err? (pc "nulla"))    
-  ;; controversial
-  (check-pred err? (pc "77"))
-  (check-pred err? (pc "779"))
-  (check-equal? (pc "U0000000A") #\newline))
-  
-
 ;; Assume: have already read '#\'
-(define (<char-start> p)
-  (let ((c (read-char p)))
+(define (<char-start>)
+  (let ((c (read-char)))
     (cond
-      [(eof-object? c) (err p "error")]
-      [(eof-object? (peek-char p)) c]
-      [(char-digit8? c) (<char-start><digit8> c p)]
+      [(eof-object? c) (err "error")]
+      [(eof-object? (peek-char)) c]
+      [(char-digit8? c) (<char-start><digit8> c)]
       [(not-char-alphabetic? c) c]
       [else
        (match c
-         [#\b (<char-start>-special-seq #\b #\a '(#\c #\k #\s #\p #\a #\c #\e) #\backspace p)]
-         [#\l (<char-start>-special-seq #\l #\i '(#\n #\e #\f #\e #\e #\d) #\linefeed p)]
-         [#\p (<char-start>-special-seq #\p #\a '(#\g #\e) #\page p)]
-         [#\s (<char-start>-special-seq #\s #\p '(#\a #\c #\e) #\space p)]
-         [#\t (<char-start>-special-seq #\t #\a '(#\b) #\tab p)]
-         [#\v (<char-start>-special-seq #\v #\t '(#\a #\b) #\vtab p)]
+         [#\b (<char-start>-special-seq #\b #\a '(#\c #\k #\s #\p #\a #\c #\e) #\backspace)]
+         [#\l (<char-start>-special-seq #\l #\i '(#\n #\e #\f #\e #\e #\d) #\linefeed)]
+         [#\p (<char-start>-special-seq #\p #\a '(#\g #\e) #\page)]
+         [#\s (<char-start>-special-seq #\s #\p '(#\a #\c #\e) #\space)]
+         [#\t (<char-start>-special-seq #\t #\a '(#\b) #\tab)]
+         [#\v (<char-start>-special-seq #\v #\t '(#\a #\b) #\vtab)]
          [#\r (<char-start>-special-seq-alt #\r
                                                  #\e '(#\t #\u #\r #\n) #\return
-                                                 #\u '(#\b #\o #\u #\t) #\rubout p)]
+                                                 #\u '(#\b #\o #\u #\t) #\rubout)]
          ;; Move this into <char-start>-nu and rename to -n.
-         [#\n (let ((next (peek-char p)))
+         [#\n (let ((next (peek-char)))
                 (cond [(char=? next #\e)
-                       (begin (read-char p)
-                              (committed '(#\w #\l #\i #\n #\e) #\newline p))]
+                       (begin (read-char)
+                              (committed '(#\w #\l #\i #\n #\e) #\newline))]
                       [(char=? next #\u)
-                       (begin (read-char p) (<char-start>nu p))]
+                       (begin (read-char) (<char-start>nu))]
                       [(eof-object? next) #\n]
                       [(not-char-alphabetic? next) #\n]
-                      [else (error p "error")]))]
+                      [else (err "error")]))]
 
          [#\u
-          (cond [(char-digit16? (peek-char p))
-                 (<char-start><digit16>+ (list (read-char p)) 3 p)]
-                [(not-char-alphabetic? (peek-char p))
-                 (read-char p)]
-                [else (err p "error")])]
+          (cond [(char-digit16? (peek-char))
+                 (<char-start><digit16>+ (list (read-char)) 3)]
+                [(not-char-alphabetic? (peek-char))
+                 #\u]
+                [else (err "error")])]
          [#\U
-          (cond [(char-digit16? (peek-char p))
-                 (<char-start><digit16>+ (list (read-char p)) 7 p)]
-                [(not-char-alphabetic? (peek-char p))
-                 (read-char p)]
-                [else (err p "error")])]
+          (cond [(char-digit16? (peek-char))
+                 (<char-start><digit16>+ (list (read-char)) 7)]
+                [(not-char-alphabetic? (peek-char))
+                 #\U]
+                [else (err "error")])]
          [_
           (if (and (char-alphabetic? c)
-                   (not-char-alphabetic? (peek-char p)))
+                   (not-char-alphabetic? (peek-char)))
               c
-              (err p "error"))])])))
+              (err "error"))])])))
 
 ;; Assume: seen '#\', c0, which may be the start of special sequence for char if c1 comes next
-(define (<char-start>-special-seq c0 c1 seq char p)
-  (let ((next (peek-char p)))
+(define (<char-start>-special-seq c0 c1 seq char)
+  (let ((next (peek-char)))
     (cond [(char=? next c1)
-           (begin (read-char p)
-                  (committed seq char p))]
+           (begin (read-char)
+                  (committed seq char))]
           [(eof-object? next) c0]
           [(not-char-alphabetic? next) c0]
-          [else (error p "error")])))
+          [else (err "error")])))
 
 ;; Assume: seen '#\', c0, which may be the start of special sequence;
 ;; for char1 if c1 comes next or for char2 if c2 comes next
-(define (<char-start>-special-seq-alt c0 c1 seq1 char1 c2 seq2 char2 p)
-  (let ((next (peek-char p)))
+(define (<char-start>-special-seq-alt c0 c1 seq1 char1 c2 seq2 char2)
+  (let ((next (peek-char)))
     (cond [(char=? next c1)
-           (begin (read-char p)
-                  (committed seq1 char1 p))]
+           (begin (read-char)
+                  (committed seq1 char1))]
           [(char=? next c2)
-           (begin (read-char p)
-                  (committed seq2 char2 p))]
+           (begin (read-char)
+                  (committed seq2 char2))]
           [(eof-object? next) c0]
           [(not-char-alphabetic? next) c0]
-          [else (error p "error")])))
+          [else (err "error")])))
 
 ;; committed to see #\nul or #\null, error otherwise
-(define (<char-start>nu p)
-  (match (read-char p)
-    [#\l (match (peek-char p)
+(define (<char-start>nu)
+  (match (read-char)
+    [#\l (match (peek-char)
            [(? not-char-alphabetic?) #\nul]
-           [#\l (read-char p)
-                (match (peek-char p)
+           [#\l (read-char)
+                (match (peek-char)
                   [(? not-char-alphabetic?) #\nul]
-                  [_ (err p "error")])]
-           [_ (err p "error")])]
-    [_ (err p "error")]))
+                  [_ (err "error")])]
+           [_ (err "error")])]
+    [_ (err "error")]))
 
-(define (<char-start><digit16>+ cs n p)
+(define (<char-start><digit16>+ cs n)
   (if (zero? n)
       (char-digit16s->char cs)
-      (match (peek-char p)
+      (match (peek-char)
         [(? eof-object?) (char-digit16s->char cs)]
-        [(? char-digit16?) (<char-start><digit16>+ (cons (read-char p) cs) (sub1 n) p)]
+        [(? char-digit16?) (<char-start><digit16>+ (cons (read-char) cs) (sub1 n))]
         [_ (char-digit16s->char cs)])))
 
-(define (<char-start><digit8> c p)
-  (match (peek-char p)
+(define (<char-start><digit8> c)
+  (match (peek-char)
     ;; this is the same behavior Racket has: it commits after two digits
     ;; have to use peek-bytes to behave differently
-    [(? char-digit8?) (<char-start><digit8><digit8> c (read-char p) p)] 
+    [(? char-digit8?) (<char-start><digit8><digit8> c (read-char))]
     [_ c]))
 
-(define (<char-start><digit8><digit8> c1 c2 p)
-  (match (read-char p)
-    [(? eof-object?) (err p "error")]
+(define (<char-start><digit8><digit8> c1 c2)
+  (match (read-char)
+    [(? eof-object?) (err "error")]
     [(? char-digit8? c3) (octal-char c1 c2 c3)]
-    [_ (err p "error")]))
+    [_ (err "error")]))
 
-(define (committed chars c p)
+(define (committed chars c)
   (match chars
-    ['() (if (not-char-alphabetic? (peek-char p))
+    ['() (if (not-char-alphabetic? (peek-char))
              c
-             (err p "error"))]
+             (err "error"))]
     [(cons c0 cs)
-     (let ((c1 (read-char p)))
+     (let ((c1 (read-char)))
        (if (and (char? c1) (char=? c1 c0))
-           (committed cs c p)
-           (err 'p "error")))]))
+           (committed cs c)
+           (err "error")))]))
 
 (define (char-digit16s->char ds)
   (let ((x (char-digit16s->number ds)))
     (if (or (<= 0 x 55295)
             (<= 57344 x 1114111))
         (integer->char x)
-        (err 'p "error"))))
+        (err "error"))))
 
 (define (char-digit2s->number ds)
   (match ds
@@ -824,7 +521,7 @@
   (match ds
     ['() 0]
     [(cons d ds)
-     (+ (char-digit->number d)        
+     (+ (char-digit->number d)
         (*10 (char-digit10s->number ds)))]))
 
 (define (char-digit16s->number ds)
@@ -872,7 +569,7 @@
               (char-digit8->number d3))))
     (if (<= 0 x 255)
         (integer->char x)
-        (err 'p "ERROR"))))
+        (err "ERROR"))))
 
 (define (not-char-alphabetic? c)
   (or (eof-object? c)
@@ -882,114 +579,68 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Strings
 
-(module+ test
-  (require rackunit)
-  (define (ps s)
-    (<string-start-chars> '() (open-input-string s)))
-
-  (check-equal? (ps "\"") "")
-  (check-equal? (ps "a\"") "a")
-  (check-equal? (ps "\\a\"") "\a")
-  (check-equal? (ps "\\b\"") "\b")
-  (check-equal? (ps "\\t\"") "\t")
-  (check-equal? (ps "\\n\"") "\n")
-  (check-equal? (ps "\\v\"") "\v")
-  (check-equal? (ps "\\f\"") "\f")
-  (check-equal? (ps "\\r\"") "\r")
-  (check-equal? (ps "\\e\"") "\e")
-  (check-equal? (ps "\\\"\"") "\"")
-  (check-equal? (ps "\\\'\"") "'")
-  (check-equal? (ps "\\\\\"") "\\")
-  (check-equal? (ps "\\xa\"") "\xa")
-  (check-equal? (ps "\\xab\"") "\xab")
-  (check-equal? (ps "\\xabcd\"") "\xabcd")
-  (check-equal? (ps "\\xabc\"") "\xabc")
-  (check-equal? (ps "\\xaq\"") "\xaq")
-  (check-equal? (ps "\\\nabc\"") "abc")
-  (check-equal? (ps "\\uab\"") "\xab")
-  (check-equal? (ps "\\uabcd\"") "\uabcd")
-  (check-equal? (ps "\\Uabcd\"") "\uabcd")
-  (check-equal? (ps "\\000\"") "\u000")
-  (check-equal? (ps "\\0g\"") "\u0g")
-  (check-equal? (ps "\\x0\"") "\x0")
-  (check-equal? (ps "\\xA\"") "\xa")
-  (check-equal? (ps "\\xa\"") "\xa")
-  (check-equal? (ps "\\UAAAAA\"") "\UAAAAA")
-
-  (check-pred err? (ps ""))
-  (check-pred err? (ps "\\"))
-  (check-pred err? (ps "\\x"))
-  (check-pred err? (ps "\\0"))
-  (check-pred err? (ps "\\x0"))  
-  (check-pred err? (ps "\\xg\""))
-  
-  (check-pred err? (ps "\\q\""))
-  (check-pred err? (ps "a\\q\""))
-  (check-pred err? (ps "\\UFFFFFFFF\""))
-  #;(check-pred err? (ps "\\Uag")))
-
 ;; Assume: have already read '"'
-(define (<string-start-chars> cs p)
-  (match (read-char p)
-    [(? eof-object?) (err p "error")]
+(define (<string-start-chars> cs)
+  (match (read-char)
+    [(? eof-object?) (err "error")]
     [#\" (list->string (reverse cs))]
-    [#\\ (<escape> cs p)]
-    [c   (<string-start-chars> (cons c cs) p)]))
+    [#\\ (<escape> cs)]
+    [c   (<string-start-chars> (cons c cs))]))
 
-(define (<escape> cs p)
-  (match (read-char p)
-    [(? eof-object?) (err p "error")]
-    [#\a (<string-start-chars> (cons #\007 cs) p)]
-    [#\b (<string-start-chars> (cons #\010 cs) p)]
-    [#\t (<string-start-chars> (cons #\011 cs) p)]
-    [#\n (<string-start-chars> (cons #\012 cs) p)]
-    [#\v (<string-start-chars> (cons #\013 cs) p)]
-    [#\f (<string-start-chars> (cons #\014 cs) p)]
-    [#\r (<string-start-chars> (cons #\015 cs) p)]
-    [#\e (<string-start-chars> (cons #\033 cs) p)]
-    [#\" (<string-start-chars> (cons #\"   cs) p)]
-    [#\' (<string-start-chars> (cons #\'   cs) p)]
-    [#\\ (<string-start-chars> (cons #\\   cs) p)]
-    [#\x (<hex>* cs 2 p)]
-    [#\u (<hex>* cs 4 p)] ; FIXME: will need a different function to handle \u...\u... form
-    [#\U (<hex>* cs 8 p)]
-    [(? char-digit8? d) (<octal>+ cs (list d) 2 p)]
-    [#\newline (<string-start-chars> cs p)]
-    [_ (err p "error")]))
+(define (<escape> cs)
+  (match (read-char)
+    [(? eof-object?) (err "error")]
+    [#\a (<string-start-chars> (cons #\007 cs))]
+    [#\b (<string-start-chars> (cons #\010 cs))]
+    [#\t (<string-start-chars> (cons #\011 cs))]
+    [#\n (<string-start-chars> (cons #\012 cs))]
+    [#\v (<string-start-chars> (cons #\013 cs))]
+    [#\f (<string-start-chars> (cons #\014 cs))]
+    [#\r (<string-start-chars> (cons #\015 cs))]
+    [#\e (<string-start-chars> (cons #\033 cs))]
+    [#\" (<string-start-chars> (cons #\"   cs))]
+    [#\' (<string-start-chars> (cons #\'   cs))]
+    [#\\ (<string-start-chars> (cons #\\   cs))]
+    [#\x (<hex>* cs 2)]
+    [#\u (<hex>* cs 4)] ; FIXME: will need a different function to handle \u...\u... form
+    [#\U (<hex>* cs 8)]
+    [(? char-digit8? d) (<octal>+ cs (list d) 2)]
+    [#\newline (<string-start-chars> cs)]
+    [_ (err "error")]))
 
-(define (<octal>+ cs ds n p)
+(define (<octal>+ cs ds n)
   (if (zero? n)
-      (<string-start-chars> (cons (char-digit8s->char ds) cs) p)
-      (match (peek-char p)
-        [(? eof-object?) (err p "error")]
-        [(? char-digit8?) (<octal>+ cs (cons (read-char p) ds) (sub1 n) p)]
-        [_ (<string-start-chars> (cons (char-digit8s->char ds) cs) p)])))
+      (<string-start-chars> (cons (char-digit8s->char ds) cs))
+      (match (peek-char)
+        [(? eof-object?) (err "error")]
+        [(? char-digit8?) (<octal>+ cs (cons (read-char) ds) (sub1 n))]
+        [_ (<string-start-chars> (cons (char-digit8s->char ds) cs))])))
 
-(define (<hex>* cs n p)
-  (match (peek-char p)
-    [(? eof-object?) (err p "error")]
-    [(? char-digit16?) (<hex>+ cs (list (read-char p)) (sub1 n) p)]
-    [_ (err p "error")]))
+(define (<hex>* cs n)
+  (match (peek-char)
+    [(? eof-object?) (err "error")]
+    [(? char-digit16?) (<hex>+ cs (list (read-char)) (sub1 n))]
+    [_ (err "error")]))
 
-(define (<hex>+ cs ds n p)
+(define (<hex>+ cs ds n)
   (if (zero? n)
-      (return-<hex>+ cs ds p)
-      (match (peek-char p)
-        [(? eof-object?) (err p "error")]
-        [(? char-digit16?) (<hex>+ cs (cons (read-char p) ds) (sub1 n) p)]
-        [_ (return-<hex>+ cs ds p)])))
+      (return-<hex>+ cs ds)
+      (match (peek-char)
+        [(? eof-object?) (err "error")]
+        [(? char-digit16?) (<hex>+ cs (cons (read-char) ds) (sub1 n))]
+        [_ (return-<hex>+ cs ds)])))
 
-(define (return-<hex>+ cs ds p)
+(define (return-<hex>+ cs ds)
   (let ((r (char-digit16s->char ds)))
     (if (err? r)
         r
-        (<string-start-chars> (cons r cs) p))))
+        (<string-start-chars> (cons r cs)))))
 
 (define (char-digit8s->char ds)
   (integer->char (char-digit8s->number ds)))
 
-(define (delim? p)
-  (let ((c (peek-char p)))
+(define (delim?)
+  (let ((c (peek-char)))
     (or (eof-object? c)
         (char-delim? c))))
 
@@ -1010,18 +661,18 @@
   (memq c '(#\) #\] #\})))
 
 ;; committed to seeing chars followed by a delimiter, producing x
-(define (committed-delim chars x p)
+(define (committed-delim chars x)
   (match chars
-    ['() (if (delim? p) x (err p "unexpected sequence"))]
+    ['() (if (delim?) x (err "unexpected sequence"))]
     [(cons c0 cs)
-     (let ((c1 (read-char p)))
+     (let ((c1 (read-char)))
        (if (and (char? c1) (char=? c1 c0))
-           (committed-delim cs x p)
-           (err p "unexpected sequence")))]))
+           (committed-delim cs x)
+           (err "unexpected sequence")))]))
 
 (define (unimplemented x)
-  (err #f (string-append "unimplemented: " x)))
-  
+  (err (string-append "unimplemented: " x)))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Multipliers

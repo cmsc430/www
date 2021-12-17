@@ -2,9 +2,8 @@
 (provide compile-literals init-symbol-table literals)
 (require "ast.rkt"
          "utils.rkt"
-         a86/ast)
-
-(define rdi 'rdi)
+         "a86/ast.rkt"
+         "registers.rkt")
 
 ;; Prog -> Asm
 (define (compile-literals p)
@@ -69,8 +68,8 @@
      (append-map literals-e es)]
     [(If e1 e2 e3)
      (append (literals-e e1) (literals-e e2) (literals-e e3))]
-    [(Begin e1 e2)
-     (append (literals-e e1) (literals-e e2))]
+    [(Begin es)
+     (append-map literals-e es)]
     [(Let xs es e)
      (append (append-map literals-e es) (literals-e e))]
     [(App e1 es)

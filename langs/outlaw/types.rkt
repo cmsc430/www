@@ -44,7 +44,8 @@
         [(eq? v #t) val-true]
         [(eq? v #f) val-false]
         [(void? v)  val-void]
-        [(empty? v) val-empty]))
+        [(empty? v) val-empty]
+        [else (error "not an immediate")]))
 
 
 (define (imm-bits? v)

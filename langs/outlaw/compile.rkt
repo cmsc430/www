@@ -1,19 +1,15 @@
 #lang racket
 (provide (all-defined-out))
 (require "ast.rkt"
+         "a86/ast.rkt"
+         "registers.rkt"
          "types.rkt"
          "lambdas.rkt"
          "fv.rkt"
          "utils.rkt"
          "compile-define.rkt"
          "compile-expr.rkt"
-         "compile-literals.rkt"
-         a86/ast)
-
-;; Registers used
-(define rbx 'rbx) ; heap
-(define rsp 'rsp) ; stack
-(define rdi 'rdi) ; arg
+         "compile-literals.rkt")
 
 ;; type CEnv = [Listof Id]
 
@@ -35,7 +31,7 @@
             (compile-lambda-defines (lambdas p) gs)
             (Global 'raise_error_align)
             (Label 'raise_error_align)
-            pad-stack
+            (pad-stack)
             (Mov rdi 0) ; null arg
             (Call 'raise_error)
 
@@ -59,7 +55,7 @@
          (Label r))))
 
 (define stdlib-ids
-  '(list list* make-list list? foldr map filter length append
+  '(list list* make-list list? foldr map filter length append append*
          memq member append-map vector->list
          reverse
          number->string gensym read read-char
@@ -70,6 +66,9 @@
          remove-duplicates remq* remove* remove
          andmap vector list->vector boolean?
          substring odd?
+         system-type ;; hard-coded
+         not findf
+         read-line
          ;; Op0
          read-byte peek-byte void
          ;; Op1
@@ -81,7 +80,7 @@
          string->uninterned-symbol
          open-input-file
          write-char error integer?
-         eq-hash-code
+         eq-hash-code char-alphabetic?
          ;; Op2
          + - < = cons eq? make-vector vector-ref
          make-string string-ref string-append
@@ -102,7 +101,8 @@
          memcpy
          open_input_file
          read_byte_port
-         peek_byte_port)))
+         peek_byte_port
+         is_char_alphabetic)))
 
 (define cons-function
   (let ((code (gensym 'cons_code))

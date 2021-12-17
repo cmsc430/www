@@ -1,9 +1,6 @@
 #lang racket
 (provide symbol->label symbol->data-label lookup pad-stack unpad-stack *8)
-(require a86/ast)
-
-(define rsp 'rsp)
-(define r15 'r15)
+(require "a86/ast.rkt" "registers.rkt")
 
 ;; Symbol -> Label
 ;; Produce a symbol that is a valid Nasm label
@@ -40,16 +37,16 @@
              [#f #f]
              [i (+ 8 i)])])]))
 
-;; Asm
+;; -> Asm
 ;; Dynamically pad the stack to be aligned for a call
-(define pad-stack
+(define (pad-stack)
   (seq (Mov r15 rsp)
        (And r15 #b1000)
        (Sub rsp r15)))
 
-;; Asm
+;; -> Asm
 ;; Undo the stack alignment after a call
-(define unpad-stack
+(define (unpad-stack)
   (seq (Add rsp r15)))
 
 (define (*8 n)

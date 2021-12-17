@@ -1,15 +1,21 @@
 #lang racket
-(provide #;%provides
-         list list* make-list list? map foldr filter length append
+(provide list list* make-list list? map foldr filter length append append*
          memq member append-map vector->list
          number->string gensym read read-char
          > <= >= void?
-         char<=?
+         char<=? char=?
          list->string string->list
          reverse
          remove-duplicates remq* remove* remove
          andmap vector list->vector boolean? substring
          odd?
+         system-type ;; hard-coded
+         not
+         findf
+         read-line
+         char-alphabetic?
+         ; unimplemented
+         exact->inexact / expt string->keyword
          ;; Op0
          read-byte peek-byte void
          ;; Op1
@@ -32,6 +38,7 @@
 (require (prefix-in % racket)
          (rename-in racket [read-byte %read-byte-port]))
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Op0
 (define read-byte
@@ -39,11 +46,17 @@
     [() (%read-byte)]
     [(p) (%read-byte-port p)]))  ;; not a racket function!
 
-(define (peek-byte) (%peek-byte))
-(define (void) (%void))
+;(define (peek-byte) (%peek-byte))
+(define peek-byte
+  (case-lambda
+    [()
+     (%peek-byte (%current-input-port) 0)]
+    [(p off)
+     (%peek-byte p off)]))
 
-#;(define (read-char) (%read-char))
-#;(define (peek-char) (%peek-char))
+(define (void . xs) (%void))
+
+(define (current-input-port) (%current-input-port))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Op1
@@ -71,7 +84,7 @@
 (define (symbol? x) (%symbol? x))
 (define (string->uninterned-symbol x) (%string->uninterned-symbol x))
 (define (open-input-file x) (%open-input-file x))
-(define (error x) (%error x))
+(define (error . x) (%error (car x))) ;; drops other args
 (define (integer? x) (%integer? x))
 (define (eq-hash-code x) (%eq-hash-code x))
 
@@ -98,7 +111,7 @@
          (apply < y zs)
          #f)]))
 
-(define <=  
+(define <=
   (case-lambda
     [(z) #t]
     [(x y . zs)
@@ -106,11 +119,11 @@
          #f
          (apply <= y zs))]))
 
-(define >  
+(define >
   (case-lambda
     [(z) #t]
     [(x y . zs)
-     (if (%< y x)         
+     (if (%< y x)
          (apply > y zs)
          #f)]))
 
@@ -172,6 +185,33 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define (length xs)
+  (match xs
+    ['() 0]
+    [(cons _ xs) (add1 (length xs))]))
+
+(define (reverse xs)
+  (reverse/a xs '()))
+
+(define (reverse/a xs ys)
+  (match xs
+    ['() ys]
+    [(cons x xs)
+     (reverse/a xs (cons x ys))]))
+
+(define (equal? x y)
+  (error "equal? is not defined"))
+
+(define member
+  (case-lambda
+    [(v lst) (member v lst equal?)]
+    [(v lst is-equal?)
+     (match lst
+       ['() #f]
+       [(cons l lst1)
+        (if (is-equal? v l)
+            lst
+            (member v lst1 is-equal?))])]))
 
 (define remove-duplicates
   (case-lambda
@@ -185,7 +225,7 @@
     [(cons x xs)
      (if (member x seen eq)
          (remove-duplicates/a xs eq seen)
-         (remove-duplicates/a xs eq (cons x seen)))]))         
+         (remove-duplicates/a xs eq (cons x seen)))]))
 
 (define (remq* v-list lst)
   (match v-list
@@ -195,7 +235,7 @@
 
 (define remove*
   (case-lambda
-    [(x xs) (remove* x xs equal?)]     
+    [(x xs) (remove* x xs equal?)]
     [(x xs eq)
      (match xs
        ['() '()]
@@ -237,6 +277,13 @@
   (or (eq? x #t)
       (eq? x #f)))
 
+(define (list->string xs)
+  (match xs
+    ['() ""]
+    [(cons c cs)
+     (string-append (make-string 1 c)
+                    (list->string cs))]))
+
 (define substring
   (case-lambda
     [(str start) (substring str start (string-length str))]
@@ -252,24 +299,36 @@
 (define (odd? x)
   (= (remainder x 2) 1))
 
-(define (char<=? c . cs)
-  (char<=/a? (char->integer c) cs))
+;; FIXME: hard-coded system type
+(define (system-type _)
+  'macosx)
 
-(define (char<=/a? d cs)
+(define (not x)
+  (if x #f #t))
+
+(define (findf proc xs)
+  (match xs
+    ['() #f]
+    [(cons x xs)
+     (if (proc x)
+         x
+         (findf proc xs))]))
+
+(define (char<=? c . cs)
+  (char-compare <= (char->integer c) cs))
+
+(define (char=? c . cs)
+  (char-compare = (char->integer c) cs))
+
+(define (char-compare cmp d cs)
   (match cs
     ['() #t]
     [(cons c cs)
      (let ((d1 (char->integer c)))
-       (if (<= d d1)
-           #t
-           (char<=/a? d1 cs)))]))
+       (if (cmp d d1)
+           (char-compare cmp d1 cs)
+           #f))]))
 
-(define (list->string xs)
-  (match xs
-    ['() ""]
-    [(cons c cs)
-     (string-append (make-string 1 c)
-                    (list->string cs))]))
 
 (define (string->list s)
   (string->list/a s (string-length s) '()))
@@ -279,7 +338,6 @@
       xs
       (string->list/a s (sub1 n)
                       (cons (string-ref s (sub1 n)) xs))))
-                            
 
 (define (void? x)
   (eq? x (void)))
@@ -306,11 +364,6 @@
     [(cons x xs)
      (list? xs)]
     [_ #f]))
-
-(define (length xs)
-  (match xs
-    ['() 0]
-    [(cons _ xs) (add1 (length xs))]))
 
 ;; should really take any number of xss
 (define (foldr f b xs)
@@ -344,41 +397,22 @@
     [(cons x xs)
      (cons (f x) (map1 f xs))]))
 
+
 (define (append . xss)
   (match xss
     ['() '()]
+    [(cons x '()) x]
     [(cons '() xss)
      (apply append xss)]
     [(cons (cons x xs) xss)
      (cons x
            (apply append xs xss))]))
 
-
-(define (reverse xs)
-  (reverse/a xs '()))
-
-(define (reverse/a xs ys)
-  (match xs
-    ['() ys]
-    [(cons x xs)
-     (reverse/a xs (cons x ys))]))
+(define (append* xs xss) ; only binary case
+  (apply append xs xss))
 
 (define (memq v lst)
   (member v lst eq?))
-
-(define member
-  (case-lambda
-    [(v lst) (member v lst equal?)]
-    [(v lst is-equal?)
-     (match lst
-       ['() #f]
-       [(cons l lst1)
-        (if (is-equal? v l)
-            lst
-            (member v lst1 is-equal?))])]))
-
-(define (equal? x y)
-  (error "equal? is not defined"))
 
 (define append-map
   (case-lambda
@@ -396,7 +430,7 @@
       '()
       (append (apply f (map1 (lambda (x) (car x)) xss))
               (append-mapn f (map1 (lambda (x) (cdr x)) xss)))))
-  
+
 (define (vector->list v)
   (vector->list/a v (vector-length v) '()))
 
@@ -433,7 +467,7 @@
 (define number->string
   (case-lambda
     [(n) (number->string n 10)]
-    [(n radix)       
+    [(n radix)
      (if (< n 0)
          (string-append "-" (nat->string (- n) "" radix))
          (nat->string n "" radix))]))
@@ -463,28 +497,8 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Need:
-;; - ports
-;; - read-char
-;; - peek-char
-
-;; Port -> Any
-;; Read an s-expression from given port
-(define (read p)
-  (let ((r (<start> p)))
-    (if (err? r)
-        (error (err-msg r))
-        r)))
-
-(struct err (port msg))
-
-(define (<start> p)
-  100)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define (read-char p)
-   (let ((b (read-byte p)))
+(define (read-char)
+   (let ((b (read-byte)))
      (if (eof-object? b)
          b
          (integer->char
@@ -492,14 +506,58 @@
               b
               (if (>= b 240)
                   (+ (arithmetic-shift (bitwise-and b #b111) 18)
-                     (arithmetic-shift (bitwise-and (read-byte p) #b111111) 12)
-                     (arithmetic-shift (bitwise-and (read-byte p) #b111111) 6)
-                     (bitwise-and (read-byte p) #b111111))
+                     (arithmetic-shift (bitwise-and (read-byte) #b111111) 12)
+                     (arithmetic-shift (bitwise-and (read-byte) #b111111) 6)
+                     (bitwise-and (read-byte) #b111111))
                   (if (>= b 224)
                       (+ (arithmetic-shift (bitwise-and b #b1111) 12)
-                         (arithmetic-shift (bitwise-and (read-byte p) #b111111) 6)
-                         (bitwise-and (read-byte p) #b111111))
+                         (arithmetic-shift (bitwise-and (read-byte) #b111111) 6)
+                         (bitwise-and (read-byte) #b111111))
                       (if (>= b 192)
                           (+ (arithmetic-shift (bitwise-and b #b11111) 6)
-                             (bitwise-and (read-byte p) #b111111))
+                             (bitwise-and (read-byte) #b111111))
                           (error "bad bytes")))))))))
+
+(define (peek-char)
+   (let ((b (peek-byte)))
+     (if (eof-object? b)
+         b
+         (integer->char
+          (if (< b 128)
+              b
+              (if (>= b 240)
+                  (+ (arithmetic-shift (bitwise-and b #b111) 18)
+                     (arithmetic-shift (bitwise-and (peek-byte (%current-input-port) 1) #b111111) 12)
+                     (arithmetic-shift (bitwise-and (peek-byte (%current-input-port) 2) #b111111) 6)
+                     (bitwise-and (peek-byte (%current-input-port) 3) #b111111))
+                  (if (>= b 224)
+                      (+ (arithmetic-shift (bitwise-and b #b1111) 12)
+                         (arithmetic-shift (bitwise-and (peek-byte (%current-input-port) 1) #b111111) 6)
+                         (bitwise-and (peek-byte (%current-input-port) 2) #b111111))
+                      (if (>= b 192)
+                          (+ (arithmetic-shift (bitwise-and b #b11111) 6)
+                             (bitwise-and (peek-byte (%current-input-port) 1) #b111111))
+                          (error "bad bytes")))))))))
+
+(define (read-line)
+  (read-line/a '()))
+
+(define (read-line/a cs)
+  (let ((c (read-char)))
+    (if (or (eof-object? c) (eq? c #\newline))
+        (list->string (reverse cs))
+        (read-line/a (cons c cs)))))
+
+(define (char-alphabetic? x) (%char-alphabetic? x))
+
+(define (exact->inexact x)
+  (error "exact->inexact not implemented"))
+
+(define (/ x y)
+  (error "/ not implemented"))
+
+(define (expt n m)
+  (error "expt not implemented"))
+
+(define (string->keyword s)
+  (error "string->keyword not implemented"))

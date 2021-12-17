@@ -2,10 +2,8 @@
 (provide compile-datum)
 (require "types.rkt"
          "utils.rkt"
-         a86/ast)
-
-;; Registers used
-(define rax 'rax) ; return
+         "a86/ast.rkt"
+         "registers.rkt")
 
 ;; Datum -> Asm
 (define (compile-datum d)
