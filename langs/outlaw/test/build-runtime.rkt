@@ -1,5 +1,5 @@
 #lang racket
-(require a86/interp)
+(require "../a86/interp.rkt")
 
 ;; link with runtime for IO operations
 (unless (file-exists? "../runtime.o")
