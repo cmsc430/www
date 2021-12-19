@@ -20,6 +20,7 @@ objs = \
 	string.o \
 	io.o \
 	error.o \
+	os.o \
 	stdlib.o
 
 default: runtime.o

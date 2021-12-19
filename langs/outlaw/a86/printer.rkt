@@ -18,7 +18,7 @@
 
 ;; Label -> String
 (define label-symbol->string
-  (match (system-type 'os)
+  (match (system-type)
     ['macosx
      (λ (s) (string-append "_" (symbol->string s)))]
     [_ symbol->string]))
@@ -26,7 +26,7 @@
 ;; Label -> String
 ;; prefix with _ for Mac
 (define label-symbol->string/rel
-  (match (system-type 'os)
+  (match (system-type)
     ['macosx
      (λ (s) (string-append "_" (symbol->string s)))]
     [_
@@ -76,7 +76,7 @@
 (define (external-label-shared? x)
   (and (label? x)
        (current-shared?)
-       (eq? 'unix (system-type 'os))
+       (eq? 'unix (system-type))
        (memq x (unbox external-labels))))
 
 (define (mov->string a1 a2)

@@ -12,6 +12,11 @@
                      (unpad-stack))]
     ['current-input-port ; hack, doesn't actually exist
      (seq (Mov rax val-void))]
+    ['system-type
+     (seq (pad-stack)
+          (Call 'system_type)
+          (Sal rax int-shift)
+          (unpad-stack))]
 
     ;; Op1
     ['add1

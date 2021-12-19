@@ -102,7 +102,8 @@
          open_input_file
          read_byte_port
          peek_byte_port
-         is_char_alphabetic)))
+         is_char_alphabetic
+         system_type)))
 
 (define cons-function
   (let ((code (gensym 'cons_code))

@@ -9,7 +9,7 @@
          remove-duplicates remq* remove* remove
          andmap vector list->vector boolean? substring
          odd?
-         system-type ;; hard-coded
+         system-type
          not
          findf
          read-line
@@ -299,10 +299,13 @@
 (define (odd? x)
   (= (remainder x 2) 1))
 
-;; FIXME: hard-coded system type
-(define (system-type _)
-  'unix)
-;  'macosx)
+(define (system-type)
+  ;; the primitive system type returns 1 for mac, 0 otherwise;
+  ;; the fall through case is for when %system-type is implemented in Racket
+  (match (%system-type)
+    [1 'macosx]
+    [0 'unix]
+    [x x]))
 
 (define (not x)
   (if x #f #t))
