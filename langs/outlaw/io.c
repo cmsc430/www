@@ -9,6 +9,7 @@
 #define port_buffer_bytes 8
 
 void utf8_encode_string(val_str_t *, char *);
+int utf8_encode_char(val_char_t, char *);
 
 val_t read_byte(void)
 {
@@ -27,6 +28,14 @@ val_t peek_byte(void* fake_port, int offset)
 val_t write_byte(val_t c)
 {
   putc((char) val_unwrap_int(c), out);
+  return val_wrap_void();
+}
+
+val_t print_codepoint_out(val_t c)
+{
+  char buffer[5] = {0};
+  utf8_encode_char(val_unwrap_char(c), buffer);
+  fprintf(out, "%s", buffer);
   return val_wrap_void();
 }
 

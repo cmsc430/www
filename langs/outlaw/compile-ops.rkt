@@ -153,6 +153,12 @@
           (pad-stack)
           (Call 'is_char_whitespace)
           (unpad-stack))]
+    ['write-char
+     (seq (assert-char rax)
+          (Mov rdi rax)
+          (pad-stack)
+          (Call 'print_codepoint_out)
+          (unpad-stack))]
 
     ;; Op2
     ['+
