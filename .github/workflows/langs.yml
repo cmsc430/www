@@ -33,4 +33,6 @@ jobs:
     - name: Install langs package
       run: raco pkg install langs/
     - name: Run tests
-      run: raco test -p langs
+      run: |
+        export LINK_DIR=/usr/lib/x86_64-linux-gnu
+        raco test -p langs

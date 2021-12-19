@@ -27,11 +27,8 @@ default: runtime.o
 runtime.o: $(objs)
 	ld -r $(objs) -o runtime.o
 
-%.so: %.o runtime.o
-	gcc -z defs -v -L$(LINK_DIR) -lunistring -shared runtime.o $< -o $@
-
 %.run: %.o runtime.o
-	gcc -L$(LINK_DIR) -lunistring runtime.o $< -o $@
+	gcc -lunistring runtime.o $< -o $@
 
 .c.o:
 	gcc -fPIC -c -g -o $@ $<
