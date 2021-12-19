@@ -15,6 +15,10 @@ jobs:
       uses: actions/checkout@main
     - name: Install nasm
       run: sudo apt-get install nasm
+    - name: Install libunistring
+      run: |
+        sudo apt-get install libunistring2
+        sudo apt-get install libunistring-dev
     - name: Install Racket
       uses: Bogdanp/setup-racket@v1.5
       with:
@@ -29,4 +33,6 @@ jobs:
     - name: Install langs package
       run: raco pkg install langs/
     - name: Run tests
-      run: raco test -p langs
+      run: |
+        export LINK_DIR=/usr/lib/x86_64-linux-gnu
+        raco test -p langs
