@@ -76,6 +76,7 @@
 (define (external-label-shared? x)
   (and (label? x)
        (current-shared?)
+       (eq? 'unix (system-type 'os))
        (memq x (unbox external-labels))))
 
 (define (mov->string a1 a2)
