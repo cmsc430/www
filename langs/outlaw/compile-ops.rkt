@@ -132,6 +132,7 @@
           (unpad-stack))]
     ['error
      (seq (assert-string rax)
+          (Xor rax type-str)
           (Mov rdi rax)
           (pad-stack)
           (Call 'raise_error))]
