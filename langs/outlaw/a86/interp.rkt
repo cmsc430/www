@@ -179,7 +179,7 @@
         ""
         "-z defs "))
   (unless (parameterize ((current-error-port err-port))
-            (system (format "gcc ~a-v -shared -lunistring ~a ~a -o ~a"
+            (system (format "gcc ~a-v -shared ~a ~a -o ~a -lunistring"
                             -z-defs-maybe
                             ;(getenv "LINK_PATH")
                             t.o objs t.so)))
