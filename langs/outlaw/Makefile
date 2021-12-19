@@ -8,10 +8,8 @@ UNAME := $(shell uname)
 
 ifeq ($(UNAME), Darwin)
   format=macho64
-  libs='-lunistring'
 else
   format=elf64
-  libs='-L/usr/lib/x86_64-linux-gnu -l:libunistring.a'
 endif
 
 objs = \
@@ -27,10 +25,13 @@ objs = \
 default: runtime.o
 
 runtime.o: $(objs)
-	ld -r $(objs) $(libs) -o runtime.o
+	ld -r $(objs) -o runtime.o
+
+%.so: %.o runtime.o
+	gcc -z defs -v -L$(LINK_DIR) -lunistring -shared runtime.o $< -o $@
 
 %.run: %.o runtime.o
-	gcc runtime.o $< -o $@
+	gcc -L$(LINK_DIR) -lunistring runtime.o $< -o $@
 
 .c.o:
 	gcc -fPIC -c -g -o $@ $<
@@ -42,7 +43,7 @@ stdlib.s: stdlib.rkt
 	cat stdlib.rkt | racket -t compile-library.rkt -m > stdlib.s
 
 %.s: %.rkt
-	cat $< | racket -t compile-stdin.rkt > $@
+	cat $< | racket -t compile-stdin.rkt -m > $@
 
 clean:
 	rm *.o *.s *.run

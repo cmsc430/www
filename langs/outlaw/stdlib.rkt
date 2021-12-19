@@ -301,7 +301,8 @@
 
 ;; FIXME: hard-coded system type
 (define (system-type _)
-  'macosx)
+  'unix)
+;  'macosx)
 
 (define (not x)
   (if x #f #t))
