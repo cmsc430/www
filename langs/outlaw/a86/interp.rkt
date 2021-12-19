@@ -179,9 +179,9 @@
         ""
         "-z defs "))
   (unless (parameterize ((current-error-port err-port))
-            (system (format "gcc ~a-v -shared ~a ~a -o ~a -lunistring"
+            (system (format "gcc ~a-v -L~a -shared ~a ~a -o ~a -lunistring"
                             -z-defs-maybe
-                            ;(getenv "LINK_PATH")
+                            (getenv "LINK_DIR")
                             t.o objs t.so)))
     (define err-msg
       (get-output-string err-port))
