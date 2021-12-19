@@ -13,6 +13,7 @@ jobs:
         sudo dpkg -i pandoc.deb
         sudo apt-get install nasm
         sudo apt-get install fonts-stix
+        sudo apt-get install libunistring-dev
     - name: Install Racket
       uses: Bogdanp/setup-racket@v1.5
       with:
@@ -22,6 +23,7 @@ jobs:
         version: '8.1'
     - name: Build and test
       run: |
+        export LINK_DIR=/usr/lib/x86_64-linux-gnu
         raco pkg install langs/
         raco make www/main.scrbl
         raco test langs
