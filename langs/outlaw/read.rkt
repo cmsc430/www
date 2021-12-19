@@ -1,6 +1,6 @@
 #lang racket
 (provide read)
-(require "stdlib.rkt")
+(require "stdlib.rkt" "utils.rkt")
 ;(require (only-in "stdlib.rkt" read-char))
 
 ;; read.rkt
@@ -673,23 +673,3 @@
 
 (define (unimplemented x)
   (err (string-append "unimplemented: " x)))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Multipliers
-
-(define (*2 a)
-   (arithmetic-shift a 1))
-
-(define (*8 a)
-   (arithmetic-shift a 3))
-
-(define (*16 a)
-   (arithmetic-shift a 4))
-
-(define (*10 a) ; 10a=2^3a+2a
-  (+ (arithmetic-shift a 1)
-     (arithmetic-shift a 3)))
-
-(define (*64 a)
-  (arithmetic-shift a 6))

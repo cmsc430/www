@@ -1,7 +1,7 @@
 #lang racket
 (provide list list* make-list list? map foldr filter length append append*
          memq member append-map vector->list
-         number->string gensym read read-char
+         number->string gensym read read-char peek-char
          > <= >= void?
          char<=? char=?
          list->string string->list
