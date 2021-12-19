@@ -561,7 +561,8 @@
   (let ((x (char->integer c)))
     (cond [(<= 48 x 57)  (- x 48)]
           [(<= 65 x 70)  (- x 55)]
-          [(<= 97 x 102) (- x 87)])))
+          [(<= 97 x 102) (- x 87)]
+          [else (error "bad char-digit16")])))
 
 (define (octal-char d1 d2 d3)
   (let ((x (+ (*64 (char-digit8->number d1))
