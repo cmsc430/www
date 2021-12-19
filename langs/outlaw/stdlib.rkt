@@ -13,7 +13,7 @@
          not
          findf
          read-line
-         char-alphabetic?
+         char-alphabetic? char-whitespace?
          ; unimplemented
          exact->inexact / expt string->keyword
          ;; Op0
@@ -553,6 +553,7 @@
         (read-line/a (cons c cs)))))
 
 (define (char-alphabetic? x) (%char-alphabetic? x))
+(define (char-whitespace? x) (%char-whitespace? x))
 
 (define (exact->inexact x)
   (error "exact->inexact not implemented"))

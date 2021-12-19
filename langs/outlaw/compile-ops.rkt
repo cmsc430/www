@@ -146,6 +146,13 @@
           (pad-stack)
           (Call 'is_char_alphabetic)
           (unpad-stack))]
+    ['char-whitespace?
+     (seq (assert-char rax)
+          (Sar rax char-shift)
+          (Mov rdi rax)
+          (pad-stack)
+          (Call 'is_char_whitespace)
+          (unpad-stack))]
 
     ;; Op2
     ['+

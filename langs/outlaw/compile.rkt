@@ -80,7 +80,7 @@
          string->uninterned-symbol
          open-input-file
          write-char error integer?
-         eq-hash-code char-alphabetic?
+         eq-hash-code char-alphabetic? char-whitespace?
          ;; Op2
          + - < = cons eq? make-vector vector-ref
          make-string string-ref string-append
@@ -103,6 +103,7 @@
          read_byte_port
          peek_byte_port
          is_char_alphabetic
+         is_char_whitespace
          system_type)))
 
 (define cons-function

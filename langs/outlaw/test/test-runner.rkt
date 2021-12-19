@@ -594,6 +594,8 @@
   (check-equal? (run '(findf odd? '(2 4 3 7))) 3)
   (check-equal? (run '(char-alphabetic? #\a)) #t)
   (check-equal? (run '(char-alphabetic? #\space)) #f)
+  (check-equal? (run '(char-whitespace? #\a)) #f)
+  (check-equal? (run '(char-whitespace? #\space)) #t)
   (check-equal? (run '(begin 1)) 1)
   (check-equal? (run '(begin 1 2)) 2)
   (check-equal? (run '(begin 1 2 3)) 3)

@@ -19,7 +19,9 @@ val_t is_char_alphabetic(val_char_t c) {
   return val_wrap_bool(uc_is_property_alphabetic(c));
 }
 
-
+val_t is_char_whitespace(val_char_t c) {
+  return val_wrap_bool(uc_is_property_white_space(c));
+}
 
 void print_result(val_t x)
 {

@@ -291,7 +291,6 @@
     [(? symbol? xs)
      (LamRest (gensym 'lamrest) '() xs (parse-e e))]
     [_
-     (eprintf "xs: ~a e: ~a\n" xs e)
      (error "parse parameter list error")]))
 
 ;; Datum -> Datum
@@ -337,7 +336,7 @@
          write-char
          error integer?
          eq-hash-code
-         char-alphabetic?))
+         char-alphabetic? char-whitespace?))
 (define op2
   '(+ - < = cons eq? make-vector vector-ref make-string string-ref
       string-append set-box! quotient remainder
