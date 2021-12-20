@@ -340,7 +340,7 @@
               cm2))])])]
     [(PStruct n ps)
      (match (compile-struct-patterns ps c g (cons #f cm) next 1)
-       [(list i f cm)
+       [(list i f cm1)
         (let ((fail (gensym)))
           (list
            (seq (Mov r8 rax)
@@ -358,7 +358,7 @@
                 (Label fail)
                 (Add rsp (*8 (length cm)))
                 (Jmp next))
-           cm))])]
+           cm1))])]
 
     [(PPred e)
      (let ((fail (gensym 'fail)))

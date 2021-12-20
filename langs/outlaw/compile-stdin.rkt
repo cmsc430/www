@@ -1,5 +1,5 @@
 #lang racket
-(require "parse.rkt" "compile.rkt" "read-all.rkt" "a86/printer.rkt")
+(require "stdlib.rkt" "parse.rkt" "compile.rkt" "read-all.rkt" "a86/printer.rkt")
 (provide main)
 
 ;; -> Void

@@ -1,7 +1,7 @@
 #lang racket
 (provide list list* make-list list? map foldr filter length append append*
          memq member append-map vector->list
-         number->string gensym read read-char
+         number->string gensym read read-char peek-char
          > <= >= void?
          char<=? char=?
          list->string string->list
@@ -13,7 +13,8 @@
          not
          findf
          read-line
-         char-alphabetic?
+         char-alphabetic? char-whitespace?
+         displayln ; only works for strings
          ; unimplemented
          exact->inexact / expt string->keyword
          ;; Op0
@@ -65,6 +66,7 @@
 (define (zero? n) (%zero? n))
 (define (char? n) (%char? n))
 (define (write-byte b) (%write-byte b)) ; IMPROVE: add port
+(define (write-char c) (%write-char c))
 (define (eof-object? x) (%eof-object? x))
 (define (integer->char i) (%integer->char i))
 (define (char->integer c) (%char->integer c))
@@ -553,6 +555,13 @@
         (read-line/a (cons c cs)))))
 
 (define (char-alphabetic? x) (%char-alphabetic? x))
+(define (char-whitespace? x) (%char-whitespace? x))
+
+(define (displayln s)
+  (if (string? s)
+      (begin (map write-char (string->list s))
+             (write-char #\newline))
+      (error "unimplemented displayln for non-strings")))
 
 (define (exact->inexact x)
   (error "exact->inexact not implemented"))

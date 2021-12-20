@@ -313,10 +313,11 @@
               cm2))])])]
     [(PStruct n ps)
      (match (compile-struct-patterns ps (cons #f cm) next 1)
-       [(list i f cm)
+       [(list i f cm1)
         (let ((fail (gensym)))
           (list
-           (seq (Mov r8 rax)
+           (seq (%%% "struct")
+                (Mov r8 rax)
                 (And r8 ptr-mask)
                 (Cmp r8 type-struct)
                 (Jne fail)
@@ -331,7 +332,7 @@
                 (Label fail)
                 (Add rsp (* 8 (length cm)))
                 (Jmp next))
-           cm))])]))
+           cm1))])]))
 
 ;; [Listof Pat] CEnv Symbol Nat -> (list Asm Asm CEnv)
 (define (compile-struct-patterns ps cm next i)

@@ -428,7 +428,13 @@
                 #f)
   (check-equal? (run '(struct foo (x))
                      '(foo-x #t))
-                'err))
+                'err)
+  (check-equal? (run '(struct foo (x))
+                     '(struct bar (y))
+                     '(match (bar 5)
+                        [(foo x) #f]
+                        [(bar x) x]))
+                5))
 
 (define (test-runner-io run)
   ;; Evildoer examples

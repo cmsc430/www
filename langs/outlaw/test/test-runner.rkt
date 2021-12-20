@@ -594,6 +594,8 @@
   (check-equal? (run '(findf odd? '(2 4 3 7))) 3)
   (check-equal? (run '(char-alphabetic? #\a)) #t)
   (check-equal? (run '(char-alphabetic? #\space)) #f)
+  (check-equal? (run '(char-whitespace? #\a)) #f)
+  (check-equal? (run '(char-whitespace? #\space)) #t)
   (check-equal? (run '(begin 1)) 1)
   (check-equal? (run '(begin 1 2)) 2)
   (check-equal? (run '(begin 1 2 3)) 3)
@@ -602,6 +604,12 @@
   (check-equal? (run '(let ((x 1)) x x x)) 1)
   (check-equal? (run '(match 1 [1 2 3])) 3)
   (check-equal? (run '(system-type)) (system-type))
+  (check-equal? (run '(struct Foo (x))
+                     '(struct Bar (y))
+                     '(match (Bar 1)
+                        [(Foo x) #f]
+                        [(Bar x) x]))
+                1)                       
   )
 
 
@@ -672,4 +680,10 @@
                 (cons #\a ""))
   (check-equal? (run "ab" '(cons (read-char) (read-char)))
                 (cons '(#\a . #\b) ""))
+  (check-equal? (run "" '(write-char #\a))
+                (cons (void) "a"))
+  (check-equal? (run "" '(write-char #\newline))
+                (cons (void) "\n"))
+  (check-equal? (run "" '(displayln "hello world"))
+                (cons (void) "hello world\n"))
   )

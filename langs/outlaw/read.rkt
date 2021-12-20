@@ -1,6 +1,6 @@
 #lang racket
 (provide read)
-(require "stdlib.rkt")
+(require "stdlib.rkt" "utils.rkt")
 ;(require (only-in "stdlib.rkt" read-char))
 
 ;; read.rkt
@@ -561,7 +561,8 @@
   (let ((x (char->integer c)))
     (cond [(<= 48 x 57)  (- x 48)]
           [(<= 65 x 70)  (- x 55)]
-          [(<= 97 x 102) (- x 87)])))
+          [(<= 97 x 102) (- x 87)]
+          [else (error "bad char-digit16")])))
 
 (define (octal-char d1 d2 d3)
   (let ((x (+ (*64 (char-digit8->number d1))
@@ -672,23 +673,3 @@
 
 (define (unimplemented x)
   (err (string-append "unimplemented: " x)))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Multipliers
-
-(define (*2 a)
-   (arithmetic-shift a 1))
-
-(define (*8 a)
-   (arithmetic-shift a 3))
-
-(define (*16 a)
-   (arithmetic-shift a 4))
-
-(define (*10 a) ; 10a=2^3a+2a
-  (+ (arithmetic-shift a 1)
-     (arithmetic-shift a 3)))
-
-(define (*64 a)
-  (arithmetic-shift a 6))

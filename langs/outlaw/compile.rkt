@@ -58,17 +58,18 @@
   '(list list* make-list list? foldr map filter length append append*
          memq member append-map vector->list
          reverse
-         number->string gensym read read-char
+         number->string gensym read read-char peek-char
          > <= >=
          void?
          list->string string->list
-         char<=?
+         char<=? char=?
          remove-duplicates remq* remove* remove
          andmap vector list->vector boolean?
          substring odd?
          system-type ;; hard-coded
          not findf
          read-line
+         exact->inexact / expt string->keyword ; unimplemented
          ;; Op0
          read-byte peek-byte void
          ;; Op1
@@ -80,7 +81,7 @@
          string->uninterned-symbol
          open-input-file
          write-char error integer?
-         eq-hash-code char-alphabetic?
+         eq-hash-code char-alphabetic? char-whitespace? displayln
          ;; Op2
          + - < = cons eq? make-vector vector-ref
          make-string string-ref string-append
@@ -103,6 +104,8 @@
          read_byte_port
          peek_byte_port
          is_char_alphabetic
+         is_char_whitespace
+         print_codepoint_out
          system_type)))
 
 (define cons-function

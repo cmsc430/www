@@ -1,6 +1,6 @@
 #lang racket
 (require "ast.rkt")
-(provide interp-prim)
+(provide interp-prim StructVal)
 
 ;; type Struct = (StructVal Symbol (Vectorof Value))
 (struct StructVal (name vals))

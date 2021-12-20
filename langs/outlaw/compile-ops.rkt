@@ -132,6 +132,7 @@
           (unpad-stack))]
     ['error
      (seq (assert-string rax)
+          (Xor rax type-str)
           (Mov rdi rax)
           (pad-stack)
           (Call 'raise_error))]
@@ -145,6 +146,19 @@
           (Mov rdi rax)
           (pad-stack)
           (Call 'is_char_alphabetic)
+          (unpad-stack))]
+    ['char-whitespace?
+     (seq (assert-char rax)
+          (Sar rax char-shift)
+          (Mov rdi rax)
+          (pad-stack)
+          (Call 'is_char_whitespace)
+          (unpad-stack))]
+    ['write-char
+     (seq (assert-char rax)
+          (Mov rdi rax)
+          (pad-stack)
+          (Call 'print_codepoint_out)
           (unpad-stack))]
 
     ;; Op2
