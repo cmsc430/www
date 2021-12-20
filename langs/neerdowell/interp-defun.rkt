@@ -111,7 +111,24 @@
     [(PAnd p1 p2)
      (match (interp-match-pat p1 v r)
        [#f #f]
-       [r1 (interp-match-pat p2 v r1)])]))
+       [r1 (interp-match-pat p2 v r1)])]
+    [(PStruct t ps)
+     (match v
+       [(StructVal n vs)
+        (and (eq? t n)
+             (interp-match-pats ps (vector->list vs) r))]
+       [_ #f])]))
+
+;; [Listof Pat] [Listof Val] Env -> [Maybe Env]
+(define (interp-match-pats ps vs r)
+  (match ps
+    ['() r]
+    [(cons p ps)
+     (match vs
+       [(cons v vs)
+        (match (interp-match-pat p v r)
+          [#f #f]
+          [r1 (interp-match-pats ps vs r1)])])]))
 
 ;; Id Env [Listof Defn] -> Answer
 (define (interp-var x r ds)
