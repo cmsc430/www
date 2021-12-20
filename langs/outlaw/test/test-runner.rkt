@@ -604,6 +604,12 @@
   (check-equal? (run '(let ((x 1)) x x x)) 1)
   (check-equal? (run '(match 1 [1 2 3])) 3)
   (check-equal? (run '(system-type)) (system-type))
+  (check-equal? (run '(struct Foo (x))
+                     '(struct Bar (y))
+                     '(match (Bar 1)
+                        [(Foo x) #f]
+                        [(Bar x) x]))
+                1)                       
   )
 
 
