@@ -346,7 +346,7 @@
            (list
             (seq (Mov rax (Offset rax (* 8 i)))
                  i1
-                 (Mov rax (Offset rsp (* 8 (sub1 (length cm1)))))
+                 (Mov rax (Offset rsp (* 8 (- (length cm1) (length cm)))))
                  is)
             (seq f1 fs)
             cmn)])])]))
