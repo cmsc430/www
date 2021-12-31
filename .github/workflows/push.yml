@@ -20,7 +20,7 @@ jobs:
         architecture: 'x64'
         distribution: 'full'
         variant: 'CS'
-        version: '8.1'
+        version: '8.3'
     - name: Build and test
       run: |
         export LINK_DIR=/usr/lib/x86_64-linux-gnu
