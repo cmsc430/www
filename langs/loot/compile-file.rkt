@@ -1,6 +1,6 @@
 #lang racket
 (provide main)
-(require "parse.rkt" "compile.rkt" "read-all.rkt" a86/printer)
+(require "parse.rkt" "compile.rkt" a86/printer)
 
 ;; String -> Void
 ;; Compile contents of given file name,
@@ -9,5 +9,5 @@
   (let ((p (open-input-file fn)))
     (begin
       (read-line p) ; ignore #lang racket line
-      (displayln (asm-string (compile (parse (read-all p)))))
+      (asm-display (compile (parse (read p))))
       (close-input-port p))))

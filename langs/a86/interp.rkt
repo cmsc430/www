@@ -43,7 +43,7 @@
     #:exists 'truncate
     (λ ()
       (parameterize ((current-shared? #t))
-        (displayln (asm-string a)))))
+        (asm-display a))))
 
   (nasm t.s t.o)
   (ld t.o t.so)

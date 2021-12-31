@@ -9,5 +9,5 @@
   (let ((p (open-input-file fn)))
     (begin
       (read-line p) ; ignore #lang racket line
-      (displayln (asm-string (compile (parse (read p)))))
+      (asm-display (compile (parse (read p))))
       (close-input-port p))))

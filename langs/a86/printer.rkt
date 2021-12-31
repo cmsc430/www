@@ -1,6 +1,7 @@
 #lang racket
 (provide/contract
- [asm-string (-> (listof instruction?) string?)])
+ [asm-string  (-> (listof instruction?) string?)] ; deprecated
+ [asm-display (-> (listof instruction?) any)])
 
 (define current-shared?
   (make-parameter #f))
@@ -20,6 +21,10 @@
 
 ;; Asm -> String
 (define (asm-string a)
+  (with-output-to-string (lambda () (asm-display a))))
+
+;; Asm -> Void
+(define (asm-display a)
   (define external-labels '())
 
   ;; Label -> String
@@ -178,26 +183,34 @@
     (let ((i-str (instr->string i)))
       (let ((pad (make-string (max 1 (- 32 (string-length i-str))) #\space)))
         (string-append i-str pad "; " s))))
-  
-  (define (instrs->string a)
+
+  ;; [Listof Instr] -> Void
+  (define (instrs-display a)
     (match a
-      ['() ""]
+      ['() (void)]
       [(cons (? Comment? c) a)
-       (string-append (comment->string c) "\n" (instrs->string a))]
+       (begin (write-string (comment->string c))
+              (write-char #\newline)
+              (instrs-display a))]
       [(cons i (cons (% s) a))
-       (string-append (line-comment i s) "\n" (instrs->string a))]
+       (begin (write-string (line-comment i s))
+              (write-char #\newline)
+              (instrs-display a))]
       [(cons i a)
-       (string-append (instr->string i) "\n" (instrs->string a))]))
+       (begin (write-string (instr->string i))
+              (write-char #\newline)
+              (instrs-display a))]))
 
   ;; entry point will be first label
   (match (findf Label? a)
     [(Label g)
-     (string-append
-      tab "global " (label-symbol->string g) "\n"
-      tab "default rel\n"
-      tab "section .text\n"
-      (instrs->string a))]
+     (begin
+       (write-string (string-append
+                      tab "global " (label-symbol->string g) "\n"
+                      tab "default rel\n"
+                      tab "section .text\n"))
+       (instrs-display a))]
     [_
-     (instrs->string a)
+     (instrs-display a)
      #;
      (error "program does not have an initial label")]))
