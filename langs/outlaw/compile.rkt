@@ -81,7 +81,7 @@
          string->uninterned-symbol
          open-input-file
          write-char error integer?
-         eq-hash-code char-alphabetic? char-whitespace? displayln
+         eq-hash-code char-alphabetic? char-whitespace? displayln write-string
          ;; Op2
          + - < = cons eq? make-vector vector-ref
          make-string string-ref string-append

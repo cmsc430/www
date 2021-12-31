@@ -15,6 +15,7 @@
          read-line
          char-alphabetic? char-whitespace?
          displayln ; only works for strings
+         write-string
          ; unimplemented
          exact->inexact / expt string->keyword
          ;; Op0
@@ -559,9 +560,13 @@
 
 (define (displayln s)
   (if (string? s)
-      (begin (map write-char (string->list s))
+      (begin (write-string s)
              (write-char #\newline))
       (error "unimplemented displayln for non-strings")))
+
+(define (write-string s)
+  (begin (map write-char (string->list s))
+         (string-length s)))
 
 (define (exact->inexact x)
   (error "exact->inexact not implemented"))
