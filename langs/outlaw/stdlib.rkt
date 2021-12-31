@@ -306,8 +306,10 @@
   ;; the primitive system type returns 1 for mac, 0 otherwise;
   ;; the fall through case is for when %system-type is implemented in Racket
   (match (%system-type)
-    [1 'macosx]
-    [0 'unix]
+    ;; the use of string->symbol here is to avoid subtle issues about symbol interning
+    ;; in separately compiled libraries
+    [1 (string->symbol "macosx")]
+    [0 (string->symbol "unix")]
     [x x]))
 
 (define (not x)
