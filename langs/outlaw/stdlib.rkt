@@ -27,7 +27,7 @@
          vector? vector-length string? string-length
          symbol->string string->symbol symbol?
          string->uninterned-symbol open-input-file
-         write-char error integer?
+         write-char error integer? procedure?
          eq-hash-code
          ;; Op2
          + - < = cons eq? make-vector vector-ref
@@ -89,6 +89,7 @@
 (define (open-input-file x) (%open-input-file x))
 (define (error . x) (%error (car x))) ;; drops other args
 (define (integer? x) (%integer? x))
+(define (procedure? x) (%procedure? x))
 (define (eq-hash-code x) (%eq-hash-code x))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

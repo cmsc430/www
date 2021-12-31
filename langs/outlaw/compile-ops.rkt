@@ -138,6 +138,8 @@
           (Call 'raise_error))]
     ['integer?
      (type-pred mask-int type-int)]
+    ['procedure?
+     (type-pred ptr-mask type-proc)]
     ['eq-hash-code
      (seq (Sal rax int-shift))]
     ['char-alphabetic?

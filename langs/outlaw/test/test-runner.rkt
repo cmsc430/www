@@ -650,7 +650,13 @@
                      '(match (Bar 1)
                         [(Foo x) #f]
                         [(Bar x) x]))
-                1)                       
+                1)
+  (check-equal? (run '(procedure? add1)) #t)
+  (check-equal? (run '(procedure? (lambda (x) x))) #t)
+  (check-equal? (run '(procedure? 8)) #f)
+  (check-equal? (run '(struct posn (x y))
+                     '(procedure? (posn 3 4)))
+                #f)
   )
 
 
