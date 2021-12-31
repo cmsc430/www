@@ -93,6 +93,7 @@
     [(PBox p) (literals-pat p)]
     [(PCons p1 p2) (append (literals-pat p1) (literals-pat p2))]
     [(PAnd p1 p2) (append (literals-pat p1) (literals-pat p2))]
+    [(PStruct t ps) (append-map literals-pat ps)]
     [_ '()]))
 
 ;; Datum -> [Listof (U Symbol String)]
