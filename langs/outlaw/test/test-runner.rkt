@@ -726,7 +726,7 @@
   (check-equal? (run "" '(write-char #\newline))
                 (cons (void) "\n"))
   (check-equal? (run "" '(write-string "hello world"))
-                (cons (void) "hello world"))
+                (cons 11 "hello world"))
   (check-equal? (run "" '(displayln "hello world"))
                 (cons (void) "hello world\n"))
   )
