@@ -476,7 +476,12 @@
   (check-equal? (run '(struct Foo (x y z))
                      '(match (Foo 1 2 3)
                         [(Foo x y z) z]))
-                3))
+                3)
+  (check-equal? (run '(struct Boo (x))
+                     '(match 8
+                        [(Boo 'y) 0]
+                        [_ 1]))
+                1))
 
 (define (test-runner-io run)
   ;; Evildoer examples
