@@ -469,6 +469,10 @@
                            (cons x (posn-xs ps))]))
                      '(posn-xs (cons (posn 3 4) (cons (posn 5 6) (cons (posn 7 8) '())))))
                 '(3 5 7))
+  (check-equal? (run '(struct Foo (x y z))
+                     '(match (Foo 1 2 3)
+                        [(Foo x y z) z]))
+                3)
 
   ;; Outlaw examples
   (check-equal? (run '(+)) 0)
