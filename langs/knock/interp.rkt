@@ -128,7 +128,9 @@
     [(cons e es)
      (match (interp-env e r ds)
        ['err 'err]
-       [v (cons v (interp-env* es r ds))])]))
+       [v (match (interp-env* es r ds)
+            ['err 'err]
+            [vs (cons v vs)])])]))
 
 ;; Defns Symbol -> Defn
 (define (defns-lookup ds f)

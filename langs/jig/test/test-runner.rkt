@@ -199,8 +199,10 @@
                  '(define (f x y)
                     10)
                  '(let ((z 2)) (f 1 2)))
-                10))
-
+                10)
+    (check-equal? (run '(define (f x y) y)
+                     '(f 1 (add1 #f)))
+                'err))
 
 (define (test-runner-io run)
   ;; Evildoer examples

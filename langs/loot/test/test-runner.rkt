@@ -205,6 +205,9 @@
                     10)
                  '(let ((z 2)) (f 1 2)))
                 10)
+  (check-equal? (run '(define (f x y) y)
+                     '(f 1 (add1 #f)))
+                'err)
 
   ;; Knock examples
   (check-equal? (run '(match 1)) 'err)
