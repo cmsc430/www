@@ -382,7 +382,7 @@
                '()))
    666)
 
-  ;; Outlaw examples
+  ;; Neerdowell examples
   (check-equal? (run '(struct foo ())
                      '(foo? (foo)))
                 #t)
@@ -434,7 +434,43 @@
                      '(match (bar 5)
                         [(foo x) #f]
                         [(bar x) x]))
-                5))
+                5)
+  (check-equal? (run '(struct nil ())
+                     '(struct pair (x y))
+                     '(define (len x)
+                        (match x
+                          [(nil) 0]
+                          [(pair _ x) (add1 (len x))]))
+                     '(len (pair 1 (pair 2 (pair 3 (nil))))))
+                3)
+  (check-equal? (run '(match (cons (cons 1 2) '())
+                        [(cons (cons x y) '()) y]))
+                2)
+  (check-equal? (run '(struct foo (p q))
+                     '(match (cons (foo 1 2) '())
+                        [(cons (foo x y) _) y]))
+                2)
+  (check-equal? (run '(struct foo (p q))
+                     '(match (cons (foo 1 2) '())
+                        [(cons (foo x 3) _) x]
+                        [_ 9]))
+                9)
+  (check-equal? (run '(struct foo (x q))
+                     '(define (get z)
+                        (match z
+                          ['() #f]
+                          [(cons (foo x q) y) x]))
+                     '(get (cons (foo 7 2) '())))
+                7)
+  (check-equal? (run '(struct posn (x y))
+                     '(define (posn-xs ps)
+                        (match ps
+                          ['() '()]
+                          [(cons (posn x y) ps)
+                           (cons x (posn-xs ps))]))
+                     '(posn-xs (cons (posn 3 4) (cons (posn 5 6) (cons (posn 7 8) '())))))
+                '(3 5 7)))
+
 
 (define (test-runner-io run)
   ;; Evildoer examples

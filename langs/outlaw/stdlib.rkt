@@ -15,6 +15,7 @@
          read-line
          char-alphabetic? char-whitespace?
          displayln ; only works for strings
+         write-string
          ; unimplemented
          exact->inexact / expt string->keyword
          ;; Op0
@@ -305,8 +306,10 @@
   ;; the primitive system type returns 1 for mac, 0 otherwise;
   ;; the fall through case is for when %system-type is implemented in Racket
   (match (%system-type)
-    [1 'macosx]
-    [0 'unix]
+    ;; the use of string->symbol here is to avoid subtle issues about symbol interning
+    ;; in separately compiled libraries
+    [1 (string->symbol "macosx")]
+    [0 (string->symbol "unix")]
     [x x]))
 
 (define (not x)
@@ -559,9 +562,13 @@
 
 (define (displayln s)
   (if (string? s)
-      (begin (map write-char (string->list s))
+      (begin (write-string s)
              (write-char #\newline))
       (error "unimplemented displayln for non-strings")))
+
+(define (write-string s)
+  (begin (map write-char (string->list s))
+         (string-length s)))
 
 (define (exact->inexact x)
   (error "exact->inexact not implemented"))

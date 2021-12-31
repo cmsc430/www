@@ -1,5 +1,5 @@
 #lang racket
-(provide asm-string current-shared?)
+(provide asm-string current-shared? asm-display)
 (require "ast.rkt")
 
 (define current-shared?
@@ -216,3 +216,27 @@
        (instrs->string a)
        #;
        (error "program does not have an initial label")])))
+
+(define (asm-display a)
+  (begin
+    (set-box! external-labels '())
+    ;; entry point will be first label
+    (match (findf Label? a)
+      [(Label g)
+       (begin
+         (write-string
+          (string-append
+           tab "global " (label-symbol->string g) "\n"
+           tab "default rel\n"
+           tab "section .text\n"))
+         (asm-display-instrs a))]
+      [_
+       (asm-display-instrs a)])))
+
+(define (asm-display-instrs a)
+  (match a
+    ['() (void)]
+    [(cons i a)
+     (begin (write-string (instr->string i))
+            (write-string "\n")
+            (asm-display-instrs a))]))
