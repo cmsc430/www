@@ -339,7 +339,7 @@
                    (Jmp next))
               cm2))])])]
     [(PStruct n ps)
-     (match (compile-struct-patterns ps c g (cons #f cm) next 1)
+     (match (compile-struct-patterns ps c g (cons #f cm) next 1 (add1 (length cm)))
        [(list i f cm1)
         (let ((fail (gensym)))
           (list
@@ -388,19 +388,19 @@
 
 
 
-;; [Listof Pat] CEnv Symbol Nat -> (list Asm Asm CEnv)
-(define (compile-struct-patterns ps c g cm next i)
+;; [Listof Pat] CEnv Symbol Nat Nat -> (list Asm Asm CEnv)
+(define (compile-struct-patterns ps c g cm next i cm0-len)
   (match ps
     ['() (list '() '() cm)]
     [(cons p ps)
      (match (compile-pattern p c g cm next)
        [(list i1 f1 cm1)
-        (match (compile-struct-patterns ps c g cm1 next (add1 i))
+        (match (compile-struct-patterns ps c g cm1 next (add1 i) cm0-len)
           [(list is fs cmn)
            (list
             (seq (Mov rax (Offset rax (*8 i)))
                  i1
-                 (Mov rax (Offset rsp (*8 (- (length cm1) (length cm)))))
+                 (Mov rax (Offset rsp (*8 (- (length cm1) cm0-len))))
                  is)
             (seq f1 fs)
             cmn)])])]))
