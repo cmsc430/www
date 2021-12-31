@@ -650,10 +650,9 @@ single list:
 Here's an example of the code this compiler emits:
 
 @ex[
-(displayln
- (asm-string
-  (compile
-   (parse '[(define (double x) (+ x x)) (double 5)]))))
+(asm-display
+ (compile
+  (parse '[(define (double x) (+ x x)) (double 5)])))
 ]
 
 And we can confirm running the code produces results consistent with

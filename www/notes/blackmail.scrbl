@@ -218,13 +218,12 @@ To compile Blackmail, we make use of two more a86
 instructions, @racket[Add] and @racket[Sub]:
 
 @ex[
-(displayln
- (asm-string
-  (list (Label 'entry)
-        (Mov 'rax 40)
-        (Add 'rax 1)
-        (Add 'rax 1)
-        (Ret))))
+(asm-display
+ (list (Label 'entry)
+       (Mov 'rax 40)
+       (Add 'rax 1)
+       (Add 'rax 1)
+       (Ret)))
 ]
 
 The compiler consists of two functions: the first, which is given a
@@ -414,7 +413,7 @@ these pieces in the two compilers we've written:
 @item{@bold{Generated} into assembly x86
 
 @itemlist[@item{we use @racket[compile] to generate assembly (in AST form),
-  and use @racket[asm-string] to obtain printable concrete X86-64 code}]}
+  and use @racket[asm-display] to print concrete X86-64 code}]}
 
 @item{@bold{Linked} against a run-time (usually written in C)
 

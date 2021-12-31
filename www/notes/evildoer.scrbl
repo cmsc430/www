@@ -426,7 +426,7 @@ Let's save it to a file called @tt{p.s}:
 @ex[
  (with-output-to-file "p.s"
    (λ ()
-     (displayln (asm-string p)))
+     (asm-display p))
    #:exists 'truncate)]
 
 We can assemble it, link it together with the printer, and run it:
@@ -501,11 +501,11 @@ Now save each program in its nasm format:
 @ex[
 (with-output-to-file "p.s"
   (λ ()
-    (displayln (asm-string p)))
+    (asm-display p))
   #:exists 'truncate)
 (with-output-to-file "life.s"
   (λ ()
-    (displayln (asm-string life)))
+    (asm-display life))
   #:exists 'truncate)]
 
 And assemble:
@@ -597,7 +597,7 @@ of its argument in @racket['rdi] before the call:
          (Ret)))                           
 (with-output-to-file "q.s"
   (λ ()
-    (displayln (asm-string q)))
+    (asm-display q))
   #:exists 'truncate)]
 
 We can assemble it into an object file:
@@ -641,7 +641,7 @@ pop around the call:
          (Ret)))
 (with-output-to-file "q.s"
   (λ ()
-    (displayln (asm-string q)))
+    (asm-display q))
   #:exists 'truncate)]
 
 @shellbox[(string-append "nasm -f " format " q.s -o q.o")

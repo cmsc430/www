@@ -422,7 +422,7 @@ Writing the @racket[compile] function is easy:
 )
 
 To convert back to the concrete NASM syntax, we use
-@racket[asm-string].
+@racket[asm-display].
 
 @margin-note{Note: the printer takes care of the macOS vs Linux label
 convention by detecting the underlying system and printing
@@ -430,7 +430,7 @@ appropriately.}
 
 @#reader scribble/comment-reader
 (examples #:eval ev
-(displayln (asm-string (compile (Int 42)))))
+(asm-display (compile (Int 42))))
                    
 Putting it all together, we can write a command line compiler much
 like the command line interpreter before, except now we emit assembly

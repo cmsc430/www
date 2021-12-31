@@ -401,22 +401,20 @@ number.  Easy-peasy:
 It's also easy to go from our data representation to its
 interpretation as an x86 program.
 
-First, we convert the data to a string. There is a function
-provided for converting from a86 to a string representation
-of x86 code in nasm notation, called @racket[asm-string].
-You can use @racket[display] to print this to the current
-output port (or to a file):
+There is a function provided for printing an a86 program as an x86
+program using nasm notation, called @racket[asm-display].  Calling
+this function prints to the current output port, but it's also
+possible to write the output to a file or convert it to a string.
 
-@margin-note{The @racket[asm-string] function knows what OS you are
+@margin-note{The @racket[asm-display] function knows what OS you are
 using and adjusts the label naming convention to use underscores or
 not, so that you don't have to worry about it.}
 
 @ex[
-(display (asm-string (tri 36)))
+(asm-display (tri 36))
     ]
 
-Notice how this generates exactly what you saw in @tt{
- tri.s}.
+Notice how this generates exactly what you saw in @tt{tri.s}.
 
 From here, we can assemble, link, and execute.
 
@@ -766,8 +764,7 @@ Each register plays the same role as in x86, so for example
 
  @#reader scribble/comment-reader
  (ex
- (display
-  (asm-string
+ (asm-display
    (prog (%%% "Start of foo")
          (Label 'foo)
          ; Racket comments won't appear
@@ -776,7 +773,7 @@ Each register plays the same role as in x86, so for example
          (Add 'rax 'rax)    (% "double it")
          (Sub 'rax 1)       (% "subtract one")
          (%% "we're done!")
-         (Ret)))))
+         (Ret))))
 }
                
 @defstruct*[Offset ([r register?] [i exact-integer?])]{
@@ -1147,24 +1144,28 @@ Each register plays the same role as in x86, so for example
 
 @defmodule[a86/printer]
 
+@defproc[(asm-display [is (listof instruction?)]) void?]{
+
+ Prints an a86 program to the current output port in nasm syntax.
+
+ @ex[
+ (asm-display (prog (Global 'entry)
+                    (Label 'entry)
+                    (Mov 'rax 42)
+                    (Ret)))
+ ]
+                                                          
+}
+
 @defproc[(asm-string [is (listof instruction?)]) string?]{
 
- Converts an a86 program to a string in nasm syntax. This is
- useful in concert with Racket functions for IO in order to
- write programs using concrete syntax that can be passed to
- @tt{nasm}.
+ Converts an a86 program to a string in nasm syntax. 
 
  @ex[
  (asm-string (prog (Global 'entry)
                    (Label 'entry)
                    (Mov 'rax 42)
                    (Ret)))
-
- (display
-  (asm-string (prog (Global 'entry)
-                    (Label 'entry)
-                    (Mov 'rax 42)
-                    (Ret))))
  ]
                                                           
 }
