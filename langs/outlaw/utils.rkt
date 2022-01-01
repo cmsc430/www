@@ -1,5 +1,5 @@
 #lang racket
-(provide symbol->label symbol->data-label lookup pad-stack unpad-stack *2 *8 *10 *16 *64)
+(provide symbol->label symbol->data-label lookup pad-stack unpad-stack)
 (require "a86/ast.rkt" "registers.rkt")
 
 ;; Symbol -> Label
@@ -46,23 +46,3 @@
 ;; Undo the stack alignment after a call
 (define (unpad-stack)
   (seq (Add rsp r15)))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Multipliers
-
-(define (*2 a)
-   (arithmetic-shift a 1))
-
-(define (*8 a)
-   (arithmetic-shift a 3))
-
-(define (*16 a)
-   (arithmetic-shift a 4))
-
-(define (*10 a) ; 10a=2^3a+2a
-  (+ (arithmetic-shift a 1)
-     (arithmetic-shift a 3)))
-
-(define (*64 a)
-  (arithmetic-shift a 6))

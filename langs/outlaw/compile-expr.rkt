@@ -69,7 +69,7 @@
 (define (compile-let xs es e c g t?)
   (seq (compile-es es c g)
        (compile-e e (append (reverse xs) c) g t?)
-       (Add rsp (*8 (length xs)))))
+       (Add rsp (* 8 (length xs)))))
 
 ;; Id [Listof Expr] CEnv GEnv Bool -> Asm
 (define (compile-app f es c g t?)
@@ -83,8 +83,8 @@
 (define (compile-app-tail e es c g)
   (seq (compile-es (cons e es) c g)
        (move-args (add1 (length es)) (length c))
-       (Add rsp (*8 (length c)))
-       (Mov rax (Offset rsp (*8 (length es))))
+       (Add rsp (* 8 (length c)))
+       (Mov rax (Offset rsp (* 8 (length es))))
        (assert-proc rax)
        (Xor rax type-proc)
        (Mov rax (Offset rax 0))
@@ -95,8 +95,8 @@
   (cond [(zero? off) (seq)]
         [(zero? i)   (seq)]
         [else
-         (seq (Mov r8 (Offset rsp (*8 (sub1 i))))
-              (Mov (Offset rsp (*8 (+ off (sub1 i)))) r8)
+         (seq (Mov r8 (Offset rsp (* 8 (sub1 i))))
+              (Mov (Offset rsp (* 8 (+ off (sub1 i)))) r8)
               (move-args (sub1 i) off))]))
 
 ;; Expr [Listof Expr] CEnv GEnv -> Asm
@@ -104,7 +104,7 @@
 ;; arguments and return address is next frame
 (define (compile-app-nontail e es c g)
   (let ((r (gensym 'ret))
-        (i (*8 (length es))))
+        (i (* 8 (length es))))
     (seq (Lea rax r)
          (Push rax)
          (compile-es (cons e es) (cons #f c) g)
@@ -125,7 +125,7 @@
          (compile-es (cons e es) (cons #f c) g)
          (compile-e el (append (make-list (add1 (length es)) #f) (cons #f c)) g #f)
 
-         (Mov r10 (Offset rsp (*8 (length es))))
+         (Mov r10 (Offset rsp (* 8 (length es))))
 
          (Mov r15 (length es))
          (let ((loop (gensym))
@@ -158,7 +158,7 @@
          (free-vars-to-heap fvs c 8)
          (Mov rax rbx) ; return value
          (Or rax type-proc)
-         (Add rbx (*8 (add1 (length fvs)))))))
+         (Add rbx (* 8 (add1 (length fvs)))))))
 
 ;; Lambda -> Id
 (define (lambda-name l)
@@ -237,7 +237,7 @@
        (seq (Mov rax (Offset rsp 0)) ; restore value being matched
             i
             (compile-e e (append cm c) g t?)
-            (Add rsp (*8 (length cm)))
+            (Add rsp (* 8 (length cm)))
             (Jmp done)
             f
             (Label next))])))
@@ -266,7 +266,7 @@
                   (Cmp rax 0)
                   (Jne fail))
              (seq (Label fail)
-                  (Add rsp (*8 (length cm)))
+                  (Add rsp (* 8 (length cm)))
                   (Jmp next))
              cm))]
     [(PSymb s)
@@ -275,7 +275,7 @@
                   (Cmp rax r9)
                   (Jne fail))
              (seq (Label fail)
-                  (Add rsp (*8 (length cm)))
+                  (Add rsp (* 8 (length cm)))
                   (Jmp next))
              cm))]
     [(PLit l)
@@ -283,7 +283,7 @@
        (list (seq (Cmp rax (imm->bits l))
                   (Jne fail))
              (seq (Label fail)
-                  (Add rsp (*8 (length cm)))
+                  (Add rsp (* 8 (length cm)))
                   (Jmp next))
              cm))]
     [(PAnd p1 p2)
@@ -294,7 +294,7 @@
            (list
             (seq (Push rax)
                  i1
-                 (Mov rax (Offset rsp (*8 (- (sub1 (length cm1)) (length cm)))))
+                 (Mov rax (Offset rsp (* 8 (- (sub1 (length cm1)) (length cm)))))
                  i2)
             (seq f1 f2)
             cm2)])])]
@@ -312,7 +312,7 @@
                 i1)
            (seq f1
                 (Label fail)
-                (Add rsp (*8 (length cm))) ; haven't pushed anything yet
+                (Add rsp (* 8 (length cm))) ; haven't pushed anything yet
                 (Jmp next))
            cm1))])]
     [(PCons p1 p2)
@@ -331,12 +331,12 @@
                    (Push r8)                ; push cdr
                    (Mov rax (Offset rax 8)) ; mov rax car
                    i1
-                   (Mov rax (Offset rsp (*8 (- (sub1 (length cm1)) (length cm)))))
+                   (Mov rax (Offset rsp (* 8 (- (sub1 (length cm1)) (length cm)))))
                    i2)
               (seq f1
                    f2
                    (Label fail)
-                   (Add rsp (*8 (length cm))) ; haven't pushed anything yet
+                   (Add rsp (* 8 (length cm))) ; haven't pushed anything yet
                    (Jmp next))
               cm2))])])]
     [(PStruct n ps)
@@ -357,7 +357,7 @@
                 i)
            (seq f
                 (Label fail)
-                (Add rsp (*8 (length cm)))
+                (Add rsp (* 8 (length cm)))
                 (Jmp next))
            cm1))])]
 
@@ -382,7 +382,7 @@
                (Cmp rax val-false)
                (Je fail)))
         (seq (Label fail)
-             (Add rsp (*8 (length cm)))
+             (Add rsp (* 8 (length cm)))
              (Jmp next))
         cm))]))
 
@@ -399,9 +399,9 @@
         (match (compile-struct-patterns ps c g cm1 next (add1 i) cm0-len)
           [(list is fs cmn)
            (list
-            (seq (Mov rax (Offset rax (*8 i)))
+            (seq (Mov rax (Offset rax (* 8 i)))
                  i1
-                 (Mov rax (Offset rsp (*8 (- (length cm1) cm0-len))))
+                 (Mov rax (Offset rsp (* 8 (- (length cm1) cm0-len))))
                  is)
             (seq f1 fs)
             cmn)])])]))

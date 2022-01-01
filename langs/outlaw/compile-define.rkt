@@ -53,11 +53,11 @@
          (seq (Label (symbol->label f))
               (Cmp r15 (length xs))
               (Jne 'raise_error_align)              
-              (Mov rax (Offset rsp (*8 (length xs))))
+              (Mov rax (Offset rsp (* 8 (length xs))))
               (Xor rax type-proc)
               (copy-env-to-stack fvs 8)              
               (compile-e e env g #t)
-              (Add rsp (*8 (length env))) ; pop env
+              (Add rsp (* 8 (length env))) ; pop env
               (Ret)))]
       [(LamRest f xs x e)
        (let ((env (append (reverse fvs) (cons x (reverse xs)) (list #f))))
@@ -83,11 +83,11 @@
                      (Label done)))
               (Push rax)
               
-              (Mov rax (Offset rsp (*8 (add1 (length xs)))))
+              (Mov rax (Offset rsp (* 8 (add1 (length xs)))))
               (Xor rax type-proc)
               (copy-env-to-stack fvs 8)              
               (compile-e e env g #t)
-              (Add rsp (*8 (length env))) ; pop env
+              (Add rsp (* 8 (length env))) ; pop env
               (Ret)))]
     [(LamCase f cs)
      (seq ; (%%% "lamcase code")

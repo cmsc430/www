@@ -815,28 +815,28 @@
     ['() 0]
     [(cons d ds)
      (+ (char-digit->number d)
-        (*2 (char-digit2s->number ds)))]))
+        (* 2 (char-digit2s->number ds)))]))
 
 (define (char-digit8s->number ds)
   (match ds
     ['() 0]
     [(cons d ds)
      (+ (char-digit->number d)
-        (*8 (char-digit8s->number ds)))]))
+        (* 8 (char-digit8s->number ds)))]))
 
 (define (char-digit10s->number ds)
   (match ds
     ['() 0]
     [(cons d ds)
      (+ (char-digit->number d)        
-        (*10 (char-digit10s->number ds)))]))
+        (* 10 (char-digit10s->number ds)))]))
 
 (define (char-digit16s->number ds)
   (match ds
     ['() 0]
     [(cons d ds)
      (+ (char-digit16->number d)
-        (*16 (char-digit16s->number ds)))]))
+        (* 16 (char-digit16s->number ds)))]))
 
 (define (char-digit->number d)
   (- (char->integer d)
@@ -871,8 +871,8 @@
           [(<= 97 x 102) (- x 87)])))
 
 (define (octal-char d1 d2 d3)
-  (let ((x (+ (*64 (char-digit8->number d1))
-              (*8  (char-digit8->number d2))
+  (let ((x (+ (* 64 (char-digit8->number d1))
+              (* 8  (char-digit8->number d2))
               (char-digit8->number d3))))
     (if (<= 0 x 255)
         (integer->char x)
@@ -1026,22 +1026,3 @@
 (define (unimplemented x)
   (err #f (string-append "unimplemented: " x)))
   
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Multipliers
-
-(define (*2 a)
-   (arithmetic-shift a 1))
-
-(define (*8 a)
-   (arithmetic-shift a 3))
-
-(define (*16 a)
-   (arithmetic-shift a 4))
-
-(define (*10 a) ; 10a=2^3a+2a
-  (+ (arithmetic-shift a 1)
-     (arithmetic-shift a 3)))
-
-(define (*64 a)
-  (arithmetic-shift a 6))

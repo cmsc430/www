@@ -467,14 +467,14 @@
   (seq (compile-make-struct/a n 1)
        (Mov rax rbx)
        (Or rax type-struct)
-       (Add rbx (*8 n))))
+       (Add rbx (* 8 n))))
 
 ;; Nat Nat -> Asm
 ;; Pop elements off stack, writing them to heap
 (define (compile-make-struct/a n i)
   (if (= n i)
-      (seq (Mov (Offset rbx (*8 (- n i))) rax))
-      (seq (Mov (Offset rbx (*8 (- n i))) rax)
+      (seq (Mov (Offset rbx (* 8 (- n i))) rax))
+      (seq (Mov (Offset rbx (* 8 (- n i))) rax)
            (Pop rax)
            (compile-make-struct/a n (add1 i)))))
 
