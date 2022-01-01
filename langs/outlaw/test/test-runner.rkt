@@ -677,7 +677,12 @@
   (check-equal? (run '(* 8 3)) 24)
   (check-equal? (run '(* 16 2)) 32)
   (check-equal? (run '(* 10 5)) 50)
-  (check-equal? (run '(* 64 2)) 128))
+  (check-equal? (run '(* 64 2)) 128)
+  (check-equal? (run '(let ((pred (lambda (x) #t)))
+                        (match 0
+                          [(and (? pred) _) #t]
+                          [_ #f])))
+                #t))
 
 
 (define (test-runner-io run)

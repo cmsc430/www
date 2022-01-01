@@ -368,7 +368,7 @@
           (seq (Lea r15 r)
                (Push r15) ; rp
                (Push rax) ; arg (saved for the moment)
-               (compile-e e (list* #f #f c) g #f)
+               (compile-e e (list* #f #f (append cm c)) g #f)
                (Pop r15)  ;; HERE
                (Push rax)
                (Push r15)
