@@ -35,12 +35,11 @@
 
 ;; Prog -> [Listof Symbol]
 (define (literals p)
-  (remove-duplicates
-   (map to-symbol (literals* p))))
+  (remove-duplicates (map to-symbol (literals* p)) eq?))
 
 ;; Prog -> [Listof Symbol]
 (define (symbols p)
-  (remove-duplicates (filter symbol? (literals* p))))
+  (remove-duplicates (filter symbol? (literals* p)) eq?))
 
 ;; (U String Symbol) -> Symbol
 (define (to-symbol s)

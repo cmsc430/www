@@ -5,7 +5,7 @@
 ;; Expr -> [Listof Id]
 ;; List all of the free variables in e
 (define (fv e)
-  (remove-duplicates (fv* e)))
+  (remove-duplicates (fv* e) eq?))
 
 ;; Expr [Listof Id] -> [Listof Id]
 (define (fv- e xs)
