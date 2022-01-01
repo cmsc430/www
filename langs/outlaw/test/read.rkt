@@ -1,6 +1,6 @@
 #lang racket
 (require rackunit
-         (rename-in "../read.rkt" [read read-stdin]))
+         (rename-in "../stdlib.rkt" [read read-stdin]))
 
 (define (p s)
   (with-input-from-string s
