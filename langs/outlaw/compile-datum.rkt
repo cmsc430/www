@@ -1,6 +1,7 @@
 #lang racket
 (provide compile-datum)
-(require "types.rkt"
+(require "stdlib.rkt"
+         "types.rkt"
          "utils.rkt"
          "a86/ast.rkt"
          "registers.rkt")

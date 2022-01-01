@@ -1,6 +1,7 @@
 #lang racket
 (provide (all-defined-out))
-(require "ast.rkt"
+(require "stdlib.rkt"
+         "ast.rkt"
          "types.rkt"
          "lambdas.rkt"
          "fv.rkt"

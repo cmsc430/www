@@ -1,6 +1,6 @@
 #lang racket
 (provide (all-defined-out))
-(require "ast.rkt" "registers.rkt" "types.rkt" "utils.rkt" "a86/ast.rkt")
+(require "stdlib.rkt" "ast.rkt" "registers.rkt" "types.rkt" "utils.rkt" "a86/ast.rkt")
 
 ;; Op -> Asm
 (define (compile-op p)
