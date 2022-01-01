@@ -1,6 +1,6 @@
 #lang racket
 (provide parse parse-define parse-e parse-library)
-(require "ast.rkt")
+(require "stdlib.rkt" "ast.rkt")
 
 ;; [Listof S-Expr] -> Prog
 (define (parse s)
