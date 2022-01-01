@@ -81,6 +81,8 @@
      (append-map literals-e cs)]
     [(Match e ps es)
      (append (literals-e e) (append-map literals-match-clause ps es))]
+    [(Apply e es el)
+     (append (literals-e e) (append-map literals-e es) (literals-e el))]
     [_ '()]))
 
 ;; Pat Expr -> [Listof Symbol]
