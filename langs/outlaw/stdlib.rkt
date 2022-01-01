@@ -13,6 +13,7 @@
          not
          findf
          read-line
+         * ; limited
          char-alphabetic? char-whitespace?
          displayln ; only works for strings
          write-string
@@ -91,6 +92,21 @@
 (define (integer? x) (%integer? x))
 (define (procedure? x) (%procedure? x))
 (define (eq-hash-code x) (%eq-hash-code x))
+
+(define (* x y)
+  (match x
+    [0 0]
+    [1 y]
+    [2  (arithmetic-shift y 1)]
+    [4  (arithmetic-shift y 2)]
+    [8  (arithmetic-shift y 3)]
+    [10 ; 10a=2^3a+2a
+     (+ (arithmetic-shift y 1)
+        (arithmetic-shift y 3))]
+    [16 (arithmetic-shift y 4)]
+    [64 (arithmetic-shift y 6)]
+    [_ (error "unimplemented multiplication")]))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Op2

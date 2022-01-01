@@ -668,7 +668,16 @@
                 #f)
   (check-equal? (run '(apply string-append (list "x")))
                 "x")
-  )
+
+  (check-equal? (run '(* 0 8)) 0)
+  (check-equal? (run '(* 1 8)) 8)
+  (check-equal? (run '(* 2 9)) 18)
+  (check-equal? (run '(* 2 -3)) -6)
+  (check-equal? (run '(* 4 3)) 12)
+  (check-equal? (run '(* 8 3)) 24)
+  (check-equal? (run '(* 16 2)) 32)
+  (check-equal? (run '(* 10 5)) 50)
+  (check-equal? (run '(* 64 2)) 128))
 
 
 (define (test-runner-io run)

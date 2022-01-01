@@ -70,6 +70,7 @@
          system-type ;; hard-coded
          not findf
          read-line
+         * ; limited
          exact->inexact / expt string->keyword ; unimplemented
          ;; Op0
          read-byte peek-byte void
