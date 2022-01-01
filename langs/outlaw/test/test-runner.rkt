@@ -666,6 +666,8 @@
   (check-equal? (run '(struct posn (x y))
                      '(procedure? (posn 3 4)))
                 #f)
+  (check-equal? (run '(apply string-append (list "x")))
+                "x")
   )
 
 
