@@ -647,11 +647,11 @@
     [#\# (<octo-elem>)]
     [(? open-paren? c) (<list-or-pair> c)]
     [#\; (<line-comment>) (<elem>)]
-    [#\' (<quote> 'quote)]
-    [#\` (<quote> 'quasiquote)]
+    [#\' (<quote> (string->symbol "quote"))]
+    [#\` (<quote> (string->symbol "quasiquote"))]
     [#\, (match (peek-char)
-           [#\@ (read-char) (<quote> 'unquote-splicing)]
-           [_ (<quote> 'unquote)])]
+           [#\@ (read-char) (<quote> (string->symbol "unquote-splicing"))]
+           [_ (<quote> (string->symbol "unquote"))])]
     [c   (<number-or-symbol> c)]))
 
 (define (<quote> q)
@@ -685,12 +685,12 @@
     [#\\ (<char-start>)]
     [#\: (<keyword>)]
     [#\& (unimplemented "boxes")] ; FIXME
-    [#\' (<quote> 'syntax)]
+    [#\' (<quote> (string->symbol "syntax"))]
     [#\! (unimplemented "shebang comment")]
-    [#\` (<quote> 'quasisyntax)]
+    [#\` (<quote> (string->symbol "quasisyntax"))]
     [#\, (match (peek-char)
-           [#\@ (read-char) (<quote> 'unsyntax-splicing)]
-           [_ (<quote> 'unsyntax)])]
+           [#\@ (read-char) (<quote> (string->symbol "unsyntax-splicing"))]
+           [_ (<quote> (string->symbol "unsyntax"))])]
     [#\~ (unimplemented "compiled code")]
     [#\i (unimplemented "inexact number")]
     [#\I (unimplemented "inexact number")]
@@ -761,8 +761,8 @@
 
 (define (<number-or-symbol> c)
   (match c
-    [#\+ (if (delim?) '+ (<unsigned-or-symbol> #\+ '()))]
-    [#\- (if (delim?) '- (<unsigned-or-symbol> #\- '()))]
+    [#\+ (if (delim?) (string->symbol "+") (<unsigned-or-symbol> #\+ '()))]
+    [#\- (if (delim?) (string->symbol "-") (<unsigned-or-symbol> #\- '()))]
     [#\. (if (delim?) (err ".") (<frac> #f '() '()))]
     [(? char-digit10?) (<unsigned-or-symbol> #f (list c))]
     [_   (<symbol> (list c))]))
