@@ -3,19 +3,24 @@
 
 ;; This is a utility for smashing together racket files into a single
 ;; monolithic program.
-;; For example:
-;; racket -t combine.rkt -m compile-stdin.rkt > outlaw.rkt
-;; creates a file with all the source code needed for the Outlaw
-;; compiler.  You still have to:
-;; a) comment out the standard library
-;; b) remove all of the requires and provides to make a valid Racket program
 
-;; String -> Void
+;; For example:
+
+;; racket -t combine.rkt -m compile-stdin.rkt stdlib.rkt > outlaw.rkt
+
+;; creates a file with all the source code needed for the Outlaw
+;; compiler.
+
+;; It will append the source code of all the files fn requires
+;; and comment out their requires and provides, excluding
+;; any files given in the ignores list.
+
+;; String String ... -> Void
 ;; Combine all the files fn depends upon, print to stdout
-;; as one monolithic program
-(define (main fn)
+;; as one monolithic program, excluding ignores.
+(define (main fn . ignores)
   (printf "#lang racket\n")
-  (let ((fs (all-files fn)))
+  (let ((fs (remove* ignores (all-files fn))))
     (for-each (lambda (f)
                 (displayln (string-append ";; " f)))
               fs)
@@ -47,6 +52,8 @@
             (begin (newline)
                    (close-input-port p))
             (begin
+              (when (regexp-match? #rx"^\\(require|^\\(provide" l)
+                (display "#;"))
               (displayln l)
               (loop)))))
     (loop)))
