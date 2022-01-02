@@ -19,10 +19,19 @@ val_t read_byte(void)
 
 val_t peek_byte(void* fake_port, int offset)
 {
-  // offset is ignored for now
-  char c = getc(in);
+  char cs[3];
+  if ((offset < 0) || (offset > 3)) { exit(-1); }
+  int i;
+  char c;
+  for (i = 0; i < offset; i++) {
+    cs[i] = getc(in);
+  }
+  c = getc(in);
   ungetc(c, in);
-  return (c == EOF) ? val_wrap_eof() : val_wrap_int(c);
+  for (i = 0; i < offset; i++) {
+    ungetc(cs[offset-i-1], in);
+  }
+  return (c == EOF) ? val_wrap_eof() : val_wrap_int((unsigned char)c);
 }
 
 val_t write_byte(val_t c)
