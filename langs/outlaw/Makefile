@@ -25,6 +25,28 @@ objs = \
 
 default: runtime.o
 
+outlaw.rkt: compile-stdin.rkt \
+	ast.rkt \
+	parse.rkt \
+	a86/ast.rkt \
+	registers.rkt \
+	types.rkt \
+	lambdas.rkt \
+	fv.rkt \
+	utils.rkt \
+	compile-ops.rkt \
+	compile-datum.rkt \
+	compile-expr.rkt \
+	compile-define.rkt \
+	compile-literals.rkt \
+	compile.rkt \
+	read-all.rkt \
+	a86/printer.rkt \
+	compile-stdin.rkt
+	(racket -t combine.rkt -m compile-stdin.rkt stdlib.rkt ;\
+	 printf "(main)\n") \
+	> outlaw.rkt
+
 runtime.o: $(objs)
 	ld -r $(objs) -o runtime.o
 
@@ -44,7 +66,7 @@ stdlib.s: stdlib.rkt
 	cat $< | racket -t compile-stdin.rkt -m > $@
 
 clean:
-	rm *.o *.s *.run
+	rm *.o *.s *.run outlaw.rkt
 
 test: example.run
 	@test "$(shell ./example.run)" = "$(shell racket example.rkt)"
