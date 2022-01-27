@@ -77,7 +77,7 @@ topics might need more attention.}
 
 The discord server is there for you to organize as a class, ask questions of
 each other, and to get help from staff. Its main purpose is as a vehicle for
-office hours. That said, feel free to use the discord for discussion. I (DVH)
+office hours. That said, feel free to use the discord for discussion. I (@prof-initials)
 will check periodically, but if you would like to ask a question directly to
 the course staff, office hours and email remain the prioritized forms of
 communication.

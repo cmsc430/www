@@ -4,7 +4,7 @@
 
 @title[#:style 'unnumbered]{Schedule}
 
-@;(TuTh 2-3:15, Online)
+@;(TuTh 9:30-10:45, IRB 0318)
 
 @(define (wk d) (nonbreaking (bold d)))
 
@@ -88,8 +88,8 @@
 
                (list @wk{4/19}
                      ""
-                     @elem{Self-hosting}
-                     @elem{No class, Thanksgiving.})
+                     @elem{Self-hosting?}
+                     @elem{Self-hosting?})
 
                (list @wk{4/26}
                      @seclink["Assignment 6"]{A6}

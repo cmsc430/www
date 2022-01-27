@@ -859,7 +859,7 @@ our usual appraoch:
                 e))
 
 (check-correctness (parse '(add1 7)))
-(eval:error (check-correctness (parse '(add1 #f))))
+;;(eval:error (check-correctness (parse '(add1 #f))))
 ]
 
 This isn't a counter-example to correctness because @racket['(add1
