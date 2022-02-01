@@ -35,7 +35,7 @@ implement several related languages.
          #:row-properties '(bottom-border ())
 	 (list* (list @bold{Staff} 'cont 'cont)
 	        (list @bold{Name} @elem{@bold{E-mail}} @elem{@bold{Hours}})
-	        (list prof prof-email "TBD")
+	        (list prof prof-email "M/W 10:00AM-12:00PM")
 		staff)]
 
 @bold{Communications:} Email, @link[@discord]{Discord}
