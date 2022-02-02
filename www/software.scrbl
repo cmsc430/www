@@ -158,6 +158,34 @@ some Linux Distribution. Here is a breakdown of the steps:
 Regardless of the IDE used, you can now run your tests from your Linux 
 subsystem by entering the project directory and using the raco command.
 
+@section{Mac}
+
+@itemlist[
+  #:style 'ordered
+
+  @item{Check "About This Mac" under the little apple symbol  in the top left corner of your screen.}
+  @item{If it says Chip: M1,
+
+  Install @link["https://download.racket-lang.org/"]{Racket} 64-bit Apple Silicon}
+  @item{If it says Processor: Intel Core i9,
+
+  Install Racket 64-bit Intel}
+  @item{Open DrRacket and click Help > Configure Command Line for Racket...}
+  @item{Install the langs package (see step 2)}
+  @item{Open up terminal and check if Homebrew is installed:
+  @verbatim|{brew -v}|}
+  @item{If not, install the latest version of @link["https://brew.sh"]{Homebrew}}
+  @item{Install nasm using homebrew:
+    @verbatim|{brew install nasm}|}
+
+  @item{Test if the installation worked:
+
+  @verbatim|{racket}|
+  Then run @verbatim|{(require a86)}|, if no errors result, then you're good to use Racket!
+  }
+
+]
+
 @section{Detailed compatiblity list}
 
 The course software has been successfully tested with the
