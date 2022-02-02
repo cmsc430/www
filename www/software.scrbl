@@ -166,13 +166,14 @@ subsystem by entering the project directory and using the raco command.
   @item{Check "About This Mac" under the little apple symbol  in the top left corner of your screen.}
   @item{If it says Chip: M1,
 
-  Install @link["https://download.racket-lang.org/"]{Racket} 64-bit Apple Silicon}
+  Install @link["https://download.racket-lang.org/releases/8.1/"]{Racket 8.1} 64-bit Apple Silicon}
   @item{If it says Processor: Intel Core i9,
 
   Install Racket 64-bit Intel}
   @item{Open DrRacket and click Help > Configure Command Line for Racket...}
-  @item{Install the langs package (see step 2)}
-  @item{Open up terminal and check if Homebrew is installed:
+  @item{Open up terminal and install the langs package:
+  @verbatim|{raco pkg install 'https://github.com/cmsc430/www.git?path=langs#main'}|}
+  @item{Check if Homebrew is installed:
   @verbatim|{brew -v}|}
   @item{If not, install the latest version of @link["https://brew.sh"]{Homebrew}}
   @item{Install nasm using homebrew:
@@ -181,7 +182,8 @@ subsystem by entering the project directory and using the raco command.
   @item{Test if the installation worked:
 
   @verbatim|{racket}|
-  Then run @verbatim|{(require a86)}|, if no errors result, then you're good to use Racket!
+  Then run @verbatim|{(require a86)}|
+  If no errors result, then you're good to use Racket!
   }
 
 ]
