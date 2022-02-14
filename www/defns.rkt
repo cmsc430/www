@@ -23,7 +23,7 @@
 
 (define staff
   (list (list "Maniktala Dhruv" "dmanikt@umd.edu" "M/Tu 15:30-16:30 AVW 4160")
-        (list "Benjamin Glover Quiring" "bquiring@umd.edu" "W 14:00-16:00 AVW 4160")
+        (list "Benjamin Glover Quiring" "bquiring@umd.edu" "W 16:30-18:30 AVW 4160")
         (list "William Chung" "wchung1@terpmail.umd.edu" "Thu 14:00-16:00 AVW 4160")))
 
 (define lecture-schedule "Tuesday & Thursday, 9:30am - 10:45pm, IRB 0318")
