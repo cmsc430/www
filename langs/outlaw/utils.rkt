@@ -10,19 +10,21 @@
 (define (symbol->data-label s)
   (to-label "data_" s))
 
+;; Char -> String
+(define (char-encode c)
+  (if (or (char<=? #\a c #\z)
+          (char<=? #\A c #\Z)
+          (char<=? #\0 c #\9)
+          (memq c '(#\_ #;#\$ #\# #\@ #\~ #\. #\?)))
+      (make-string 1 c)
+      (string-append "$" (number->string (char->integer c) 16))))
+
 (define (to-label prefix s)
   (string->symbol
-   (string-append
-    prefix
-    (apply string-append
-           (map (λ (c)
-                  (if (or (char<=? #\a c #\z)
-                          (char<=? #\A c #\Z)
-                          (char<=? #\0 c #\9)
-                          (memq c '(#\_ #;#\$ #\# #\@ #\~ #\. #\?)))
-                      (make-string 1 c)
-                      (string-append "$" (number->string (char->integer c) 16))))
-                (string->list (symbol->string s)))))))
+   (string-append prefix
+                  (apply string-append
+                         (map char-encode
+                              (string->list (symbol->string s)))))))
 
 ;; Id CEnv -> [Maybe Integer]
 (define (lookup x cenv)
