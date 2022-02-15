@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include "values.h"
+#include "types.h"
 
 void print_char(val_char_t);
 void print_codepoint(val_char_t);
@@ -18,11 +19,6 @@ void print_result(val_t x)
   case T_CHAR:
     print_char(val_unwrap_char(x));    
     break;
-  case T_EOF:
-    printf("#<eof>");
-    break;
-  case T_VOID:
-    break;    
   case T_INVALID:
     printf("internal error");
   }

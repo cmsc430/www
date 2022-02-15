@@ -10,7 +10,7 @@ endif
 objs = \
 	main.o \
 	values.o \
-	char.o
+	print.o
 
 default: runtime.o
 
