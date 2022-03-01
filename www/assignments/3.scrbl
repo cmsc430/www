@@ -5,7 +5,7 @@
 @(require "../../langs/con-plus/semantics.rkt")
 @(require redex/pict)
 
-@bold{Due: Thu, March 4, 11:59PM}
+@bold{Due: Fri, March 4, 11:59PM}
 
 The goal of this assignment is to extend the parser, interpreter, and
 compiler with some simple unary numeric and boolean operations and two
