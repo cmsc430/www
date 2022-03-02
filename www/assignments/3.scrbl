@@ -90,7 +90,7 @@ true in general for Racket.  The parser should reject any
 
 The meaning of a @racket[cond] expression is computed by evaluating
 each expression @racket[_e-pi] in order until the first one that is
-not @racket[#f] is found, in which case, the corresponding expression
+does not evaluate to @racket[#f] is found, in which case, the corresponding expression
 @racket[_e-ai] is evaluated and its value is the value of the
 @racket[cond] expression.  If no such @racket[_e-pi] exists, the
 expression @racket[_e-an]'s value is the value of the @racket[cond].
