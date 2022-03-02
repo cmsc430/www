@@ -90,7 +90,7 @@ true in general for Racket.  The parser should reject any
 
 The meaning of a @racket[cond] expression is computed by evaluating
 each expression @racket[_e-pi] in order until the first one that is
-true is found, in which case, the corresponding expression
+not @racket[#f] is found, in which case, the corresponding expression
 @racket[_e-ai] is evaluated and its value is the value of the
 @racket[cond] expression.  If no such @racket[_e-pi] exists, the
 expression @racket[_e-an]'s value is the value of the @racket[cond].
@@ -286,10 +286,44 @@ You can test your code in several ways:
 Note that only a small number of tests are given to you, so you should
 write additional test cases.
 
+@section[#:tag-prefix "a3-" #:style 'unnumbered]{Rubric}
+
+The autograder will grade based on these eight components:
+
+Handwritten Tests (proportionally graded)
+
+@itemlist[
+
+ @item{(50%) Public and non-public handwritten tests}
+
+]
+
+Randomized Property Testing (must pass all the associated tests for each property)
+
+@itemlist[
+
+  @item{(6.25) Correct intepreter for primitives}
+
+ @item{(6.25) Correct compiler for primitives}
+ 
+ @item{(6.25) Correct intepreter for cond}
+
+ @item{(6.25) Correct compiler for cond}
+ 
+   @item{(6.25) Correct intepreter for case}
+
+ @item{(6.25) Correct compiler for case}
+ 
+   @item{(6.25) Correct intepreter}
+
+ @item{(6.25) Correct compiler}
+]
+
+
 @section[#:tag-prefix "a3-" #:style 'unnumbered]{Submitting}
 
 You should submit on Gradescope. You should submit a zip file with
 exactly the same structure that the stub contains (a dupe-plus
 folder). We will only use the @tt{parse.rkt}, @tt{ast.rkt},
 @tt{compile.rkt}, @tt{interp.rkt}, and @tt{interp-prim.rkt} files for
-grading, so make sure all your work is contained there!
+grading, so make sure all your work is contained there! The autograder will fail if it does not contain a dupe-plus folder with these files or there a syntax error.
