@@ -89,7 +89,7 @@ true in general for Racket.  The parser should reject any
 
 
 The meaning of a @racket[cond] expression is computed by evaluating
-each expression @racket[_e-pi] in order until the first one that is
+each expression @racket[_e-pi] in order until the first one that
 does not evaluate to @racket[#f] is found, in which case, the corresponding expression
 @racket[_e-ai] is evaluated and its value is the value of the
 @racket[cond] expression.  If no such @racket[_e-pi] exists, the
@@ -294,7 +294,7 @@ Handwritten Tests (proportionally graded)
 
 @itemlist[
 
- @item{(50%) Public and non-public handwritten tests}
+ @item{(50%) Public and non-public handwritten tests: Gradescope's @tt{all.rkt} will contain additional private tests that does not match the ones in the publicly given file}
 
 ]
 
@@ -302,21 +302,21 @@ Randomized Property Testing (must pass all the associated tests for each propert
 
 @itemlist[
 
-  @item{(6.25) Correct intepreter for primitives}
+  @item{(6.25%) Correct intepreter for primitives}
 
- @item{(6.25) Correct compiler for primitives}
+ @item{(6.25%) Correct compiler for primitives}
  
- @item{(6.25) Correct intepreter for cond}
+ @item{(6.25%) Correct intepreter for cond}
 
- @item{(6.25) Correct compiler for cond}
+ @item{(6.25%) Correct compiler for cond}
  
-   @item{(6.25) Correct intepreter for case}
+   @item{(6.25%) Correct intepreter for case}
 
- @item{(6.25) Correct compiler for case}
+ @item{(6.25%) Correct compiler for case}
  
-   @item{(6.25) Correct intepreter}
+   @item{(6.25%) Correct intepreter}
 
- @item{(6.25) Correct compiler}
+ @item{(6.25%) Correct compiler}
 ]
 
 
