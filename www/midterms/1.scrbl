@@ -5,11 +5,11 @@
 
 @title{Midterm 1}
 
-@bold{Due: @m1-date 3:15PM}
+@bold{Due: @m1-date 11:59PM}
 
 @(define repo "https://github.com/cmsc430/Midterm1-prog")
 
-Midterm 1 will be released at least 72 hours prior to its due date.
+Midterm 1 will be released at least 48 hours prior to its due date.
 
 @section{Instructions}
 
@@ -28,7 +28,7 @@ Answers to common clarifying questions will be posted to the
 @tt{#midterm-1} channel on Discord.
 
 If you have trouble reaching the course staff via Discord, email
-@tt|{dvanhorn@cs.umd.edu}|.
+@tt|{jmct@umd.edu}|.
 
 You may not communicate with anyone outside of the course staff about
 the midterm.
