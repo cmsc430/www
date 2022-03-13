@@ -15,7 +15,7 @@ Midterm 1 will be released at least 48 hours prior to its due date.
 
 The midterm will be released as a zip file @tt{m1.zip} on ELMS.
 
-There are SIX parts to this midterm.  Each part has its own directory
+There are FIVE parts to this midterm.  Each part has its own directory
 with a README and supplementary files.  Read the README in each part
 for instructions on how to complete that part of the midterm.
 
