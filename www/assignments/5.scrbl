@@ -82,10 +82,10 @@ register to the number of arguments before jumping to the function.
 The function should check this number against the expected number and
 signal an error when they don't match.
 
-Note that there's now an easier way to signal an error in the
-compiler; simply jump to @racket['raise_error_align].  There's no need
-to do the @racket[(error-label c)] thing anymore.  Jumping to
-@racket['raise_error_align] will dynamically align the stack before
+Note A4 previously had an outdated way to signal an error in the
+compiler that was not consistent with the lecture notes. A5 now matches 
+the lecture notes way to signal an error of simply jumping to @racket['raise_error_align].
+Jumping to @racket['raise_error_align] will dynamically align the stack before
 calling the C code in the runtime system that prints an error and
 exits.
 
