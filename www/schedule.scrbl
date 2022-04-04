@@ -69,7 +69,7 @@
                      @elem{Spring Break})
                
                (list @wk{3/29}
-                     @seclink["Assignment 5"]{A5}                     
+                     ""
                      @elem{@secref["Loot"]}
                      @elem{@secref["Loot"], cont.})
                
