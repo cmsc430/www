@@ -74,9 +74,9 @@
                      @elem{@secref["Loot"], cont.})
                
                (list @wk{4/5}
-                     @bold{@seclink["Midterm_2"]{M2}}
+                     @seclink["Assignment 5"]{A5}                     
                      @elem{@secref["Knock"]}
-                     @elem{No lecture (exam)})
+                     @elem{Review and Voting})
                                     
                (list @wk{4/12}
 	             ""
@@ -87,7 +87,7 @@
                      )
 
                (list @wk{4/19}
-                     ""
+                     @bold{@seclink["Midterm_2"]{M2}}
                      @elem{Self-hosting?}
                      @elem{Self-hosting?})
 
