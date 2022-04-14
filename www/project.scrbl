@@ -550,4 +550,4 @@ will grade the latest submission that occurs before the deadline.
 You may also design your own project, however, you will need to submit
 a one-page write-up that documents what you plan to do and how you
 will evaluate whether it is successful.  You must submit this document
-and have it approved by the instructor by Dec 7.
+and have it approved by the instructor by April 29th.
