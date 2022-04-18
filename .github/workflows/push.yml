@@ -53,3 +53,23 @@ jobs:
         SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
         SSH_USERNAME: ${{secrets.SSH_USERNAME}}
         SSH_HOSTNAME: ${{secrets.SSH_HOSTNAME}}
+  deploy-next:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dvh-next'
+    steps:
+    - name: Download www
+      uses: actions/download-artifact@v2
+      with:
+        name: www
+        path: cmsc430
+    - name: Deploy to web
+      uses: plum-umd/github-actions-rsync@master
+      with:
+        RSYNC_OPTIONS: -rvzp
+        RSYNC_TARGET: /fs/www/class/fall2022/
+        RSYNC_SOURCE: cmsc430
+      env:
+        SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
+        SSH_USERNAME: ${{secrets.SSH_USERNAME}}
+        SSH_HOSTNAME: ${{secrets.SSH_HOSTNAME}}
