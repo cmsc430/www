@@ -22,11 +22,10 @@
 (define racket-version "8.4")
 
 (define staff
-  (list (list "Dhruv Maniktala" "dmanikt@umd.edu" "M/Tu 15:30-16:30 AVW 4160")
-        (list "Benjamin Glover Quiring" "bquiring@umd.edu" "W 16:30-18:30 AVW 4160")
-        (list "William Chung" "wchung1@terpmail.umd.edu" "Thu 14:00-16:00 AVW 4160")))
+  (list (list "Matvey Stepanov" "mpstepan@umd.edu" "TBA")
+        (list "Pierce Darragh" "pdarragh@umd.edu " "TBA")))
 
-(define lecture-schedule "Tuesday & Thursday, 9:30am - 10:45pm, IRB 0318")
+(define lecture-schedule "Tuesday & Thursday, 2:00pm - 3:15pm, CSI 1115")
 
 (define discord "https://discord.gg/N4cke9v38X")
 

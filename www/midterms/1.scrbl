@@ -28,7 +28,7 @@ Answers to common clarifying questions will be posted to the
 @tt{#midterm-1} channel on Discord.
 
 If you have trouble reaching the course staff via Discord, email
-@tt|{jmct@umd.edu}|.
+@tt{@prof-email}.
 
 You may not communicate with anyone outside of the course staff about
 the midterm.
