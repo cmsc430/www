@@ -5,7 +5,7 @@
 @(require "../notes/ev.rkt"
           "../notes/utils.rkt")
 
-@bold{Due: Tuesday, November 30th, 11:59PM EDT}
+@bold{Due: Thursday, May 5th, 11:59PM EDT}
 
 The goal of this assignment is to add syntax checking to our compiler.
 
