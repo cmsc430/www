@@ -77,17 +77,8 @@ The starter code calls @racket[check-syntax] in both
 @tt{compile-file.rkt} and @tt{interp-file.rkt}.  The definition of
 @racket[check-syntax] is stubbed out in @tt{check-syntax.rkt}.
 
-There are a few tests included in @tt{test/check-syntax.rkt}.  For
-this assignment, very few tests are included so you should write your
-own.
-
-@section[#:tag-prefix "a6-" #:style 'unnumbered #:tag "update"]{Update a86}
-
-There have been some changes to a86 that you'll need.  You can update
-the @tt{langs} package with the following:
-
-@verbatim|{raco pkg update langs}|
-
+There are tests included in @tt{test/check-syntax.rkt}. You can also use this file 
+to write your own tests for debugging.
 
 @section[#:tag-prefix "a6-" #:style 'unnumbered]{Submitting}
 
