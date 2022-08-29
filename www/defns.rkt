@@ -2,11 +2,11 @@
 (provide (all-defined-out))
 (require scribble/core scribble/html-properties scribble/manual) 
 
-(define prof (link "http://jmct.cc/" "José Manuel Calderón Trilla"))
-(define prof-email "jmct@umd.edu")
-(define prof-initials "JMCT")
+(define prof (link "https://www.cs.umd.edu/~dvanhorn/" "David Van Horn"))
+(define prof-email "dvanhorn@cs.umd.edu")
+(define prof-initials "DVH")
 
-(define semester "spring")
+(define semester "fall")
 (define year "2022")
 (define courseno "CMSC 430")
 
@@ -14,19 +14,18 @@
 (define AVW "AVW")
 
 
-(define m1-date "03/12")
-(define m2-date "04/21")
-(define final-date "05/13")
+(define m1-date "TBD")
+(define m2-date "TBS")
+(define final-date "TBD")
 (define elms-url "TBD")
 
-(define racket-version "8.3")
+(define racket-version "8.4")
 
 (define staff
-  (list (list "Dhruv Maniktala" "dmanikt@umd.edu" "M/Tu 15:30-16:30 AVW 4160")
-        (list "Benjamin Glover Quiring" "bquiring@umd.edu" "W 16:30-18:30 AVW 4160")
-        (list "William Chung" "wchung1@terpmail.umd.edu" "Thu 14:00-16:00 AVW 4160")))
+  (list (list "Matvey Stepanov" "mpstepan@umd.edu" "TBA")
+        (list "Pierce Darragh" "pdarragh@umd.edu " "TBA")))
 
-(define lecture-schedule "Tuesday & Thursday, 9:30am - 10:45pm, IRB 0318")
+(define lecture-schedule "Tuesday & Thursday, 2:00pm - 3:15pm, CSI 1115")
 
 (define discord "https://discord.gg/N4cke9v38X")
 
