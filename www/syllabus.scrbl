@@ -27,35 +27,16 @@ in C and Assembly as covered in CMSC 216.
 
 @section{Course Workflow}
 
-The course will be a combination of synchronous in-person lectures,
-video lectures, live Q+A sessions, and online course notes. The short
-lecture videos will be available online, to view at your own pace. The
-scheduled in-person lecture time will supplement and expand upon the
-videos and incorporate Q+A time, focusing on the topic of the most
-recent video lectures.
+The course will consist of synchronous in-person lectures, which will
+be recorded and available on ELMS immediately after each lecture.
 
-In-person lectures will be recorded and posted shortly after each
-class.
-
-@section{COVID-19}
-
-In the Fall of 2021, we are still in the midst of the global COVID-19
-pandemic.  Although this semester marks a return to in-person
-instruction, a number of changes have been made by the university in
-order to anticipate and accomodate this situation.  Please review the
-Provost's FAQ on @link["https://provost.umd.edu/node/4243"]{Fall 2021
-Instruction}.
+Midterm and final exams will be taken online.
 
 @section{Mask Policy}
 
-@bold{Face coverings over the nose and mouth are required while you
-are indoors at all times.} There are no exceptions when it comes to
-classrooms, laboratories, and campus offices.  Students not wearing a
-mask will be given a warning and asked to wear one, or will be asked
-to leave the room immediately. Students who have additional issues
-with the mask expectation after a first warning will be referred to
-the Office of Student Conduct for failure to comply with a directive
-of University officials.
+Effective Monday, August 29, wearing a mask will not be required while
+indoors in most situations, including classrooms. However, wearing a
+KN95 mask is recommended while indoors for added protection.
 
 
 @section{Office Hours}
@@ -141,9 +122,9 @@ percentages:
 @section[#:tag "syllabus-videos"]{Videos}
 
 Videos will be a core part of this course.  There are two types of
-videos: (1) short, pre-recorded video lectures which will be made
-available before each class, and (2) screen and audio captures of each
-in-person lecture.
+videos: (1) pre-recorded video lectures which will be made available
+before each class, and (2) screen and audio captures of each in-person
+lecture.
 
 These videos will be made available as the course progresses. If there
 is ever any issue with accessing these videos, let the instructor know
@@ -152,7 +133,7 @@ as soon as possible.
 
 @section[#:tag "syllabus-assignments"]{Assignments}
 
-There will be several programming @secref{Assignments}, often with full week
+There will be several programming @secref{Assignments}, often with a full week
 given for completion and submission (e.g. if it assigned on a Tuesday it will
 be due the following Tuesday at 11:59pm EST unless otherwise noted).
 

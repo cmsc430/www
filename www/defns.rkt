@@ -16,7 +16,7 @@
 
 (define m1-date "TBD")
 (define m2-date "TBS")
-(define final-date "TBD")
+(define final-date "12/17")
 (define elms-url "TBD")
 
 (define racket-version "8.4")
