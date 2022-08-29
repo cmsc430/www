@@ -29,6 +29,6 @@
 
 (define lecture-schedule "Tuesday & Thursday, 2:00pm - 3:15pm, CSI 1115")
 
-(define discord "https://discord.gg/N4cke9v38X")
+(define discord "https://discord.gg/cX5vASt8Tp")
 
 (define gradescope "https://www.gradescope.com/courses/365197")
