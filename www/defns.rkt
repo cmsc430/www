@@ -17,7 +17,7 @@
 (define m1-date "10/4")
 (define m2-date "11/1")
 (define final-date "12/17")
-(define elms-url "TBD")
+(define elms-url "https://umd.instructure.com/courses/1328554")
 
 (define racket-version "8.4")
 
