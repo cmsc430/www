@@ -12,6 +12,10 @@ class's final exam as set by the registrar.
 
 Submissions should be made on Gradescope.
 
+Descriptions of potential projects will be released later in the semester
+and announced in class.
+
+@;{
 There are several projects to choose from, described below.
 
 In addition the source code for your project, you must write a 2-page
@@ -551,3 +555,4 @@ You may also design your own project, however, you will need to submit
 a one-page write-up that documents what you plan to do and how you
 will evaluate whether it is successful.  You must submit this document
 and have it approved by the instructor by April 29th.
+}
