@@ -31,4 +31,4 @@
 
 (define discord "https://discord.gg/cX5vASt8Tp")
 
-(define gradescope "https://www.gradescope.com/courses/365197")
+(define gradescope "https://www.gradescope.com/courses/433916")
