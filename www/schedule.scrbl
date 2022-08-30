@@ -26,7 +26,7 @@
                      @elem{@secref["a86"], (@link["https://www.youtube.com/watch?v=25tV38STdbQ"]{video})} )
 
                (list @wk{9/13}
-	       	     @seclink["Assignment 2"]{A2}
+	       	     @elem{A2} @;{@seclink["Assignment 2"]{A2}}
                      @itemlist[@item{@secref["Abscond"]}
                                @item{@secref["Blackmail"], (@link["https://www.youtube.com/watch?v=28F-5sCUfzg"]{video})}
 			       @item{@secref["Con"], (@link["https://youtu.be/nh8x0EQsQQY"]{video})}]
@@ -39,7 +39,7 @@
                      @elem{@secref["Evildoer"], (@link["https://youtu.be/ouOgFdbT9fk"]{video})})
                                     
                (list @wk{9/27}
-	       	     @seclink["Assignment 3"]{A3}
+	       	     @elem{A3} @;{@seclink["Assignment 3"]{A3}}
 		     @elem{@secref["Extort"], (@link["https://youtu.be/4lU-0i5sl-Q"]{video})}
 		     @elem{@secref["Fraud"], (@link["https://youtu.be/XmezNX4qfWE"]{video})})
                
@@ -49,7 +49,7 @@
                      @elem{@secref["Fraud"], cont. (@link["https://youtu.be/XmezNX4qfWE"]{video})})
                
                (list @wk{10/11}
-	       	     @seclink["Assignment 4"]{A4}
+	       	     @elem{A4} @;{@seclink["Assignment 4"]{A4}}
 		     @elem{@secref["Hustle"] (@link["https://youtu.be/SwKc_FeEmHk"]{video})}
                      @itemlist[
 		       @item{@secref["Hustle"], cont. (@link["https://youtu.be/SwKc_FeEmHk"]{video})}
@@ -63,7 +63,7 @@
                      @elem{@secref{Jig}})
 		                                   
                (list @wk{10/25}
-                     @seclink["Assignment 5"]{A5}
+                     @elem{A5} @;{@seclink["Assignment 5"]{A5}}
                      @elem{@secref["Loot"]}
                      @elem{@secref["Loot"], cont.})
                
@@ -86,7 +86,7 @@
                      @elem{Self-hosting?})
 
                (list @wk{11/22}
-                     @seclink["Assignment 6"]{A6}
+                     @elem{A6} @;{@seclink["Assignment 6"]{A6}}
 		     @elem{GC}
 		     @elem{GC}
 		     )
