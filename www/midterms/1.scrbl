@@ -7,17 +7,16 @@
 
 @bold{Due: @m1-date 11:59PM}
 
-@(define repo "https://github.com/cmsc430/Midterm1-prog")
-
 Midterm 1 will be released at least 48 hours prior to its due date.
 
 @section{Instructions}
 
 The midterm will be released as a zip file @tt{m1.zip} on ELMS.
 
-There are FIVE parts to this midterm.  Each part has its own directory
-with a README and supplementary files.  Read the README in each part
-for instructions on how to complete that part of the midterm.
+There are several parts to this midterm.  Each part has its own
+directory with a README and supplementary files.  Read the README in
+each part for instructions on how to complete that part of the
+midterm.
 
 @section{Communications}
 
