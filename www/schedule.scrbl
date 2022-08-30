@@ -69,8 +69,8 @@
                
                (list @wk{11/1}
       	       	     @bold{@seclink["Midterm_2"]{M2}}
-                     @elem{@secref["Knock"]}
-                     @elem{Review and Voting})
+                     @elem{No lecture (exam)}
+                     @elem{@secref["Knock"]})
                                     
                (list @wk{11/8}
 	             ""
