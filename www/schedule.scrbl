@@ -44,32 +44,31 @@
 		     @elem{@secref["Fraud"], (@link["https://youtu.be/XmezNX4qfWE"]{video})})
                
                (list @wk{10/4}
-	       	     ""
-                     @elem{@secref["Fraud"], cont. (@link["https://youtu.be/XmezNX4qfWE"]{video})}
-                     @itemlist[@item{Exam Review}
-		               @item{@secref["Hustle"] (@link["https://youtu.be/SwKc_FeEmHk"]{video})}])
+	       	     @bold{@seclink["Midterm_1"]{M1}}
+                     @elem{No lecture (exam)}
+                     @elem{@secref["Fraud"], cont. (@link["https://youtu.be/XmezNX4qfWE"]{video})})
                
                (list @wk{10/11}
-	       	     @bold{@seclink["Midterm_1"]{M1}}
+	       	     @seclink["Assignment 4"]{A4}
+		     @elem{@secref["Hustle"] (@link["https://youtu.be/SwKc_FeEmHk"]{video})}
                      @itemlist[
 		       @item{@secref["Hustle"], cont. (@link["https://youtu.be/SwKc_FeEmHk"]{video})}
-		       @item{@secref["Hoax"], (@link["https://youtu.be/yEsXYn8exfk"]{video})}]
-                     @elem{No lecture (exam)})
+		       @item{@secref["Hoax"], (@link["https://youtu.be/yEsXYn8exfk"]{video})}])
 
                (list @wk{10/18}
-	       	     @seclink["Assignment 4"]{A4}
+                     ""
 		     @itemlist[
 		       @item{@secref["Hoax"], cont. (@link["https://youtu.be/SwKc_FeEmHk"]{video})}
                        @item{@secref{Iniquity}, (@link["https://www.youtube.com/watch?v=Yz2n7KgIfNQ"]{video})}]
                      @elem{@secref{Jig}})
 		                                   
                (list @wk{10/25}
-                     ""
+                     @seclink["Assignment 5"]{A5}
                      @elem{@secref["Loot"]}
                      @elem{@secref["Loot"], cont.})
                
                (list @wk{11/1}
-                     @seclink["Assignment 5"]{A5}                     
+      	       	     @bold{@seclink["Midterm_2"]{M2}}
                      @elem{@secref["Knock"]}
                      @elem{Review and Voting})
                                     
