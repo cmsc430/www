@@ -22,10 +22,10 @@
 (define racket-version "8.4")
 
 (define staff
-  (list (list "Pierce Darragh"  "pdarragh@umd.edu" "TBA")
-        (list "Chris Maxey"     "cmaxey@umd.edu"   "TBA")
-        (list "Deena Postol"    "dpostol@umd.edu"  "TBA")
-        (list "Matvey Stepanov" "mpstepan@umd.edu" "TBA")))
+  (list (list "Pierce Darragh"  "pdarragh@umd.edu" "M, T, Th, 11AM-12PM AVW 4160")
+        (list "Chris Maxey"     "cmaxey@umd.edu"   "M, 2PM-5PM AVW 4160")
+        (list "Deena Postol"    "dpostol@umd.edu"  "W, 1PM-4PM AVW 4160")
+        (list "Matvey Stepanov" "mpstepan@umd.edu" "F, 12PM-3PM AVW 4160")))
 
 (define lecture-schedule "Tuesday & Thursday, 2:00pm - 3:15pm, CSI 1115")
 
