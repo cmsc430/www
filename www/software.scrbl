@@ -76,7 +76,7 @@ You will need to modify your @tt{PATH} environment variable to include
 the location of Racket and other tools used in this course.  You can
 do this with the following command:
 
-@verbatim|{set path= ( $path /afs/glue.umd.edu/home/glue/d/v/dvanhorn/home/local/bin )}|
+@verbatim|{set path = ( $path /cell_root/software/racket/8.4/sys/bin )}|
 
 If you add this line to the @tt{.path} file in your home directory, then you
 won't have to run this command manually every time you login; it will happen
@@ -84,7 +84,6 @@ automatically.
 
 Once set, you should be able to run commands such as @tt{racket} or
 @tt{drracket}.
-
 
 @section{Installing Racket}
 
