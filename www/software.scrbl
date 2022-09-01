@@ -55,6 +55,37 @@ This course will make use of the following software:
   system such as clang.} 
 ]
 
+@section{GRACE}
+
+The @link["http://www.grace.umd.edu/"]{GRACE} system gives students
+access to an x86-64 Linux system that meets all of the system
+requirements for the software in this course.  If you have an
+incompatible system (e.g. an ARM or Apple Silicone computer), or if you'd
+rather avoid installing and setting up the software for this course, you
+can use GRACE.
+
+To use GRACE, open a terminal on your computer and 
+type:
+
+@verbatim|{ssh -Y <directoryID>@grace.umd.edu}|
+
+You will prompted for your UMD Directory ID password.  After entering
+your password, you will be at the GRACE command line prompt.
+
+You will need to modify your @tt{PATH} environment variable to include
+the location of Racket and other tools used in this course.  You can
+do this with the following command:
+
+@verbatim|{set path= ( $path /afs/glue.umd.edu/home/glue/d/v/dvanhorn/home/local/bin )}|
+
+If you add this line to the @tt{.path} file in your home directory, then you
+won't have to run this command manually every time you login; it will happen
+automatically.
+
+Once set, you should be able to run commands such as @tt{racket} or
+@tt{drracket}.
+
+
 @section{Installing Racket}
 
 Racket is available for all major operating systems from:
