@@ -445,3 +445,9 @@ syllabus.
 
 Portions of the course materials are based on material developed by
 Ranjit Jhala and Joe Gibbs Politz.
+
+We gratefully acknowledge the work of past CMSC 430 TAs William Chung,
+Pierce Darragh, Justin Frank, Vyas Gupta, Sankha Narayan Guria, Tasnim
+Kabir, John Kastner, Yiyun Liu, Dhruv Maniktala, Christopher Maxey,
+Deena Postol, Ivan Quiles-Rodriguez, Benjamin Quiring, Temur
+Saidkhodjaev, Matvey Stepanov, Alex Taber.
