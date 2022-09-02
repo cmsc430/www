@@ -82,8 +82,13 @@ If you add this line to the @tt{.path} file in your home directory, then you
 won't have to run this command manually every time you login; it will happen
 automatically.
 
-Once set, you should be able to run commands such as @tt{racket} or
-@tt{drracket}.
+Once set, you should be able to run commands such as @tt{racket}.
+
+You can also run graphical programs such as @tt{drracket} so long as
+you have X11 forwarding set up.  On Linux, this is likely set up out
+of the box.  On Mac, you will need to install
+@link["https://www.xquartz.org/"]{XQuartz}.  On Windows, you can use
+@link["https://mobaxterm.mobatek.net/"]{MobaXterm}.
 
 @section{Installing Racket}
 
