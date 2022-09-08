@@ -1,7 +1,7 @@
 #lang scribble/manual
 @title[#:tag "Assignment 2" #:style 'unnumbered]{Assignment 2: Racket Primer}
 
-@bold{Due: Thursday, September 15, 11:59PM}
+@bold{Due: @elem[#:style "strike"]{Thursday, September 15, 11:59PM}, Saturday 17, 11:59PM}
 
 The goal of this assignment is to gain practice programming in Racket.
 

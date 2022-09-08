@@ -22,19 +22,22 @@
 
                (list @wk{9/6}
 	       	     @seclink["Assignment 1"]{A1}
+                     @elem{No class, sick day.}
                      @elem{@secref["OCaml to Racket"], cont., (@link["https://youtu.be/sLOMQ_j7cPE"]{video}) }
-                     @elem{@secref["a86"], (@link["https://www.youtube.com/watch?v=25tV38STdbQ"]{video})} )
+                     )
 
                (list @wk{9/13}
 	       	     @seclink["Assignment 2"]{A2}
+                     @elem{@secref["a86"], (@link["https://www.youtube.com/watch?v=25tV38STdbQ"]{video})}
                      @itemlist[@item{@secref["Abscond"]}
                                @item{@secref["Blackmail"], (@link["https://www.youtube.com/watch?v=28F-5sCUfzg"]{video})}
 			       @item{@secref["Con"], (@link["https://youtu.be/nh8x0EQsQQY"]{video})}]
-                     @elem{@secref["Dupe"], (@link["https://youtu.be/GdQZ2D1lyZA"]{video})})
+                     )
 
                (list @wk{9/20}
 	             ""
-                     @itemlist[@item{@secref["Dodger"], (@link["https://youtu.be/-SuINAKs7gE"]{video})}
+                     @itemlist[@item{@secref["Dupe"], (@link["https://youtu.be/GdQZ2D1lyZA"]{video})}
+                               @item{@secref["Dodger"], (@link["https://youtu.be/-SuINAKs7gE"]{video})}
                                @item{Semantics, Correctness, Testing}]
                      @elem{@secref["Evildoer"], (@link["https://youtu.be/ouOgFdbT9fk"]{video})})
                                     
