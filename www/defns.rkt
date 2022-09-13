@@ -22,10 +22,12 @@
 (define racket-version "8.4")
 
 (define staff
-  (list (list "Pierce Darragh"  "pdarragh@umd.edu" "M, T, Th, 11AM-12PM AVW 4160")
+  (list (list "Pierce Darragh"  "pdarragh@umd.edu" "M, 1PM-2PM; T, Th, 11AM-12PM AVW 4160")
+        (list "Dhruv Maniktala" "dmanikt@umd.edu"  "T, W, Th, 10AM-11AM, Virtual")
         (list "Chris Maxey"     "cmaxey@umd.edu"   "F, 12PM-3PM AVW 4160")
         (list "Deena Postol"    "dpostol@umd.edu"  "M, 2PM-5PM AVW 4160")
         (list "Matvey Stepanov" "mpstepan@umd.edu" "W, 1PM-4PM AVW 4160")))
+
 
 
 
