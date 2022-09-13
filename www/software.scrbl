@@ -74,11 +74,12 @@ your password, you will be at the GRACE command line prompt.
 
 You will need to modify your @tt{PATH} environment variable to include
 the location of Racket and other tools used in this course.  You can
-do this with the following command:
+do this with the following commands:
 
 @verbatim|{set path = ( $path /cell_root/software/racket/8.4/sys/bin )}|
+@verbatim|{set path = ( $path /cell_root/software/nasm/2.15.05/sys/bin/ )}|
 
-If you add this line to the @tt{.path} file in your home directory, then you
+If you add these lines to the @tt{.path} file in your home directory, then you
 won't have to run this command manually every time you login; it will happen
 automatically.
 
