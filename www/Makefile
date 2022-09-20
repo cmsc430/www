@@ -20,6 +20,10 @@ $(course):
 		tar -c `git ls-files intro a86 abscond blackmail con dupe dodger extort fraud hustle hoax iniquity jig knock loot mug mountebank neerdowell fp project.pdf` \
 			a86/main.c a86/gcd.c a86/tri.s abscond/42.s | \
 		(cd ../www/main/code ; tar -x ; \
+			zip -c abscond.zip -r abscond/ ; \
+			zip -c blackmail.zip -r blackmail/ ; \
+			zip -c con.zip -r con/ ; \
+			zip -c dupe.zip -r dupe/ ; \
 			zip -c fraud.zip -r fraud/ ; \
 			zip -c hustle.zip -r hustle/ ; \
 			zip -c hoax.zip -r hoax/ ; \

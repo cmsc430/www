@@ -42,7 +42,7 @@
                      @elem{@secref["Evildoer"], (@link["https://youtu.be/ouOgFdbT9fk"]{video})})
                                     
                (list @wk{9/27}
-	       	     @elem{A3} @;{@seclink["Assignment 3"]{A3}}
+	       	     @seclink["Assignment 3"]{A3}
 		     @elem{@secref["Extort"], (@link["https://youtu.be/4lU-0i5sl-Q"]{video})}
 		     @elem{@secref["Fraud"], (@link["https://youtu.be/XmezNX4qfWE"]{video})})
                
