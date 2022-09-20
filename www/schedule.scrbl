@@ -29,17 +29,15 @@
                (list @wk{9/13}
 	       	     @seclink["Assignment 2"]{A2}
                      @elem{@secref["a86"], (@link["https://www.youtube.com/watch?v=25tV38STdbQ"]{video})}
-                     @itemlist[@item{@secref["Abscond"]}
-                               @item{@secref["Blackmail"], (@link["https://www.youtube.com/watch?v=28F-5sCUfzg"]{video})}
-			       @item{@secref["Con"], (@link["https://youtu.be/nh8x0EQsQQY"]{video})}]
-                     )
+                     @elem{@secref["Abscond"]})
 
                (list @wk{9/20}
 	             ""
-                     @itemlist[@item{@secref["Dupe"], (@link["https://youtu.be/GdQZ2D1lyZA"]{video})}
-                               @item{@secref["Dodger"], (@link["https://youtu.be/-SuINAKs7gE"]{video})}
-                               @item{Semantics, Correctness, Testing}]
-                     @elem{@secref["Evildoer"], (@link["https://youtu.be/ouOgFdbT9fk"]{video})})
+                     @itemlist[@item{@secref["Blackmail"], (@link["https://www.youtube.com/watch?v=28F-5sCUfzg"]{video})}
+			       @item{@secref["Con"], (@link["https://youtu.be/nh8x0EQsQQY"]{video})}
+                               @item{@secref["Dupe"], (@link["https://youtu.be/GdQZ2D1lyZA"]{video})}]
+                     @itemlist[@item{@secref["Dodger"], (@link["https://youtu.be/-SuINAKs7gE"]{video})}
+                               @item{@secref["Evildoer"], (@link["https://youtu.be/ouOgFdbT9fk"]{video})}])
                                     
                (list @wk{9/27}
 	       	     @seclink["Assignment 3"]{A3}

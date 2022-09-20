@@ -24,6 +24,8 @@ $(course):
 			zip -c blackmail.zip -r blackmail/ ; \
 			zip -c con.zip -r con/ ; \
 			zip -c dupe.zip -r dupe/ ; \
+			zip -c dodger.zip -r dodger/ ; \
+			zip -c extort.zip -r extort/ ; \
 			zip -c fraud.zip -r fraud/ ; \
 			zip -c hustle.zip -r hustle/ ; \
 			zip -c hoax.zip -r hoax/ ; \
