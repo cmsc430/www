@@ -334,4 +334,4 @@ You should submit on Gradescope. You should submit a zip file with
 exactly the same structure that the stub contains (a dupe-plus
 folder). We will only use the @tt{parse.rkt}, @tt{ast.rkt},
 @tt{compile.rkt}, @tt{interp.rkt}, and @tt{interp-prim.rkt} files for
-grading, so make sure all your work is contained there! The autograder will fail if it does not contain a dupe-plus folder with these files or there a syntax error.
+grading, so make sure all your work is contained there! The autograder will fail if it does not contain a dupe-plus folder with these files or there is a syntax error.
