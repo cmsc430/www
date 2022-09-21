@@ -13,9 +13,17 @@ forms of control flow expressions: @racket[cond]-expressions and
 @racket[case]-expressions.
 
 
-You are given a zip file on ELMS with a starter compiler based on the
-Dupe language we studied in class.  You are tasked with extending the
-language in a number of ways:
+You are given a starter compiler based on the Dupe language we studied
+in class.  The source code is available for download on ELMS and on
+GRACE.  On GRACE, the @tt{dupe-plus.zip} file can be found in:
+
+@verbatim|{
+/afs/glue.umd.edu/class/fall2022/cmsc/430/0101/public/
+}|
+
+
+You are tasked with extending the language in a number of
+ways:
 
 @itemlist[
 @item{adding new primitive operations,}
