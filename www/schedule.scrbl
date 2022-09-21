@@ -34,9 +34,9 @@
                (list @wk{9/20}
 	             ""
                      @itemlist[@item{@secref["Blackmail"], (@link["https://www.youtube.com/watch?v=28F-5sCUfzg"]{video})}
-			       @item{@secref["Con"], (@link["https://youtu.be/nh8x0EQsQQY"]{video})}
-                               @item{@secref["Dupe"], (@link["https://youtu.be/GdQZ2D1lyZA"]{video})}]
-                     @itemlist[@item{@secref["Dodger"], (@link["https://youtu.be/-SuINAKs7gE"]{video})}
+			       @item{@secref["Con"], (@link["https://youtu.be/nh8x0EQsQQY"]{video})}]
+                     @itemlist[@item{@secref["Dupe"], (@link["https://youtu.be/GdQZ2D1lyZA"]{video})}
+                               @item{@secref["Dodger"], (@link["https://youtu.be/-SuINAKs7gE"]{video})}
                                @item{@secref["Evildoer"], (@link["https://youtu.be/ouOgFdbT9fk"]{video})}])
                                     
                (list @wk{9/27}
