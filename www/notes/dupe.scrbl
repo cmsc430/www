@@ -457,6 +457,95 @@ Still correct:
 @ex[
 (for-each interp-bits-correct es)]
 
+Now consider the first case, where we are calling @racket[value->bits]
+on @racket[i], which we know is an integer whenever this clause of the
+@racket[match] is taken.  From looking at the definition of
+@racket[value->bits], we know @racket[(value->bits i)] is
+@racket[(arithmetic-shift i int-shift)] when @racket[i] is an integer.
+So we can replace the RHS of the first case with
+@racket[(arithmetic-shift i int-shift)].
+
+We can do similar reasoning on the second case with
+@racket[(value->bits b)] where @racket[b] is a boolean.  From the
+definition of @racket[value->bits], we can replace the RHS with
+@racket[(match b [#t val-true] [#f val-false])], which can be written
+more succinctly as @racket[(if b val-true val-false)].
+
+In the third case, let's suppose there is an analog of
+@racket[interp-prim1] called @racket[interp-prim1-bits] that operates
+on, and produces, bits.  As a start, we can assume a definition
+that is just the specification of this function:
+
+@#reader scribble/comment-reader
+(ex #:no-prompt
+;; Op Bits -> Bits
+(define (interp-prim1-bits p b)
+  (value->bits (interp-prim1 p (bits->value))))
+)
+
+Now we can replace the RHS of the third case with
+@racket[(interp-prim1-bits p (interp-bits e))].
+
+Finally, in the fourth case, we can use the following equality:
+
+@racketblock[
+(_f (if _e0 _e1 _e2)) = (if _e0 (_f _e1) (_f _e2))
+]
+
+to arrive at:
+
+@racketblock[
+(if (interp e0)
+    (value->bits (interp e1))
+    (value->bits (interp e2)))
+]
+
+Of course, @racket[(value->bits (interp e1))] is just what
+@racket[interp-bits] computes, so this is equivalent to:
+
+@racketblock[
+(if (interp e0)
+    (interp-bits e1)
+    (interp-bits e2))
+]
+
+Now observe that @racket[(interp e0)] produces @racket[#f] if and only
+if @racket[(interp-bits e0)] produces @racket[val-false].  We can therefore
+eliminate the use of @racket[interp] by replacing this conditional with:
+
+@racketblock[
+(if (eq? val-false (interp-bits e0))
+    (interp-bits e2)
+    (interp-bits e1))
+]
+
+(Notice the swapping of the then- and else-branch of the conditional.)
+
+We've now arrived at the following @racket[interp]-free definition of
+@racket[interp-bits]:
+
+@#reader scribble/comment-reader
+(ex #:no-prompt
+;; Expr -> Bits
+(define (interp-bits e)
+  (match e
+    [(Int i) (arithmetic-shift i int-shift)]
+    [(Bool b) (if b val-true val-false)]
+    [(Prim1 p e)
+     (interp-prim1-bits p (interp-bits e))]
+    [(If e1 e2 e3)
+     (if (eq? val-false (interp-bits e1))
+         (interp-bits e2)
+         (interp-bits e3))])))
+
+And it is still correct:
+@ex[
+(for-each interp-bits-correct es)]
+
+
+@;{
+
+
 In the first two cases, we know that @racket[i] and @racket[b] are
 integers and booleans, respectively.  So we know @racket[(values->bits
 i) = (* 2 i)] and @racket[(values->bits b) = (if b #,val-true #,val-false)].  We can
@@ -645,6 +734,8 @@ _bs #,(value->bits 1))], i.e. adding @binary[(value->bits 1) 2].  When @racket[_
 represents a boolean, then @racket[(value->bits (add1 (bits->value
 _bs)))] would crash, while @racket[(+ _bs (value->bits 1))] doesn't, but this is an
 undefined program, so changing the behavior is fine.
+}
+
 
 Looking back: starting from the spec, we've arrived at a definition of
 @racket[interp-bits] that is completely self-contained: it doesn't use
