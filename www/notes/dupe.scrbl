@@ -405,7 +405,8 @@ The one wrinkle is we really only need the spec to hold when
 is undefined, we use an exception handler to avoid testing when
 @racket[_e] is undefined.
 
-Now let us inline the defintion of @racket[interp]:
+Now let us inline the defintion of @racket[interp], i.e. let's replace
+the use of @racket[interp] with it's definition:
 
 @#reader scribble/comment-reader
 (ex #:no-prompt
@@ -415,16 +416,12 @@ Now let us inline the defintion of @racket[interp]:
    (match e
      [(Int i) i]
      [(Bool b) b]
-     [(Prim1 'add1 e0)
-      (add1 (interp e0))]
-     [(Prim1 'sub1 e0)
-      (sub1 (interp e0))]
-     [(Prim1 'zero? e0)
-      (zero? (interp e0))]
-     [(If e0 e1 e2)
-      (if (interp e0)
-          (interp e1)
-          (interp e2))])))
+     [(Prim1 p e)
+      (interp-prim1 p (interp e))]
+     [(If e1 e2 e3)
+      (if (interp e1)
+          (interp e2)
+          (interp e3))])))
 )
 
 It's still correct:
@@ -445,16 +442,14 @@ So we get:
   (match e
     [(Int i) (value->bits i)]
     [(Bool b) (value->bits b)]
-    [(Prim1 'add1 e0)
-     (value->bits (add1 (interp e0)))]
-    [(Prim1 'sub1 e0)
-     (value->bits (sub1 (interp e0)))]
-    [(Prim1 'zero? e0)
-     (value->bits (zero? (interp e0)))]
-    [(If e0 e1 e2) (value->bits
-     (if (interp e0)
-         (interp e1)
-         (interp e2)))]))
+    [(Prim1 p e)
+     (value->bits
+      (interp-prim1 p (interp e)))]
+    [(If e1 e2 e3)
+     (value->bits
+      (if (interp e1)
+          (interp e2)
+          (interp e3)))])))
 )
 
 
