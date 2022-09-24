@@ -18,7 +18,7 @@
 
 @(ev '(require rackunit a86))
 @(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "dupe" f))))))
-	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "random.rkt" "types.rkt"))
+	   '("interp.rkt" "interp-prim.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "random.rkt" "types.rkt"))
 
 
 @title[#:tag "Dupe"]{Dupe: a duplicity of types}
@@ -480,7 +480,7 @@ that is just the specification of this function:
 (ex #:no-prompt
 ;; Op Bits -> Bits
 (define (interp-prim1-bits p b)
-  (value->bits (interp-prim1 p (bits->value))))
+  (value->bits (interp-prim1 p (bits->value b))))
 )
 
 Now we can replace the RHS of the third case with
@@ -759,7 +759,7 @@ interpreter in a final conversion:
 (interp.v2 (parse '(if 7 1 2)))
 (interp.v2 (parse '(if (zero? 7) 1 2)))
 (eval:error (interp.v2 (parse '(add1 #f))))
-(interp.v2 (parse '(add1 #t)))
+(eval:error (interp.v2 (parse '(add1 #t))))
 )
 
 Notice the last two examples.  What's going on?
