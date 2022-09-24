@@ -19,7 +19,7 @@
 (define final-date "12/17")
 (define elms-url "https://umd.instructure.com/courses/1328554")
 
-(define racket-version "8.4")
+(define racket-version "8.6")
 
 (define staff
   (list (list "Pierce Darragh"  "pdarragh@umd.edu" "M, 1PM-2PM; T, Th, 11AM-12PM AVW 4160")

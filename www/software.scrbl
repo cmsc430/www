@@ -33,14 +33,16 @@
 This course will make use of the following software:
 
 @itemlist[
- @item{Operating system: an x86-64 ABI conforming OS such as
-  many variants of Linux and macOS running on an x86-64 CPU.
-  For @secref{Windows}, see notes below.
 
-  Students have access to the campus
-  @link["http://www.grace.umd.edu/"]{GRACE} cluster, which use
-  Red Hat Linux on an x86-64 CPU, an appropriate OS for this
-  class.}
+ @item{Operating system: an x86-64 ABI conforming OS such as many
+  variants of Linux and macOS running on an x86-64 CPU.  It is
+  also possible to use macOS on an Apple Silicon CPU with some extra
+  steps.  For @secref{Windows}, see notes below.
+
+  All students have access to the campus
+  @link["http://www.grace.umd.edu/"]{GRACE} cluster, which use Red Hat
+  Linux on an x86-64 CPU, an appropriate OS for this class.  See the
+  @secref{GRACE} notes below.}
 
  @item{Racket: the implementation language and source
   language of our compilers.}
@@ -55,43 +57,164 @@ This course will make use of the following software:
   system such as clang.} 
 ]
 
-@section{GRACE}
+Instruction for using each system are below:
+
+@itemlist[
+@item{@secref{GRACE}}
+@item{@secref{Linux}}
+@item{@secref{mac}}
+@item{@secref{Windows}}
+]
+
+@section[#:tag "GRACE"]{Using GRACE}
 
 The @link["http://www.grace.umd.edu/"]{GRACE} system gives students
 access to an x86-64 Linux system that meets all of the system
 requirements for the software in this course.  If you have an
-incompatible system (e.g. an ARM or Apple Silicone computer), or if you'd
-rather avoid installing and setting up the software for this course, you
-can use GRACE.
+incompatible system, or if you'd rather avoid installing and setting
+up the software for this course, you can use GRACE.
+
+Before using GRACE, you should locally install an implementation of
+the X.Org X Window System which will enable you to run GUI programs
+from GRACE on your computer (or any other computer that uses X11).  On
+Linux, this is likely set up by default.  On Mac, you will need to
+install @link["https://www.xquartz.org/"]{XQuartz}.  On Windows, you
+can use @link["https://mobaxterm.mobatek.net/"]{MobaXterm}.
 
 To use GRACE, open a terminal on your computer and 
 type:
 
-@verbatim|{ssh -Y <directoryID>@grace.umd.edu}|
+@verbatim|{   ssh -Y <directoryID>@grace.umd.edu}|
 
 You will prompted for your UMD Directory ID password.  After entering
 your password, you will be at the GRACE command line prompt.
 
-You will need to modify your @tt{PATH} environment variable to include
-the location of Racket and other tools used in this course.  You can
-do this with the following commands:
+The @tt{-Y} command line option sets up X11 forwarding, which lets you
+run GUI applications from GRACE.  If you leave this off, programs like
+DrRacket will fail to launch when started.
 
-@verbatim|{set path = ( $path /cell_root/software/racket/8.4/sys/bin )}|
-@verbatim|{set path = ( $path /cell_root/software/nasm/2.15.05/sys/bin/ )}|
+Racket and @tt{nasm} are already installed, but you will need to
+modify your @tt{PATH} environment variable so that you can execute
+them from the command-line.  You can do this with the following
+commands:
+
+@verbatim|{
+   set path = ( $path /cell_root/software/racket/8.4/sys/bin )
+   set path = ( $path /cell_root/software/nasm/2.15.05/sys/bin/ )}|
 
 If you add these lines to the @tt{.path} file in your home directory, then you
 won't have to run this command manually every time you login; it will happen
 automatically.
 
-Once set, you should be able to run commands such as @tt{racket}.
+Once set, you should be able to run commands such as @tt{racket},
+@tt{raco}, and @tt{nasm}.  Other tools such as @tt{gcc} are already
+available.
 
-You can also run graphical programs such as @tt{drracket} so long as
-you have X11 forwarding set up.  On Linux, this is likely set up out
-of the box.  On Mac, you will need to install
-@link["https://www.xquartz.org/"]{XQuartz}.  On Windows, you can use
-@link["https://mobaxterm.mobatek.net/"]{MobaXterm}.
+Finally, you will need to install @secref{langs-package}.
 
-@section{Installing Racket}
+@section[#:tag "Linux"]{Using Linux}
+
+If you have an ARM-based machine, you will need to use
+@seclink["GRACE"]{GRACE} or potentially setup an x86 VM.
+
+For x86-based Linux machines, you will need to
+@seclink["install-racket"]{install Racket} and the
+@seclink["langs-package"]{langs package}.  Finally, install @tt{nasm}.
+You can use your favorite package manager; they should all have
+@tt{nasm}.
+
+
+@section[#:tag "mac"]{Using macOS}
+
+If you are using a macOS computer, the setup will be different
+depending on whether you have an Intel-based CPU or an Apple Silicon
+CPU.  If you're unsure which you have, click the Apple icon in the
+top-left and select "About This Mac".  Under CPU, you will see
+a chip name containing either Intel or Apple.
+
+@subsection[#:tag "intel-mac"]{Using macOS on Intel}
+
+Intel-based Macs are fairly straightforward to set up.  You will need
+to @seclink["install-racket"]{install Racket} and the
+@seclink["langs-package"]{langs package}.  You will also need to
+install @tt{nasm}.  It's probably easiest to use a package manager
+such as @link["https://brew.sh/"]{Homebrew} to install with @tt{brew
+install nasm}.
+
+You will also want to make sure your Racket installation is visible
+from your @tt{PATH} environment variable.  Assuming Racket was
+installed in the usual location, you can run:
+
+@verbatim|{   PATH=$PATH:"/Applications/Racket v8.6/bin"}|
+
+You can add this line to the @tt{.zprofile} file in your home
+directory so that it is available every time you start the Terminal.
+
+@subsection[#:tag "apple-silicon-mac"]{Using macOS on Apple Silicon}
+
+It's also possible to run everything we need on an Apple Silicon Mac
+even though it doesn't use an x86 CPU and instead uses an ARM
+processor. That's because Apple provides a compability layer called Rosetta
+that will allow you run x86 programs on your ARM CPU.
+
+The set up is basically the same as when @secref{intel-mac}, except
+that when you install Racket you need to select the installer for
+@bold{Mac OS (Intel 64-bit)} when
+@link["https://download.racket-lang.org/"]{downloading Racket}.  Do
+not use Apple Silicon 64-bit installer.  This will work thanks to
+Rosetta.
+
+Otherwise, follow the steps given above.
+
+@section[#:tag "Windows"]{Using Windows}
+
+For Windows users, using WSL for testing is highly recommended. Beyond 
+the first few assignments, the projects will require generating and 
+executing assembly code using the nasm package. Students in the past 
+have had trouble trying to configure this in the Windows environment, 
+so an easier workaround is simply to enable WSL and run your tests through 
+some Linux Distribution. Here is a breakdown of the steps:
+
+@itemlist[
+ #:style 'ordered
+ @item{Following the instructions at
+  @link["https://docs.microsoft.com/en-us/windows/wsl/install-win10"]{
+   this link}, install a Linux Distro of your choice (e.g.,
+  Ubuntu). The instructions include a suggestion to upgrade to
+  WSL2; this is not necessary but will improve efficiency in
+  general.}
+
+ @item{Open your installed Linux distribution of choice and
+  make any initial configurations necessary (user, pass,
+  etc.). Run @tt{sudo apt update} and follow with @tt{sudo apt
+   upgrade}. These two may take some time. }
+
+ @item{Run @tt{sudo apt install racket} and @tt{
+   sudo apt install nasm}. These two should cover the necessary
+  installations for this course.}
+
+ @item{Here is where to determine which IDE you would like to
+  use.
+
+@itemlist[
+  @item{Using vim (or Emacs as mentioned in the previous section) is simple. Copy assignment files into WSL. Modify files.}
+  @item{Previous students preferred installing VSCode (outside of WSL) from @link["https://code.visualstudio.com/download"]{this link}. 
+  For each assignment, copy assignment files somewhere on your Linux distro. For some .rkt file, call 'code some-rkt-file.rkt' and 
+  after some automatic set up, VSCode should load up the file. Install Racket extensions from the VSCode 
+  Marketplace (a suggestion will also pop up once you open a .rkt file) to have colorized syntax, bracket matching, 
+  inteliSense, etc. }
+  @item{If you are intent on using DrRacket, you would also need to install Racket on your local machine 
+  (outside WSL). For each assignment, copy assignment files into your normal file system and use DrRacket to edit files 
+  accordingly. To access from your Linux subsystem, create a soft symbolic link in your Linux distro to the
+  project directory (or the parent directory so you do not need to make links with each new project).}
+]}
+
+]
+
+Regardless of the IDE used, you can now run your tests from your Linux 
+subsystem by entering the project directory and using the raco command.
+
+@section[#:tag "install-racket"]{Installing Racket}
 
 Racket is available for all major operating systems from:
 
@@ -146,54 +269,7 @@ If you'd like to use Emacs, there's a good
 using DrRacket for a while before switching to Emacs.  Using any other
 editor is fine, too.
 
-@section[#:tag "Windows"]{Windows 10 Users}
-
-For Windows 10 users, using WSL for testing is highly recommended. Beyond 
-the first few assignments, the projects will require generating and 
-executing assembly code using the nasm package. Students in the past 
-have had trouble trying to configure this in the Windows environment, 
-so an easier workaround is simply to enable WSL and run your tests through 
-some Linux Distribution. Here is a breakdown of the steps:
-
-@itemlist[
- #:style 'ordered
- @item{Following the instructions at
-  @link["https://docs.microsoft.com/en-us/windows/wsl/install-win10"]{
-   this link}, install a Linux Distro of your choice (e.g.,
-  Ubuntu). The instructions include a suggestion to upgrade to
-  WSL2; this is not necessary but will improve efficiency in
-  general.}
-
- @item{Open your installed Linux distribution of choice and
-  make any initial configurations necessary (user, pass,
-  etc.). Run @tt{sudo apt update} and follow with @tt{sudo apt
-   upgrade}. These two may take some time. }
-
- @item{Run @tt{sudo apt install racket} and @tt{
-   sudo apt install nasm}. These two should cover the necessary
-  installations for this course.}
-
- @item{Here is where to determine which IDE you would like to
-  use.
-
-@itemlist[
-  @item{Using vim (or Emacs as mentioned in the previous section) is simple. Git clone project repos into WSL. Modify files.}
-  @item{Previous students preferred installing VSCode (outside of WSL) from @link["https://code.visualstudio.com/download"]{this link}. 
-  For each assignment, git clone somewhere on your Linux distro. For some .rkt file, call 'code some-rkt-file.rkt' and 
-  after some automatic set up, VSCode should load up the file. Install Racket extensions from the VSCode 
-  Marketplace (a suggestion will also pop up once you open a .rkt file) to have colorized syntax, bracket matching, 
-  inteliSense, etc. }
-  @item{If you are intent on using DrRacket, you would also need to install Racket on your local machine 
-  (outside WSL). For each assignment, git clone into your normal file system and use DrRacket to edit files 
-  accordingly. To access from your Linux subsystem, create a soft symbolic link in your Linux distro to the
-  project directory (or the parent directory so you do not need to make links with each new project).}
-]}
-
-]
-
-Regardless of the IDE used, you can now run your tests from your Linux 
-subsystem by entering the project directory and using the raco command.
-
+@;{
 @section{Detailed compatiblity list}
 
 The course software has been successfully tested with the
@@ -325,3 +401,4 @@ Here are some examples of writing various functions in our subset of Racket.
 
 }
 
+}
