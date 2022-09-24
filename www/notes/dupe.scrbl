@@ -390,7 +390,8 @@ succeeds):
   (with-handlers ([exn:fail? (λ (x) 'ok)])
     (interp e)
     (check-equal? (interp-bits e)
-                  (value->bits (interp e)))))
+                  (value->bits (interp e))
+		  (format "~a" e))))
 
 (define es
   (for/list ([i 100])
@@ -450,7 +451,6 @@ So we get:
       (if (interp e1)
           (interp e2)
           (interp e3)))])))
-)
 
 
 Still correct:
@@ -473,8 +473,9 @@ more succinctly as @racket[(if b val-true val-false)].
 
 In the third case, let's suppose there is an analog of
 @racket[interp-prim1] called @racket[interp-prim1-bits] that operates
-on, and produces, bits.  As a start, we can assume a definition
-that is just the specification of this function:
+on, and produces, bits.  As a start, we can assume a definition that
+is just the specification of this function (we'll derive a better
+version later):
 
 @#reader scribble/comment-reader
 (ex #:no-prompt
@@ -535,12 +536,62 @@ We've now arrived at the following @racket[interp]-free definition of
      (interp-prim1-bits p (interp-bits e))]
     [(If e1 e2 e3)
      (if (eq? val-false (interp-bits e1))
-         (interp-bits e2)
-         (interp-bits e3))])))
+         (interp-bits e3)
+         (interp-bits e2))])))
 
 And it is still correct:
 @ex[
 (for-each interp-bits-correct es)]
+
+
+We're almost done.  Now let's derive a version of
+@racket[interp-prim1-bits] starting from the specification we gave
+above.  To start, replace the use of @racket[interp-prim1] with its
+definition:
+
+@#reader scribble/comment-reader
+(ex #:no-prompt
+;; Op Bits -> Bits
+(define (interp-prim1-bits op b)
+  (value->bits
+   (match op
+     ['add1  (add1 (bits->value b))]
+     ['sub1  (sub1 (bits->value b))]
+     ['zero? (zero? (bits->value b))]))))
+
+Now push @racket[value->bits] inward:
+
+@#reader scribble/comment-reader
+(ex #:no-prompt
+;; Op Bits -> Bits
+(define (interp-prim1-bits op b)
+  (match op
+    ['add1  (value->bits (add1 (bits->value b)))]
+    ['sub1  (value->bits (sub1 (bits->value b)))]
+    ['zero? (value->bits (zero? (bits->value b)))])))
+
+Now notice the following:
+
+@itemlist[
+
+@item{@racket[(value->bits (add1 (bits->value b)))] ≡ @racket[(+ b (value->bits 1))] ≡ @racket[(+ b (arithmetic-shift 1 int-shift))]}
+
+@item{@racket[(value->bits (sub1 (bits->value b)))] ≡ @racket[(- b (value->bits 1))] ≡ @racket[(- b (arithmetic-shift 1 int-shift))]}
+
+@item{@racket[(value->bits (zero? (bits->value b)))] ≡ @racket[(value->bits (zero? b))] ≡ @racket[(if (zero? b) val-true val-false)]}
+
+]
+
+So we can define @racket[interp-prim1-bits] as:
+
+@#reader scribble/comment-reader
+(ex #:no-prompt
+;; Op Bits -> Bits
+(define (interp-prim1-bits op b)
+  (match op
+    ['add1  (+ b (arithmetic-shift 1 int-shift))]
+    ['sub1  (- b (arithmetic-shift 1 int-shift))]
+    ['zero? (if (zero? b) val-true val-false)])))
 
 
 @;{
@@ -759,7 +810,7 @@ interpreter in a final conversion:
 (interp.v2 (parse '(if 7 1 2)))
 (interp.v2 (parse '(if (zero? 7) 1 2)))
 (eval:error (interp.v2 (parse '(add1 #f))))
-(eval:error (interp.v2 (parse '(add1 #t))))
+(interp.v2 (parse '(add1 #t)))
 )
 
 Notice the last two examples.  What's going on?
@@ -941,8 +992,7 @@ our usual appraoch:
 @ex[
 (define (check-correctness e)
   (check-equal? (interp-compile e)
-                (interp e)
-                e))
+                (interp e)))
 
 (check-correctness (parse '(add1 7)))
 ;;(eval:error (check-correctness (parse '(add1 #f))))
@@ -961,8 +1011,7 @@ produces void, effectively ignoring the test:
 (define (check-correctness e)
   (with-handlers ([exn:fail? void])
     (check-equal? (interp-compile e)
-                  (interp e)
-                  e)))
+                  (interp e))))
 
 (check-correctness (parse '(add1 7)))
 (check-correctness (parse '(add1 #f)))
