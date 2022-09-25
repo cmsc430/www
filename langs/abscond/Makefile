@@ -1,5 +1,4 @@
 UNAME := $(shell uname)
-.PHONY: test
 
 ifeq ($(UNAME), Darwin)
   format=macho64
@@ -17,10 +16,10 @@ runtime.o: $(objs)
 	ld -r $(objs) -o runtime.o
 
 %.run: %.o runtime.o
-	gcc runtime.o $< -o $@
+	arch -x86_64 gcc runtime.o $< -o $@
 
 .c.o:
-	gcc -fPIC -c -g -o $@ $<
+	arch -x86_64 gcc -fPIC -c -g -o $@ $<
 
 .s.o:
 	nasm -g -f $(format) -o $@ $<
@@ -31,5 +30,5 @@ runtime.o: $(objs)
 clean:
 	rm *.o *.s *.run
 
-test: example.run
-	@test "$(shell ./example.run)" = "$(shell racket example.rkt)"
+%.test: %.run %.rkt
+	@test "$(shell ./$(<))" = "$(shell racket $(word 2,$^))"
