@@ -161,7 +161,7 @@ even at a low-level.
 Without getting too bogged down in the details, here how the
 code works. Instructions execute one after another. There
 are a number of registers which can be used to hold values.
-This code makes use of the @tt{rax} and @tt{rdi} register
+This code makes use of the @tt{rax} and @tt{rbx} register
 (and some other registers are implicitly used and altered by
 the @tt{call}, @tt{push}, @tt{pop} and @tt{ret}
 instructions). The lines like @tt{entry:}, @tt{tri:}, and
