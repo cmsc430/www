@@ -109,7 +109,7 @@
   (require rackunit)
   ;; Check that the semantics is total function
   (redex-check F e
-               (check-true (redex-match? F (a_0) (judgment-holds (𝑭 e a) a)) (term e))
+               (check-true (redex-match? F (a_0) (judgment-holds (𝑭 e a) a)) (format "~a" (term e)))
                #:print? #f))
 
 
@@ -250,5 +250,5 @@
   (require rackunit)
   ;; Check that the semantics is total function
   (redex-check G e
-               (check-true (redex-match? G (a_0) (judgment-holds (𝑮 e a) (format "~a" a))))
+               (check-true (redex-match? G (a_0) (judgment-holds (𝑮 e a) a)))
                #:print? #f))
