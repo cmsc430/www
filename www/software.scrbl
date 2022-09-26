@@ -93,14 +93,16 @@ The @tt{-Y} command line option sets up X11 forwarding, which lets you
 run GUI applications from GRACE.  If you leave this off, programs like
 DrRacket will fail to launch when started.
 
-Racket and @tt{nasm} are already installed, but you will need to
-modify your @tt{PATH} environment variable so that you can execute
-them from the command-line.  You can do this with the following
-commands:
+Racket, @tt{nasm}, and @tt{gcc} are already installed, but you will
+need to modify your @tt{PATH} environment variable so that you can
+execute them from the command-line.  You can do this with the
+following commands:
 
 @verbatim|{
-   set path = ( $path /cell_root/software/racket/8.4/sys/bin )
-   set path = ( $path /cell_root/software/nasm/2.15.05/sys/bin/ )}|
+   # CMSC 430 set up
+   set path = ( /cell_root/software/racket/8.4/sys/bin $path )
+   set path = ( /cell_root/software/nasm/2.15.05/sys/bin/ $path )
+   set path = ( /cell_root/software/gcc/9.1.0/sys/bin/ $path )}|
 
 If you add these lines to the @tt{.path} file in your home directory, then you
 won't have to run this command manually every time you login; it will happen
