@@ -3,8 +3,19 @@
 #   ld will always choose .dylib over .a to link, so either rename or remove
 #   the .dylib versions.
 
+
 UNAME := $(shell uname)
 .PHONY: test
+
+
+# When on GRACE, we pass options to find libunistring in the course's
+# public directory.
+ifeq ($(shell hostname | egrep "grace.\.umd\.edu"),)
+else
+ CMSC430_LIB := /afs/glue/class/fall2022/cmsc/430/0101/public
+ link_opts := -L$(CMSC430_LIB)/lib/ -Wl,-rpath=$(CMSC430_LIB)/lib/
+ include := -I$(CMSC430_LIB)/include/
+endif
 
 ifeq ($(UNAME), Darwin)
   format=macho64
@@ -51,10 +62,10 @@ runtime.o: $(objs)
 	ld -r $(objs) -o runtime.o
 
 %.run: %.o runtime.o
-	gcc -lunistring runtime.o $< -o $@
+	gcc $(link_opts) -lunistring runtime.o $< -o $@
 
 .c.o:
-	gcc -fPIC -c -g -o $@ $<
+	gcc $(include) -fPIC -c -g -o $@ $<
 
 .s.o:
 	nasm -g -f $(format) -o $@ $<
