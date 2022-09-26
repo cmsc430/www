@@ -1,7 +1,7 @@
 #lang scribble/manual
 @title[#:tag "Assignment 3" #:style 'unnumbered]{Assignment 3: Primitives, Conditionals, and Dispatch}
 
-@(require (for-label (except-in racket ...)))
+@(require (for-label a86 (except-in racket ...)))
 @(require "../../langs/con-plus/semantics.rkt")
 @(require redex/pict)
 

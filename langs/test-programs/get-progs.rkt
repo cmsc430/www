@@ -49,10 +49,10 @@
   (if (file-exists? p.in)
       (check-equal? (run/io p.run p.in)
                     (racket/io p.rkt p.in)
-                    p.rkt)
+                    (path->string p.rkt))
       (check-equal? (run p.run)
                     (racket p.rkt)
-                    p.rkt)))
+                    (path->string p.rkt))))
 
 (define (system/s cmd)
   (with-output-to-string (thunk (system cmd))))
