@@ -261,32 +261,32 @@
     [(cons _ asm)
      (label-decls asm)]))
 
-(define (label-symbol? x)
-  (and (symbol? x)
-       (not (register? x))))
+;; Symbol -> Boolean
+(define (nasm-label? s)
+  (regexp-match #rx"^[a-zA-Z._?][a-zA-Z0-9_$#@~.?]*$" (symbol->string s)))
 
 ;; Asm -> (Listof Symbol)
 ;; Compute all uses of label names
 (define (label-uses asm)
   (match asm
     ['() '()]
-    [(cons (Jmp (? label-symbol? s)) asm)
+    [(cons (Jmp (? label? s)) asm)
      (cons s (label-uses asm))]
-    [(cons (Je (? label-symbol? s)) asm)
+    [(cons (Je (? label? s)) asm)
      (cons s (label-uses asm))]
-    [(cons (Jne (? label-symbol? s)) asm)
+    [(cons (Jne (? label? s)) asm)
      (cons s (label-uses asm))]
-    [(cons (Jg (? label-symbol? s)) asm)
+    [(cons (Jg (? label? s)) asm)
      (cons s (label-uses asm))]
-    [(cons (Jge (? label-symbol? s)) asm)
+    [(cons (Jge (? label? s)) asm)
      (cons s (label-uses asm))]
-    [(cons (Jl (? label-symbol? s)) asm)
+    [(cons (Jl (? label? s)) asm)
      (cons s (label-uses asm))]
-    [(cons (Jle (? label-symbol? s)) asm)
+    [(cons (Jle (? label? s)) asm)
      (cons s (label-uses asm))]
-    [(cons (Call (? label-symbol? s)) asm)
+    [(cons (Call (? label? s)) asm)
      (cons s (label-uses asm))]
-    [(cons (Lea _ (? label-symbol? s)) asm)
+    [(cons (Lea _ (? label? s)) asm)
      (cons s (label-uses asm))]    
     [(cons _ asm)
      (label-uses asm)]))
