@@ -4,7 +4,6 @@
 
 (define rax 'rax) ; return
 (define rdi 'rdi) ; arg
-(define r8  'r8)  ; scratch in +, -
 
 ;; Op0 -> Asm
 (define (compile-op0 p)
