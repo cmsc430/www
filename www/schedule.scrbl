@@ -36,18 +36,19 @@
                      @itemlist[@item{@secref["Blackmail"], (@link["https://www.youtube.com/watch?v=28F-5sCUfzg"]{video})}
 			       @item{@secref["Con"], (@link["https://youtu.be/nh8x0EQsQQY"]{video})}]
                      @itemlist[@item{@secref["Dupe"], (@link["https://youtu.be/GdQZ2D1lyZA"]{video})}
-                               @item{@secref["Dodger"], (@link["https://youtu.be/-SuINAKs7gE"]{video})}
-                               @item{@secref["Evildoer"], (@link["https://youtu.be/ouOgFdbT9fk"]{video})}])
+                               @item{@secref["Dodger"], (@link["https://youtu.be/-SuINAKs7gE"]{video})}])
                                     
                (list @wk{9/27}
 	       	     @seclink["Assignment 3"]{A3}
-		     @elem{@secref["Extort"], (@link["https://youtu.be/4lU-0i5sl-Q"]{video})}
-		     @elem{@secref["Fraud"], (@link["https://youtu.be/XmezNX4qfWE"]{video})})
+		     @elem{@secref["Evildoer"], (@link["https://youtu.be/ouOgFdbT9fk"]{video})}
+		     @itemlist[
+		       @item{@secref["Evildoer"], cont. (@link["https://youtu.be/ouOgFdbT9fk"]{video})}
+		       @item{@secref["Extort"], (@link["https://youtu.be/4lU-0i5sl-Q"]{video})}])
                
                (list @wk{10/4}
 	       	     @bold{@seclink["Midterm_1"]{M1}}
                      @elem{No lecture (exam)}
-                     @elem{@secref["Fraud"], cont. (@link["https://youtu.be/XmezNX4qfWE"]{video})})
+                     @elem{@secref["Fraud"] (@link["https://youtu.be/XmezNX4qfWE"]{video})})
                
                (list @wk{10/11}
 	       	     @elem{A4} @;{@seclink["Assignment 4"]{A4}}
