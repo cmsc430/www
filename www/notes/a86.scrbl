@@ -697,7 +697,7 @@ Each register plays the same role as in x86, so for example
  A predicate for label @emph{names}, i.e. symbols which are not register names.
 
  Labels must also follow the NASM restrictions on label names: "Valid
- characters in labels are letters, numbers, @tt{_}, @tt{$}, @tt{#}, @tt{@}, @tt{~}, @tt{.}, and
+ characters in labels are letters, numbers, @tt{_}, @tt{$}, @tt{#}, @tt{@"@"}, @tt{~}, @tt{.}, and
  @tt{?}. The only characters which may be used as the first character of an
  identifier are letters, @tt{.} (with special meaning), @tt{_}
  and @tt{?}."
