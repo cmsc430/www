@@ -177,6 +177,7 @@
 
 (define (label? x)
   (and (symbol? x)
+       (nasm-label? x)
        (not (register? x))))
 
 (define (instruction? x)
