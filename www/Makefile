@@ -17,7 +17,7 @@ $(course):
 		$(course).scrbl
 	mkdir -p $(course)/code/	
 	cd ../langs ; \
-		tar -c `git ls-files intro a86 abscond blackmail con dupe dodger extort fraud hustle hoax iniquity jig knock loot mug mountebank neerdowell fp project.pdf` \
+		tar -c `git ls-files intro a86 abscond blackmail con dupe dodger evildoer extort fraud hustle hoax iniquity jig knock loot mug mountebank neerdowell fp project.pdf` \
 			a86/main.c a86/gcd.c a86/tri.s abscond/42.s | \
 		(cd ../www/main/code ; tar -x ; \
 			zip -c abscond.zip -r abscond/ ; \
@@ -25,6 +25,7 @@ $(course):
 			zip -c con.zip -r con/ ; \
 			zip -c dupe.zip -r dupe/ ; \
 			zip -c dodger.zip -r dodger/ ; \
+			zip -c evildoer.zip -r evildoer/ ; \
 			zip -c extort.zip -r extort/ ; \
 			zip -c fraud.zip -r fraud/ ; \
 			zip -c hustle.zip -r hustle/ ; \
