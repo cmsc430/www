@@ -702,6 +702,14 @@ Each register plays the same role as in x86, so for example
  identifier are letters, @tt{.} (with special meaning), @tt{_}
  and @tt{?}."
  
+ @ex[
+ (label? 'foo)
+ (label? "foo")
+ (label? 'rax)
+ (label? 'foo-bar)
+ (label? 'foo.bar)
+ ]
+
 }
 
 @defproc[(instruction? [x any/c]) boolean?]{
@@ -800,12 +808,14 @@ Each register plays the same role as in x86, so for example
 
  Creates a label from the given symbol. Each label in a
  program must be unique.  Register names cannot be used
- as label names.
+ as label names and names must follow the NASM restrictions
+ on valid label names (see @racket[label?] for details).
 
  @ex[
  (Label 'fred)
  (eval:error (Label "fred"))
  (eval:error (Label 'rax))
+ (eval:error (Label 'fred-wilma))
  ]
 
 }

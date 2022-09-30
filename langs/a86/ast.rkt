@@ -12,6 +12,8 @@
       (error n "cannot use register as label name; given ~v" x))
     (unless (symbol? x)
       (error n "expects symbol; given ~v" x))
+    (unless (label? x)
+      (error n "label names must conform to nasm restrictions"))
     x))
 
 (define check:label-symbol+integer
