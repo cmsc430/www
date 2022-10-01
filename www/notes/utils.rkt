@@ -3,6 +3,7 @@
 (require (for-syntax racket/runtime-path racket/base racket/file))
 (require scribble/manual racket/runtime-path)
 (require (for-label (except-in racket compile) a86))
+(require images/icons/file)
 
 (begin-for-syntax
   (define-runtime-path notes "../../langs/"))
@@ -35,3 +36,8 @@
                                    #:left-pad-string "0"
                                    #:align 'right
                                    #:min-width len))))
+
+(define (src-code lang)
+  (margin-note (small-save-icon) " "
+               (link (string-append "code/" (string-downcase lang) ".zip") "Source code")
+	       "."))

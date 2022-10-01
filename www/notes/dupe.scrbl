@@ -23,6 +23,8 @@
 
 @title[#:tag "Dupe"]{Dupe: a duplicity of types}
 
+@src-code["dupe"]
+
 @emph{There are 10 types of values...}
 
 @table-of-contents[]

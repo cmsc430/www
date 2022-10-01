@@ -20,6 +20,8 @@
 
 @title[#:tag "Dodger"]{Dodger: addressing a lack of character}
 
+@src-code["dodger"]
+
 @emph{There are 11 types of values...}
 
 @table-of-contents[]

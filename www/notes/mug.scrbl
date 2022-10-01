@@ -18,7 +18,11 @@
 @(for-each (λ (f) (ev `(require (file ,f))))
 	   '("interp.rkt" "compile.rkt" "compile-expr.rkt" "compile-literals.rkt" "utils.rkt" "ast.rkt" "parse.rkt" "types.rkt" "unload-bits-asm.rkt"))
 
-@title[#:tag "Mug"]{Mug: symbols and interned string literals}
+@(define this-lang "Mug")
+
+@title[#:tag this-lang]{@|this-lang|: symbols and interned string literals}
+
+@src-code[this-lang]
 
 @table-of-contents[]
 

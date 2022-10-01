@@ -33,6 +33,8 @@
 
 @title[#:tag "Blackmail"]{Blackmail: incrementing and decrementing}
 
+@src-code["blackmail"]
+
 @emph{Let's Do It Again!}
 
 @table-of-contents[]

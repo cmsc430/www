@@ -17,7 +17,11 @@
 @(for-each (λ (f) (ev `(require (file ,f))))
 	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
-@title[#:tag "Loot"]{Loot: lambda the ultimate}
+@(define this-lang "Loot")
+
+@title[#:tag this-lang]{@|this-lang|: lambda the ultimate}
+
+@src-code[this-lang]
 
 @table-of-contents[]
 

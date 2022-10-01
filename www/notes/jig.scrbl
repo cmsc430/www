@@ -16,7 +16,11 @@
 @(for-each (λ (f) (ev `(require (file ,f))))
 	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
-@title[#:tag "Jig"]{Jig: jumping to tail calls}
+@(define this-lang "Jig")
+
+@title[#:tag this-lang]{@|this-lang|: jumping to tail calls}
+
+@src-code[this-lang]
 
 @table-of-contents[]
 

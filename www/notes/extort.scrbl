@@ -25,6 +25,8 @@
 
 @title[#:tag this-lang]{@|this-lang|: when errors exist}
 
+@src-code[this-lang]
+
 @emph{The greatest mistake is to imagine that we never err.}
 
 @table-of-contents[]

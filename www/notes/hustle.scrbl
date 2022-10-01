@@ -23,6 +23,7 @@
 
 @title[#:tag this-lang]{@|this-lang|: heaps and lists}
 
+@src-code[this-lang]
 
 @emph{A little and a little, collected together, become a great deal;
 the heap in the barn consists of single grains, and drop and drop

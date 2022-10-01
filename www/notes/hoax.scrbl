@@ -23,6 +23,7 @@
 
 @title[#:tag this-lang]{@|this-lang|: vectors and strings}
 
+@src-code[this-lang]
 
 @emph{Stupidity, outrage, vanity, cruelty, iniquity, bad faith,
 falsehood - we fail to see the whole array when it is facing in the

@@ -23,6 +23,8 @@
 
 @title[#:tag this-lang]{@|this-lang|: local binding, variables, and binary operations}
 
+@src-code[this-lang]
+
 @emph{To be is to be the value of a variable.}
 
 @table-of-contents[]
