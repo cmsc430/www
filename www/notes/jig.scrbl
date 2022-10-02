@@ -210,7 +210,8 @@ Here's what this code will compile to, roughly:
 @#reader scribble/comment-reader
 (ex
 (asm-interp
- (seq (Label 'entry)
+ (seq (Global 'entry)
+      (Label 'entry)
       
       ;; calling (f 100), so set up return address,
       ;; push argument, then jump
@@ -419,7 +420,8 @@ We can modify the code to embody these ideas:
 @#reader scribble/comment-reader
 (ex
 (asm-interp
- (seq (Label 'entry)
+ (seq (Global 'entry)
+      (Label 'entry)
       
       ;; calling (f 100), so set up return address,
       ;; push argument, then jump
@@ -535,7 +537,8 @@ call:
 @#reader scribble/comment-reader
 (ex
 (asm-interp
- (seq (Label 'entry)
+ (seq (Global 'entry)
+      (Label 'entry)
 
       ;; TAIL calling (f 100),
       ;; no args to pop
