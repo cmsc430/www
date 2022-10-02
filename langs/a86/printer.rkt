@@ -206,7 +206,7 @@
     [(Label g)
      (begin
        (write-string (string-append
-                      tab "global " (label-symbol->string g) "\n"
+                      ; tab "global " (label-symbol->string g) "\n"
                       tab "default rel\n"
                       tab "section .text\n"))
        (instrs-display a))]
