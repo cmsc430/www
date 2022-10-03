@@ -4,14 +4,15 @@
          "../interp-io.rkt"
          "../parse.rkt"
          "../types.rkt"
+	 "../build-runtime.rkt"
          a86/interp
          rackunit)
 
 ;; link with runtime for IO operations
-(unless (file-exists? "../runtime.o")
-  (system "make -C .. runtime.o"))
+;(unless (file-exists? "../runtime.o")
+;  (system "make -C .. runtime.o"))
 (current-objs
- (list (path->string (normalize-path "../runtime.o"))))
+ (list (path->string runtime-path)))
 
 (define (test-runner run)
   
