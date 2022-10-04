@@ -4,7 +4,6 @@
 
 (define rax 'rax) ; return
 (define rdi 'rdi) ; arg
-(define r8  'r8)  ; scratch in +, -
 (define r9  'r9)  ; scratch in assert-type
 
 ;; Op0 -> Asm
@@ -56,20 +55,6 @@
           (Call 'write_byte)
           (Mov rax val-void))]))
 
-;; Op2 -> Asm
-(define (compile-op2 p)
-  (match p
-    ['+
-     (seq (Pop r8)
-          (assert-integer r8)
-          (assert-integer rax)
-          (Add rax r8))]
-    ['-
-     (seq (Pop r8)
-          (assert-integer r8)
-          (assert-integer rax)
-          (Sub r8 rax)
-          (Mov rax r8))]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
