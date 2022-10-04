@@ -51,7 +51,7 @@ This course will make use of the following software:
   for this course.}
  
  @item{NASM: the Netwide Assembler, which we will use to
-  assembly x86 programs.}
+  assemble x86 programs.}
 
  @item{GCC: the GNU compiler collection or a GCC-compatible
   system such as clang.} 
