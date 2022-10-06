@@ -47,13 +47,6 @@
   (seq (compile-e e)
        (compile-op1 p)))
 
-;; Op2 Expr Expr -> Asm
-(define (compile-prim2 p e1 e2)
-  (seq (compile-e e1)
-       (Push rax)
-       (compile-e e2)
-       (compile-op2 p)))
-
 ;; Expr Expr Expr -> Asm
 (define (compile-if e1 e2 e3)
   (let ((l1 (gensym 'if))

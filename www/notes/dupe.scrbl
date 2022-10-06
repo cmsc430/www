@@ -23,6 +23,8 @@
 
 @title[#:tag "Dupe"]{Dupe: a duplicity of types}
 
+@src-code["dupe"]
+
 @emph{There are 10 types of values...}
 
 @table-of-contents[]
@@ -65,7 +67,7 @@ The s-expression parser is defined as follows:
 
 @section{Meaning of Dupe programs}
 
-To consider he meaning of Dupe programs, we must revisit the meaning
+To consider the meaning of Dupe programs, we must revisit the meaning
 of conditions.  Previously we branched on whether a subexpression
 evaluated to 0.  We will now consider whether the subexpression
 evaluates to @racket[#f].

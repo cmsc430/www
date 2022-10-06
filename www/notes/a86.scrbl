@@ -826,6 +826,13 @@ Each register plays the same role as in x86, so for example
  
 }
 
+@defstruct*[Global ([x label?])]{
+
+ Declares a label as global, i.e. linkable with other object files.
+
+}
+
+
 @defstruct*[Call  ([x (or/c label? register?)])]{
 
  A call instruction.

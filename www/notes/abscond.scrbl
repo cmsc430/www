@@ -36,6 +36,8 @@
 
 @title[#:tag "Abscond"]{Abscond: a language of numbers}
 
+@src-code["abscond"]
+
 @emph{Let's Make a Programming Language!}
 
 @table-of-contents[]

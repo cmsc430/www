@@ -63,6 +63,8 @@ HERE
 
 @title[#:tag "Evildoer"]{Evildoer: change the world a couple nibbles at a time}
 
+@src-code["evildoer"]
+
 @emph{Warning: Side effects may include itching, burning,
  oozing, weeping. Not intended for heart patients and those
  with nervous disorders.}

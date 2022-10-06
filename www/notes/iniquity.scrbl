@@ -26,6 +26,8 @@
 
 @title[#:tag this-lang]{@|this-lang|: function definitions and calls}
 
+@src-code[this-lang]
+
 @table-of-contents[]
 
 @section[#:tag-prefix "iniquity"]{Functions}

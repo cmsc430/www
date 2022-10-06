@@ -16,7 +16,11 @@
 @(for-each (λ (f) (ev `(require (file ,f))))
 	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
-@title[#:tag "Jig"]{Jig: jumping to tail calls}
+@(define this-lang "Jig")
+
+@title[#:tag this-lang]{@|this-lang|: jumping to tail calls}
+
+@src-code[this-lang]
 
 @table-of-contents[]
 
@@ -206,7 +210,8 @@ Here's what this code will compile to, roughly:
 @#reader scribble/comment-reader
 (ex
 (asm-interp
- (seq (Label 'entry)
+ (seq (Global 'entry)
+      (Label 'entry)
       
       ;; calling (f 100), so set up return address,
       ;; push argument, then jump
@@ -415,7 +420,8 @@ We can modify the code to embody these ideas:
 @#reader scribble/comment-reader
 (ex
 (asm-interp
- (seq (Label 'entry)
+ (seq (Global 'entry)
+      (Label 'entry)
       
       ;; calling (f 100), so set up return address,
       ;; push argument, then jump
@@ -531,7 +537,8 @@ call:
 @#reader scribble/comment-reader
 (ex
 (asm-interp
- (seq (Label 'entry)
+ (seq (Global 'entry)
+      (Label 'entry)
 
       ;; TAIL calling (f 100),
       ;; no args to pop

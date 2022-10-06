@@ -83,14 +83,14 @@
                      )
 
                (list @wk{11/15}
-                     @bold{@seclink["Midterm_2"]{M2}}
+                     ""
                      @elem{Self-hosting?}
                      @elem{Self-hosting?})
 
                (list @wk{11/22}
                      @elem{A6} @;{@seclink["Assignment 6"]{A6}}
 		     @elem{GC}
-		     @elem{GC}
+		     @elem{No class, Thanksgiving}
 		     )
 
                (list @wk{11/29}

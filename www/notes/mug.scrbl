@@ -18,7 +18,11 @@
 @(for-each (λ (f) (ev `(require (file ,f))))
 	   '("interp.rkt" "compile.rkt" "compile-expr.rkt" "compile-literals.rkt" "utils.rkt" "ast.rkt" "parse.rkt" "types.rkt" "unload-bits-asm.rkt"))
 
-@title[#:tag "Mug"]{Mug: symbols and interned string literals}
+@(define this-lang "Mug")
+
+@title[#:tag this-lang]{@|this-lang|: symbols and interned string literals}
+
+@src-code[this-lang]
 
 @table-of-contents[]
 
@@ -78,7 +82,8 @@ We can run it just to make sure:
 @ex[
 (unload/free
  (asm-interp
-  (seq (Label 'entry)
+  (seq (Global 'entry)
+       (Label 'entry)
        (Mov 'rbx 'rdi)
        (compile-string "Hello!")
        (Ret))))
@@ -139,7 +144,8 @@ following:
 @ex[
 (unload/free
  (asm-interp
-  (seq (Label 'entry)
+  (seq (Global 'entry)
+       (Label 'entry)
        (Lea 'rax 'hi)
        (Or 'rax type-str)
        (Ret)
@@ -187,7 +193,8 @@ instruction, instead computing that type tagging at link time:
 @ex[
 (unload/free
  (asm-interp
-  (seq (Label 'entry)
+  (seq (Global 'entry)
+       (Label 'entry)
        (Lea 'rax (Plus 'hi type-str))
        (Ret)
        (Data)
@@ -221,7 +228,8 @@ efficient to evaluate string literals.  We could replace the old
 
 (unload/free
  (asm-interp
-  (seq (Label 'entry)
+  (seq (Global 'entry)
+       (Label 'entry)
        (compile-string "Hello!")
        (Ret))))
 ]

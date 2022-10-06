@@ -18,7 +18,11 @@
 @(for-each (λ (f) (ev `(require (file ,f))))
 	   '("interp.rkt" "compile.rkt" "compile-expr.rkt" "compile-literals.rkt" "compile-datum.rkt" "utils.rkt" "ast.rkt" "parse.rkt" "types.rkt" "unload-bits-asm.rkt"))
 
-@title[#:tag "Mountebank"]{Mountebank: quote and compound static data}
+@(define this-lang "Mountebank")
+
+@title[#:tag this-lang]{@|this-lang|: quote and compound static data}
+
+@src-code[this-lang]
 
 @table-of-contents[]
 

@@ -28,6 +28,8 @@
 
 @title[#:tag this-lang]{@|this-lang|: pattern matching}
 
+@src-code[this-lang]
+
 @table-of-contents[]
 
 @section[#:tag-prefix "knock"]{Matching}

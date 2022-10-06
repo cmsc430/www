@@ -23,6 +23,8 @@
 
 @title[#:tag "Con"]{Con: branching with conditionals}
 
+@src-code["con"]
+
 @emph{When you come to a fork in the road, take it.}
 
 @table-of-contents[]
