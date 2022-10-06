@@ -11,7 +11,7 @@
 ;; | Eof
 ;; | Void
 
-;; type REnv = (Listof (List Id Value))
+;; type Env = (Listof (List Id Value))
 
 ;; Expr -> Answer
 (define (interp e)
