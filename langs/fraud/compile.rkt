@@ -4,11 +4,10 @@
 
 ;; Registers used
 (define rax 'rax) ; return
-(define rbx 'rbx) ; heap
 (define rsp 'rsp) ; stack
 (define rdi 'rdi) ; arg
 
-;; type CEnv = [Listof Variable]
+;; type CEnv = (Listof ID)
 
 ;; Expr -> Asm
 (define (compile e)
