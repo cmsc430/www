@@ -8,7 +8,7 @@
 (define (interp e)
   (interp-env (translate e) '()))
 
-;; Expr VEnv -> Answer
+;; IExpr VEnv -> Answer
 (define (interp-env e r)
   (match e
     [(Int i) i]
