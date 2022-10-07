@@ -23,9 +23,9 @@
     [(Int i) i]
     [(Bool b) b]
     [(Char c) c]
-    [(Eof) eof]       
+    [(Eof) eof]
     [(Var x) (lookup r x)]
-    [(Prim0 p) (interp-prim0 p)]     
+    [(Prim0 p) (interp-prim0 p)]
     [(Prim1 p e)
      (match (interp-env e r)
        ['err 'err]
