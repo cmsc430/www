@@ -61,6 +61,6 @@
          (lookup r x))]))
 
 ;; Env Id Value -> Env
-(define (ext r v val)
-  (cons (list v val) r))
+(define (ext r x v)
+  (cons (list x v) r))
 
