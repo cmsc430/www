@@ -11,7 +11,7 @@
 ;; | Eof
 ;; | Void
 
-;; type REnv = (Listof (List Id Value))
+;; type Env = (Listof (List Id Value))
 
 ;; Expr -> Answer
 (define (interp e)
@@ -23,9 +23,9 @@
     [(Int i) i]
     [(Bool b) b]
     [(Char c) c]
-    [(Eof) eof]       
+    [(Eof) eof]
     [(Var x) (lookup r x)]
-    [(Prim0 p) (interp-prim0 p)]     
+    [(Prim0 p) (interp-prim0 p)]
     [(Prim1 p e)
      (match (interp-env e r)
        ['err 'err]
@@ -61,6 +61,6 @@
          (lookup r x))]))
 
 ;; Env Id Value -> Env
-(define (ext r v val)
-  (cons (list v val) r))
+(define (ext r x v)
+  (cons (list x v) r))
 

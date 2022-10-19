@@ -1,7 +1,6 @@
 #lang racket
 (provide interp interp-env-heap)
-(require "heap.rkt"
-         "env.rkt"
+(require "env.rkt"
          "unload.rkt"
          "interp-prims-heap.rkt"
          "ast.rkt")

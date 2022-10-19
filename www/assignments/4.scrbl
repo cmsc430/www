@@ -7,19 +7,19 @@
 
 @(require "../notes/ev.rkt")
 
-@bold{Due: Thursday, Mar 31st at 11:59PM EST}
+@bold{Due: Tuesday, Oct 18, 11:59PM EST}
 
 The goal of this assignment is to extend a compiler with binding
 forms and primitives that can take any number of arguments.
 
-You are given a zip file on ELMS with a starter compiler similar to
-the @seclink["Fraud"]{Fraud} language we studied in class.  You are
-tasked with:
+You are given a @tt{fraud-plus.zip} file on ELMS with a starter
+compiler similar to the @seclink["Fraud"]{Fraud} language we studied
+in class.  You are tasked with:
 
 @itemlist[
 
 @item{incorporating the language features you added in
-@seclink["Assignment 3"]{Assignment 3},}
+@seclink["Assignment 3"]{Assignment 3}, scaled up to Fraud,}
 
 @item{extending the addition primitive to handle an arbitrary number of arguments,}
 
@@ -182,12 +182,13 @@ write additional test cases.
 
 @section[#:tag-prefix "a4-" #:style 'unnumbered]{Submitting}
 
-You should submit on Gradescope. You should submit a zip file that has
-exactly the same structure that the stub contains. We will only use
-the @tt{compile.rkt}, @tt{interp.rkt}, and @tt{interp-prim.rkt} files
-for grading, so make sure all your work is contained there! Note the
-lack of @tt{ast.rkt}, @tt{parse.rkt}, etc. - part of assignment 3 was
-learning to design your own structures, part of assignment 4 is
-learning to work within the constraints of an existing design!
+Submit a zip file containing your work to Gradescope.  Use @tt{make
+submit.zip} from within the @tt{dupe-plus} directory to create a zip
+file with the proper structure.
 
-
+We will only use the @tt{compile.rkt}, @tt{interp.rkt}, and
+@tt{interp-prim.rkt} files for grading, so make sure all your work is
+contained there! Note the lack of @tt{ast.rkt}, @tt{parse.rkt}, etc. -
+part of assignment 3 was learning to design your own structures, part
+of assignment 4 is learning to work within the constraints of an
+existing design!
