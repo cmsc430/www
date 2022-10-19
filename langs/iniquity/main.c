@@ -4,8 +4,6 @@
 #include "print.h"
 #include "runtime.h"
 
-#include "types.h"
-
 FILE* in;
 FILE* out;
 void (*error_handler)();
