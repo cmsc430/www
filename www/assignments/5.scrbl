@@ -10,16 +10,16 @@
 	   '("ast.rkt" "parse.rkt" "interp.rkt"))
 
 
-@bold{Due: Tuesday, April 19th, 11:59PM EDT}
+@bold{Due: Monday, November 7, 11:59PM EDT}
 
 The goal of this assignment is to extend a compiler with arity
 checking for function calls, to add new kinds of function parameter
 features, and to add the @racket[apply] form for applying a function
 to a list of arguments.
 
-You are given a repository with a starter compiler similar to the
-@seclink["Iniquity"]{Iniquity} language we studied in class.  You are
-tasked with:
+You are given a file @tt{iniquity-plus.zip} on ELMS with a starter
+compiler similar to the @seclink["Iniquity"]{Iniquity} language we
+studied in class.  You are tasked with:
 
 @itemlist[
 
@@ -76,12 +76,6 @@ register to the number of arguments before jumping to the function.
 The function should check this number against the expected number and
 signal an error when they don't match.
 
-Note A4 previously had an outdated way to signal an error in the
-compiler that was not consistent with the lecture notes. A5 now matches 
-the lecture notes way to signal an error of simply jumping to @racket['raise_error_align].
-Jumping to @racket['raise_error_align] will dynamically align the stack before
-calling the C code in the runtime system that prints an error and
-exits.
 
 You should modify @racket[compile-app] and @racket[compile-define] to
 implement this part of the assignment.
@@ -492,10 +486,9 @@ such as when @racket[_e] is not a proper list.}
 
 @section[#:tag-prefix "a5-" #:style 'unnumbered]{Submitting}
 
-You should submit on Gradescope. You should submit a zip file that has
-exactly the same structure that the stub contains. We will only use
-the @tt{compile.rkt} files for grading, so make sure all your work is
-contained there!
+Submit a zip file containing your work to Gradescope.  Use @tt{make
+submit.zip} from within the @tt{iniquity-plus} directory to create a zip
+file with the proper structure.
 
 
 
