@@ -17,8 +17,10 @@
      (prog (externs)
            (Global 'entry)
            (Label 'entry)
-           (Mov rbx rdi)   ; recv heap pointer
+           (Push rbx)    ; save callee-saved register	   
+           (Mov rbx rdi) ; recv heap pointer
            (compile-e e '())
+           (Pop rbx)     ; restore callee-save register
            (Ret)
            (compile-defines ds)
            (Label 'raise_error_align)

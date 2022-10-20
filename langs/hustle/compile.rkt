@@ -18,8 +18,10 @@
         (Extern 'raise_error)
         (Global 'entry)
         (Label 'entry)
+	(Push rbx)    ; save callee-saved register
         (Mov rbx rdi) ; recv heap pointer
         (compile-e e '())
+	(Pop rbx)     ; restore callee-save register
         (Ret)
         (Label 'raise_error_align)
         pad-stack
