@@ -14,7 +14,7 @@ HERE
 
 
 It appears you launched DrRacket using Finder, which
-does properly set up the PATH environment variable.
+does not properly set up the PATH environment variable.
 Try launching DrRacket from the command line using the
 'drracket' command.
 HERE
