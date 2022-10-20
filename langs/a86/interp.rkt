@@ -4,9 +4,12 @@
  [asm-interp    (-> (listof instruction?) any/c)]
  [asm-interp/io (-> (listof instruction?) string? any/c)])
 
-(require "printer.rkt" "ast.rkt" "callback.rkt"
+(require "printer.rkt" "ast.rkt" "callback.rkt" "check-nasm.rkt"
          (rename-in ffi/unsafe [-> _->]))
 (require (submod "printer.rkt" private))
+
+;; Check NASM availability when required to fail fast.
+(check-nasm-available)
 
 ;; Assembly code is linked with object files in this parameter
 (define current-objs
