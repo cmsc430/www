@@ -19,7 +19,7 @@
            (Label 'entry)
            (Push rbx)    ; save callee-saved register	   
            (Mov rbx rdi) ; recv heap pointer
-           (compile-e e '() #t)
+           (compile-e e '() #f)
            (Pop rbx)     ; restore callee-save register
            (Ret)
            (compile-defines ds)

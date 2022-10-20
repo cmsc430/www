@@ -20,7 +20,7 @@
            (Push rbx)    ; save callee-saved register	   
            (Mov rbx rdi) ; recv heap pointer
            (compile-defines-values ds)
-           (compile-e e (reverse (define-ids ds)) #t)
+           (compile-e e (reverse (define-ids ds)) #f)
            (Add rsp (* 8 (length ds))) ;; pop function definitions
            (Pop rbx)     ; restore callee-save register
            (Ret)
