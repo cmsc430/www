@@ -375,7 +375,7 @@ So for example the following creates a box containing the value 7:
 
 @#reader scribble/comment-reader
 (racketblock
-(seq (Mov 'rax (arithmetic-shift 7 imm-shift))  
+(seq (Mov 'rax (value->bits 7))
      (Mov (Offset 'rbx 0) 'rax) ; write '7' into address held by rbx
      (Mov 'rax 'rbx)            ; copy pointer into return register
      (Or 'rax type-box)         ; tag pointer as a box
@@ -396,9 +396,9 @@ Pairs are similar.  Suppose we want to make @racket[(cons 3 4)]:
 
 @#reader scribble/comment-reader
 (racketblock
-(seq (Mov 'rax (arithmetic-shift 3 imm-shift))
+(seq (Mov 'rax (value->bits 3))
      (Mov (Offset 'rbx 0) 'rax) ; write '3' into address held by rbx
-     (Mov 'rax (arithmetic-shift 4 imm-shift))
+     (Mov 'rax (value->bits 4))
      (Mov (Offset 'rbx 8) 'rax) ; write '4' into word after address held by rbx
      (Mov 'rax rbx)             ; copy pointer into return register
      (Or 'rax type-pair)        ; tag pointer as a pair
