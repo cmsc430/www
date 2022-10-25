@@ -19,10 +19,10 @@ runtime.o: $(objs)
 	ld -r $(objs) -o runtime.o
 
 %.run: %.o runtime.o
-	gcc runtime.o $< -o $@
+	gcc  -L/opt/homebrew/Cellar/libsigsegv/2.14/lib/ -lsigsegv runtime.o $< -o $@
 
 .c.o:
-	gcc -fPIC -c -g -o $@ $<
+	gcc -I/opt/homebrew/Cellar/libsigsegv/2.14/include/ -fPIC -c -g -o $@ $<
 
 .s.o:
 	nasm -g -f $(format) -o $@ $<
