@@ -1,27 +1,27 @@
 #lang racket
-(provide (all-defined-out))
-(require "ast.rkt" a86/ast)
+(provide compile blackmail-compiler)
+(require "ast.rkt" "../a86/ast.rkt"
+         "../abscond/compile.rkt")
 
-;; Expr -> Asm
-(define (compile e)
-  (prog (Global 'entry)
-        (Label 'entry)
-        (compile-e e)
-        (Ret)))
+(define blackmail-compiler
+  (class abscond-compiler
+    (super-new)
 
-;; Expr -> Asm
-(define (compile-e e)
-  (match e
-    [(Prim1 p e) (compile-prim1 p e)]
-    [(Int i)     (compile-integer i)]))
+    (inherit compile)
 
-;; Op Expr -> Asm
-(define (compile-prim1 p e)
-  (seq (compile-e e)
-       (match p
-         ['add1 (Add 'rax 1)]
-         ['sub1 (Sub 'rax 1)])))
+    ;; Expr -> Asm
+    (define/override (compile-e e)
+      (match e
+        [(Prim1 p e) (compile-prim1 p e)]
+        [_ (super compile-e e)]))
 
-;; Integer -> Asm
-(define (compile-integer i)
-  (seq (Mov 'rax i)))
+    ;; Op Expr -> Asm
+    (define (compile-prim1 p e)
+      (seq (compile-e e)
+           (match p
+             ['add1 (Add 'rax 1)]
+             ['sub1 (Sub 'rax 1)])))))
+
+(define compile
+  (let ([compiler (new blackmail-compiler)])
+    (λ (p) (send compiler compile p))))

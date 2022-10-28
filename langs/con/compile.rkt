@@ -1,34 +1,33 @@
 #lang racket
-(provide (all-defined-out))
-(require "ast.rkt" a86/ast "compile-prim.rkt")
+(provide compile con-compiler)
+(require "ast.rkt" "../a86/ast.rkt"
+         "../blackmail/compile.rkt")
 
-;; Expr -> Asm
-(define (compile e)
-  (prog (Global 'entry)
-        (Label 'entry)
-        (compile-e e)
-        (Ret)))
+(define con-compiler
+  (class blackmail-compiler
+    (super-new)
 
-;; Expr -> Asm
-(define (compile-e e)
-  (match e
-    [(Int i)           (compile-integer i)]
-    [(Prim1 p e)       (compile-prim1 p (compile-e e))]
-    [(IfZero e1 e2 e3) (compile-ifzero e1 e2 e3)]))
+    (inherit compile)
 
-;; Integer -> Asm
-(define (compile-integer i)
-  (seq (Mov 'rax i)))
+    ;; Expr -> Asm
+    (define/override (compile-e e)
+      (match e
+        [(IfZero e1 e2 e3) (compile-ifzero e1 e2 e3)]
+        [_ (super compile-e e)]))
 
-;; Expr Expr Expr -> Asm
-(define (compile-ifzero e1 e2 e3)
-  (let ((l1 (gensym 'if))
-        (l2 (gensym 'if)))
-    (seq (compile-e e1)
-         (Cmp 'rax 0)
-         (Je l1)
-         (compile-e e3)
-         (Jmp l2)
-         (Label l1)
-         (compile-e e2)
-         (Label l2))))
+    ;; Expr Expr Expr -> Asm
+    (define (compile-ifzero e1 e2 e3)
+      (let ((l1 (gensym 'if))
+            (l2 (gensym 'if)))
+        (seq (compile-e e1)
+             (Cmp 'rax 0)
+             (Je l1)
+             (compile-e e3)
+             (Jmp l2)
+             (Label l1)
+             (compile-e e2)
+             (Label l2))))))
+
+(define compile
+  (let ([compiler (new con-compiler)])
+    (λ (p) (send compiler compile p))))
