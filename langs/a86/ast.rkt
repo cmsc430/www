@@ -149,6 +149,7 @@
 (instruct Push   (a1)      check:push)
 (instruct Pop    (a1)      check:register)
 (instruct Lea    (dst x)   check:lea)
+(instruct Not    (x)       check:register)
 (instruct Div    (den)     check:register)
 
 (instruct Offset (r i)     check:offset)
@@ -217,6 +218,7 @@
       (Push? x)
       (Pop? x)
       (Lea? x)
+      (Not? x)
       (Div? x)
       (Comment? x)
       (Equ? x)

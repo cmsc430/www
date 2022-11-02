@@ -170,6 +170,9 @@
        (string-append tab "lea "
                       (arg->string d) ", [rel "
                       (exp->string x) "]")]
+      [(Not r)
+       (string-append tab "not "
+                      (reg->string r))]
       [(Div r)
        (string-append tab "div "
                       (arg->string r))]

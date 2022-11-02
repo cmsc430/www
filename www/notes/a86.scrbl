@@ -1216,6 +1216,20 @@ Each register plays the same role as in x86, so for example
  ]
 }
 
+@defstruct*[Not ([a1 register?])]{
+Perform bitwise not operation (each 1 is set to 0, and each 0 is set to 1) on the destination operand.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 0)
+   (Not 'rax)
+   (Ret)))
+ ]
+}
+
 @defstruct*[Lea ([dst (or/c register? offset?)] [x label?])]{
  Loads the address of the given label into @racket[dst].
  
