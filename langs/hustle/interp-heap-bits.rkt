@@ -18,15 +18,15 @@
 ;; Expr REnv Heap -> Answer
 (define (interp-env-heap e r h)
   (match e    
-    [(Int i)  (cons h (imm->bits i))]
-    [(Bool b) (cons h (imm->bits b))]
-    [(Char c) (cons h (imm->bits c))]
-    [(Eof)    (cons h (imm->bits eof))]
-    [(Empty)  (cons h (imm->bits '()))]
+    [(Int i)  (cons h (value->bits i))]
+    [(Bool b) (cons h (value->bits b))]
+    [(Char c) (cons h (value->bits c))]
+    [(Eof)    (cons h (value->bits eof))]
+    [(Empty)  (cons h (value->bits '()))]
     [(Var x)  (cons h (lookup r x))]
-    [(Prim0 'void) (cons h (imm->bits (void)))]
-    [(Prim0 'read-byte) (cons h (imm->bits (read-byte)))]
-    [(Prim0 'peek-byte) (cons h (imm->bits (peek-byte)))]
+    [(Prim0 'void) (cons h (value->bits (void)))]
+    [(Prim0 'read-byte) (cons h (value->bits (read-byte)))]
+    [(Prim0 'peek-byte) (cons h (value->bits (peek-byte)))]
     [(Prim1 p e)
      (match (interp-env-heap e r h)
        ['err 'err]
@@ -44,7 +44,7 @@
      (match (interp-env-heap p r h)
        ['err 'err]
        [(cons h v)
-        (if (= v (imm->bits #f))            
+        (if (= v (value->bits #f))
             (interp-env-heap e2 r h)
             (interp-env-heap e1 r h))])]
     [(Begin e1 e2)     
