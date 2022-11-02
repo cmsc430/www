@@ -34,7 +34,7 @@
           (Xor rax type-char))]
     ['eof-object?
      (seq (Cmp rax (value->bits eof))
-          (if-equal))
+          (if-equal))]
     ['write-byte
      (seq (Mov rdi rax)
           (Call 'write_byte)
