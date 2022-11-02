@@ -1028,6 +1028,75 @@ Each register plays the same role as in x86, so for example
  ]
 }
 
+@defstruct*[Jo ([x (or/c label? register?)])]{
+ Jump to @racket[x] if the overflow flag is set.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax (sub1 (expt 2 63)))
+   (Add 'rax 1)
+   (Jo 'l1)
+   (Mov 'rax 0)
+   (Label 'l1)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Jno ([x (or/c label? register?)])]{
+ Jump to @racket[x] if the overflow flag is @emph{not} set.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax (sub1 (expt 2 63)))
+   (Add 'rax 1)
+   (Jno 'l1)
+   (Mov 'rax 0)
+   (Label 'l1)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Jc ([x (or/c label? register?)])]{
+ Jump to @racket[x] if the carry flag is set.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax -1)
+   (Add 'rax 1)
+   (Jc 'l1)
+   (Mov 'rax 0)
+   (Label 'l1)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Jnc ([x (or/c label? register?)])]{
+ Jump to @racket[x] if the carry flag is @emph{not} set.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax -1)
+   (Add 'rax 1)
+   (Jnc 'l1)
+   (Mov 'rax 0)
+   (Label 'l1)
+   (Ret)))
+ ]
+}
+
+
 @defstruct*[And ([dst (or/c register? offset?)] [src (or/c register? offset? exact-integer?)])]{
  Compute logical ``and'' of @racket[dst] and @racket[src] and put result in @racket[dst].
 

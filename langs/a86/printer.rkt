@@ -141,6 +141,18 @@
       [(Jge l)
        (string-append tab "jge "
                       (jump-target->string l))]
+      [(Jo l)
+       (string-append tab "jo "
+                      (jump-target->string l))]
+      [(Jno l)
+       (string-append tab "jno "
+                      (jump-target->string l))]
+      [(Jc l)
+       (string-append tab "jc "
+                      (jump-target->string l))]
+      [(Jnc l)
+       (string-append tab "jnc "
+                      (jump-target->string l))]
       [(Call l)
        (string-append tab "call "
                       (jump-target->string l))]
