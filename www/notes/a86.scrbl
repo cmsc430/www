@@ -1096,6 +1096,266 @@ Each register plays the same role as in x86, so for example
  ]
 }
 
+@defstruct*[Cmove ([dst register?] [src (or/c register? offset?)])]{
+ Move from @racket[dst] to @racket[src] if the comparison flag is set to equal.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 0)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmove 'rax 'r9)
+   (Ret)))
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 2)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmove 'rax 'r9)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Cmovne ([dst register?] [src (or/c register? offset?)])]{
+ Move from @racket[dst] to @racket[src] if the comparison flag is set to not equal.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 0)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovne 'rax 'r9)
+   (Ret)))
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 2)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovne 'rax 'r9)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Cmovl ([dst register?] [src (or/c register? offset?)])]{
+ Move from @racket[dst] to @racket[src] if the comparison flag is set to less than.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 0)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovl 'rax 'r9)
+   (Ret)))
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax -1)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovl 'rax 'r9)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Cmovle ([dst register?] [src (or/c register? offset?)])]{
+ Move from @racket[dst] to @racket[src] if the comparison flag is set to less than or equal.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 0)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovle 'rax 'r9)
+   (Ret)))
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 2)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovle 'rax 'r9)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Cmovg ([dst register?] [src (or/c register? offset?)])]{
+ Move from @racket[dst] to @racket[src] if the comparison flag is set to greather than.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 0)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovg 'rax 'r9)
+   (Ret)))
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 2)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovg 'rax 'r9)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Cmovge ([dst register?] [src (or/c register? offset?)])]{
+ Move from @racket[dst] to @racket[src] if the comparison flag is set to greater than or equal.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax -1)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovge 'rax 'r9)
+   (Ret)))
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 2)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovge 'rax 'r9)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Cmovo ([dst register?] [src (or/c register? offset?)])]{
+ Move from @racket[dst] to @racket[src] if the overflow flag is set.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax (- (expt 2 63) 1))
+   (Add 'rax 1)
+   (Mov 'r9 1)
+   (Cmovo 'rax 'r9)
+   (Ret)))
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax (- (expt 2 63) 2))
+   (Add 'rax 1)
+   (Mov 'r9 1)
+   (Cmovo 'rax 'r9)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Cmovno ([dst register?] [src (or/c register? offset?)])]{
+ Move from @racket[dst] to @racket[src] if the overflow flag is not set.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax (- (expt 2 63) 1))
+   (Add 'rax 1)
+   (Mov 'r9 1)
+   (Cmovno 'rax 'r9)
+   (Ret)))
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax (- (expt 2 63) 2))
+   (Add 'rax 1)
+   (Mov 'r9 1)
+   (Cmovno 'rax 'r9)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Cmovc ([dst register?] [src (or/c register? offset?)])]{
+ Move from @racket[dst] to @racket[src] if the carry flag is set.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax (- (expt 2 64) 1))
+   (Add 'rax 1)
+   (Mov 'r9 1)
+   (Cmovc 'rax 'r9)
+   (Ret)))
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax (- (expt 2 64) 2))
+   (Add 'rax 1)
+   (Mov 'r9 1)
+   (Cmovc 'rax 'r9)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Cmovnc ([dst register?] [src (or/c register? offset?)])]{
+ Move from @racket[dst] to @racket[src] if the carry flag is not set.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax (- (expt 2 64) 1))
+   (Add 'rax 1)
+   (Mov 'r9 1)
+   (Cmovnc 'rax 'r9)
+   (Ret)))
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax (- (expt 2 64) 2))
+   (Add 'rax 1)
+   (Mov 'r9 1)
+   (Cmovnc 'rax 'r9)
+   (Ret)))
+ ]
+}
+
 
 @defstruct*[And ([dst (or/c register? offset?)] [src (or/c register? offset? exact-integer?)])]{
  Compute logical ``and'' of @racket[dst] and @racket[src] and put result in @racket[dst].
