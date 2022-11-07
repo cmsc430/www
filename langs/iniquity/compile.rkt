@@ -1,6 +1,6 @@
 #lang racket
 (provide (all-defined-out))
-(require "ast.rkt" "types.rkt" "compile-ops.rkt" a86/ast)
+(require "ast.rkt" "types.rkt" "compile-ops.rkt" "max-stack.rkt" a86/ast)
 
 ;; Registers used
 (define rax 'rax) ; return
@@ -17,10 +17,19 @@
      (prog (externs)
            (Global 'entry)
            (Label 'entry)
-           (Push rbx)    ; save callee-saved register	   
-           (Mov rbx rdi) ; recv heap pointer
+           (Push rbx)    ; save callee-saved registers
+           (Push 'rbp)
+           (Mov 'rbp 'rsp)
+           (Sub 'rbp (* 8 10000))    ; stack boundary, 10K words
+           (Mov 'r8 (Offset 'rbp 0)) ; touch the end just to see if we segfault
+           (Mov rbx rdi)             ; recv heap pointer
+           (Mov 'r8 rsp)
+           (Sub 'r8 (* 8 (max-stack e)))
+           (Cmp 'rbp 'r8)
+           (Jge 'raise_error_align)
            (compile-e e '())
-           (Pop rbx)     ; restore callee-save register
+           (Pop 'rbp)    ; restore callee-save registers
+           (Pop rbx)
            (Ret)
            (compile-defines ds)
            (Label 'raise_error_align)
@@ -46,6 +55,10 @@
   (match d
     [(Defn f xs e)
      (seq (Label (symbol->label f))
+          (Mov 'r8 rsp)
+          (Sub 'r8 (* 8 (max-stack e)))
+          (Cmp 'rbp 'r8)
+          (Jge 'raise_error_align)
           (compile-e e (reverse xs))
           (Add rsp (* 8 (length xs))) ; pop args
           (Ret))]))
