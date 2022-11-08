@@ -26,11 +26,24 @@ setting.
 
 After submitting, click "Leaderboard" to see the latest standings.
 
-There are 118 compilers included.  Your score will be the number of
+There are 133 compilers included.  Your score will be the number of
 compilers you are able to eliminate, with a maximum score of 100.
 
 We reserve the right to update the reference interpreter and will
 announce any changes on Discord.
+
+The following updates have been made since the release:
+
+@itemlist[
+
+@item{The interpreter now checks for integer overflow and crashes when
+this happens, thereby making overflow behavior unspecified for the compilers.}
+
+@item{The interpreter now crashes when interpreting unbound variables
+instead of producing @racket['err], making unbound variable behavior
+unspecified.}
+
+]
 
 Submissions should be written using the following format:
 
