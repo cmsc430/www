@@ -5,7 +5,7 @@
 @(require "../notes/ev.rkt"
           "../notes/utils.rkt")
 
-@bold{Due: Monday, Nov 13, 11:59PM EDT}
+@bold{Due: Monday, Nov 14, 11:59PM EST}
 
 The goal of this assignment is to hone your testing skills.
 
@@ -26,10 +26,11 @@ setting.
 
 After submitting, click "Leaderboard" to see the latest standings.
 
-Initially there will be around 30 compilers included, but more will be
-added before the deadline.
+There are 118 compilers included.  Your score will be the number of
+compilers you are able to eliminate, with a maximum score of 100.
 
-We reserve the right to update the reference interpreter.
+We reserve the right to update the reference interpreter and will
+announce any changes on Discord.
 
 Submissions should be written using the following format:
 
@@ -53,7 +54,7 @@ and the second element is the program, for example:
   (list
     '[ (add1 1) ]
     '[ (write-byte 97) ]
-    (list "abc" '[ (read-byte) ])
+    '[ "abc" [ (read-byte) ]]
     '[ (define (f x) (+ x x)) (f 5) ]))
 }|
 
