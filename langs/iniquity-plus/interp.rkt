@@ -21,8 +21,9 @@
 ;; type REnv = (Listof (List Id Value))
 ;; type Defns = (Listof Defn)
 
-;; Prog Defns -> Answer
+;; Prog -> Answer
 (define (interp p)
+  (check-syntax p)
   (match p
     [(Prog ds e)
      (interp-env e '() ds)]))
@@ -105,11 +106,11 @@
      ; check arity is acceptable
      (if (< (length vs) (length xs))
          'err
-           (interp-env e
-                       (zip (cons x xs)
-                            (cons (drop vs (length xs))
-                                  (take vs (length xs))))
-                       ds))]    
+         (interp-env e
+                     (zip (cons x xs)
+                          (cons (drop vs (length xs))
+                                (take vs (length xs))))
+                     ds))]
     [(FunCase cs)
      (match (select-case-lambda cs (length vs))
        ['err 'err]
@@ -135,7 +136,9 @@
     [(cons e es)
      (match (interp-env e r ds)
        ['err 'err]
-       [v (cons v (interp-env* es r ds))])]))
+       [v (match (interp-env* es r ds)
+            ['err 'err]
+            [vs (cons v vs)])])]))
 
 ;; Defns Symbol -> Defn
 (define (defns-lookup ds f)
