@@ -10,7 +10,7 @@
 	   '("ast.rkt" "parse.rkt" "interp.rkt"))
 
 
-@bold{Due: Monday, November 7, 11:59PM EDT}
+@bold{Due: @elem[#:style "strike"]{Monday, November 7, 11:59PM EST}, Tuesday, November 8, 11:59PM EST}
 
 The goal of this assignment is to extend a compiler with arity
 checking for function calls, to add new kinds of function parameter

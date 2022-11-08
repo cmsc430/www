@@ -35,6 +35,8 @@
       (error n "expects register; given ~v" a1))
     (unless (or (exact-integer? a2) (register? a2) (offset? a2))
       (error n "expects exact integer, register, or offset; given ~v" a2))
+    (when (and (exact-integer? a2) (> (integer-length a2) 32))
+      (error n "literal must not exceed 32-bits; given ~v (~v bits); go through a register instead" a2 (integer-length a2)))
     (values a1 a2)))
 
 (define check:register
@@ -51,6 +53,22 @@
       (error n "expects register, offset, exact integer, or defined constant; given ~v" a2))
     (when (and (offset? a1) (offset? a2))
       (error n "cannot use two memory locations; given ~v, ~v" a1 a2))
+    (when (and (exact-integer? a2) (> (integer-length a2) 32))
+      (error n "literal must not exceed 32-bits; given ~v (~v bits); go through a register instead" a2 (integer-length a2)))
+    (when (and (offset? a1) (exact-integer? a2))
+      (error n "cannot use a memory locations and literal; given ~v, ~v; go through a register instead" a1 a2))
+    (values a1 a2)))
+
+(define check:mov
+  (λ (a1 a2 n)
+    (unless (or (register? a1) (offset? a1))
+      (error n "expects register or offset; given ~v" a1))
+    (unless (or (register? a2) (offset? a2) (exact-integer? a2) (Const? a2))
+      (error n "expects register, offset, exact integer, or defined constant; given ~v" a2))
+    (when (and (offset? a1) (offset? a2))
+      (error n "cannot use two memory locations; given ~v, ~v" a1 a2))
+    (when (and (exact-integer? a2) (> (integer-length a2) 64))
+      (error n "literal must not exceed 64-bits; given ~v (~v bits)" a2 (integer-length a2)))
     (when (and (offset? a1) (exact-integer? a2))
       (error n "cannot use a memory locations and literal; given ~v, ~v; go through a register instead" a1 a2))
     (values a1 a2)))
@@ -76,6 +94,8 @@
   (λ (a1 n)
     (unless (or (exact-integer? a1) (register? a1))
       (error n "expects exact integer or register; given ~v" a1))
+    (when (and (exact-integer? a1) (> (integer-length a1) 32))
+      (error n "literal must not exceed 32-bits; given ~v (~v bits); go through a register instead" a1 (integer-length a1)))
     a1))
 
 (define check:lea
@@ -126,7 +146,7 @@
 (instruct Label  (x)       check:label-symbol)
 (instruct Call   (x)       check:target)
 (instruct Ret    ()        check:none)
-(instruct Mov    (dst src) check:src-dest)
+(instruct Mov    (dst src) check:mov)
 (instruct Add    (dst src) check:arith)
 (instruct Sub    (dst src) check:arith)
 (instruct Cmp    (a1 a2)   check:src-dest)
@@ -169,13 +189,21 @@
       (symbol? x)
       (integer? x)))
 
-(provide offset? register? instruction? label?)
+(provide offset? register? instruction? label? 64-bit-integer? 32-bit-integer?)
 
 (define offset? Offset?)
 
 (define (register? x)
   (and (memq x '(cl eax rax rbx rcx rdx rbp rsp rsi rdi r8 r9 r10 r11 r12 r13 r14 r15))
        #t))
+
+(define (64-bit-integer? x)
+  (and (exact-integer? x)
+       (<= (integer-length x) 64)))
+
+(define (32-bit-integer? x)
+  (and (exact-integer? x)
+       (<= (integer-length x) 32)))
 
 (define (label? x)
   (and (symbol? x)
