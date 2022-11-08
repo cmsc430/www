@@ -12,10 +12,10 @@ $(course): scribble zips
 zips:
 	mkdir -p $(course)/code/
 	cd ../langs ; \
-		tar -c `git ls-files intro a86 abscond blackmail con dupe dodger evildoer extort fraud hustle hoax iniquity jig knock loot mug mountebank neerdowell fp project.pdf` \
+		tar -c `git ls-files intro a86 abscond blackmail con dupe dodger evildoer extort fraud hustle hoax iniquity iniquity-plus jig knock loot mug mountebank neerdowell fp project.pdf` \
 			a86/main.c a86/gcd.c a86/tri.s abscond/42.s | \
 		(cd ../www/main/code ; tar -x ; \
-			for f in abscond blackmail con dupe dodger evildoer extort fraud hustle hoax iniquity jig knock loot mug mountebank ; do \
+			for f in abscond blackmail con dupe dodger evildoer extort fraud hustle hoax iniquity iniquity-plus jig knock loot mug mountebank ; do \
 			zip $${f}.zip -r $${f}/ ; \
 			done )
 	cd slides ; \
