@@ -191,6 +191,7 @@
   (check-equal? (run "a" '(read-byte)) (cons 97 ""))
   (check-equal? (run "b" '(begin (write-byte 97) (read-byte)))
                 (cons 98 "a"))
+  (check-equal? (run "a" '(write-byte (read-byte))) (cons (void) "a"))
   (check-equal? (run "" '(read-byte)) (cons eof ""))
   (check-equal? (run "" '(eof-object? (read-byte))) (cons #t ""))
   (check-equal? (run "a" '(eof-object? (read-byte))) (cons #f ""))

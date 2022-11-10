@@ -308,10 +308,18 @@
                (free-vars-to-heap fvs c 8)
                (Mov rax rbx) ; return value
                (Or rax type-proc)
-               (Add rbx (* 8 (add1 (length fvs))))))
+               (Add rbx (* 8 (add1 (length fvs)))))
 
-        (compile-lambda-define (Lam f xs e))))
-        
+          (let ((env (append (reverse fvs) (reverse xs) (list #f))))
+            (match-let ([(cons is bs) (compile-e e env #t)])              
+              (seq (Label (symbol->label f))
+                   (Mov rax (Offset rsp (* 8 (length xs))))
+                   (Xor rax type-proc)
+                   (copy-env-to-stack fvs 8)
+                   is
+                   (Add rsp (* 8 (length env))) ; pop env
+                   (Ret)
+                   bs))))))
 
 ;; [Listof Id] CEnv Int -> Asm
 ;; Copy the values of given free variables into the heap at given offset
