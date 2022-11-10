@@ -2,7 +2,8 @@
 (provide interp interp-env)
 (require "ast.rkt"
          "env.rkt"
-         "interp-prims.rkt")
+         "interp-prims.rkt"
+         racket/control)
 
 ;; type Answer = Value | 'err
 
@@ -94,7 +95,9 @@
      (match (interp-env e r ds)
        ['err 'err]
        [v
-        (interp-match v ps es r ds)])]))
+        (interp-match v ps es r ds)])]
+    [(Reset e)
+     (reset (interp-env e r ds))]))
 
 ;; Value [Listof Pat] [Listof Expr] Env Defns -> Answer
 (define (interp-match v ps es r ds)

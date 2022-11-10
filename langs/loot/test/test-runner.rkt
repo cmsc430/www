@@ -286,7 +286,14 @@
                      '(tri 36))
                 666)
   (check-equal? (run '((match 8 [8 (lambda (x) x)]) 12))
-                12))
+                12)
+
+  ;; Shift/reset examples
+  (check-equal? (run '(reset 5)) 5)
+  (check-equal? (run '(add1 (reset 5))) 6)
+  (check-equal? (run '(add1 (reset (add1 5)))) 7)
+  (check-equal? (run '(add1 (reset (add1 (reset (add1 5)))))) 8))
+                
 
 (define (test-runner-io run)
   ;; Evildoer examples

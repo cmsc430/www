@@ -7,6 +7,7 @@
 (define rbx 'rbx) ; heap
 (define rsp 'rsp) ; stack
 (define rdi 'rdi) ; arg
+(define r12 'r12) ; reset
 
 ;; type CEnv = [Listof Id]
 
@@ -17,14 +18,16 @@
      (prog (externs)
            (Global 'entry)
            (Label 'entry)
-           (Push rbx)    ; save callee-saved register	   
+           (Push rbx)    ; save callee-saved registers
+           (Push r12)
            (Mov rbx rdi) ; recv heap pointer
            (compile-defines-values ds)
            (match (compile-e e (reverse (define-ids ds)) #f)
              [(cons i bs)
               (seq i
                    (Add rsp (* 8 (length ds))) ;; pop function definitions
-                   (Pop rbx)     ; restore callee-save register
+                   (Pop r12)     ; restore callee-save register
+                   (Pop rbx)
                    (Ret)
                    bs)])           
            (compile-defines ds)
@@ -113,7 +116,8 @@
     [(Let x e1 e2)      (compile-let x e1 e2 c t?)]
     [(App e es)         (compile-app e es c t?)]
     [(Lam f xs e)       (compile-lam f xs e c)]
-    [(Match e ps es)    (compile-match e ps es c t?)]))
+    [(Match e ps es)    (compile-match e ps es c t?)]
+    [(Reset e)          (compile-reset e c t?)]))
 
 ;; Value -> (cons Asm Asm)
 (define (compile-value v)
@@ -451,6 +455,17 @@
                    (Add rsp (* 8 (length cm))) ; haven't pushed anything yet
                    (Jmp next))
               cm2))])])]))
+
+;; Expr CEnv Boolean -> (cons Asm Asm)
+(define (compile-reset e c t?)
+  (match-let ([(cons is bs) (compile-e e c #f)])
+    (cons (let ((r (gensym 'reset)))
+            (seq (Push 'r12)
+                 (Lea 'r12 r)
+                 is
+                 (Pop 'r12)
+                 (Label r)))
+          bs)))
 
 ;; Id CEnv -> Integer
 (define (lookup x cenv)
