@@ -117,7 +117,8 @@
     [(App e es)         (compile-app e es c t?)]
     [(Lam f xs e)       (compile-lam f xs e c)]
     [(Match e ps es)    (compile-match e ps es c t?)]
-    [(Reset e)          (compile-reset e c t?)]))
+    [(Reset e)          (compile-reset e c t?)]
+    [(Shift x e)        (compile-shift x e c t?)]))
 
 ;; Value -> (cons Asm Asm)
 (define (compile-value v)
@@ -460,12 +461,40 @@
 (define (compile-reset e c t?)
   (match-let ([(cons is bs) (compile-e e c #f)])
     (cons (let ((r (gensym 'reset)))
-            (seq (Push 'r12)
+            (seq (Push 'r12)                 
                  (Lea 'r12 r)
-                 is
-                 (Pop 'r12)
-                 (Label r)))
+                 (Push 'r12)
+                 is                 
+                 (Label r)
+                 (Add rsp 8)
+                 (Pop 'r12)))
           bs)))
+
+;; Id Expr CEnv Boolean -> (cons Asm Asm)
+(define (compile-shift x e c t?)
+  (match-let ([(cons is bs) (compile-e e c #f)])
+
+    (cons (let ((loop (gensym))
+                (done (gensym)))
+            ;; this destroys the environment for e, so it won't work if e has
+            ;; any free variables and needs to be fixed up by re-pushing
+            ;; the fvs of e on the stack after popping
+
+            ;; this also doesn't create the closure and bind it to x
+
+            ;; will need to create the closure to enable the environment fixup            
+            (seq (Label loop) ; pop everything until reaching the reset
+                 (Mov r8 (Offset rsp 0))
+                 (Cmp r8 r12)
+                 (Je done)
+                 (Add rsp 8)
+                 (Jmp loop)
+                 (Label done)
+                 is
+                 (Jmp r12)))
+          bs)))
+
+  
 
 ;; Id CEnv -> Integer
 (define (lookup x cenv)

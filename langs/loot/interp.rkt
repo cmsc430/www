@@ -97,7 +97,13 @@
        [v
         (interp-match v ps es r ds)])]
     [(Reset e)
-     (reset (interp-env e r ds))]))
+     (reset (interp-env e r ds))]
+    [(Shift x e)
+     (shift k
+            (let ((k1 (λ (vs) (if (= (length vs) 1)
+                                  (k (first vs))
+                                  'err))))
+              (interp-env e (ext r x k1) ds)))]))
 
 ;; Value [Listof Pat] [Listof Expr] Env Defns -> Answer
 (define (interp-match v ps es r ds)

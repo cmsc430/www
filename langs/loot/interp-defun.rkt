@@ -91,6 +91,10 @@
               (if (= (length xs) (length vs))           
                   (interp-env e (append (zip xs vs) r) ds)
                   'err)]
+             [(? procedure? k)
+              (if (= 1 (length vs))
+                  (k (first vs))
+                  'err)]
              [_ 'err])])])]
     [(Match e ps es)
      (match (interp-env e r ds)
@@ -98,7 +102,11 @@
        [v
         (interp-match v ps es r ds)])]
     [(Reset e)
-     (reset (interp-env e r ds))]))
+     (reset (interp-env e r ds))]
+    [(Shift x e)
+     ;; cheating a bit since we don't defunctionalize
+     (shift k
+            (interp-env e (ext r x k) ds))]))
 
 ;; Value [Listof Pat] [Listof Expr] Env Defns -> Answer
 (define (interp-match v ps es r ds)

@@ -25,6 +25,7 @@
 ;;           | (App Expr (Listof Expr))
 ;;           | (Lam Id (Listof Id) Expr)
 ;;           | (Reset Expr)
+;;           | (Shift Id Expr)
 ;; type Id   = Symbol
 ;; type Op0  = 'read-byte
 ;; type Op1  = 'add1 | 'sub1 | 'zero?
@@ -68,6 +69,7 @@
 (struct Lam   (f xs e)     #:prefab)
 (struct Match (e ps es)    #:prefab)
 (struct Reset (e)          #:prefab)
+(struct Shift (x e)        #:prefab)
 
 (struct PVar  (x)          #:prefab)
 (struct PWild ()           #:prefab)

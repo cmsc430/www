@@ -292,7 +292,11 @@
   (check-equal? (run '(reset 5)) 5)
   (check-equal? (run '(add1 (reset 5))) 6)
   (check-equal? (run '(add1 (reset (add1 5)))) 7)
-  (check-equal? (run '(add1 (reset (add1 (reset (add1 5)))))) 8))
+  (check-equal? (run '(add1 (reset (add1 (reset (add1 5)))))) 8)
+
+  (check-equal? (run '(reset (shift _ 5))) 5)
+  (check-equal? (run '(reset (add1 (shift _ 5)))) 5)
+  (check-equal? (run '(reset (add1 (reset (add1 (shift _ 5)))))) 6))
                 
 
 (define (test-runner-io run)

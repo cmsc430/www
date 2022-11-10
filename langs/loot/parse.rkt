@@ -51,6 +51,8 @@
          (error "parse lambda error"))]
     [(list 'reset e)
      (Reset (parse-e e))]
+    [(list 'shift (? symbol? x) e)
+     (Shift x (parse-e e))]
     [(cons e es)
      (App (parse-e e) (map parse-e es))]    
     [_ (error "Parse error" s)]))
