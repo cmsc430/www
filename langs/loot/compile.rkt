@@ -302,14 +302,14 @@
 
 ;; Id [Listof Id] Expr CEnv -> (cons Asm Asm)
 (define (compile-lam f xs e c)
-  (cons (let ((fvs (fv (Lam f xs e))))
-          (seq (Lea rax (symbol->label f))
+  (let ((fvs (fv (Lam f xs e))))
+    (cons (seq (Lea rax (symbol->label f))
                (Mov (Offset rbx 0) rax)
                (free-vars-to-heap fvs c 8)
                (Mov rax rbx) ; return value
                (Or rax type-proc)
                (Add rbx (* 8 (add1 (length fvs)))))
-
+          
           (let ((env (append (reverse fvs) (reverse xs) (list #f))))
             (match-let ([(cons is bs) (compile-e e env #t)])              
               (seq (Label (symbol->label f))
