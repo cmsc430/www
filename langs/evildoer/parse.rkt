@@ -6,7 +6,7 @@
 (define (parse s)
   (match s
     ['eof                (Eof)]
-    [(? integer?)        (Int s)]
+    [(? exact-integer?)  (Int s)]
     [(? boolean?)        (Bool s)]
     [(? char?)           (Char s)]
     [(list (? op0? o))   (Prim0 o)]

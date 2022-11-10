@@ -5,7 +5,7 @@
 ;; S-Expr -> Expr
 (define (parse s)
   (match s
-    [(? integer?)            (Int s)]
+    [(? exact-integer?)      (Int s)]
     [(? boolean? s)          (Bool s)]
     [(? char? s)             (Char s)]
     ['eof                    (Eof)]

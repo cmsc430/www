@@ -5,7 +5,7 @@
 ;; S-Expr -> Expr
 (define (parse s)
   (match s
-    [(? integer?) (Int s)]
+    [(? exact-integer?) (Int s)]
     [(? boolean?) (Bool s)]
     [(? char?)    (Char s)]
     [(list (? op1? o) e)  (Prim1 o (parse e))]
