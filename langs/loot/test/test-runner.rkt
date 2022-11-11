@@ -114,6 +114,7 @@
   (check-equal? (run '(make-vector 3 5)) #(5 5 5))
   (check-equal? (run '(vector? (make-vector 0 0))) #t)
   (check-equal? (run '(vector? (cons 0 0))) #f)
+  (check-equal? (run '(vector-ref (make-vector 0 #f) 0)) 'err)
   (check-equal? (run '(vector-ref (make-vector 3 5) -1)) 'err)
   (check-equal? (run '(vector-ref (make-vector 3 5) 0)) 5)
   (check-equal? (run '(vector-ref (make-vector 3 5) 1)) 5)

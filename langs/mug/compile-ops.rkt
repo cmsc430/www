@@ -226,6 +226,8 @@
      (seq (Pop r8)
           (assert-vector r8)
           (assert-integer rax)
+          (Cmp r8 type-vect)
+          (Je 'raise_error_align) ; special case for empty vector
           (Cmp rax 0)
           (Jl 'raise_error_align)
           (Xor r8 type-vect)      ; r8 = ptr
