@@ -462,7 +462,7 @@
 
 ;; Expr CEnv Boolean -> (cons Asm Asm)
 (define (compile-reset e c t?)
-  (match-let ([(cons is bs) (compile-e e c #f)])
+  (match-let ([(cons is bs) (compile-e e (cons #f (cons #f c)) #f)])
     (cons (let ((r (gensym 'reset)))
             (seq (Push 'r12)                 
                  (Lea 'r12 r)

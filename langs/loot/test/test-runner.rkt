@@ -300,8 +300,7 @@
 
   (check-equal? (run '(reset (let ((x 5)) (shift _ x)))) 5)
   (check-equal? (run '(let ((x 5)) (reset (shift _ x)))) 5)
-  #;(check-equal? (run '(reset (let ((x 5)) (shift _ (let ((y 2)) (cons x y)))))) '(5 . 2))
-  #;
+  (check-equal? (run '(reset (let ((x 5)) (shift _ (let ((y 2)) (cons x y)))))) '(5 . 2))
   (check-equal? (run '(define (f x)
                         (shift _ x))
                      '(reset (f 5)))
