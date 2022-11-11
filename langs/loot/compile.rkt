@@ -307,6 +307,9 @@
 
 ;; Id [Listof Id] Expr CEnv -> (cons Asm Asm)
 (define (compile-lam f xs e c)
+  ;; Observation: we don't need to traverse e to compute the free variables
+  ;; we could instead just filter vars in c (removing duplicates) to get the set
+  ;; of free variables.
   (let ((fvs (fv (Lam f xs e))))
     (cons (seq (Lea rax (symbol->label f))
                (Mov (Offset rbx 0) rax)
@@ -471,23 +474,80 @@
                  (Pop 'r12)))
           bs)))
 
+
+;; Move things on the stack (possibly) further up
+;; overwriting what's there.  You have to be a little
+;; careful here because where you're going may overlap
+;; with where you are.  So... you have to start from
+;; the end, i.e. the highest part of the stack.
+;; The whole stack is not being moved up; it's just
+;; the variable bindings.
+
+;; [Listof Id] CEnv Int -> Asm
+;; Copy the closure environment at given offset to stack
+;; ASSUME: List of fvs are given in reverse order in c, i.e. highest location
+;; first.
+(define (move-fvs-on-stack fvs c off)
+  (match fvs
+    ['() (seq)]
+    [(cons _ fvs)
+     (seq (Mov r9 (Offset rax off))
+          (Push r9)
+          (move-fvs-on-stack fvs c (+ 8 off)))]))
+
+;; Produce a set of variables in c
+;; CEnv -> CEnv
+(define (fvs-c c)
+  (define (loop c c-env)
+    (match c
+      ['() c-env]
+      [(cons (? symbol? x) c)
+       (if (memq x c-env)
+           (loop c c-env)
+           (loop c (cons x c-env)))]
+      [(cons _ c) (loop c c-env)]))
+  (loop c '()))
+
+
 ;; Id Expr CEnv Boolean -> (cons Asm Asm)
 (define (compile-shift x e c t?)
-  (match-let ([(cons is bs) (compile-e e c #f)])
-
-    (cons ;; this destroys the environment for e, so it won't work if e has
-          ;; any free variables and needs to be fixed up by re-pushing
-          ;; the fvs of e on the stack after popping
-
-          ;; this also doesn't create the closure and bind it to x
-
-          ;; will need to create the closure to enable the environment fixup
-          (seq (Mov rsp 'r12)
-               is
-               (Mov r8 (Offset rsp 0))
-               (Jmp r8))
-          bs)))
-
+  (let ((fv (fvs-c c)))
+    (match-let ([(cons is bs) (compile-e e fv #f)])
+      ;; We're going to reset the stack to some point higher up
+      ;; in the address space and then run e.  Since e may depend
+      ;; on things in the environment and resetting will destroy
+      ;; that environment, we need to save the environment, reset
+      ;; the stack, then reinstall the environment.
+      ;; It may be tempting to try and do this in-place, but it
+      ;; won't work because the reset may be in the middle of c.
+      ;; So we copy the values out to the heap and then copy
+      ;; them back to the stack.
+      
+      ;; this destroys the environment for e, so it won't work if e has
+      ;; any free variables and needs to be fixed up by re-pushing
+      ;; the fvs of e on the stack after popping
+      
+      ;; this also doesn't create the closure and bind it to x
+      
+      ;; will need to create the closure to enable the environment fixup
+      (cons (seq (%% (format "BEGIN: Free vars to heap: ~a ~a" fv c))
+                 (free-vars-to-heap fv c 0)
+                 (%% "END: Free vars to heap")
+                 (Mov rsp 'r12)
+                 (Mov rax rbx) ; should make copy-env-to-stack take a register and pass rbx
+                 (%% (format "BEGIN: Copy env to stack: ~a ~a" fv c))
+                 (copy-env-to-stack fv 0)
+                 (%% (format "END: Copy env to stack"))
+                 (Add rbx (* 8 (length fv))) ; allocate the stuff we just copied to the heap
+                 (%% "BEGIN: body of shift")
+                 is
+                 (%% "END: body of shift")
+                 (Add rsp (* 8 (length fv)))
+                 (Mov r8 (Offset rsp 0))
+                 (%% "Jumping back to reset")
+                 (Jmp r8))
+            bs))))
+  
   
 
 ;; Id CEnv -> Integer
