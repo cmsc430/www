@@ -483,18 +483,6 @@
 ;; The whole stack is not being moved up; it's just
 ;; the variable bindings.
 
-;; [Listof Id] CEnv Int -> Asm
-;; Copy the closure environment at given offset to stack
-;; ASSUME: List of fvs are given in reverse order in c, i.e. highest location
-;; first.
-(define (move-fvs-on-stack fvs c off)
-  (match fvs
-    ['() (seq)]
-    [(cons _ fvs)
-     (seq (Mov r9 (Offset rax off))
-          (Push r9)
-          (move-fvs-on-stack fvs c (+ 8 off)))]))
-
 ;; Produce a set of variables in c
 ;; CEnv -> CEnv
 (define (fvs-c c)
@@ -522,29 +510,18 @@
       ;; won't work because the reset may be in the middle of c.
       ;; So we copy the values out to the heap and then copy
       ;; them back to the stack.
-      
-      ;; this destroys the environment for e, so it won't work if e has
-      ;; any free variables and needs to be fixed up by re-pushing
-      ;; the fvs of e on the stack after popping
-      
+     
       ;; this also doesn't create the closure and bind it to x
       
       ;; will need to create the closure to enable the environment fixup
-      (cons (seq (%% (format "BEGIN: Free vars to heap: ~a ~a" fv c))
-                 (free-vars-to-heap fv c 0)
-                 (%% "END: Free vars to heap")
+      (cons (seq (free-vars-to-heap fv c 0)
                  (Mov rsp 'r12)
                  (Mov rax rbx) ; should make copy-env-to-stack take a register and pass rbx
-                 (%% (format "BEGIN: Copy env to stack: ~a ~a" fv c))
                  (copy-env-to-stack fv 0)
-                 (%% (format "END: Copy env to stack"))
                  (Add rbx (* 8 (length fv))) ; allocate the stuff we just copied to the heap
-                 (%% "BEGIN: body of shift")
                  is
-                 (%% "END: body of shift")
                  (Add rsp (* 8 (length fv)))
                  (Mov r8 (Offset rsp 0))
-                 (%% "Jumping back to reset")
                  (Jmp r8))
             bs))))
   
