@@ -73,9 +73,19 @@
       [_ (label-symbol->string e)]))
   
   (define tab (make-string 8 #\space))
+
+  ;; Instruction -> String
+  (define (fancy-instr->string i)
+    (let ((s (simple-instr->string i)))
+      (if (instruction-annotation i)
+          (if (< (string-length s) 40)
+              (format "~a~a; ~.a" s (make-string (- 40 (string-length s)) #\space) (instruction-annotation i))
+              (format "~a ; ~.a" s (instruction-annotation i)))
+          s)))
+  
   
   ;; Instruction -> String
-  (define (instr->string i)
+  (define (simple-instr->string i)
     (match i
       [(Text)      (string-append tab "section .text")]
       [(Data)      (string-append tab "section .data align=8")] ; 8-byte aligned data
@@ -180,7 +190,7 @@
       [(%%% s) (string-append ";;; " s)]))
 
   (define (line-comment i s)
-    (let ((i-str (instr->string i)))
+    (let ((i-str (simple-instr->string i)))
       (let ((pad (make-string (max 1 (- 32 (string-length i-str))) #\space)))
         (string-append i-str pad "; " s))))
 
@@ -193,11 +203,11 @@
               (write-char #\newline)
               (instrs-display a))]
       [(cons i (cons (% s) a))
-       (begin (write-string (line-comment i s))
+       (begin (write-string (line-comment i s)) ; a line comment trumps an annotation
               (write-char #\newline)
               (instrs-display a))]
       [(cons i a)
-       (begin (write-string (instr->string i))
+       (begin (write-string (fancy-instr->string i))
               (write-char #\newline)
               (instrs-display a))]))
 

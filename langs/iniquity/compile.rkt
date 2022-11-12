@@ -10,6 +10,8 @@
 
 ;; type CEnv = [Listof Variable]
 
+(current-annotation "top-level")
+  
 ;; Prog -> Asm
 (define (compile p)
   (match p
@@ -43,31 +45,33 @@
 
 ;; Defn -> Asm
 (define (compile-define d)
+  (parameterize ([current-annotation d])
   (match d
     [(Defn f xs e)
      (seq (Label (symbol->label f))
           (compile-e e (reverse xs))
           (Add rsp (* 8 (length xs))) ; pop args
-          (Ret))]))
+          (Ret))])))
 
 ;; Expr CEnv -> Asm
 (define (compile-e e c)
-  (match e
-    [(Int i)            (compile-value i)]
-    [(Bool b)           (compile-value b)]
-    [(Char c)           (compile-value c)]
-    [(Eof)              (compile-value eof)]
-    [(Empty)            (compile-value '())]
-    [(Var x)            (compile-variable x c)]
-    [(Str s)            (compile-string s)]
-    [(Prim0 p)          (compile-prim0 p c)]
-    [(Prim1 p e)        (compile-prim1 p e c)]
-    [(Prim2 p e1 e2)    (compile-prim2 p e1 e2 c)]
-    [(Prim3 p e1 e2 e3) (compile-prim3 p e1 e2 e3 c)]
-    [(If e1 e2 e3)      (compile-if e1 e2 e3 c)]
-    [(Begin e1 e2)      (compile-begin e1 e2 c)]
-    [(Let x e1 e2)      (compile-let x e1 e2 c)]
-    [(App f es)         (compile-app f es c)]))
+  (parameterize ([current-annotation e])
+    (match e
+      [(Int i)            (compile-value i)]
+      [(Bool b)           (compile-value b)]
+      [(Char c)           (compile-value c)]
+      [(Eof)              (compile-value eof)]
+      [(Empty)            (compile-value '())]
+      [(Var x)            (compile-variable x c)]
+      [(Str s)            (compile-string s)]
+      [(Prim0 p)          (compile-prim0 p c)]
+      [(Prim1 p e)        (compile-prim1 p e c)]
+      [(Prim2 p e1 e2)    (compile-prim2 p e1 e2 c)]
+      [(Prim3 p e1 e2 e3) (compile-prim3 p e1 e2 e3 c)]
+      [(If e1 e2 e3)      (compile-if e1 e2 e3 c)]
+      [(Begin e1 e2)      (compile-begin e1 e2 c)]
+      [(Let x e1 e2)      (compile-let x e1 e2 c)]
+      [(App f es)         (compile-app f es c)])))
 
 ;; Value -> Asm
 (define (compile-value v)
