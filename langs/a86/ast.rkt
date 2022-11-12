@@ -219,7 +219,7 @@
       (symbol? x)
       (integer? x)))
 
-(provide offset? register? instruction? label? 64-bit-integer? 32-bit-integer?)
+(provide offset? register? label? 64-bit-integer? 32-bit-integer?)
 
 (define offset? Offset?)
 
@@ -240,40 +240,10 @@
        (nasm-label? x)
        (not (register? x))))
 
-#;
-(define (instruction? x)
-  (or (Text? x)
-      (Data? x)
-      (Global? x)
-      (Label? x)
-      (Extern? x)
-      (Call? x)
-      (Ret? x)
-      (Mov? x)
-      (Add? x)
-      (Sub? x)
-      (Cmp? x)
-      (Jmp? x)
-      (Je? x)
-      (Jne? x)
-      (Jl? x)
-      (Jle? x)
-      (Jg? x)
-      (Jge? x)
-      (And? x)
-      (Or? x)
-      (Xor? x)
-      (Sal? x)
-      (Sar? x)
-      (Push? x)
-      (Pop? x)
-      (Lea? x)
-      (Div? x)
-      (Comment? x)
-      (Equ? x)
-      (Dd? x)
-      (Dq? x)
-      ))
+(provide (rename-out [a86:instruction? instruction?]))
+(define (a86:instruction? x)
+  (or (instruction? x)
+      (Comment? x)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Instruction sequencing and program error checking
