@@ -79,8 +79,8 @@
     (let ((s (simple-instr->string i)))
       (if (instruction-annotation i)
           (if (< (string-length s) 40)
-              (format "~a~a; ~.a" s (make-string (- 40 (string-length s)) #\space) (instruction-annotation i))
-              (format "~a ; ~.a" s (instruction-annotation i)))
+              (format "~a~a; ~.s" s (make-string (- 40 (string-length s)) #\space) (instruction-annotation i))
+              (format "~a ; ~.s" s (instruction-annotation i)))
           s)))
   
   
