@@ -249,10 +249,10 @@
 ;; Instruction sequencing and program error checking
 
 (provide/contract
- [seq   (-> (or/c instruction? (listof instruction?)) ...
-            (listof instruction?))]
- [prog (-> (or/c instruction? (listof instruction?)) ...
-           (listof instruction?))])
+ [seq   (-> (or/c a86:instruction? (listof a86:instruction?)) ...
+            (listof a86:instruction?))]
+ [prog (-> (or/c a86:instruction? (listof a86:instruction?)) ...
+           (listof a86:instruction?))])
 
 ;; (U Instruction Asm) ... -> Asm
 ;; Convenient for sequencing instructions or groups of instructions
