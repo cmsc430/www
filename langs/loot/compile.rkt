@@ -7,6 +7,9 @@
 (define rbx 'rbx) ; heap
 (define rsp 'rsp) ; stack
 (define rdi 'rdi) ; arg
+(define r8 'r8)   ; scratch
+(define r9 'r9)   ; scratch
+(define r10 'r10) ; scratch
 (define r12 'r12) ; reset
 
 ;; type CEnv = [Listof Id]
@@ -99,6 +102,7 @@
 
 ;; Expr CEnv Bool -> (cons Asm Asm)
 (define (compile-e e c t?)
+  ;(printf "compile-e ~v ~v\n" e c)
   (match e
     [(Int i)            (cons (compile-value i) (seq))]
     [(Bool b)           (cons (compile-value b) (seq))]
@@ -462,7 +466,7 @@
 
 ;; Expr CEnv Boolean -> (cons Asm Asm)
 (define (compile-reset e c t?)
-  (match-let ([(cons is bs) (compile-e e (cons #f (cons #f c)) #f)])
+  (match-let ([(cons is bs) (compile-e e (cons #f (cons #t c)) #f)])
     (cons (let ((r (gensym 'reset)))
             (seq (Push 'r12)                 
                  (Lea 'r12 r)
@@ -483,49 +487,114 @@
 ;; The whole stack is not being moved up; it's just
 ;; the variable bindings.
 
-;; Produce a set of variables in c
-;; CEnv -> CEnv
-(define (fvs-c c)
-  (define (loop c c-env)
-    (match c
-      ['() c-env]
-      [(cons (? symbol? x) c)
-       (if (memq x c-env)
-           (loop c c-env)
-           (loop c (cons x c-env)))]
-      [(cons _ c) (loop c c-env)]))
-  (loop c '()))
+;; Splits an environment into just the variables for
+;; a lexical reset and what remains
+;; CEnv -> (values CEnv CEnv)
+(define (shift-cenv c)
+  (match c
+    ['() (values '() '())]
+    [(cons #f (cons #t _)) (values '() c)]
+    [(cons #f c) (shift-cenv c)]
+    [(cons x c) (let-values ([(in out) (shift-cenv c)])
+                  (values (cons x in) out))]))
 
+;; rax points to the closure
+(define (copy-back fv c i)
+  (match fv
+    ['() (seq)]
+    [(cons #t _) (seq)]
+    [(cons x fv)
+     ;; +16 to skip first two words of the closure
+     (seq (Mov r8 (Offset rax (+ 16 (lookup x c))))
+          (Mov (Offset rsp i) r8)
+          (copy-back fv c (+ i 8)))]))
 
 ;; Id Expr CEnv Boolean -> (cons Asm Asm)
 (define (compile-shift x e c t?)
-  (let ((fv (fvs-c c)))
-    (match-let ([(cons is bs) (compile-e e fv #f)])
-      ;; We're going to reset the stack to some point higher up
-      ;; in the address space and then run e.  Since e may depend
-      ;; on things in the environment and resetting will destroy
-      ;; that environment, we need to save the environment, reset
-      ;; the stack, then reinstall the environment.
-      ;; It may be tempting to try and do this in-place, but it
-      ;; won't work because the reset may be in the middle of c.
-      ;; So we copy the values out to the heap and then copy
-      ;; them back to the stack.
-     
-      ;; this also doesn't create the closure and bind it to x
-      
-      ;; will need to create the closure to enable the environment fixup
-      (cons (seq (free-vars-to-heap fv c 0)
-                 (Mov rsp 'r12)
-                 (Mov rax rbx) ; should make copy-env-to-stack take a register and pass rbx
-                 (copy-env-to-stack fv 0)
-                 (Add rbx (* 8 (length fv))) ; allocate the stuff we just copied to the heap
-                 is
-                 (Add rsp (* 8 (length fv)))
-                 (Mov r8 (Offset rsp 0))
-                 (Jmp r8))
-            bs))))
-  
-  
+  (let-values ([(c-inside c-outside) (shift-cenv c)]) ;; need to be careful about only popping off local-stack
+    (let ((fun (gensym 'shift))
+          (exit (gensym 'exit)))
+      (match-let ([(cons is bs) (compile-e e (cons x (append c-inside c-outside)) #f)])  ; a tiny bit wasteful if x is shadowed
+        ;; We're going to reset the stack to some point higher up
+        ;; in the address space and then run e.  Since e may depend
+        ;; on things in the environment and resetting will destroy
+        ;; that environment, we need to save the environment, reset
+        ;; the stack, then reinstall the environment.
+        ;; It may be tempting to try and do this in-place, but it
+        ;; won't work because the reset may be in the middle of c.
+        ;; So we copy the values out to the heap and then copy
+        ;; them back to the stack.
+
+        ;; this also doesn't create the closure and bind it to x
+
+        ;; will need to create the closure to enable the environment fixup
+        (cons (seq (Mov rax rbx)
+
+                   (%% "initialize closure")
+                   (Lea r8 fun)
+                   (Mov (Offset rbx 0) r8)
+                   (Mov r8 r12)
+                   (Sub r8 rsp)
+                   (Mov (Offset rbx 8) r8)
+                   (Add rbx 16)
+
+                   (%% "copy the stack to the heap, reset stack")
+                   (let ((loop (gensym 'loop))
+                         (done (gensym 'done)))
+                     (seq (Label loop)
+                          (Cmp r12 rsp)
+                          (Je done)
+                          (Pop r8)
+                          (Mov (Offset rbx 0) r8)
+                          (Add rbx 8)
+                          (Jmp loop)
+                          (Label done)))
+
+                   (%% "alloc local env on stack")
+                   (Sub rsp (* (length c-inside) 8))
+
+                   (%% "copy back local env")
+                   (copy-back c-inside c 0)
+
+                   (%% "bind to the procedure")
+                   (Xor rax type-proc)
+                   (Push rax)
+
+                   (%% "run")
+                   is
+
+                   (%% "pop off local env")
+                   (Add rsp (* 8 (add1 (length c-inside))))
+
+                   (%% "jump to the reset")
+                   (Mov r8 (Offset rsp 0))
+                   (Jmp r8)
+                   (Label exit))
+
+              (seq (Label fun)
+                   (Pop rax)
+                   (Pop r8)
+                   #|
+                   (Xor r8 type-proc)
+                   (Mov r9 (Offset r8 8))
+
+                   (Sub r8 16)
+                   (Sub r8 r9)
+
+                   (let ((loop (gensym 'loop))
+                         (done (gensym 'done)))
+                     (seq (Label loop)
+                          (Cmp r9 0)
+                          (Je done)
+                          (Mov r10 (Offset r8 0))
+                          (Push r10)
+                          (Add r8 8)
+                          (Sub r9 8)
+                          (Jmp loop)
+                          (Label done)))
+                   |#
+                   (Jmp exit)
+                   bs))))))
 
 ;; Id CEnv -> Integer
 (define (lookup x cenv)
