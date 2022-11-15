@@ -259,6 +259,8 @@
      (seq (Pop r8)
           (assert-string r8)
           (assert-integer rax)
+          (Cmp r8 type-str)
+          (Je 'raise_error_align) ; special case for empty string
           (Cmp rax 0)
           (Jl 'raise_error_align)
           (Xor r8 type-str)       ; r8 = ptr
