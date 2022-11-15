@@ -472,9 +472,9 @@
                  (Lea 'r12 r)
                  (Push 'r12)
 		 (Mov 'r12 rsp)
-                 is                 
+                 is
+                 (Ret)                 
                  (Label r)
-                 (Add rsp 8)
                  (Pop 'r12)))
           bs)))
 
@@ -511,10 +511,12 @@
 
 ;; Id Expr CEnv Boolean -> (cons Asm Asm)
 (define (compile-shift x e c t?)
-  (let-values ([(c-inside c-outside) (shift-cenv c)]) ;; need to be careful about only popping off local-stack
+  ;; need to be careful about only popping off local-stack
+  (let-values ([(c-inside c-outside) (shift-cenv c)]) 
     (let ((fun (gensym 'shift))
           (exit (gensym 'exit)))
-      (match-let ([(cons is bs) (compile-e e (cons x (append c-inside c-outside)) #f)])  ; a tiny bit wasteful if x is shadowed
+      ;; a tiny bit wasteful if x is shadowed
+      (match-let ([(cons is bs) (compile-e e (cons x (append c-inside c-outside)) #f)])  
         ;; We're going to reset the stack to some point higher up
         ;; in the address space and then run e.  Since e may depend
         ;; on things in the environment and resetting will destroy
@@ -524,10 +526,6 @@
         ;; won't work because the reset may be in the middle of c.
         ;; So we copy the values out to the heap and then copy
         ;; them back to the stack.
-
-        ;; this also doesn't create the closure and bind it to x
-
-        ;; will need to create the closure to enable the environment fixup
         (cons (seq (Mov rax rbx)
 
                    (%% "initialize closure")
@@ -566,21 +564,24 @@
                    (%% "pop off local env")
                    (Add rsp (* 8 (add1 (length c-inside))))
 
-                   (%% "jump to the reset")
-                   (Mov r8 (Offset rsp 0))
-                   (Jmp r8)
+                   (%% "return to the reset")
+                   (Ret)
+
+                   (%% "only get here when k is applied")
                    (Label exit))
 
               (seq (Label fun)
+                   (%% "closure and arg on stack")
                    (Pop rax)
                    (Pop r8)
-                   #|
                    (Xor r8 type-proc)
                    (Mov r9 (Offset r8 8))
 
+                   (%% "move to the end of the closure")
                    (Sub r8 16)
                    (Sub r8 r9)
 
+                   (%% "push all the things in the closure")
                    (let ((loop (gensym 'loop))
                          (done (gensym 'done)))
                      (seq (Label loop)
@@ -592,7 +593,8 @@
                           (Sub r9 8)
                           (Jmp loop)
                           (Label done)))
-                   |#
+
+                   (%% "jump to the end of the shift")
                    (Jmp exit)
                    bs))))))
 

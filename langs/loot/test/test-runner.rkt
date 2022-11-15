@@ -306,7 +306,46 @@
   (check-equal? (run '(define (f x)
                         (shift _ x))
                      '(reset (f 5)))
-                5))
+                5)
+  (check-equal? (run '(reset (shift k (k 1)))) 1)
+  (check-equal? (run '(reset (shift k (add1 (k 1))))) 2)
+  (check-equal? (run '(reset (add1 (shift k (k 1))))) 2)
+  (check-equal? (run '(reset (add1 (shift k (k (k 1)))))) 3)
+  (check-equal? (run '(reset (+ (shift k (k (k 1))) 1))) 3)
+  (check-equal? (run '(reset (let ((x (shift k (k (k 4)))))
+                               (+ x x))))
+                16)
+
+  (check-equal? (run '(reset
+                       (begin (shift k (k 1))
+                              (shift k (k 2))))))
+
+  (check-equal? (run '(reset
+                       (begin
+                         (shift k (cons 1 (k (void)))) ;; (1)
+                         '())))
+                '(1))
+  ;; one above works, but this one doesn't.  I suspect
+  ;; return from one call to k is "eating up" the reset
+  ;; and screws up the second one... or something.
+  (check-equal? (run '(reset
+                       (begin
+                         (shift k (cons 1 (k (void))))
+                         (begin
+                           (shift k (cons 2 (k (void))))
+                           '()))))
+                '(1 2))
+  #;
+  (check-equal? (run '(define (yield x) (shift k (cons x (k (void)))))
+                     '(reset (begin
+                               (yield 1)
+                               (begin (yield 2)
+                                      (begin (yield 3)
+                                             '())))))
+                '(1 2 3))
+  #;
+  (check-equal? (run '(define (double x) (+ x x))
+                     '(reset (double (shift k (k (k 4)))))) 16))
 
                 
 

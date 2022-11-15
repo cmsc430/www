@@ -100,7 +100,7 @@
      (reset (interp-env e r ds))]
     [(Shift x e)
      (shift k
-            (let ((k1 (λ (vs) (if (= (length vs) 1)
+            (let ((k1 (λ vs (if (= (length vs) 1)
                                   (k (first vs))
                                   'err))))
               (interp-env e (ext r x k1) ds)))]))
