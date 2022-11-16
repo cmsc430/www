@@ -4,7 +4,7 @@
 
 @title[#:style '(unnumbered)]{Project}
 
-The final assesment for this course consists of an individually
+The final assessment for this course consists of an individually
 completed project.
 
 Final deliverables are due by the end of the time schedule for the
@@ -174,7 +174,7 @@ Suppose you have:
 Since the expression @racket[(f 5)] is calling a known function, you
 should be able to transform this call into @racket[(let ((x 5)) (add1
 x))].  Using the previously described optimization, you can further
-optimize this to @racket[(add1 5)], which in turn can be simiplified
+optimize this to @racket[(add1 5)], which in turn can be simplified
 to @racket[6].  You can keep going and notice that @racket[(zero? 6)]
 is just @racket[#f], so the whole program can be simplified to:
 
@@ -190,7 +190,7 @@ Note that the last example can get considerably more complicated in a
 language with first-class functions since it may not be possible to
 know statically which function is being called.
 
-There are many other optimziations you might consider.  Think about
+There are many other optimizations you might consider.  Think about
 the kinds of expressions you might write and how they can be
 simplified, then figure out how to do it programmatically.
 }
@@ -245,7 +245,7 @@ Here are some examples to help illustrate:
 ]
 
 Any time an expression produces a number of values that doesn't match
-what the surrounding context expects, an error should be signalled.
+what the surrounding context expects, an error should be signaled.
 
 @ex[
 
@@ -265,7 +265,7 @@ run-time system should print each of them out, followed by a newline:
 Note there is some symmetry here between function arity checking where
 we make sure the number of arguments matches the number of parameters
 of the function being called and the ``result arity'' checking that is
-required to implement this feature.  This suggests a similiar approach
+required to implement this feature.  This suggests a similar approach
 to implementing this feature, namely designating a register to
 communicate the arity of the result, which should be checked by the
 surrounding context.
@@ -472,10 +472,10 @@ Here are the key features that need to be added:
 @itemlist[
 
 @item{all language constructs that allocate memory should check that
-the current state of the heap can accomodate an allocation before
+the current state of the heap can accommodate an allocation before
 performing it, and if not, doing a garbage collection and trying
-again.  If there is still not possible to accomodate the allocation,
-an error should be signalled.}
+again.  If there is still not possible to accommodate the allocation,
+an error should be signaled.}
 
 @item{@racket[(collect-garbage)] will run a garbage collection and
 return void.}
@@ -488,7 +488,7 @@ currently allocated in the heap.}
 
 @item{@racket[(dump-memory-stats)] prints information about the
 current stack and heap and returns void.  See the @tt{iniquity-gc}
-langauge for an example.}
+language for an example.}
 ]
 
 
@@ -499,7 +499,7 @@ langauge for an example.}
 You may also design your own project, however, you will need to submit
 a one-page write-up that documents what you plan to do and how you
 will evaluate whether it is successful.  You must submit this document
-and have it approved by the instructor by XXX.
+and have it approved by the instructor by November 22.
 
 @section[#:tag "project"]{Submitting}
 
