@@ -7,27 +7,27 @@
 ;; with decent error messages.
 
 (define check:label-symbol
-  (λ (x n)
+  (λ (a x n)
     (when (register? x)
       (error n "cannot use register as label name; given ~v" x))
     (unless (symbol? x)
       (error n "expects symbol; given ~v" x))
     (unless (label? x)
       (error n "label names must conform to nasm restrictions"))
-    x))
+    (values a x)))
 
 (define check:label-symbol+integer
-  (λ (x c n)
+  (λ (a x c n)
     (check:label-symbol x n)
     (unless (integer? c)
       (error n "expects integer constant; given ~v" c))
-    (values x c)))
+    (values a x c)))
 
 (define check:target
-  (λ (x n)
+  (λ (a x n)
     (unless (or (symbol? x) (offset? x)); either register or label
       (error n "expects symbol; given ~v" x))
-    x))
+    (values a x)))
 
 (define check:cmov
   (λ (a1 a2 n)
@@ -38,23 +38,23 @@
     (values a1 a2)))
 
 (define check:arith  
-  (λ (a1 a2 n)
+  (λ (a a1 a2 n)
     (unless (register? a1)
       (error n "expects register; given ~v" a1))
     (unless (or (exact-integer? a2) (register? a2) (offset? a2))
       (error n "expects exact integer, register, or offset; given ~v" a2))
     (when (and (exact-integer? a2) (> (integer-length a2) 32))
       (error n "literal must not exceed 32-bits; given ~v (~v bits); go through a register instead" a2 (integer-length a2)))
-    (values a1 a2)))
+    (values a a1 a2)))
 
 (define check:register
-  (λ (a1 n)
+  (λ (a a1 n)
     (unless (register? a1)
       (error n "expects register; given ~v" a1))
-    a1))
+    (values a a1)))
 
 (define check:src-dest
-  (λ (a1 a2 n)
+  (λ (a a1 a2 n)
     (unless (or (register? a1) (offset? a1))
       (error n "expects register or offset; given ~v" a1))
     (unless (or (register? a2) (offset? a2) (exact-integer? a2) (Const? a2))
@@ -65,10 +65,10 @@
       (error n "literal must not exceed 32-bits; given ~v (~v bits); go through a register instead" a2 (integer-length a2)))
     (when (and (offset? a1) (exact-integer? a2))
       (error n "cannot use a memory locations and literal; given ~v, ~v; go through a register instead" a1 a2))
-    (values a1 a2)))
+    (values a a1 a2)))
 
 (define check:mov
-  (λ (a1 a2 n)
+  (λ (a a1 a2 n)
     (unless (or (register? a1) (offset? a1))
       (error n "expects register or offset; given ~v" a1))
     (unless (or (register? a2) (offset? a2) (exact-integer? a2) (Const? a2))
@@ -79,43 +79,43 @@
       (error n "literal must not exceed 64-bits; given ~v (~v bits)" a2 (integer-length a2)))
     (when (and (offset? a1) (exact-integer? a2))
       (error n "cannot use a memory locations and literal; given ~v, ~v; go through a register instead" a1 a2))
-    (values a1 a2)))
+    (values a a1 a2)))
 
 (define check:shift
-  (λ (a1 a2 n)
+  (λ (a a1 a2 n)
     (unless (register? a1)
       (error n "expects register; given ~v" a1))
     (unless (or (and (exact-integer? a2) (<= 0 a2 63))
                 (eq? 'cl a2))
       (error n "expects exact integer in [0,63]; given ~v" a2))
-    (values a1 a2)))      
+    (values a a1 a2)))      
 
 (define check:offset
-  (λ (r i n)
+  (λ (a r i n)
     (unless (or (register? r) (label? r))
       (error n "expects register or label as first argument; given ~v" r))
     (unless (exact-integer? i)
       (error n "expects exact integer as second argument; given ~v" i))
-    (values r i)))
+    (values a r i)))
 
 (define check:push
-  (λ (a1 n)
+  (λ (a a1 n)
     (unless (or (exact-integer? a1) (register? a1))
       (error n "expects exact integer or register; given ~v" a1))
     (when (and (exact-integer? a1) (> (integer-length a1) 32))
       (error n "literal must not exceed 32-bits; given ~v (~v bits); go through a register instead" a1 (integer-length a1)))
-    a1))
+    (values a a1)))
 
 (define check:lea
-  (λ (dst x n)
+  (λ (a dst x n)
     (unless (or (register? dst) (offset? dst))
       (error n "expects register or offset; given ~v" dst))
     (unless (or (label? x) (offset? x) (exp? x))
       (error n "expects label, offset, or expression; given ~v" x))
-    (values dst x)))
+    (values a dst x)))
 
 (define check:none
-  (λ (n) (values)))
+  (λ (a n) (values a)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Comments
@@ -140,12 +140,42 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Instructions
 
-(define-syntax-rule
-  (instruct Name (x ...) guard)
-  (begin (provide (struct-out Name))
-         (struct Name (x ...)
-           #:transparent
-           #:guard guard)))
+(require racket/struct)
+(define current-annotation (make-parameter #f))
+(provide instruction-annotation current-annotation)
+
+(struct instruction (annotation))
+
+(define-syntax (instruct stx)
+  (syntax-case stx ()
+    [(instruct Name (x ...) guard)
+     (with-syntax ([Name? (datum->syntax stx (string->symbol (string-append (symbol->string (syntax->datum #'Name)) "?")))])
+     #'(begin (provide Name Name?)              
+              (define-match-expander Name
+                (lambda (stx)
+                  (syntax-case stx ()
+                    [(_ elts (... ...))
+                     #'(%Name _ elts (... ...))]))
+                (lambda (stx)
+                  (syntax-case stx ()
+                    [m (identifier? #'m) #'(λ (x ...) (%Name (current-annotation) x ...))]
+                    [(m x ...) #'(%Name (current-annotation) x ...)])))
+              (struct %Name instruction (x ...)
+                #:transparent
+                #:guard guard
+                #:methods gen:equal+hash
+                [(define equal-proc (λ (i1 i2 equal?)
+                                      (equal? (struct->vector i1)
+                                              (struct->vector i2))))
+                 (define hash-proc  (λ (i hash) (hash (struct->vector i))))
+                 (define hash2-proc (λ (i hash) (hash (struct->vector i))))]
+                #:methods gen:custom-write
+                [(define write-proc
+                   (make-constructor-style-printer
+                    (lambda (obj) 'Name)        
+                    (lambda (obj)
+                      (rest (rest (vector->list (struct->vector obj)))))))])
+              (define Name? %Name?)))]))
 
 (instruct Text   ()        check:none)
 (instruct Data   ()        check:none)
@@ -190,15 +220,15 @@
 (instruct Not    (x)       check:register)
 (instruct Div    (den)     check:register)
 
-(instruct Offset (r i)     check:offset)
+(instruct Offset (r i)     check:offset)        ;; May need to make this not an instruction
 (instruct Extern (x)       check:label-symbol)
 
 (instruct Equ    (x v)     check:label-symbol+integer)
 (instruct Const  (x)       check:label-symbol)
 
 ;; IMPROVE: do more checking
-(instruct Dd (x) (lambda (x n) x))
-(instruct Dq (x) (lambda (x n) x))
+(instruct Dd (x) (lambda (a x n) (values a x)))
+(instruct Dq (x) (lambda (a x n) (values a x)))
 
 (provide (struct-out Plus))
 (struct Plus (e1 e2) #:transparent)
@@ -212,7 +242,7 @@
       (symbol? x)
       (integer? x)))
 
-(provide offset? register? instruction? label? 64-bit-integer? 32-bit-integer?)
+(provide offset? register? label? 64-bit-integer? 32-bit-integer?)
 
 (define offset? Offset?)
 
@@ -233,63 +263,19 @@
        (nasm-label? x)
        (not (register? x))))
 
-(define (instruction? x)
-  (or (Text? x)
-      (Data? x)
-      (Global? x)
-      (Label? x)
-      (Extern? x)
-      (Call? x)
-      (Ret? x)
-      (Mov? x)
-      (Add? x)
-      (Sub? x)
-      (Cmp? x)
-      (Jmp? x)
-      (Je? x)
-      (Jne? x)
-      (Jl? x)
-      (Jle? x)
-      (Jg? x)
-      (Jge? x)
-      (Jo? x)
-      (Jno? x)
-      (Jc? x)
-      (Jnc? x)
-      (Cmove?  x)
-      (Cmovne? x)
-      (Cmovl?  x)
-      (Cmovle? x)
-      (Cmovg?  x)
-      (Cmovge? x)
-      (Cmovo?  x)
-      (Cmovno? x)
-      (Cmovc?  x)
-      (Cmovnc? x)
-      (And? x)
-      (Or? x)
-      (Xor? x)
-      (Sal? x)
-      (Sar? x)
-      (Push? x)
-      (Pop? x)
-      (Lea? x)
-      (Not? x)
-      (Div? x)
-      (Comment? x)
-      (Equ? x)
-      (Dd? x)
-      (Dq? x)
-      ))
+(provide (rename-out [a86:instruction? instruction?]))
+(define (a86:instruction? x)
+  (or (instruction? x)
+      (Comment? x)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Instruction sequencing and program error checking
 
 (provide/contract
- [seq   (-> (or/c instruction? (listof instruction?)) ...
-            (listof instruction?))]
- [prog (-> (or/c instruction? (listof instruction?)) ...
-           (listof instruction?))])
+ [seq   (-> (or/c a86:instruction? (listof a86:instruction?)) ...
+            (listof a86:instruction?))]
+ [prog (-> (or/c a86:instruction? (listof a86:instruction?)) ...
+           (listof a86:instruction?))])
 
 ;; (U Instruction Asm) ... -> Asm
 ;; Convenient for sequencing instructions or groups of instructions
