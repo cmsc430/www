@@ -316,6 +316,8 @@
                                (+ x x))))
                 16)
 
+  (check-equal? (run '((let ((x 3)) (reset (+ (shift k k) x))) 4)) 7)
+
   #;
   (check-equal? (run '(reset
                        (begin (shift k (k 1))
