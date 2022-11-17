@@ -48,7 +48,7 @@
      (seq (Label (symbol->label f))
           (compile-e e (reverse xs))
           (Add rsp (* 8 (length xs))) ; pop args
-          (Ret))])))
+          (Ret))]))
 
 ;; Expr CEnv -> Asm
 (define (compile-e e c)
