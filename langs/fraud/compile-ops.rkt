@@ -5,14 +5,14 @@
 (define rax 'rax) ; return
 (define rdi 'rdi) ; arg
 (define r8  'r8)  ; scratch in +, -
-(define r9  'r9)  ; scratch in assert-type
+(define r9  'r9)  ; scratch
 (define r15 'r15) ; stack pad (non-volatile)
 (define rsp 'rsp) ; stack
 
 ;; Op0 -> Asm
 (define (compile-op0 p)
   (match p
-    ['void      (seq (Mov rax val-void))]
+    ['void      (seq (Mov rax (value->bits (void))))]
     ['read-byte (seq pad-stack
                      (Call 'read_byte)
                      unpad-stack)]
@@ -30,14 +30,11 @@
      (seq (assert-integer rax)
           (Sub rax (value->bits 1)))]
     ['zero?
-     (let ((l1 (gensym)))
-       (seq (assert-integer rax)
-            (Cmp rax 0)
-            (Mov rax val-true)
-            (Je l1)
-            (Mov rax val-false)
-            (Label l1)))]
-    ['char? (type-pred mask-char type-char)]
+     (seq (assert-integer rax)
+          (Cmp rax 0)
+          (if-equal))]
+    ['char?
+     (type-pred mask-char type-char)]
     ['char->integer
      (seq (assert-char rax)
           (Sar rax char-shift)
@@ -47,14 +44,14 @@
           (Sar rax int-shift)
           (Sal rax char-shift)
           (Xor rax type-char))]
-    ['eof-object? (eq-imm val-eof)]
+    ['eof-object? (eq-value eof)]
     ['write-byte
      (seq (assert-byte rax)
           pad-stack
           (Mov rdi rax)
           (Call 'write_byte)
           unpad-stack
-          (Mov rax val-void))]))
+          (Mov rax (value->bits (void))))]))
 
 ;; Op2 -> Asm
 (define (compile-op2 p)
@@ -74,22 +71,14 @@
      (seq (Pop r8)
           (assert-integer r8)
           (assert-integer rax)
-          (Cmp r8 rax)          
-          (Mov rax val-true)
-          (let ((true (gensym)))
-            (seq (Jl true)
-                 (Mov rax val-false)
-                 (Label true))))]
+          (Cmp r8 rax)
+          (if-lt))]
     ['=
      (seq (Pop r8)
           (assert-integer r8)
           (assert-integer rax)
           (Cmp r8 rax)          
-          (Mov rax val-true)
-          (let ((true (gensym)))
-            (seq (Je true)
-                 (Mov rax val-false)
-                 (Label true))))]))
+          (if-equal))]))
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -102,13 +91,9 @@
          (Jne 'raise_error_align))))
 
 (define (type-pred mask type)
-  (let ((l (gensym)))
-    (seq (And rax mask)
-         (Cmp rax type)
-         (Mov rax (value->bits #t))
-         (Je l)
-         (Mov rax (value->bits #f))
-         (Label l))))
+  (seq (And rax mask)
+       (Cmp rax type)
+       (if-equal)))
 
 (define assert-integer
   (assert-type mask-int type-int))
@@ -136,14 +121,20 @@
        (Cmp r (value->bits 255))
        (Jg 'raise_error_align)))
 
-;; Imm -> Asm
-(define (eq-imm imm)
-  (let ((l1 (gensym)))
-    (seq (Cmp rax imm)
-         (Mov rax val-true)
-         (Je l1)
-         (Mov rax val-false)
-         (Label l1))))
+;; -> Asm
+;; set rax to #t or #f based on given comparison
+(define (if-compare c)
+  (seq (Mov rax (value->bits #f))
+       (Mov r9  (value->bits #t))
+       (c rax r9)))
+
+(define (if-equal) (if-compare Cmove))
+(define (if-lt) (if-compare Cmovl))
+
+;; Value -> Asm
+(define (eq-value v)
+  (seq (Cmp rax (value->bits v))
+       (if-equal)))
 
 ;; Asm
 ;; Dynamically pad the stack to be aligned for a call
