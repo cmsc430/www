@@ -19,13 +19,11 @@
            (Label 'entry)
            (Push 'rbx)
            (Push 'rbp)
-	   (Push 'rbx)
            (Mov 'rbp 'rsp) ; save stack base pointer
            (Mov rbx rdi)   ; recv heap pointer
            (compile-e e '())
-	   (Pop 'rbx)
            (Pop 'rbp)
-           (Pop 'rbx)
+	   (Pop 'rbx)
            (Ret)
            (compile-defines ds)
            (Label 'raise_error_align)
