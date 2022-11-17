@@ -17,11 +17,13 @@
      (prog (externs)
            (Global 'entry)
            (Label 'entry)
+           (Push 'rbx)
            (Push 'rbp)
            (Mov 'rbp 'rsp) ; save stack base pointer
            (Mov rbx rdi)   ; recv heap pointer
            (compile-e e '())
            (Pop 'rbp)
+	   (Pop 'rbx)
            (Ret)
            (compile-defines ds)
            (Label 'raise_error_align)

@@ -4,12 +4,12 @@
 
 (define rax 'rax) ; return
 (define rdi 'rdi) ; arg
-(define r9  'r9)  ; scratch in assert-type
+(define r9  'r9)  ; scratch
 
 ;; Op0 -> Asm
 (define (compile-op0 p)
   (match p
-    ['void      (seq (Mov rax val-void))]
+    ['void      (seq (Mov rax (value->bits (void))))]
     ['read-byte (seq (Call 'read_byte))]
     ['peek-byte (seq (Call 'peek_byte))]))
 
@@ -23,22 +23,11 @@
      (seq (assert-integer rax)
           (Sub rax (value->bits 1)))]
     ['zero?
-     (let ((l1 (gensym)))
-       (seq (assert-integer rax)
-            (Cmp rax 0)
-            (Mov rax val-true)
-            (Je l1)
-            (Mov rax val-false)
-            (Label l1)))]
+     (seq (assert-integer rax)
+          (Cmp rax 0)
+          (if-equal))]
     ['char?
-     (let ((l1 (gensym)))
-       (seq (And rax mask-char)
-            (Xor rax type-char)
-            (Cmp rax 0)
-            (Mov rax val-true)
-            (Je l1)
-            (Mov rax val-false)
-            (Label l1)))]
+     (type-pred mask-char type-char)]
     ['char->integer
      (seq (assert-char rax)
           (Sar rax char-shift)
@@ -48,12 +37,12 @@
           (Sar rax int-shift)
           (Sal rax char-shift)
           (Xor rax type-char))]
-    ['eof-object? (eq-imm val-eof)]
+    ['eof-object? (eq-value eof)]
     ['write-byte
      (seq (assert-byte)
           (Mov rdi rax)
           (Call 'write_byte)
-          (Mov rax val-void))]))
+          (Mov rax (value->bits (void))))]))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -66,13 +55,9 @@
          (Jne 'err))))
 
 (define (type-pred mask type)
-  (let ((l (gensym)))
-    (seq (And rax mask)
-         (Cmp rax type)
-         (Mov rax (value->bits #t))
-         (Je l)
-         (Mov rax (value->bits #f))
-         (Label l))))
+  (seq (And rax mask)
+       (Cmp rax type)
+       (if-equal)))
 
 (define assert-integer
   (assert-type mask-int type-int))
@@ -100,11 +85,14 @@
        (Cmp rax (value->bits 255))
        (Jg 'err)))
 
-;; Imm -> Asm
-(define (eq-imm imm)
-  (let ((l1 (gensym)))
-    (seq (Cmp rax imm)
-         (Mov rax val-true)
-         (Je l1)
-         (Mov rax val-false)
-         (Label l1))))
+;; -> Asm
+;; set rax to #t or #f if comparison flag is equal
+(define (if-equal)
+  (seq (Mov rax (value->bits #f))
+       (Mov r9  (value->bits #t))
+       (Cmove rax r9)))
+
+;; Value -> Asm
+(define (eq-value v)
+  (seq (Cmp rax (value->bits v))
+       (if-equal)))

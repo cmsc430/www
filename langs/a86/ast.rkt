@@ -29,6 +29,14 @@
       (error n "expects symbol; given ~v" x))
     (values a x)))
 
+(define check:cmov
+  (λ (a1 a2 n)
+    (unless (register? a1)
+      (error n "expects register; given ~v" a1))
+    (unless (or (register? a2) (offset? a2))
+      (error n "expects register or offset; given ~v" a2))
+    (values a1 a2)))
+
 (define check:arith  
   (λ (a a1 a2 n)
     (unless (register? a1)
@@ -187,6 +195,20 @@
 (instruct Jle    (x)       check:target)
 (instruct Jg     (x)       check:target)
 (instruct Jge    (x)       check:target)
+(instruct Jo     (x)       check:target)
+(instruct Jno    (x)       check:target)
+(instruct Jc     (x)       check:target)
+(instruct Jnc    (x)       check:target)
+(instruct Cmove  (dst src) check:cmov)
+(instruct Cmovne (dst src) check:cmov)
+(instruct Cmovl  (dst src) check:cmov)
+(instruct Cmovle (dst src) check:cmov)
+(instruct Cmovg  (dst src) check:cmov)
+(instruct Cmovge (dst src) check:cmov)
+(instruct Cmovo  (dst src) check:cmov)
+(instruct Cmovno (dst src) check:cmov)
+(instruct Cmovc  (dst src) check:cmov)
+(instruct Cmovnc (dst src) check:cmov)
 (instruct And    (dst src) check:src-dest)
 (instruct Or     (dst src) check:src-dest)
 (instruct Xor    (dst src) check:src-dest)
@@ -195,6 +217,7 @@
 (instruct Push   (a1)      check:push)
 (instruct Pop    (a1)      check:register)
 (instruct Lea    (dst x)   check:lea)
+(instruct Not    (x)       check:register)
 (instruct Div    (den)     check:register)
 
 (instruct Offset (r i)     check:offset)        ;; May need to make this not an instruction
@@ -239,6 +262,7 @@
   (and (symbol? x)
        (nasm-label? x)
        (not (register? x))))
+
 
 (provide (rename-out [a86:instruction? instruction?]))
 (define (a86:instruction? x)

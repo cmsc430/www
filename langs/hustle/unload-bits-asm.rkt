@@ -25,4 +25,4 @@
                     (integer-length ptr-mask)))
 
 (define (heap-ref i)
-  (ptr-ref (cast (untag i) _int64 _pointer) _uint64))
+  (ptr-ref (cast (untag i) _int64 _pointer) _int64))

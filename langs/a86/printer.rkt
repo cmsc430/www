@@ -151,6 +151,58 @@
       [(Jge l)
        (string-append tab "jge "
                       (jump-target->string l))]
+      [(Jo l)
+       (string-append tab "jo "
+                      (jump-target->string l))]
+      [(Jno l)
+       (string-append tab "jno "
+                      (jump-target->string l))]
+      [(Jc l)
+       (string-append tab "jc "
+                      (jump-target->string l))]
+      [(Jnc l)
+       (string-append tab "jnc "
+                      (jump-target->string l))]
+      [(Cmove dst src)
+       (string-append tab "cmove "
+                      (reg->string dst) ", "
+                      (arg->string src))]
+      [(Cmovne dst src)
+       (string-append tab "cmovne "
+                      (reg->string dst) ", "
+                      (arg->string src))]
+      [(Cmovl dst src)
+       (string-append tab "cmovl "
+                      (reg->string dst) ", "
+                      (arg->string src))]
+      [(Cmovle dst src)
+       (string-append tab "cmovle "
+                      (reg->string dst) ", "
+                      (arg->string src))]
+      [(Cmovg dst src)
+       (string-append tab "cmovg "
+                      (reg->string dst) ", "
+                      (arg->string src))]
+      [(Cmovge dst src)
+       (string-append tab "cmovge "
+                      (reg->string dst) ", "
+                      (arg->string src))]
+      [(Cmovo dst src)
+       (string-append tab "cmovo "
+                      (reg->string dst) ", "
+                      (arg->string src))]
+      [(Cmovno dst src)
+       (string-append tab "cmovno "
+                      (reg->string dst) ", "
+                      (arg->string src))]
+      [(Cmovc dst src)
+       (string-append tab "cmovc "
+                      (reg->string dst) ", "
+                      (arg->string src))]
+      [(Cmovnc dst src)
+       (string-append tab "cmovnc "
+                      (reg->string dst) ", "
+                      (arg->string src))]
       [(Call l)
        (string-append tab "call "
                       (jump-target->string l))]
@@ -168,6 +220,9 @@
        (string-append tab "lea "
                       (arg->string d) ", [rel "
                       (exp->string x) "]")]
+      [(Not r)
+       (string-append tab "not "
+                      (reg->string r))]
       [(Div r)
        (string-append tab "div "
                       (arg->string r))]

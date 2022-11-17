@@ -4,24 +4,32 @@
 
 @title[#:style '(unnumbered)]{Project}
 
-The final assesment for this course consists of an individually
+The final assessment for this course consists of an individually
 completed project.
 
 Final deliverables are due by the end of the time schedule for the
 class's final exam as set by the registrar.
 
-Submissions should be made on Gradescope.
-
-Descriptions of potential projects will be released later in the semester
-and announced in class.
-
-@;{
 There are several projects to choose from, described below.
 
-In addition the source code for your project, you must write a 2-page
-document which gives a summary of your work and describes how your
-project is implemented.
+Compared to assignments, the project is more open-ended.  You will
+need to select from a project description below and then select which
+language you'd like to target with your project.  As starter code, you
+can use the source code of any of the course languages.  How you
+implement your project is up to you.  It may involve changes to all
+aspects of the language implementation: the parser, the compiler, and
+the run-time system (however, we do not require an interpreter
+implementation). No tests are provided, so we recommend you write your
+own and suggest focusing on tests @emph{before} trying to implement
+these features.
 
+In addition to the source code for your project, you must write a
+2-page document in PDF format, which gives a summary of your work and
+describes how your project is implemented.
+
+@table-of-contents[]
+
+@;{
 @section{a86 optimizer}
 
 Our compiler is designed to be simple and easy to maintain.  That
@@ -166,7 +174,7 @@ Suppose you have:
 Since the expression @racket[(f 5)] is calling a known function, you
 should be able to transform this call into @racket[(let ((x 5)) (add1
 x))].  Using the previously described optimization, you can further
-optimize this to @racket[(add1 5)], which in turn can be simiplified
+optimize this to @racket[(add1 5)], which in turn can be simplified
 to @racket[6].  You can keep going and notice that @racket[(zero? 6)]
 is just @racket[#f], so the whole program can be simplified to:
 
@@ -182,9 +190,10 @@ Note that the last example can get considerably more complicated in a
 language with first-class functions since it may not be possible to
 know statically which function is being called.
 
-There are many other optimziations you might consider.  Think about
+There are many other optimizations you might consider.  Think about
 the kinds of expressions you might write and how they can be
 simplified, then figure out how to do it programmatically.
+}
 
 @section{Multiple return values}
 
@@ -236,7 +245,7 @@ Here are some examples to help illustrate:
 ]
 
 Any time an expression produces a number of values that doesn't match
-what the surrounding context expects, an error should be signalled.
+what the surrounding context expects, an error should be signaled.
 
 @ex[
 
@@ -256,7 +265,7 @@ run-time system should print each of them out, followed by a newline:
 Note there is some symmetry here between function arity checking where
 we make sure the number of arguments matches the number of parameters
 of the function being called and the ``result arity'' checking that is
-required to implement this feature.  This suggests a similiar approach
+required to implement this feature.  This suggests a similar approach
 to implementing this feature, namely designating a register to
 communicate the arity of the result, which should be checked by the
 surrounding context.
@@ -270,7 +279,7 @@ to use @racket['rax] for the common case of a single result.)  The
 solution for this problem with function parameters was to use the
 stack and a similar approach can work for results too.
 
-@section{Exceptions and Exception Handling}
+@section{Exceptions and exception handling}
 
 Exceptions and exception handling mechanisms are widely used in modern
 programming languages.  Implement Racket's @racket[raise] and
@@ -440,119 +449,58 @@ semester:
   its scope is appropriate for a final project.}
 ]
 
+}
 
 @;{
+@section{Pattern matching}
 
+Racket, OCaml, Rust, Scala, and many other programming languages
+support pattern matching.  Extend
+}
 
-@(define repo "https://classroom.github.com/a/t5KO9b5-")
+@section{Garbage collection}
 
-The goal of this project is to put together everything you've
-learned over the semester to complete a full-featured compiler.
+Racket, OCaml, Java, JavaScript, Ruby, and many, many other languages
+use garbage collection as the means of deallocating memory.  Implement
+a garbage collector.
 
-Project repository:
-@centered{@link[repo repo]}
+You may choose to implement this feature for any language that is
+@seclink["Loot"]{Loot} or later.
 
-@link["code/project.pdf"]{Slides} from lecture on the project.
-
-You are given a working compiler for an extension of the language we
-have been developing all semester.
-
-Your overall object is to improve the @emph{run-time} performance of
-code generated by your compiler while maintaining correctness.
-
-There will be two releases of benchmark programs:
+Here are the key features that need to be added:
 
 @itemlist[
-@item{Tuesday 12/3}
-@item{Tuesday 12/10}
+
+@item{all language constructs that allocate memory should check that
+the current state of the heap can accommodate an allocation before
+performing it, and if not, doing a garbage collection and trying
+again.  If there is still not possible to accommodate the allocation,
+an error should be signaled.}
+
+@item{@racket[(collect-garbage)] will run a garbage collection and
+return void.}
+
+@item{@racket[(current-memory-use)] will return the number of bytes
+current allocated in the heap.  This operation should not run a
+garbage collection and should not trace reachable objects in the heap.
+Instead it should simply return the total size, in bytes, that are
+currently allocated in the heap.}
+
+@item{@racket[(dump-memory-stats)] prints information about the
+current stack and heap and returns void.  See the @tt{iniquity-gc}
+language for an example.}
 ]
 
-The final due date for your project is 10:30 AM on Saturday 12/14.
-
-You will have an allowance of 10 minutes to @emph{compile} all benchmark
-programs.  Exceeding the allowance result in a penalty, but there is
-no reward for improving @emph{compile-time} performance so long as you
-come in under the 10 minute mark.
-
-You will have an allowance of 10 minutes to @emph{run} all benchmark
-programs.  For full-credit, you must improve the overall run-time
-performance by 20\%.  Run-time will compute as the average of three
-runs, done on the GRACE cluster.
-
-Full credit solutions will be entered in a compiler tournament to
-determine the most performant (and correct) compiler.  Tournament
-results do not count toward your grade and will involve compiling
-programs not included in the benchmark suite.
-
-Benchmark programs will be batch I/O programs: read some input,
-compute something, produce a result and/or write some output.
-
-I/O primitives include @racket[read-char], @racket[write-char]
-(limited to the standard input and output ports).
-
-The compiler supports a standard library, with source level
-definitions provided to you.  See the @racket[stdlib] function 
-in the compiler.
-
-There will be a garbage collector provided by the second round of
-benchmarks which you will need to incorporate in to your compiler.
-
-@section[#:tag-prefix "fp-" #:style 'unnumbered]{Measuring run-times}
-
-Let's look at an example of how to measure the run-time performance of
-the code your compiler generates.
-
-First, let's start with fairly computationally intensive program.
-Here is a @link["code/fp/sieve.rkt"]{program} that computes the
-@emph{n}th prime number using the ancient
-@link["https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes"]{Sieve of
-Eratosthenes} method.
-
-Save it to the directory where your compiler lives and run @tt{make
-sieve.run}.  This will run the compiler to generate the @tt{sieve.run}
-executable.  This program expects to read a number from the standard
-input port.
-
-Run:
-
-@centered{@tt{echo -n 100 | ./sieve.run}}
-
-to compute the 100th prime number.
-
-To measure the time it takes, add the time command:
-
-@centered{@tt{echo -n 100 | time ./sieve.run}}
-
-This will run the program and show the result @emph{and} timing
-information.  We will be concerned with improving the real time it
-takes to run the program.
 
 
-@section[#:tag-prefix "fp-" #:style 'unnumbered]{Testing}
-
-@bold{There is separate a repository for tests.} When you push your
-code, Travis will automatically run your code against the tests.  If
-you would like to run the tests locally, clone the following
-repository into the directory that contains your compiler and run
-@tt{raco test .} to test everything:
-
-@centered{@tt{https://github.com/cmsc430/fp-test.git}}
-
-This repository will evolve as the week goes on, but any time there's
-a significant update it will be announced on Piazza.
-
-@section[#:tag-prefix "fp-" #:style 'unnumbered]{Submitting}
-
-Pushing your local repository to github ``submits'' your work.  We
-will grade the latest submission that occurs before the deadline.
-}
-
-}
 
 @section{Design your own}
 
 You may also design your own project, however, you will need to submit
 a one-page write-up that documents what you plan to do and how you
 will evaluate whether it is successful.  You must submit this document
-and have it approved by the instructor by April 29th.
-}
+and have it approved by the instructor by November 22.
+
+@section[#:tag "project"]{Submitting}
+
+Submissions should be made on Gradescope.
