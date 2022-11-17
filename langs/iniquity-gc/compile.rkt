@@ -18,9 +18,11 @@
            (Global 'entry)
            (Label 'entry)
            (Push 'rbp)
+	   (Push 'rbx)
            (Mov 'rbp 'rsp) ; save stack base pointer
            (Mov rbx rdi)   ; recv heap pointer
            (compile-e e '())
+	   (Pop 'rbx)
            (Pop 'rbp)
            (Ret)
            (compile-defines ds)

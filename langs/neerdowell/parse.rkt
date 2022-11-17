@@ -105,7 +105,7 @@
 (define (parse-pat p)
   (match p
     [(? boolean?) (PLit p)]
-    [(? integer?) (PLit p)]
+    [(? exact-integer?) (PLit p)]
     [(? char?)    (PLit p)]
     ['_           (PWild)]
     [(? symbol?)  (PVar p)]
@@ -129,7 +129,7 @@
      (PStruct n (map parse-pat ps))]))
 
 (define (self-quoting? x)
-  (or (integer? x)
+  (or (exact-integer? x)
       (boolean? x)
       (char? x)
       (string? x)

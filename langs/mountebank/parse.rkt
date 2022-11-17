@@ -63,7 +63,7 @@
 (define (parse-pat p)
   (match p
     [(? boolean?) (PLit p)]
-    [(? integer?) (PLit p)]
+    [(? exact-integer?) (PLit p)]
     [(? char?)    (PLit p)]
     ['_           (PWild)]
     [(? symbol?)  (PVar p)]

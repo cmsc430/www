@@ -51,58 +51,56 @@
                      @elem{@secref["Fraud"] (@link["https://youtu.be/XmezNX4qfWE"]{video})})
                
                (list @wk{10/11}
-	       	     @elem{A4} @;{@seclink["Assignment 4"]{A4}}
+	       	     ""
 		     @elem{@secref["Hustle"] (@link["https://youtu.be/SwKc_FeEmHk"]{video})}
                      @itemlist[
 		       @item{@secref["Hustle"], cont. (@link["https://youtu.be/SwKc_FeEmHk"]{video})}
 		       @item{@secref["Hoax"], (@link["https://youtu.be/yEsXYn8exfk"]{video})}])
 
                (list @wk{10/18}
-                     ""
+                     @seclink["Assignment 4"]{A4}
 		     @itemlist[
 		       @item{@secref["Hoax"], cont. (@link["https://youtu.be/SwKc_FeEmHk"]{video})}
                        @item{@secref{Iniquity}, (@link["https://www.youtube.com/watch?v=Yz2n7KgIfNQ"]{video})}]
-                     @elem{@secref{Jig}})
+                     @elem{@secref{Iniquity}})
 		                                   
                (list @wk{10/25}
-                     @elem{A5} @;{@seclink["Assignment 5"]{A5}}
-                     @elem{@secref["Loot"]}
-                     @elem{@secref["Loot"], cont.})
+                     ""
+                     @elem{@secref["Jig"]}
+                     @elem{@secref["Jig"], cont.})
                
                (list @wk{11/1}
       	       	     @bold{@seclink["Midterm_2"]{M2}}
                      @elem{No lecture (exam)}
-                     @elem{@secref["Knock"]})
+                     @elem{@secref["Loot"]})
                                     
                (list @wk{11/8}
-	             ""
-                     @itemlist[
-		       @item{@secref["Mug"]}
-		       @item{@secref["Mountebank"]}]
-		     @secref["Neerdowell"]
+	             @seclink["Assignment 5"]{A5}
+                     @elem{@secref["Loot"], cont.}
+                     @elem{@secref["Knock"]}
                      )
 
                (list @wk{11/15}
-                     ""
-                     @elem{Self-hosting?}
-                     @elem{Self-hosting?})
+                     @seclink["Assignment 6"]{A6}
+                     @elem{GC}
+                     @elem{GC, cont.})
 
                (list @wk{11/22}
-                     @elem{A6} @;{@seclink["Assignment 6"]{A6}}
-		     @elem{GC}
+                     ""
+		     @elem{@secref{Mug}}
 		     @elem{No class, Thanksgiving}
 		     )
 
                (list @wk{11/29}
                @bold{@tbaseclink["Settle on Final Project"]{Final Project}}                     
-                     @elem{Final Project Q&A}
-		     @elem{Slack}
+                     @elem{@secref{Mountebank}}
+		     @elem{@secref{Neerdowell}}
 		     )
                
                (list @wk{12/6}
                      "Final Projects due on exam date"
-                     @elem{Slack}
-                     @elem{Last day}
+                     @elem{Outlaw}
+                     @elem{Self-hosting}
                      )
 
                )]

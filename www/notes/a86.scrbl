@@ -720,6 +720,28 @@ Each register plays the same role as in x86, so for example
  A predicate for offsets.
 }
 
+@defproc[(64-bit-integer? [x any/c]) boolean?]{
+ A predicate for determining if a value is an integer that fits in 64-bits.
+
+ @ex[
+ (64-bit-integer? 0)
+ (64-bit-integer? (sub1 (expt 2 64)))
+ (64-bit-integer? (expt 2 64))
+ (64-bit-integer? (- (expt 2 63)))
+ (64-bit-integer? (sub1 (- (expt 2 63))))]
+}
+
+@defproc[(32-bit-integer? [x any/c]) boolean?]{
+ A predicate for determining if a value is an integer that fits in 64-bits.
+
+ @ex[
+ (32-bit-integer? 0)
+ (32-bit-integer? (sub1 (expt 2 32)))
+ (32-bit-integer? (expt 2 32))
+ (32-bit-integer? (- (expt 2 32)))
+ (32-bit-integer? (sub1 (- (expt 2 32))))]
+}
+
 @defproc[(seq [x (or/c instruction? (listof instruction?))] ...) (listof instruction?)]{
  A convenience function for splicing togeter instructions and lists of instructions.
 
@@ -866,7 +888,7 @@ Each register plays the same role as in x86, so for example
 
 }
 
-@defstruct*[Mov ([dst (or/c register? offset?)] [src (or/c register? offset? exact-integer?)])]{
+@defstruct*[Mov ([dst (or/c register? offset?)] [src (or/c register? offset? 64-bit-integer?)])]{
                               
  A move instruction. Moves @racket[src] to @racket[dst].
 
@@ -885,7 +907,7 @@ Each register plays the same role as in x86, so for example
 
 }
 
-@defstruct*[Add ([dst register?] [src (or/c register? offset? exact-integer?)])]{
+@defstruct*[Add ([dst register?] [src (or/c register? offset? 32-bit-integer?)])]{
 
  An addition instruction. Adds @racket[src] to @racket[dst]
  and writes the result to @racket[dst].
@@ -901,7 +923,7 @@ Each register plays the same role as in x86, so for example
  ]
 }
 
-@defstruct*[Sub ([dst register?] [src (or/c register? offset? exact-integer?)])]{
+@defstruct*[Sub ([dst register?] [src (or/c register? offset? 32-bit-integer?)])]{
 
  A subtraction instruction. Subtracts @racket[src] frrom
  @racket[dst] and writes the result to @racket[dst].
@@ -917,7 +939,7 @@ Each register plays the same role as in x86, so for example
  ]
 }
 
-@defstruct*[Cmp ([a1 (or/c register? offset?)] [a2 (or/c register? offset? exact-integer?)])]{ 
+@defstruct*[Cmp ([a1 (or/c register? offset?)] [a2 (or/c register? offset? 32-bit-integer?)])]{ 
  Compare @racket[a1] to @racket[a2].  Doing a comparison
  sets the status flags that affect the conditional instructions like @racket[Je], @racket[Jl], etc.
 
@@ -1357,7 +1379,8 @@ Each register plays the same role as in x86, so for example
 }
 
 
-@defstruct*[And ([dst (or/c register? offset?)] [src (or/c register? offset? exact-integer?)])]{
+@defstruct*[And ([dst (or/c register? offset?)] [src (or/c register? offset? 32-bit-integer?)])]{
+
  Compute logical ``and'' of @racket[dst] and @racket[src] and put result in @racket[dst].
 
  @#reader scribble/comment-reader
@@ -1372,7 +1395,7 @@ Each register plays the same role as in x86, so for example
  )
 }
 
-@defstruct*[Or ([dst (or/c register? offset?)] [src (or/c register? offset? exact-integer?)])]{
+@defstruct*[Or ([dst (or/c register? offset?)] [src (or/c register? offset? 32-bit-integer?)])]{
  Compute logical ``or'' of @racket[dst] and @racket[src] and put result in @racket[dst].
 
  @#reader scribble/comment-reader
@@ -1387,7 +1410,7 @@ Each register plays the same role as in x86, so for example
  )
 }
 
-@defstruct*[Xor ([dst (or/c register? offset?)] [src (or/c register? offset? exact-integer?)])]{
+@defstruct*[Xor ([dst (or/c register? offset?)] [src (or/c register? offset? 32-bit-integer?)])]{
  Compute logical ``exclusive or'' of @racket[dst] and @racket[src] and put result in @racket[dst].
 
  @#reader scribble/comment-reader
@@ -1442,7 +1465,7 @@ Each register plays the same role as in x86, so for example
  )
 }
 
-@defstruct*[Push ([a1 (or/c exact-integer? register?)])]{
+@defstruct*[Push ([a1 (or/c 32-bit-integer? register?)])]{
 
  Decrements the stack pointer and then stores the source
  operand on the top of the stack.

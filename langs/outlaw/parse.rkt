@@ -234,7 +234,7 @@
 (define (parse-pat p)
   (match p
     [(? boolean?) (PLit p)]
-    [(? integer?) (PLit p)]
+    [(? exact-integer?) (PLit p)]
     [(? char?)    (PLit p)]
     ['_           (PWild)]
     [(? symbol?)  (PVar p)]
@@ -302,7 +302,7 @@
      (cons (parse-datum d1) (parse-datum d2))]
     ['() '()]
     [(? symbol? s) s]
-    [(? integer? i) i]
+    [(? exact-integer? i) i]
     [(? boolean? b) b]
     [(? string? s) s]
     [(? char? c) c]
@@ -311,7 +311,7 @@
     [_ (error "parse datum error")]))
 
 (define (self-quoting? x)
-  (or (integer? x)
+  (or (exact-integer? x)
       (boolean? x)
       (char? x)
       (string? x)

@@ -24,7 +24,7 @@
 ;; S-Expr -> Expr
 (define (parse-e s)
   (match s
-    [(? integer?)                  (Int s)]
+    [(? exact-integer?)            (Int s)]
     [(? boolean?)                  (Bool s)]
     [(? char?)                     (Char s)]
     [(? string?)                   (Str s)]
@@ -61,7 +61,7 @@
 (define (parse-pat p)
   (match p
     [(? boolean?) (PLit p)]
-    [(? integer?) (PLit p)]
+    [(? exact-integer?) (PLit p)]
     [(? char?)    (PLit p)]
     ['_           (PWild)]
     [(? symbol?)  (PVar p)]

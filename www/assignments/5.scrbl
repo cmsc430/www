@@ -10,7 +10,7 @@
 	   '("ast.rkt" "parse.rkt" "interp.rkt"))
 
 
-@bold{Due: Monday, November 7, 11:59PM EDT}
+@bold{Due: @elem[#:style "strike"]{Monday, November 7, 11:59PM EST}, Tuesday, November 8, 11:59PM EST}
 
 The goal of this assignment is to extend a compiler with arity
 checking for function calls, to add new kinds of function parameter
@@ -25,8 +25,8 @@ studied in class.  You are tasked with:
 
 @item{implementing run-time arity checking for function calls,}
 
-@item{extending function definition to include ``rest argument''
-parameters for writing variable arity functions,}
+@item{extending function definitions to include ``rest argument''
+parameters for writing variable-arity functions,}
 
 @item{extending function definitions to include
 @racket[case-lambda]-style multiple-arity functions,}
@@ -68,7 +68,7 @@ that will cause the following program to signal an error:
 
 The function call knows how many arguments are given and the function
 definition knows how many argument are expected.  The generated code
-should check that these two things match when the function is called.
+should check that these two quantities match when the function is called.
 
 A simple way to do this is to pick a designated register that will be
 used for communicating arity information.  The caller should set the
@@ -83,7 +83,7 @@ implement this part of the assignment.
 @section[#:tag-prefix "a5-" #:style 'unnumbered #:tag "rest"]{Rest
 arguments}
 
-Many languages including JavaScript, C, and Racket include a facilty
+Many languages including JavaScript, C, and Racket provide facilities
 for defining functions that take a ``rest argument'' which allows the
 function to be called with more arguments than expected and these
 additional arguments will be bound to a single value that collects all
@@ -138,15 +138,16 @@ pass all of the arguments on the stack along with information about
 the number of arguments.
 
 The compilation of function definitions that use a rest argument
-should generate code that check that the given number of arguments is
+should generate code that checks that the given number of arguments is
 acceptable and should generate code to pop all ``extra'' arguments off
 the stack and construct a list which is then bound to the rest
 parameter.
 
-It is worth remembering that arguments are pushed on the stack in such a
-way that the last argument is at the top of the stack.  This has the
-benefit of making it easy to pop off the extra arguments and to
-construct a list with the elements in the proper order.
+It is worth remembering that arguments are pushed on the stack in such
+a way that the last argument is the element most recently pushed on
+the stack.  This has the benefit of making it easy to pop off the
+extra arguments and to construct a list with the elements in the
+proper order.
 
 HINT: the function definition knows the number of ``required''
 arguments, i.e. the minimum number of arguments the function can be
@@ -190,7 +191,7 @@ A @racket[case-lambda] form can have any number of clauses (including
 zero!) and the first clause for which the number of arguments is
 acceptable is taken when the function is called.
 
-Note that @racket[case-lambda] can be combined with rest arguments so.
+Note that @racket[case-lambda] can be combined with rest arguments too.
 A clause that accepts any number of arguments is written by simply
 listing a parameter name (no parentheses).  A clause that accepts some
 non-zero minimum number of parameters is written with a dotted
@@ -231,8 +232,8 @@ of arguments.
 @section[#:tag-prefix "a5-" #:style 'unnumbered #:tag "apply"]{Apply}
 
 Apply is the yin to the yang of rest arguments (or maybe the other way
-around).  Whereas a rest argument let's a function take arbitrarily
-more arguments and package them up as a list, @racket[apply] will
+around).  Whereas a rest argument lets a function take arbitrarily
+more arguments and packages them up as a list, @racket[apply] will
 apply a function to a list as though the elements of the list were
 given as arguments.
 
@@ -377,7 +378,7 @@ What used to be represented as @racket[(Defn _f _xs _e)] is now
 represented as @racket[(Defn _f (FunPlain _xs _e))].
 
 
-The parser already works for these new form of function definitions.
+The parser already works for these new forms of function definitions.
 Here are some examples of how function definitions are parsed, but you
 are encouraged to try out more to get a better sense:
 
@@ -396,13 +397,13 @@ are encouraged to try out more to get a better sense:
 
 @section[#:tag-prefix "a5-" #:style 'unnumbered]{Starter code}
 
-The code given to you is just an implementation of Iniquity, but
-updated to parse the new forms of function definitions and
+The compiler code given to you is just an implementation of Iniquity,
+but updated to parse the new forms of function definitions and
 re-organized slightly to match the new AST representation.
 
-The code also includes a full implementation of the interpreter, so
-you do not need to update @racket[interp.rkt] and can use the
-interpreter to guide your implementation of the compiler.
+The interpreter code given to you works on the full Iniquity+
+language, so you do not need to update @racket[interp.rkt] and can use
+the interpreter to guide your implementation of the compiler.
 
 @ex[
 (interp
@@ -454,7 +455,7 @@ be pretty easy.  Make sure it works for plain function definitions.}
 @item{Move on to @secref[#:tag-prefixes '("a5-") "rest"].  You could
 start by emitting code that checks that the arguments are acceptable,
 popping the appropriate number of arguments off (and ignoring the
-elements), the pushing the empty list.  This will work like a rest arg
+elements), then pushing the empty list.  This will work like a rest arg
 in that it should accept any number of arguments beyond the required
 minimum, but the rest argument will always be bound to empty.  Once
 working, try to modify the code to build a list as it pops arguments.
@@ -489,15 +490,3 @@ such as when @racket[_e] is not a proper list.}
 Submit a zip file containing your work to Gradescope.  Use @tt{make
 submit.zip} from within the @tt{iniquity-plus} directory to create a zip
 file with the proper structure.
-
-
-
-
-
-
-
-
-
-
-
-
