@@ -72,7 +72,7 @@
 
 ;; Value -> Asm
 (define (compile-value v)
-  (seq (Mov rax (imm->bits v))))
+  (seq (Mov rax (value->bits v))))
 
 ;; Id CEnv -> Asm
 (define (compile-variable x c)
@@ -235,7 +235,7 @@
            (cons x cm))]
     [(PLit l)
      (let ((fail (gensym)))
-       (list (seq (Cmp rax (imm->bits l))
+       (list (seq (Cmp rax (value->bits l))
                   (Jne fail))
              (seq (Label fail)
                   (Add rsp (* 8 (length cm)))
