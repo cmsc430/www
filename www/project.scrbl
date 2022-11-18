@@ -504,3 +504,30 @@ and have it approved by the instructor by November 22.
 @section[#:tag "project"]{Submitting}
 
 Submissions should be made on Gradescope.
+
+Your submission should be a zip file containing the following contents:
+
+
+@verbatim|{
+info.rkt
+summary.pdf
+<lang>/
+}|
+
+where @tt{<lang>} corresponds to the language you have chosen to
+implement for your project, e.g. @tt{iniquity}, @tt{loot}, etc.
+
+The @tt{info.rkt} should contain the following information:
+
+@codeblock|{
+#lang info
+(define project '<project>)
+(define language '<lang>)
+}|
+
+where @tt{<project>} indicates which project you are doing.  It should
+either be @tt{values}, @tt{exceptions}, @tt{garbage-collection}, or
+@tt{custom}.  The @tt{<lang>} should be @tt{iniquity}, @tt{loot},
+etc. and should be the same as the directory that contains the
+implementation.
+
