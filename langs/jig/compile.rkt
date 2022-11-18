@@ -71,7 +71,7 @@
 
 ;; Value -> Asm
 (define (compile-value v)
-  (seq (Mov rax (imm->bits v))))
+  (seq (Mov rax (value->bits v))))
 
 ;; Id CEnv -> Asm
 (define (compile-variable x c)
