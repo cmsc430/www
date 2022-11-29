@@ -5,12 +5,119 @@
          "env.rkt"
          "types.rkt")
 
+(define address-mask #xfffffffffffffff8)
+
 ;; type Answer* = Bits | 'err
 ;; type Bits = Integer (64-bits)
 ;; type Heap = Bytes
 
+(define heap-size 10000)
+
+;; from =     1 to 10000 incl.
+;; to   = 10001 to 20000 incl.
+
 ;; Allocate by incrementing first word
-(define heap (make-bytes (* 8 10001)))
+(define heap (make-bytes (* 8 (add1 (* 2 heap-size)))))
+
+(define (dump-memory-stats s)
+  (printf "stack:\n")
+  (for ([x (in-list s)])
+    (printf "~a\n" x))
+  (printf "heap:\n")
+  (printf (if (<= (heap-ref 0) (* 8 heap-size)) "lower\n" "upper\n"))
+  (for ([i (in-range (if (<= (heap-ref 0) (* 8 heap-size)) 8 (* 8 (add1 heap-size))) (heap-ref 0) 8)])
+    (printf "~a\n" (heap-ref i))))
+
+
+(define type-stack (box '()))
+
+(define (push! type)
+  (set-box! type-stack (cons type (unbox type-stack))))
+
+(define (pop!)
+  (let ((s (unbox type-stack)))
+    (set-box! type-stack (cdr s))
+    (car s)))
+
+;; Stack -> Stack
+(define (gc s)
+  (set-box! type-stack '())
+  ;; set the next free address to start of to-space
+  (heap-set! 0 (if (<= (heap-ref 0) (* 8 heap-size)) (* 8 (add1 heap-size)) 8))
+  (let ((s* (gc-stack s)))
+    (begin (gc-heap)
+           s*)))
+
+
+(define (gc-heap)
+  (define curr (if (<= (heap-ref 0) (* 8 heap-size)) 8 (* 8 (add1 heap-size))))
+
+  (define (loop)
+    (unless (= curr (heap-ref 0))        
+      (let ((t (pop!)))
+        (cond
+          [(= t type-box)
+           (heap-set! curr (update (heap-ref curr)))
+           (set! curr (+ curr 8))]
+          [(= t type-cons)
+           (heap-set! curr       (update (heap-ref curr)))
+           (heap-set! (+ curr 8) (update (heap-ref (+ curr 8))))
+           (set! curr (+ curr 16))]
+          [(= t type-vect)
+           (let ((n (heap-ref curr)))
+             (for ([i (in-range 8 (* 8 (add1 n)) 8)])
+               (heap-set! (+ curr i) (update (heap-ref (+ curr i))))))
+           (set! curr (+ curr (* 8 (add1 (heap-ref curr)))))]
+          [(= t type-str)
+           (set! curr (+ curr (+ 8
+                                 (* 8 (quotient (heap-ref curr) 2))
+                                 (* 8 (remainder (heap-ref curr) 2)))))]))
+      (loop)))
+  (loop))
+
+        
+;; Stack -> Stack
+(define (gc-stack s)
+  (match s
+    ['() '()]
+    [(cons b s)
+     (cons (update b) (gc-stack s))]))
+
+(define (fwd? a)  
+  (let ((v (heap-ref a)))    
+    (and (not (imm-bits? v))
+         (let ((b (bitwise-and v address-mask)))
+           (if (> (heap-ref 0) (* 8 heap-size)) ; in upper
+               (> b (* 8 heap-size))
+               (<= b (* 8 heap-size)))))))
+
+
+;; Move n words of type t from address a
+;; Address Tag Natural -> Bits
+(define (move a t n)
+  (push! t)
+  (let ((b (* 8 n)))
+    (for ([i (in-range 0 b 8)])
+      (heap-set! (+ (heap-ref 0) i) (heap-ref (+ a i))))
+    (let ((r (bitwise-xor (heap-ref 0) t)))
+      (heap-set! 0 (+ (heap-ref 0) b))
+      (heap-set! a r)
+      r)))
+
+;; Bits -> Bits
+(define (update b)
+  (if (imm-bits? b)
+      b
+      (let ((a (bitwise-and b address-mask)))
+        (cond
+          [(zero? a)      b]
+          [(fwd? a)       (heap-ref a)]          
+          [(box-bits? b)  (move a type-box 1)]
+          [(cons-bits? b) (move a type-cons 2)]
+          [(vect-bits? b) (move a type-vect (add1 (heap-ref a)))]
+          [(str-bits? b)  (move a type-str
+                                (add1 (+ (quotient (heap-ref a) 2)
+                                         (remainder (heap-ref a) 2))))]))))
 
 ;; Address Word -> Void
 (define (heap-set! a w)
@@ -114,6 +221,11 @@
               (loop cs (+ i 8))]))
          (loop (string->list str) 8))
        (values (bitwise-xor a type-str) s))]
+    [(Prim0 'dump-memory-stats)
+     (begin (dump-memory-stats s)
+            (values (imm->bits (void)) s))]
+    [(Prim0 'collect-garbage)
+     (values (imm->bits (void)) (gc s))]
     [(Prim0 p)
      (values (interp-prim0 p) s)] ;; XXX will need stack for collect-garbage
     [(Prim1 p e)
