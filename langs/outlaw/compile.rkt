@@ -82,7 +82,7 @@
          symbol->string string->symbol symbol?
          string->uninterned-symbol
          open-input-file
-         write-char error integer? procedure?
+         write-char error integer? exact-integer? procedure?
          eq-hash-code char-alphabetic? char-whitespace? displayln write-string
          ;; Op2
          + - < = cons eq? make-vector vector-ref
