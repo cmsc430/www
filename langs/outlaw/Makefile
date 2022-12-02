@@ -58,10 +58,10 @@ outlaw.rkt: compile-stdin.rkt \
 	> outlaw.rkt
 
 runtime.o: $(objs)
-	ld -r $(objs) -o runtime.o
+	gcc -lunistring -r $(objs) -o runtime.o
 
 %.run: %.o runtime.o
-	gcc $(link_opts) -L/usr/lib/x86_64-linux-gnu -lunistring runtime.o $< -o $@
+	gcc $(link_opts) -lunistring runtime.o $< -o $@
 
 .c.o:
 	gcc $(include) -fPIC -c -g -o $@ $<
