@@ -34,5 +34,5 @@ jobs:
       run: raco pkg install langs/
     - name: Run tests
       run: |
-        export LINK_DIR=/usr/lib/x86_64-linux-gnu
+        export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu
         raco test -p langs
