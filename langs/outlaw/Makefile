@@ -61,7 +61,7 @@ runtime.o: $(objs)
 	gcc -r $(objs) -o runtime.o
 
 %.run: %.o runtime.o
-	gcc $(link_opts) runtime.o -lunistring $< -o $@
+	gcc $(link_opts) runtime.o -static -lunistring $< -o $@
 
 .c.o:
 	gcc $(include) -fPIC -c -g -o $@ $<
