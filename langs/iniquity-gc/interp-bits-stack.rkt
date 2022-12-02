@@ -194,6 +194,17 @@
            ['() (bits->answer b)]
            [_ (error "bad stack!")])))]))
 
+
+;; XXX: this is all set up to check if allocation should trigger
+;; GC but this won't be able to install the new stack without
+;; updating all the callers which will be gross.
+;; Better to just make the stack a global, mutable thing like the
+;; heap.  Closer to compiler anyway, too.
+(define (alloc s size)
+  (let ((a (heap-ref 0)))
+    (begin (heap-set! 0 (+ a (* 8 size)))
+           a)))
+
 ;; Expr CEnv Stack Defns -> Bits Stack throws 'err
 (define (interp-env e r s ds)
   (match e
@@ -205,22 +216,21 @@
     [(Var x)  (values (list-ref s (lookup r x)) s)]
     [(Str "") (values type-str s)]
     [(Str str)
-     (let ((a (heap-ref 0))
-           (n (string-length str)))
-       (heap-set! a (string-length str))
-       (heap-set! 0 (+ a (* 8 (+ 1 (quotient n 2) (remainder n 2)))))
-       (let ()
-         (define (loop cs i)
-           (match cs
-             ['() (void)]
-             [(cons c '())
-              (heap-set! (+ a i) (char->integer c))]
-             [(cons c1 (cons c2 cs))
-              (heap-set! (+ a i) (+ (arithmetic-shift (char->integer c2) 32)
-                                    (char->integer c1)))
-              (loop cs (+ i 8))]))
-         (loop (string->list str) 8))
-       (values (bitwise-xor a type-str) s))]
+     (let ((n (string-length str)))
+       (let ((a (alloc s (+ 1 (quotient n 2) (remainder n 2)))))           
+         (heap-set! a (string-length str))
+         (let ()
+           (define (loop cs i)
+             (match cs
+               ['() (void)]
+               [(cons c '())
+                (heap-set! (+ a i) (char->integer c))]
+               [(cons c1 (cons c2 cs))
+                (heap-set! (+ a i) (+ (arithmetic-shift (char->integer c2) 32)
+                                      (char->integer c1)))
+                (loop cs (+ i 8))]))
+           (loop (string->list str) 8))
+         (values (bitwise-xor a type-str) s)))]
     [(Prim0 'dump-memory-stats)
      (begin (dump-memory-stats s)
             (values (imm->bits (void)) s))]
@@ -230,13 +240,13 @@
      (values (interp-prim0 p) s)] ;; XXX will need stack for collect-garbage
     [(Prim1 p e)
      (let-values ([(v s) (interp-env e r s ds)])
-       (values (interp-prim1 p v) s))]    
+       (values (interp-prim1 s p v) s))]    
     [(Prim2 p e1 e2)
      (let-values ([(v1 s1) (interp-env e1 r s ds)])
        (let-values ([(v2 s2) (interp-env e2 (cons #f r) (cons v1 s1) ds)])
          (match s2
            [(cons v1 s)
-            (values (interp-prim2 p v1 v2) s)])))]    
+            (values (interp-prim2 s p v1 v2) s)])))]    
     [(Prim3 p e1 e2 e3)
      (let-values ([(v1 s1) (interp-env e1 r s ds)])
        (let-values ([(v2 s2) (interp-env e2 (cons #f r) (cons v1 s1) ds)])
@@ -303,7 +313,7 @@
     ))
 
 ;; Op1 Bits -> Bits
-(define (interp-prim1 p1 v)
+(define (interp-prim1 s p1 v)
   (match (list p1 v)
     [(list 'add1 (? int-bits?))
      (+ v (imm->bits 1))]
@@ -324,9 +334,8 @@
      (begin (write-byte (bits->value v))
             val-void)]
     [(list 'box v)
-     (let ((a (heap-ref 0)))
+     (let ((a (alloc s 1)))
        (heap-set! a v)
-       (heap-set! 0 (+ a 8))
        (bitwise-xor a type-box))]
      
     [(list 'unbox (? box-bits?))
@@ -356,30 +365,28 @@
     [_ (raise 'err)]))
 
 ;; Op2 Value Value -> Answer
-(define (interp-prim2 p v1 v2)
+(define (interp-prim2 s p v1 v2)
   (match (list p v1 v2)
     [(list '+ (? int-bits?) (? int-bits?)) (+ v1 v2)]
     [(list '- (? int-bits?) (? int-bits?)) (- v1 v2)]
     [(list '< (? int-bits?) (? int-bits?)) (imm->bits (< v1 v2))]
     [(list '= (? int-bits?) (? int-bits?)) (imm->bits (= v1 v2))]
     [(list 'cons v1 v2)
-     (let ((a (heap-ref 0)))
+     (let ((a (alloc s 2)))
        (heap-set! a v2)
-       (heap-set! (+ a 8) v1)
-       (heap-set! 0 (+ a 16))
+       (heap-set! (+ a 8) v1)       
        (bitwise-xor a type-cons))]     
     [(list 'eq? v1 v2) (imm->bits (= v1 v2))]
     [(list 'make-vector (? int-bits?) _)
      (if (<= 0 v1)
          (if (zero? v1)
              type-vect
-             (let ((a (heap-ref 0))
-                   (n (bits->value v1)))
-               (heap-set! a n)
-               (for ([i n])
-                 (heap-set! (+ a 8 (* i 8)) v2))
-               (heap-set! 0 (+ a 8 (* n 8)))
-               (bitwise-xor a type-vect)))
+             (let ((n (bits->value v1)))
+               (let ((a (alloc s (add1 n))))
+                 (heap-set! a n)
+                 (for ([i n])
+                   (heap-set! (+ a 8 (* i 8)) v2))                 
+                 (bitwise-xor a type-vect))))
          (raise 'err))]
     [(list 'vector-ref (? vect-bits?) (? int-bits?))
      (let ((a (bitwise-xor v1 type-vect)))       
