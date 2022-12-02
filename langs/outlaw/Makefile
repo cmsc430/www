@@ -3,7 +3,6 @@
 #   ld will always choose .dylib over .a to link, so either rename or remove
 #   the .dylib versions.
 
-
 UNAME := $(shell uname)
 .PHONY: test
 
@@ -78,6 +77,12 @@ stdlib.s: stdlib.rkt
 
 clean:
 	rm *.o *.s *.run outlaw.rkt
+
+outlaw2.s: outlaw.rkt outlaw.run
+	cat outlaw.rkt | ./outlaw.run > outlaw2.s
+
+self-host-test: outlaw.s outlaw2.s
+	cmp -s outlaw.s outlaw2.s
 
 test: example.run
 	@test "$(shell ./example.run)" = "$(shell racket example.rkt)"
