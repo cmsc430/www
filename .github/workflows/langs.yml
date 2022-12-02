@@ -30,7 +30,6 @@ jobs:
       run: |
         nasm --version
         gcc --version
-	ls -al /usr/lib/x86_64-linux-gnu/
     - name: Install langs package
       run: raco pkg install langs/
     - name: Run tests
