@@ -48,10 +48,14 @@
          '()
          xs))
 
-(define (register? x)
-  (and (memq x '(cl eax rax rbx rcx rdx rbp rsp rsi rdi r8 r9 r10 r11 r12 r13 r14 r15))
-       #t))
+(define registers
+  '(cl eax rax rbx rcx rdx rbp rsp rsi rdi r8 r9 r10 r11 r12 r13 r14 r15))
 
+;; Any -> Boolean
+(define (register? x)
+  (and (memq x registers) #t))
+
+;; Any -> Boolean
 (define (exp? x)
   (or (Offset? x)
       (and (Plus? x)
@@ -62,39 +66,15 @@
 
 (define offset? Offset?)
 
+;; Any -> Boolean
 (define (label? x)
   (and (symbol? x)
        (not (register? x))))
 
+;; Any -> Boolean
 (define (instruction? x)
-  (or (Text? x)
-      (Data? x)
-      (Global? x)
-      (Label? x)
-      (Extern? x)
-      (Call? x)
-      (Ret? x)
-      (Mov? x)
-      (Add? x)
-      (Sub? x)
-      (Cmp? x)
-      (Jmp? x)
-      (Je? x)
-      (Jne? x)
-      (Jl? x)
-      (Jle? x)
-      (Jg? x)
-      (Jge? x)
-      (And? x)
-      (Or? x)
-      (Xor? x)
-      (Sal? x)
-      (Sar? x)
-      (Push? x)
-      (Pop? x)
-      (Lea? x)
-      (Div? x)
-      ;(Comment? x)
-      (Equ? x)
-      (Dd? x)
-      (Dq? x)))
+  (ormap (λ (p) (p x))
+         (list Text? Data? Global? Label? Extern? Call? Ret? Mov?
+               Add? Sub? Cmp? Jmp? Je? Jne? Jl? Jle? Jg? Jge?
+               And? Or? Xor? Sal? Sar? Push? Pop? Lea? Div? Equ?
+               Dd? Dq?)))
