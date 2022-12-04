@@ -75,7 +75,7 @@
          list->string string->list
          char<=? char=?
          remove-duplicates remq* remove* remove
-         andmap vector list->vector boolean?
+         andmap ormap vector list->vector boolean?
          substring odd?
          system-type ;; hard-coded
          not findf
