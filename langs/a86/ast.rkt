@@ -161,6 +161,7 @@
                     [m (identifier? #'m) #'(λ (x ...) (%Name (current-annotation) x ...))]
                     [(m x ...) #'(%Name (current-annotation) x ...)])))
               (struct %Name instruction (x ...)
+                #:reflection-name 'Name
                 #:transparent
                 #:guard guard
                 #:methods gen:equal+hash
