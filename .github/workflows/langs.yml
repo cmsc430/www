@@ -34,4 +34,5 @@ jobs:
       run: raco pkg install langs/
     - name: Run tests
       run: |
-        raco test -p langs
+        raco test -j 8 -p langs
+        raco test -j 8 -c outlaw
