@@ -38,7 +38,7 @@
   (match fs
     ['() (void)]
     [(cons f fs)
-     (displayln (make-string 72 #\;))
+     (displayln (make-string 12 #\;))
      (displayln (string-append ";; " f "\n"))
      (print-file f)
      (print-files fs)]))

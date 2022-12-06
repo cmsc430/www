@@ -1,6 +1,8 @@
 #lang scribble/manual
+@(require (for-label (except-in racket compile ...) a86))
 @(require "defns.rkt")
 @(require "notes/ev.rkt")
+@(require "fancyverb.rkt")
 
 @title[#:style '(unnumbered)]{Project}
 
@@ -278,6 +280,127 @@ registers will no longer suffice.  (Although you may want to continue
 to use @racket['rax] for the common case of a single result.)  The
 solution for this problem with function parameters was to use the
 stack and a similar approach can work for results too.
+
+
+@subsection{Returning multiple values to the run-time system or @racket[asm-interp]}
+
+In implementing @racket[values], there are two design decisions you
+have to make:
+
+@itemlist[#:style 'ordered
+@item{How are values going to be represented during the execution of a program?}
+@item{How are values going to be communicated back to the run-time system and/or asm-interp when the program completes?}
+]
+
+The answers to (1) and (2) don't necessarily have to be the same.
+
+Note that you can go a long way working on (1) without making any
+changes to the run-time system or @tt{unload-bits-asm.rkt} (which is
+how the result of @racket[asm-interp] is converted back to a Racket
+value).  You can basically punt on (2) and work on (1) by writing
+tests that use multiple values within a computation, but ultimately
+return a single value, e.g. @racket[(let-values ([(x y) (values 1 2)]
+(cons x y)))].
+
+As for (2), here is a suggestion that you are free to adopt, although
+you can implement (2) however you'd like so long as when running an
+executable that returns multiple values it prints the results in a way
+consistent with how Racket prints and that if using
+@racket[asm-interp], your version of @racket[unload/free] produces
+multiple values whenever the program does.
+
+You can return a vector of results at the end of @racket[entry].  This
+means after the instructions for the program, whatever values are
+produced are converted from the internal representation of values
+(i.e., your design for (1)) to a vector and the address (untagged) is
+put into @tt{rax} to be returned to the run-time system and/or
+@racket[asm-interp].
+
+Now both the run-time system and @tt{unload-bits-asm.rkt} need to be
+updated to deal with this change in representation for the result.
+
+In @tt{main.c}, the part that gets the result and prints it:
+
+@fancy-c[
+#<<HERE
+  val_t result = entry(heap);
+  print_result(result);
+  if (val_typeof(result) != T_VOID)
+    putchar('\n');
+HERE
+]
+
+can be changed to getting the vector and printing each element:
+
+@fancy-c[
+#<<HERE
+  val_vect_t *result = entry(heap);
+  for (int i = 0; i < result->len; ++i) {
+    print_result(result->elems[i]);
+    if (val_typeof(result->elems[i]) != T_VOID)
+      putchar('\n');
+  }
+HERE
+]
+
+You'll also need to update the signature of @racket[entry] in
+@tt{runtime.h} to:
+
+@fancy-c["  val_vect_t* entry();"]
+
+You'll also need to make a similar change to @racket[unload/free] in
+@tt{unload-bits-asm.rkt}, which plays the role of the run-time system
+when writing tests that use @racket[asm-interp].
+
+Instead of:
+
+@#reader scribble/comment-reader
+(racketblock
+;; Answer* -> Answer
+(define (unload/free a)
+  (match a
+    ['err 'err]
+    [(cons h v) (begin0 (unload-value v)
+                        (free h))]))
+)
+
+You'll want:
+
+@#reader scribble/comment-reader
+(racketblock
+;; Answer* -> Answer
+(define (unload/free a)
+  (match a
+    ['err 'err]
+    [(cons h vs) (begin0 (unload-values vs)
+                         (free h))]))
+
+(define (unload-values vs)
+  (let ((vec (unload-value (bitwise-xor vs type-vect))))
+    (apply values (vector->list vec))))
+)
+
+
+
+Let's say you make these changes to the run-time system and
+@racket[unload/free] before you make any changes to the compiler and
+now you want to adapt the compiler to work with the new set up (before
+trying to do anything with @racket[values]).  You can add the following
+at the end of @racket[entry], just before the @racket[(Ret)]:
+
+@#reader scribble/comment-reader
+(racketblock
+;; Create and return unary vector holding the result
+(Mov r8 1)
+(Mov (Offset rbx 0) r8)  ; write size of vector, 1
+(Mov (Offset rbx 8) rax) ; write rax as single element of vector
+(Mov rax rbx)            ; return the pointer to the vector
+)
+
+In order to return more values, you'd construct a larger vector.
+
+
+
 
 @section{Exceptions and exception handling}
 

@@ -22,12 +22,22 @@
             (map (lambda (i) (Extern (symbol->label i))) stdlib-ids)
             (Global 'entry)
             (Label 'entry)
+
+            (Push rbx) ; save non-volatile registers
+            (Push r12)
+            (Push r15)
+
             (Mov rbx rdi) ; recv heap pointer
             (init-symbol-table p)
             (init-lib)
             
             (compile-defines ds gs)
             (compile-variable (last-define-id ds) '() gs)
+
+            (Pop r15) ; restore non-volatile registers
+            (Pop r12)
+            (Pop rbx)
+
             (Ret)
             (compile-lambda-defines (lambdas p) gs)
             (Global 'raise_error_align)
@@ -65,7 +75,7 @@
          list->string string->list
          char<=? char=?
          remove-duplicates remq* remove* remove
-         andmap vector list->vector boolean?
+         andmap ormap vector list->vector boolean?
          substring odd?
          system-type ;; hard-coded
          not findf

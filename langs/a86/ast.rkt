@@ -161,6 +161,7 @@
                     [m (identifier? #'m) #'(λ (x ...) (%Name (current-annotation) x ...))]
                     [(m x ...) #'(%Name (current-annotation) x ...)])))
               (struct %Name instruction (x ...)
+                #:reflection-name 'Name
                 #:transparent
                 #:guard guard
                 #:methods gen:equal+hash
@@ -169,13 +170,35 @@
                                               (struct->vector i2))))
                  (define hash-proc  (λ (i hash) (hash (struct->vector i))))
                  (define hash2-proc (λ (i hash) (hash (struct->vector i))))]
+                
+                #:property prop:custom-print-quotable 'never
                 #:methods gen:custom-write
                 [(define write-proc
-                   (make-constructor-style-printer
+		   (instr-print 'Name)
+                   #;(make-constructor-style-printer
                     (lambda (obj) 'Name)        
                     (lambda (obj)
                       (rest (rest (vector->list (struct->vector obj)))))))])
               (define Name? %Name?)))]))
+
+(define (instr-print type)
+  (lambda (instr port mode)
+    (if (number? mode)
+        (write-string "(" port)
+        (write-string "#(struct:" port))
+    (write-string (symbol->string type) port)
+    (let ([recur (case mode
+                   [(#t) write]
+                   [(#f) display]
+                   [else (lambda (p port) (print p port mode))])])
+        (for-each (lambda (e)
+                    (write-string " " port)
+                    (recur e port))
+                  (rest (rest (vector->list (struct->vector instr))))))
+    (if (number? mode)
+        (write-string ")" port)
+        (write-string ")" port))))
+
 
 (instruct Text   ()        check:none)
 (instruct Data   ()        check:none)

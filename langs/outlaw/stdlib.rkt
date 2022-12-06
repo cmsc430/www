@@ -7,7 +7,7 @@
          list->string string->list
          reverse
          remove-duplicates remq* remove* remove
-         andmap vector list->vector boolean? substring
+         andmap ormap vector list->vector boolean? substring
          odd?
          system-type
          not
@@ -279,6 +279,13 @@
     [(cons x xs)
      (and (f x)
           (andmap f xs))]))
+
+(define (ormap f xs)
+  (match xs
+    ['() #f]
+    [(cons x xs)
+     (or (f x)
+         (ormap f xs))]))
 
 (define (list->vector xs)
   (list->vector/a (make-vector (length xs) 0) 0 xs))

@@ -29,10 +29,10 @@ jobs:
     - name: Version info
       run: |
         nasm --version
-        gcc --version        
+        gcc --version
     - name: Install langs package
       run: raco pkg install langs/
     - name: Run tests
       run: |
-        export LINK_DIR=/usr/lib/x86_64-linux-gnu
         raco test -p langs
+        raco test -c outlaw
