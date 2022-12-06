@@ -825,6 +825,18 @@ Each register plays the same role as in x86, so for example
  ]
 }
 
+@defstruct*[Text ()]{
+
+ Declares the start of a text section, which includes instructions to
+ be executed.
+
+}
+
+@defstruct*[Data ()]{
+
+ Declares the start of a data section, which includes data and constants.
+
+}
 
 @defstruct*[Label ([x label?])]{
 
