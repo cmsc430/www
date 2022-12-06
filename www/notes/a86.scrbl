@@ -1045,6 +1045,23 @@ Each register plays the same role as in x86, so for example
  ]
 }
 
+@defstruct*[Jle ([x (or/c label? register?)])]{
+ Jump to label @racket[x] if the conditional flag is set to ``less than or equal.''
+               
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 42)
+   (Cmp 'rax 42)
+   (Jle 'l1)
+   (Mov 'rax 0)
+   (Label 'l1)                   
+   (Ret)))
+ ]
+}
+
 @defstruct*[Jg ([x (or/c label? register?)])]{
  Jump to label @racket[x] if the conditional flag is set to ``greater than.''
                
@@ -1055,6 +1072,23 @@ Each register plays the same role as in x86, so for example
    (Label 'entry)
    (Mov 'rax 42)
    (Cmp 'rax 2)
+   (Jg 'l1)
+   (Mov 'rax 0)
+   (Label 'l1)                   
+   (Ret)))
+ ]
+}
+
+@defstruct*[Jge ([x (or/c label? register?)])]{
+ Jump to label @racket[x] if the conditional flag is set to ``greater than or equal.''
+               
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 42)
+   (Cmp 'rax 42)
    (Jg 'l1)
    (Mov 'rax 0)
    (Label 'l1)                   
@@ -1540,6 +1574,14 @@ Perform bitwise not operation (each 1 is set to 0, and each 0 is set to 1) on th
    (Label 'done)
    (Ret)))
  ]
+}
+
+@defstruct*[Dd ([d integer?])]{
+ Psuedo-instruction for declaring 32-bits of initialized static memory.
+}
+
+@defstruct*[Dq ([d integer?])]{
+ Psuedo-instruction for declaring 64-bits of initialized static memory.
 }
 
 @section{From a86 to x86}
