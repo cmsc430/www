@@ -1,5 +1,4 @@
 UNAME := $(shell uname)
-.PHONY: test
 
 ifeq ($(UNAME), Darwin)
   format=macho64
@@ -9,8 +8,8 @@ endif
 
 objs = \
 	main.o \
-	values.o \
-	print.o
+	print.o \
+	values.o
 
 default: runtime.o
 
@@ -18,19 +17,19 @@ runtime.o: $(objs)
 	ld -r $(objs) -o runtime.o
 
 %.run: %.o runtime.o
-	gcc runtime.o $< -o $@
+	arch -x86_64 gcc runtime.o $< -o $@
 
 .c.o:
-	gcc -fPIC -c -g -o $@ $<
+	arch -x86_64 gcc -fPIC -c -g -o $@ $<
 
 .s.o:
 	nasm -g -f $(format) -o $@ $<
 
 %.s: %.rkt
-	racket -t compile-file.rkt -m $< > $@
+	cat $< | racket -t compile-stdin.rkt -m > $@
 
 clean:
 	rm *.o *.s *.run
 
-test: example.run
-	@test "$(shell ./example.run)" = "$(shell racket example.rkt)"
+%.test: %.run %.rkt
+	@test "$(shell ./$(<))" = "$(shell racket $(word 2,$^))"

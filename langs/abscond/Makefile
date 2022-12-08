@@ -25,7 +25,7 @@ runtime.o: $(objs)
 	nasm -g -f $(format) -o $@ $<
 
 %.s: %.rkt
-	racket -t compile-file.rkt -m $< > $@
+	cat $< | racket -t compile-stdin.rkt -m > $@
 
 clean:
 	rm *.o *.s *.run
