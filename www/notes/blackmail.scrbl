@@ -29,7 +29,7 @@
 	       #'(void)))]))
 
 @;{ Have to compile 42.s (at expand time) before listing it }
-@(shell-expand "racket -t compile-file.rkt -m add1-add1-40.rkt > add1-add1-40.s")
+@(shell-expand "cat add1-add1-40.rkt | racket -t compile-stdin.rkt -m > add1-add1-40.s")
 
 @title[#:tag "Blackmail"]{Blackmail: incrementing and decrementing}
 
@@ -247,10 +247,10 @@ We can now try out a few examples:
 ]
 
 And give a command line wrapper for parsing, checking, and compiling
-files in @link["code/blackmail/compile-file.rkt"]{@tt{compile-file.rkt}},
+in @link["code/blackmail/compile-stdin.rkt"]{@tt{compile-stdin.rkt}},
 we can compile files as follows:
 
-@shellbox["racket -t compile-file.rkt -m add1-add1-40.rkt"]
+@shellbox["cat add1-add1-40.rkt | racket -t compile-stdin.rkt -m"]
 
 And using the same @link["code/blackmail/Makefile"]{@tt{Makefile}}
 setup as in Abscond, we capture the whole compilation process with a
