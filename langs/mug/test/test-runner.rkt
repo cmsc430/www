@@ -248,7 +248,8 @@
   (check-equal? (run '(match (box 1) [(box x) x] [_ 2]))
                 1)
 
-  ;; Loot examples 
+  ;; Loot examples
+  (check-true (procedure? (run '(λ (x) x))))
   (check-equal? (run '((λ (x) x) 5))
                 5)
   

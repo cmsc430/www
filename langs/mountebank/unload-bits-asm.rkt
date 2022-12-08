@@ -37,7 +37,10 @@
           (string)
           (build-string (heap-ref i)
                         (lambda (j)
-                          (char-ref (+ i 8) j)))))]))
+                          (char-ref (+ i 8) j)))))]
+    [(? proc-bits? i)
+     (lambda _
+       (error "This function is not callable."))]))
 
 (define (untag i)
   (arithmetic-shift (arithmetic-shift i (- (integer-length ptr-mask)))

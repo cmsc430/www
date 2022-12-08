@@ -40,6 +40,9 @@
           (build-string (heap-ref i)
                         (lambda (j)
                           (char-ref (+ i 8) j)))))]
+    [(? proc-bits? i)
+     (lambda _
+       (error "This function is not callable."))]
     [(? struct-bits? i)
      (struct-val)]))
 

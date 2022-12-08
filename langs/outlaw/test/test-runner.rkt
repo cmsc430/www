@@ -245,6 +245,7 @@
                 1)
 
   ;; Loot examples
+  (check-true (procedure? (run '(λ (x) x))))
   (check-equal? (run '((λ (x) x) 5))
                 5)
 
