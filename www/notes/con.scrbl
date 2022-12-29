@@ -217,7 +217,9 @@ branch, then (unconditionally) jump over the then branch code.
 To accomplish this, we will need two new labels: one for the then
 branch code and one for the end of the then branch code.  The
 @racket[gensym] function can be used to generate symbols that have not
-appeared before.
+appeared before. @margin-note{Q: Why should we generate label names
+here?  What would go wrong if simply used labels like @racket['l0] and
+@racket['l1]?}
 
 In total, the code for this example would look like:
 
