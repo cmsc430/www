@@ -21,9 +21,9 @@
 
 @emph{@string-titlecase[semester], @year}
 
-@emph{Lectures: @lecture-schedule}
+@emph{Lectures: @lecture-schedule, @classroom}
 
-@emph{Professor: @prof}
+@emph{Professor: @prof (@prof-pronouns)}
 
 CMSC 430 is an introduction to compilers.  Its major goal is to arm
 students with the ability to design, implement, and extend a

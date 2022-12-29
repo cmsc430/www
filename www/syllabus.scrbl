@@ -6,38 +6,133 @@
 
 @title[#:style 'unnumbered]{Syllabus}
 
-@local-table-of-contents[]
+@bold{Introduction to Compilers, CMSC 430}
 
-@section{Prerequisites and Description}
+@bold{Term:} @string-titlecase[semester], @year
+
+@bold{Professor:} @prof (@prof-pronouns)
+
+@bold{Email:} @prof-email
+
+@bold{Office Hours:} By appointment.  Send email or Discord DM to set
+up.
 
 @bold{Prerequisite:} a grade of C or better in CMSC330; and permission
 of department; or CMSC graduate student.
 
 @bold{Credits:} 3.
 
-@courseno is an introduction to compilers.  Its major goal is to arm
-students with the ability to design, implement, and extend a
-programming language. Throughout the course, students will design and
-implement several related high-level programming languages, building
-compilers that target the x86 CPU architecture.
+@bold{Lecture dates:} @lecture-dates
+
+@bold{Lecture Times:} @lecture-schedule
+
+@bold{Classroom:} @classroom
+
+@bold{Course Description:} @courseno is an introduction to compilers.
+Its major goal is to arm students with the ability to design,
+implement, and extend a programming language. Throughout the course,
+students will design and implement several related high-level
+programming languages, building compilers that target the x86 CPU
+architecture.
 
 The course assumes familiarity with a functional programming such as
 OCaml from CMSC 330, and, to a lesser extent, imperative programming
 in C and Assembly as covered in CMSC 216.
 
-@section{Course Workflow}
+@bold{Learning Outcomes:} TBD.
 
-The course will consist of synchronous in-person lectures, which will
-be recorded and available on ELMS immediately after each lecture.
+@bold{Required Resources:} TBD.
 
-Midterm and final exams will be taken online.
+@bold{Course Structure:} The course will consist of synchronous
+in-person lectures, which will be recorded and available on ELMS
+immediately after each lecture.  There are two midterms, a final
+project, which counts as the final assessment for the class, several
+assignments, and several quizes and surveys.  Midterms are take-home
+exams and completed online.
 
-@section{Mask Policy}
+@bold{Contents:}
 
-Effective Monday, August 29, wearing a mask will not be required while
-indoors in most situations, including classrooms. However, wearing a
-KN95 mask is recommended while indoors for added protection.
+@local-table-of-contents[]
 
+@section{Policies and Resources for Undergraduate Courses}
+
+It is our shared responsibility to know and abide by the University of
+Maryland's policies that relate to all courses, which include topics
+like:
+
+@itemlist[
+@item{Academic integrity}
+@item{Student and instructor conduct}
+@item{Accessibility and accommodations}
+@item{Attendance and excused absences}
+@item{Grades and appeals}
+@item{Copyright and intellectual property}
+]
+
+Please visit
+@link["https://www.ugst.umd.edu/courserelatedpolicies.html"]{https://www.ugst.umd.edu/courserelatedpolicies.html}
+for the Office of Undergraduate Studies' full list of campus-wide
+policies and follow up with the instructor if you have questions.
+
+@section{Course Guidelines}
+
+@bold{Names/Pronouns and Self-Identifications:} The University of
+Maryland recognizes the importance of a diverse student body, and we
+are committed to fostering inclusive and equitable classroom
+environments. We invite you, if you wish, to tell us how you want to
+be referred to in this class, both in terms of your name and your
+pronouns (he/him, she/her, they/them, etc.). Keep in mind that the
+pronouns someone uses are not necessarily indicative of their gender
+identity. Visit @link["https://trans.umd.edu"]{https://trans.umd.edu}
+to learn more.
+
+Additionally, it is your choice whether to disclose how you identify
+in terms of your gender, race, class, sexuality, religion, and
+dis/ability, among all aspects of your identity (e.g., should it come
+up in classroom conversation about our experiences and perspectives)
+and should be self-identified, not presumed or imposed.  Course staff
+will do their best to address and refer to all students accordingly,
+and we ask you to do the same for all of your fellow Terps.
+
+@bold{Communication with Instructor:}
+
+Email: If you need to reach out and communicate with @prof, please
+email at @|prof-email|. Please DO NOT email questions that are easily
+found in the syllabus or on ELMS (i.e. When is this assignment due?
+How much is it worth? etc.) but please DO reach out about personal,
+academic, and intellectual concerns/questions.
+
+ELMS: IMPORTANT announcements will be sent via ELMS messaging. You
+must make sure that your email & announcement notifications (including
+changes in assignments and/or due dates) are enabled in ELMS so you do
+not miss any messages.  You are responsible for checking your email
+and Canvas/ELMS inbox with regular frequency.
+
+@bold{Communication with Peers:}
+
+With a diversity of perspectives and experience, we may find ourselves
+in disagreement and/or debate with one another. As such, it is
+important that we agree to conduct ourselves in a professional manner
+and that we work together to foster and preserve a virtual classroom
+environment in which we can respectfully discuss and deliberate
+controversial questions. We encourage you to confidently exercise your
+right to free speech—bearing in mind, of course, that you will be
+expected to craft and defend arguments that support your
+position. Keep in mind, that free speech has its limit and this course
+is NOT the space for hate speech, harassment, and derogatory
+language. We will make every reasonable attempt to create an
+atmosphere in which each student feels comfortable voicing their
+argument without fear of being personally attacked, mocked, demeaned,
+or devalued.
+
+Any behavior (including harassment, sexual harassment, and racially
+and/or culturally derogatory language) that threatens this atmosphere
+will not be tolerated. Please alert the instructor immediately if you
+feel threatened, dismissed, or silenced at any point during the
+semester and/or if your engagement in discussion has been in some way
+hindered by the learning environment.
+
+HERE
 
 @section{Office Hours}
 
@@ -86,13 +181,21 @@ of the course:
   @item{Language design}
   @item{Advanced topics in compilation}]
 
-@section{Grading}
+@section{Grades}
 
-Grades will be maintained on @link[elms-url]{ELMS}.
+All assessment scores will be posted on the course
+@link[elms-url]{ELMS} page.
 
-You are responsible for all material discussed in lecture and posted
-on the class web page, including announcements, deadlines, policies,
-etc.
+Late work will not be accepted for course credit so please plan to
+have it submitted well before the scheduled deadline.
+
+Any formal grade disputes must be submitted in writing and within one
+week of receiving the grade.  Final letter grades are assigned based
+on the percentage of total assessment points earned.  To be fair to
+everyone I have to establish clear standards and apply them
+consistently, so please understand that being close to a cutoff is not
+the same as making the cut (89.99 ≠ 90.00).  It would be unethical to
+make exceptions for some and not others.
 
 Your final course grade will be determined according to the following
 percentages:
@@ -117,6 +220,14 @@ percentages:
   (list @elem{Quizzes & surveys}    "15%")
   (list "Midterms (2)" "25%")
   (list "Final project" "15%")]
+
+Final letter grades will be assigned based on the following cutoff
+table:
+
+@tabular[#:style 'boxed #:sep @hspace[1]
+         (list (list "A+" "97%" "C+" "77%" "D+" "67%" " " " ")
+	       (list "A"  "94%" "C"  "74%" "D"  "64%" "F" "<60%")
+	       (list "A-" "90%" "C-" "70%" "D-" "60%" " " " "))]
 
 
 @section[#:tag "syllabus-videos"]{Videos}
@@ -310,12 +421,6 @@ All arrangements for exam accommodations as a result of disability
 three business days prior to the exam date; later requests (including
 retroactive ones) will be refused.
 
-@section{University of Maryland Policies for Undergraduate Students}
-
-Please read the university's guide on
-@link["https://www.ugst.umd.edu/courserelatedpolicies.html"]{Course
-Related Policies}, which provides you with resources and information
-relevant to your participation in a UMD course.
 
 
 @section{Academic Integrity}

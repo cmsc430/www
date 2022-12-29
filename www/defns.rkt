@@ -3,12 +3,15 @@
 (require scribble/core scribble/html-properties scribble/manual) 
 
 (define prof (link "https://www.cs.umd.edu/~dvanhorn/" "David Van Horn"))
+(define prof-pronouns "he/him")
 (define prof-email "dvanhorn@cs.umd.edu")
 (define prof-initials "DVH")
 
 (define semester "fall")
 (define year "2022")
 (define courseno "CMSC 430")
+
+(define lecture-dates "August 30 -- December 8, 2022")
 
 (define IRB "IRB") 
 (define AVW "AVW")
@@ -31,7 +34,8 @@
 
 
 
-(define lecture-schedule "Tuesday & Thursday, 2:00pm - 3:15pm, CSI 1115")
+(define lecture-schedule "Tuesday & Thursday, 2:00pm - 3:15pm")
+(define classroom "CSI 1115")
 
 (define discord "https://discord.gg/cX5vASt8Tp")
 
