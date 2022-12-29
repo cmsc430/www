@@ -85,10 +85,10 @@ writing!) do not have this property. Instead they interact
 with the outside world and compute results based on the
 state of the world.
 
-For example, consider the @tt{compile-file.rkt} program,
-which reads the contents of a file from disk and compiles
-it. The meaning of this program depends on the state of your
-computer's hard drive. Similarly, it prints out assembly
+For example, consider the @tt{compile-stdin.rkt} program,
+which reads the contents of stdin and compiles
+it. The meaning of this program depends on the state of input
+port. Similarly, it prints out assembly
 code to the standard output port. So not only does this
 program depend on the outside world, it changes it too.
 

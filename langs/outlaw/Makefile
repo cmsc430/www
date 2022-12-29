@@ -18,8 +18,10 @@ endif
 
 ifeq ($(UNAME), Darwin)
   format=macho64
+  CC=arch -x86_64 gcc
 else
   format=elf64
+  CC=gcc
 endif
 
 objs = \
@@ -61,10 +63,10 @@ runtime.o: $(objs)
 	ld -r $(objs) -o runtime.o
 
 %.run: %.o runtime.o
-	gcc $(link_opts) runtime.o $< -lunistring -o $@
+	$(CC) $(link_opts) runtime.o $< -lunistring -o $@
 
 .c.o:
-	gcc $(include) -fPIC -c -g -o $@ $<
+	$(CC) $(include) -fPIC -c -g -o $@ $<
 
 .s.o:
 	nasm -g -f $(format) -o $@ $<

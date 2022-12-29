@@ -31,7 +31,7 @@
 	       #'(void)))]))
 
 @;{ Have to compile 42.s (at expand time) before listing it }
-@(shell-expand "racket -t compile-file.rkt -m 42.rkt > 42.s")
+@(shell-expand "cat 42.rkt | racket -t compile-stdin.rkt -m > 42.s")
 
 
 @title[#:tag "Abscond"]{Abscond: a language of numbers}
@@ -438,11 +438,11 @@ Putting it all together, we can write a command line compiler much
 like the command line interpreter before, except now we emit assembly
 code:
 
-@codeblock-include["abscond/compile-file.rkt"]
+@codeblock-include["abscond/compile-stdin.rkt"]
 
 Example:
 
-@shellbox["racket -t compile-file.rkt -m 42.rkt"]
+@shellbox["cat 42.rkt | racket -t compile-stdin.rkt -m"]
 
 Using a Makefile, we can capture the whole compilation dependencies as:
 

@@ -113,10 +113,10 @@ is updated to include function applications.
 
 Because of the change from a program being a single expression to a
 sequence, we have to update the utilities that read program files,
-i.e. @tt{interp-file.rkt} and @tt{compile-file.rkt}:
+i.e. @tt{interp-file.rkt} and @tt{compile-stdin.rkt}:
 
 @codeblock-include["iniquity/interp-file.rkt"]
-@codeblock-include["iniquity/compile-file.rkt"]
+@codeblock-include["iniquity/compile-stdin.rkt"]
 
 
 
