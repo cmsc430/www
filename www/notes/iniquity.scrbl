@@ -113,9 +113,9 @@ is updated to include function applications.
 
 Because of the change from a program being a single expression to a
 sequence, we have to update the utilities that read program files,
-i.e. @tt{interp-file.rkt} and @tt{compile-stdin.rkt}:
+i.e. @tt{interp-stdin.rkt} and @tt{compile-stdin.rkt}:
 
-@codeblock-include["iniquity/interp-file.rkt"]
+@codeblock-include["iniquity/interp-stdin.rkt"]
 @codeblock-include["iniquity/compile-stdin.rkt"]
 
 
@@ -197,7 +197,7 @@ and @racket[odd?]:
 
 And the utility for interpreting programs in files works as well:
 
-@shellbox["racket -t interp-file.rkt -m example/len.rkt"]
+@shellbox["cat example/len.rkt | racket -t interp-stdin.rkt -m"]
 
 
 @section[#:tag-prefix "iniquity"]{Conventions of Calling}

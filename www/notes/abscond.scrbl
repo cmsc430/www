@@ -185,9 +185,9 @@ produces it's meaning:
 )
 
 We can add a command line wrapper program for interpreting Abscond
-programs saved in files:
+programs from stdin:
 
-@codeblock-include["abscond/interp-file.rkt"]
+@codeblock-include["abscond/interp-stdin.rkt"]
 
 The details here aren't important (and you won't be asked to write
 this kind of code), but this program @racket[read]s the contents of a
@@ -196,7 +196,7 @@ well-formed Abscond program, then it runs the intepreter and displays
 the result.
 
 For example, interpreting the program @tt{42.rkt} shown above:
-@shellbox["racket -t interp-file.rkt -m 42.rkt"]
+@shellbox["cat 42.rkt | racket -t interp-stdin.rkt -m"]
 
 Even though the semantics is obvious, we can provide a formal
 definition of Abscond using @bold{operational semantics}.
@@ -475,7 +475,7 @@ adds up to much more efficient programs.  Just to demonstrate, here's
 a single data point measuring the difference between interpreting and
 compiling Abscond programs:
 
-@shellbox["time -p racket -t interp-file.rkt -m 42.rkt"]
+@shellbox["cat 42.rkt | time -p racket -t interp-stdin.rkt -m"]
 
 Compiling:
 
