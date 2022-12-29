@@ -847,11 +847,21 @@ just how @racket[interp-bits] interprets an @racket[add1].}
 @item{@racket[(sub1 _e)]: should work like @racket[(add1 _e)] but
 subtracting @racket[#,(value->bits 1)].}
 
- @item{@racket[(zero? _e)]: this should produce the
+@item{@racket[(zero? _e)]: this should produce the
   instructions for @racket[_e] followed by instructions that
   compare @racket['rax] to 0 and set @racket['rax] to
   @racket[#t] (i.e. @binary[val-true 2]) if true and
-  @racket[#f] (i.e. @binary[val-false 2]) otherwise.}
+  @racket[#f] (i.e. @binary[val-false 2]) otherwise.
+
+This is a bit different from what we saw with Con, which combined
+conditional execution with testing for equality to @racket[0].  Here
+there is no need to @emph{jump} anywhere based on whether @racket[_e]
+produces @racket[0] or not.  Instead we want to move either the
+encoding of @racket[#t] or @racket[#f] into @racket['rax] depending on
+what @racket[_e] produces.  To accomplish that, we can use a new kind
+of instruction, the @bold{conditional move} instruction: @racket[Cmov].
+
+}
 
 @item{@racket[(if _e0 _e1 _e2)]: this should work much like before,
 compiling each subexpression, generating some labels and the
