@@ -2,8 +2,10 @@ UNAME := $(shell uname)
 
 ifeq ($(UNAME), Darwin)
   format=macho64
+  CC=arch -x86_64 gcc
 else
   format=elf64
+  CC=gcc
 endif
 
 objs = \
@@ -17,10 +19,10 @@ runtime.o: $(objs)
 	ld -r $(objs) -o runtime.o
 
 %.run: %.o runtime.o
-	arch -x86_64 gcc runtime.o $< -o $@
+	$(CC) runtime.o $< -o $@
 
 .c.o:
-	arch -x86_64 gcc -fPIC -c -g -o $@ $<
+	$(CC) -fPIC -c -g -o $@ $<
 
 .s.o:
 	nasm -g -f $(format) -o $@ $<
