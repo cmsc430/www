@@ -2,41 +2,39 @@
 (provide (all-defined-out))
 (require scribble/core scribble/html-properties scribble/manual) 
 
-(define prof (link "https://www.cs.umd.edu/~dvanhorn/" "David Van Horn"))
+(define prof (link "jmct.cc" "JMCT"))
 (define prof-pronouns "he/him")
-(define prof-email "dvanhorn@cs.umd.edu")
-(define prof-initials "DVH")
+(define prof-email "jmct")
+(define prof-initials "JMCT")
 
-(define semester "fall")
-(define year "2022")
+(define semester "spring")
+(define year "2023")
 (define courseno "CMSC 430")
 
-(define lecture-dates "August 30 -- December 8, 2022")
+(define lecture-dates "January 25 -- May 11, 2023")
 
 (define IRB "IRB") 
 (define AVW "AVW")
+(define KEY "KEY")
 
 
-(define m1-date "10/4")
-(define m2-date "11/1")
-(define final-date "12/17")
-(define elms-url "https://umd.instructure.com/courses/1328554")
+(define m1-date "TBD")
+(define m2-date "TBD")
+(define final-date "TBD")
+(define elms-url "https://umd.instructure.com/courses/1338880")
 
-(define racket-version "8.6")
+(define racket-version "8.7")
 
 (define staff
-  (list (list "Pierce Darragh"  "pdarragh@umd.edu" "M, 1PM-2PM; T, Th, 11AM-12PM AVW 4160")
-        (list "Dhruv Maniktala" "dmanikt@umd.edu"  "T, W, Th, 10AM-11AM, Virtual")
-        (list "Chris Maxey"     "cmaxey@umd.edu"   "F, 12PM-3PM AVW 4160")
-        (list "Deena Postol"    "dpostol@umd.edu"  "M, 2PM-5PM AVW 4160")
-        (list "Matvey Stepanov" "mpstepan@umd.edu" "W, 1PM-4PM AVW 4160")))
+  (list (list "Pierce Darragh"  "pdarragh@umd.edu" "TBD")
+        (list "Gihan Jayatilaka" "gihan@umd.edu"  "TBD")))
 
 
 
 
-(define lecture-schedule "Tuesday & Thursday, 2:00pm - 3:15pm")
-(define classroom "CSI 1115")
+(define lecture-schedule "Tuesday & Thursday, 12:30am - 1:45pm")
+(define classroom "KEY 0106")
 
-(define discord "https://discord.gg/cX5vASt8Tp")
+(define discord "https://discord.gg/UvbxV2JS")
 
-(define gradescope "https://www.gradescope.com/courses/433916")
+(define gradescope "https://www.gradescope.com/courses/503944")
