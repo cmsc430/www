@@ -1,9 +1,16 @@
 #lang scribble/manual
-@(require "../defns.rkt")
+@(require "../defns.rkt"
+          (only-in scribble/html/html div))
 
 @title[#:tag "Assignment 1" #:style 'unnumbered]{Assignment 1: Learning about Programming Languages}
 
-@bold{Due: Thursday, 8, 11:59PM}
+@; @bold{Due: Thursday, 8, 11:59PM}
+@bold{Due: No due date yet.}
+
+@nested[#:style "warning"]{This assignment has not yet been officially
+released. The specification is provided now so you can get a head start if you
+like, but you will not be able to submit the assignment until it is officially
+released.}
 
 Find two programming languages that are new to you, and answer the following questions:
 
@@ -33,7 +40,10 @@ Racket, Ruby, Scheme, SML, Visual Basic.
 
 @section[#:style 'unnumbered]{What to turn in}
 
-Submit this assignment via @link[@gradescope]{Gradescope}.
+@;{Submit this assignment via @link[@gradescope]{Gradescope}.}
+
+Until this assignment is officially assigned (see the due date), submissions
+will not be accepted.
 
 @;{We will be using GitHub Classroom.  This means you will work with git
 repositories and turning in your work consists of pushing the
