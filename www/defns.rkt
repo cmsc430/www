@@ -26,8 +26,14 @@
 (define racket-version "8.7")
 
 (define staff
-  (list (list "Pierce Darragh"  "pdarragh@umd.edu" "TBD")
-        (list "Gihan Jayatilaka" "gihan@umd.edu"  "TBD")))
+  (list (list "Pierce Darragh"  "pdarragh@umd.edu" "Tu: 11am-1pm (virtual), W: 2pm-4pm, Th: 12pm-2pm (virtual)")
+        (list "Gihan Jayatilaka" "gihan@umd.edu"  "Tu/Th: 9am-12pm (virtual)")
+        (list "Srikavin Ramkumar" "srikavin@umd.edu"  "M/W: 2:15pm-4:15pm, F: 11am-1pm")
+        (list "Uyen Nguyen" "upnguyen@terpmail.umd.edu"  "M/W/F: 9am-11am")
+        (list "Myron Truesdale" "mtruesda@umd.edu"  "W/F: 11:30am-2:30pm")
+        (list "Bijan Naimi" "bnaimi@terpmail.umd.edu"  "M/W/F: 11:30am-1:30pm")
+        (list "Stephen Tang" "stang12@umd.edu"  "Tu/Th: 1pm-3pm, F: 12:30pm-2:30pm")
+        ))
 
 
 
