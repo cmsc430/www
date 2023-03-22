@@ -183,7 +183,7 @@ write additional test cases.
 @section[#:tag-prefix "a4-" #:style 'unnumbered]{Submitting}
 
 Submit a zip file containing your work to Gradescope.  Use @tt{make
-submit.zip} from within the @tt{dupe-plus} directory to create a zip
+submit.zip} from within the @tt{fraud-plus} directory to create a zip
 file with the proper structure.
 
 We will only use the @tt{compile.rkt}, @tt{interp.rkt}, and
