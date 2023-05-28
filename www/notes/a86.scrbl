@@ -1165,7 +1165,7 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Cmove ([dst register?] [src (or/c register? offset?)])]{
- Move from @racket[dst] to @racket[src] if the comparison flag is set to equal.
+ Move from @racket[src] to @racket[dst] if the comparison flag is set to equal.
 
  @ex[
  (asm-interp
@@ -1191,7 +1191,7 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Cmovne ([dst register?] [src (or/c register? offset?)])]{
- Move from @racket[dst] to @racket[src] if the comparison flag is set to not equal.
+ Move from @racket[src] to @racket[dst] if the comparison flag is set to not equal.
 
  @ex[
  (asm-interp
@@ -1217,7 +1217,7 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Cmovl ([dst register?] [src (or/c register? offset?)])]{
- Move from @racket[dst] to @racket[src] if the comparison flag is set to less than.
+ Move from @racket[src] to @racket[dst] if the comparison flag is set to less than.
 
  @ex[
  (asm-interp
@@ -1243,7 +1243,7 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Cmovle ([dst register?] [src (or/c register? offset?)])]{
- Move from @racket[dst] to @racket[src] if the comparison flag is set to less than or equal.
+ Move from @racket[src] to @racket[dst] if the comparison flag is set to less than or equal.
 
  @ex[
  (asm-interp
@@ -1269,7 +1269,7 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Cmovg ([dst register?] [src (or/c register? offset?)])]{
- Move from @racket[dst] to @racket[src] if the comparison flag is set to greather than.
+ Move from @racket[src] to @racket[dst] if the comparison flag is set to greather than.
 
  @ex[
  (asm-interp
@@ -1295,7 +1295,7 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Cmovge ([dst register?] [src (or/c register? offset?)])]{
- Move from @racket[dst] to @racket[src] if the comparison flag is set to greater than or equal.
+ Move from @racket[src] to @racket[dst] if the comparison flag is set to greater than or equal.
 
  @ex[
  (asm-interp
@@ -1321,7 +1321,7 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Cmovo ([dst register?] [src (or/c register? offset?)])]{
- Move from @racket[dst] to @racket[src] if the overflow flag is set.
+ Move from @racket[src] to @racket[dst] if the overflow flag is set.
 
  @ex[
  (asm-interp
@@ -1347,7 +1347,7 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Cmovno ([dst register?] [src (or/c register? offset?)])]{
- Move from @racket[dst] to @racket[src] if the overflow flag is not set.
+ Move from @racket[src] to @racket[dst] if the overflow flag is not set.
 
  @ex[
  (asm-interp
@@ -1373,7 +1373,7 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Cmovc ([dst register?] [src (or/c register? offset?)])]{
- Move from @racket[dst] to @racket[src] if the carry flag is set.
+ Move from @racket[src] to @racket[dst] if the carry flag is set.
 
  @ex[
  (asm-interp
@@ -1399,7 +1399,7 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Cmovnc ([dst register?] [src (or/c register? offset?)])]{
- Move from @racket[dst] to @racket[src] if the carry flag is not set.
+ Move from @racket[src] to @racket[dst] if the carry flag is not set.
 
  @ex[
  (asm-interp
