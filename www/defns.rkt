@@ -33,7 +33,7 @@
 
 
 (define lecture-schedule "Weekdays, 12:30pm - 1:50pm")
-(define classroom (link "https://umd.zoom.us/j/99831545139?pwd=NWMzbG5mcWVtS0FBWlBnVXU4WVFqQT09" "Zoom"))
+(define classroom (link "https://umd.zoom.us/j/99876119693?pwd=d0h3aWRML2dka3dzbElVSHdMeVBEZz09" "Zoom"))
 
 (define discord "https://discord.gg/Me7XFYC8")
 (define gradescope "https://www.gradescope.com/courses/533338")
