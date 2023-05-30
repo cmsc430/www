@@ -1,6 +1,6 @@
 course = main
 
-.PHONY : all clean test scribble zips
+.PHONY : all clean test scribble zips push
 
 all: clean $(course)
 
@@ -31,7 +31,8 @@ scribble:
 		--redirect-main http://docs.racket-lang.org/ \
 		$(course).scrbl
 
-
+push:
+	rsync -rvzp main/ dvanhorn@junkfood.cs.umd.edu:/fs/www/class/summer2023/cmsc430/
 
 clean:
 	rm -rf $(course)
