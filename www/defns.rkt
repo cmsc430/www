@@ -28,7 +28,8 @@
 (define racket-version "8.7")
 
 (define staff
-  (list (list "William Wegand"  "wwegand@terpmail.umd.edu" "TBD")
+  (list (list "William Wegand" "wwegand@terpmail.umd.edu" "TBD")
+        (list "Pierce Darragh" "pdarragh@umd.edu" "TBD")
         ))
 
 
