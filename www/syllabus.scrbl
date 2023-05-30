@@ -193,7 +193,6 @@ of the course:
   @item{Advanced topics in compilation}]
 
 @section{Grades}
-@;{
 
 All assessment scores will be posted on the course
 @link[elms-url]{ELMS} page.
@@ -552,4 +551,3 @@ Pierce Darragh, Justin Frank, Vyas Gupta, Sankha Narayan Guria, Tasnim
 Kabir, John Kastner, Yiyun Liu, Dhruv Maniktala, Christopher Maxey,
 Deena Postol, Ivan Quiles-Rodriguez, Benjamin Quiring, Temur
 Saidkhodjaev, Matvey Stepanov, Alex Taber.
-}
