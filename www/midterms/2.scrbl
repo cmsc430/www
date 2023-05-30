@@ -9,7 +9,8 @@
 
 @bold{Due: @m2-date 11:59PM}
 
-Midterm 2 will be released at least 48 hours prior to its due date.
+Midterm 2 will be released at least @midterm-hours hours prior to
+its due date.
 
 @section{Instructions}
 

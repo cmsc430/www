@@ -9,8 +9,7 @@
 The final assessment for this course consists of an individually
 completed project.
 
-Final deliverables are due by the end of the time schedule for the
-class's final exam as set by the registrar.
+Final deliverables are due on the last day of class, July 7.
 
 There are several projects to choose from, described below.
 

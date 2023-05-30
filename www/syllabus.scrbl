@@ -4,6 +4,20 @@
 
 @provide[exam-table]
 
+@(define grades:m1 (list @elem{Midterm, @m1-date} "10%"))
+@(define grades:f  (list @elem{Final Exam, @final-date} "20%"))
+
+@(define (make-grade-component-table . entries)
+  @tabular[#:style 'boxed
+	   #:sep @hspace[1] 
+           (list* (list @bold{Component} @bold{Percentage}) entries)])
+
+
+@(define exam-table
+  @make-grade-component-table[
+    @grades:m1
+    @grades:f])
+
 @title[#:style 'unnumbered]{Syllabus}
 
 @bold{Introduction to Compilers, CMSC 430}
@@ -39,16 +53,13 @@ The course assumes familiarity with a functional programming such as
 OCaml from CMSC 330, and, to a lesser extent, imperative programming
 in C and Assembly as covered in CMSC 216.
 
-@bold{Learning Outcomes:} TBD.
-
-@bold{Required Resources:} TBD.
 
 @bold{Course Structure:} The course will consist of synchronous
-in-person lectures, which will be recorded and available on ELMS
+@bold{zoom} lectures, which will be recorded and available on ELMS
 immediately after each lecture.  There are two midterms, a final
 project, which counts as the final assessment for the class, several
 assignments, and several quizes and surveys.  Midterms are take-home
-exams and completed online.
+exams and completed online over a @midterm-hours period.
 
 @bold{Contents:}
 
@@ -132,7 +143,7 @@ feel threatened, dismissed, or silenced at any point during the
 semester and/or if your engagement in discussion has been in some way
 hindered by the learning environment.
 
-HERE
+@;{HERE}
 
 @section{Office Hours}
 
@@ -182,6 +193,7 @@ of the course:
   @item{Advanced topics in compilation}]
 
 @section{Grades}
+@;{
 
 All assessment scores will be posted on the course
 @link[elms-url]{ELMS} page.
@@ -200,21 +212,6 @@ make exceptions for some and not others.
 Your final course grade will be determined according to the following
 percentages:
 
-@(define grades:m1 (list @elem{Midterm, @m1-date} "10%"))
-@(define grades:f  (list @elem{Final Exam, @final-date} "20%"))
-
-@(define (make-grade-component-table . entries)
-  @tabular[#:style 'boxed
-	   #:sep @hspace[1] 
-           (list* (list @bold{Component} @bold{Percentage}) entries)])
-
-
-@(define exam-table
-  @make-grade-component-table[
-    @grades:m1
-    @grades:f])
-
-
 @make-grade-component-table[
   (list "Assignments" "45%")
   (list @elem{Quizzes & surveys}    "15%")
@@ -232,14 +229,13 @@ table:
 
 @section[#:tag "syllabus-videos"]{Videos}
 
-Videos will be a core part of this course.  There are two types of
-videos: (1) pre-recorded video lectures which will be made available
-before each class, and (2) screen and audio captures of each in-person
-lecture.
+Lectures will be recorded and posted to ELMS shortly after every
+class.  There are also prepared videos available covering the
+material.
 
-These videos will be made available as the course progresses. If there
-is ever any issue with accessing these videos, let the instructor know
-as soon as possible.
+These videos will be made available as the course
+progresses. If there is ever any issue with accessing these videos,
+let the instructor know as soon as possible.
 
 
 @section[#:tag "syllabus-assignments"]{Assignments}
@@ -556,3 +552,4 @@ Pierce Darragh, Justin Frank, Vyas Gupta, Sankha Narayan Guria, Tasnim
 Kabir, John Kastner, Yiyun Liu, Dhruv Maniktala, Christopher Maxey,
 Deena Postol, Ivan Quiles-Rodriguez, Benjamin Quiring, Temur
 Saidkhodjaev, Matvey Stepanov, Alex Taber.
+}

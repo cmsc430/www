@@ -5,7 +5,7 @@
 @(require "../notes/ev.rkt"
           "../notes/utils.rkt")
 
-@bold{Due: Monday, Nov 14, 11:59PM EST}
+@bold{Due: Monday, July 3, 11:59PM EST}
 
 The goal of this assignment is to hone your testing skills.
 

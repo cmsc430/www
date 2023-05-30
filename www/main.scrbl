@@ -38,7 +38,7 @@ implement several related languages.
 	        (list prof prof-email "By appt.")
 		staff)]
 
-@bold{Communications:} Email, @link[@discord]{Discord}
+@bold{Communications:} @link[@elms-url]{ELMS}, @link[@discord]{Discord}
 
 @bold{Assumptions:} This course assumes you know the material in CMSC 330 and
 CMSC 216. In particular, you need to know how to program in a functional
