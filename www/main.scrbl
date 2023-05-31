@@ -50,6 +50,9 @@ this material.
 change. Any substantive change will be accompanied with an announcement to the
 class via ELMS.
 
+@bold{Feedback:} We welcome anonymous feedback on the course and its
+staff using this @link["https://docs.google.com/forms/d/e/1FAIpQLSdUNNY5Vun42xATeByf_V9JLce1hbDZuCd0Qj_YJo4z_e5vcA/viewform?usp=sf_link"]{form}.
+
 @include-section{syllabus.scrbl}
 @include-section{texts.scrbl}
 @include-section{schedule.scrbl}
