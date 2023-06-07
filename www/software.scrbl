@@ -49,12 +49,12 @@ This course will make use of the following software:
 
  @item{Racket @tt{langs} package: a package containing utilities
   for this course.}
- 
+
  @item{NASM: the Netwide Assembler, which we will use to
   assemble x86 programs.}
 
  @item{GCC: the GNU compiler collection or a GCC-compatible
-  system such as clang.} 
+  system such as clang.}
 ]
 
 Instruction for using each system are below:
@@ -81,7 +81,7 @@ Linux, this is likely set up by default.  On Mac, you will need to
 install @link["https://www.xquartz.org/"]{XQuartz}.  On Windows, you
 can use @link["https://mobaxterm.mobatek.net/"]{MobaXterm}.
 
-To use GRACE, open a terminal on your computer and 
+To use GRACE, open a terminal on your computer and
 type:
 
 @verbatim|{   ssh -Y <directoryID>@grace.umd.edu}|
@@ -169,11 +169,11 @@ Otherwise, follow the steps given above.
 
 @section[#:tag "Windows"]{Using Windows}
 
-For Windows users, using WSL for testing is highly recommended. Beyond 
-the first few assignments, the projects will require generating and 
-executing assembly code using the nasm package. Students in the past 
-have had trouble trying to configure this in the Windows environment, 
-so an easier workaround is simply to enable WSL and run your tests through 
+For Windows users, using WSL for testing is highly recommended. Beyond
+the first few assignments, the projects will require generating and
+executing assembly code using the nasm package. Students in the past
+have had trouble trying to configure this in the Windows environment,
+so an easier workaround is simply to enable WSL and run your tests through
 some Linux Distribution. Here is a breakdown of the steps:
 
 @itemlist[
@@ -198,21 +198,36 @@ some Linux Distribution. Here is a breakdown of the steps:
   use.
 
 @itemlist[
-  @item{Using vim (or Emacs as mentioned in the previous section) is simple. Copy assignment files into WSL. Modify files.}
-  @item{Previous students preferred installing VSCode (outside of WSL) from @link["https://code.visualstudio.com/download"]{this link}. 
-  For each assignment, copy assignment files somewhere on your Linux distro. For some .rkt file, call 'code some-rkt-file.rkt' and 
-  after some automatic set up, VSCode should load up the file. Install Racket extensions from the VSCode 
-  Marketplace (a suggestion will also pop up once you open a .rkt file) to have colorized syntax, bracket matching, 
-  inteliSense, etc. }
-  @item{If you are intent on using DrRacket, you would also need to install Racket on your local machine 
-  (outside WSL). For each assignment, copy assignment files into your normal file system and use DrRacket to edit files 
-  accordingly. To access from your Linux subsystem, create a soft symbolic link in your Linux distro to the
-  project directory (or the parent directory so you do not need to make links with each new project).}
+  @item{Using vim (or Emacs as mentioned in the previous section) is simple.
+   Copy assignment files into WSL. Modify files. }
+
+  @item{Previous students preferred installing VSCode (outside of WSL) from
+   @link["https://code.visualstudio.com/download"]{this link}. For each
+   assignment, copy assignment files somewhere on your Linux distro. If you
+   would like to open @tt{some-file.rkt}, you can open it from the command line by
+   calling @tt{code some-file.rkt} and, after some automatic set up, VSCode should
+   load up the file. You can install Racket extensions from the VSCode
+   Marketplace (a suggestion will also pop up once you open a .rkt file) to
+   have colorized syntax, bracket matching, autocomplete/IntelliSense, etc. }
+
+  @item{If you are intent on using DrRacket, you will want to set up an X
+   Window System to run GUI programs from within WSL. A popular option is
+   @link["https://mobaxterm.mobatek.net/"]{MobaXterm}. Once that is installed,
+   you can launch DrRacket from within your WSL terminal by running the
+   command @tt{drracket}.
+
+   You could also install DrRacket @emph{outside} WSL and copy your files back
+   and forth or use a symbolic link to connect the two. However, DrRacket will
+   not be able to see the @tt{langs} package you will install later by default,
+   so you would either need to install it again within DrRacket or else find a
+   way to connect your Windows-based DrRacket to your WSL-based Racket package
+   configuration. This seems unnecessarily complicated, though, so we don't
+   recommend this option. }
 ]}
 
 ]
 
-Regardless of the IDE used, you can now run your tests from your Linux 
+Regardless of the IDE used, you can now run your tests from your Linux
 subsystem by entering the project directory and using the raco command.
 
 @section[#:tag "install-racket"]{Installing Racket}
@@ -261,7 +276,7 @@ install updates, run:
 
 @section{IDE}
 
-Racket comes with it's own IDE: DrRacket, which is the recommended way
+Racket comes with its own IDE: DrRacket, which is the recommended way
 to edit Racket files.  We will also be running Racket and its
 associated tools from the command line.
 
@@ -283,7 +298,7 @@ following:
             @item{Red Hat Enterprise Linux 7.7}
             @item{macOS 11.0 (Big Sur)}
             @item{macOS 10.15 (Catalina)}]}
-  
+
  @item{Racket:
   @itemlist[@item{Racket 8.1 [cs]}
             @item{Racket 8.1 [bc]}
@@ -327,7 +342,7 @@ A program is a sequence of definitions or expressions.
 The grammar for the subset of Racket we will use is:
 
 @(with-unquote-rewriter
-  (lambda (lw) 
+  (lambda (lw)
     (build-lw (list (build-lw "(" (lw-line lw) (lw-line-span lw) (lw-column lw) 1)
                     (build-lw 'unquote (lw-line lw) (lw-line-span lw) (+ 1 (lw-column lw)) 7)
                     (build-lw " " (lw-line lw) (lw-line-span lw) (+ 2 (lw-column lw)) 1)
@@ -338,7 +353,7 @@ The grammar for the subset of Racket we will use is:
                (lw-column lw)
                (+ 8 (lw-column-span lw))))
 
-	       
+
   (render-grammar R0))
 
 @section{Built-In Datatypes}
