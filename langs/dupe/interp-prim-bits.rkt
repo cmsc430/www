@@ -7,4 +7,4 @@
   (match op
     ['add1  (+ b (value->bits 1))]
     ['sub1  (- b (value->bits 1))]
-    ['zero? (= b (value->bits 0))]))
+    ['zero? (if (zero? b) (value->bits #t) (value->bits #f))]))
