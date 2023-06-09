@@ -146,10 +146,17 @@ You will also want to make sure your Racket installation is visible
 from your @tt{PATH} environment variable.  Assuming Racket was
 installed in the usual location, you can run:
 
-@verbatim|{   PATH=$PATH:"/Applications/Racket v8.6/bin"}|
+@verbatim|{   export PATH=$PATH:"/Applications/Racket v8.9/bin"}|
 
-You can add this line to the @tt{.zprofile} file in your home
-directory so that it is available every time you start the Terminal.
+NOTE: You'll need to know what version of Racket you installed and use that
+version's name in the above command. For example, if you install Racket 8.6,
+you should be using the path @tt{"/Applications/Racket 8.6/bin"} instead.
+
+You can add this line to the @tt{.zshrc} file in your home directory so that it
+is available every time you start the Terminal. Note that once you make this
+change to the @tt{.zshrc}, you'll either need to restart your terminal
+application or run @tt{source ~/.zshrc} to update your current @tt{PATH}
+settings.
 
 @subsection[#:tag "apple-silicon-mac"]{Using macOS on Apple Silicon}
 
