@@ -37,8 +37,7 @@
           (if-equal))]
     ['write-byte
      (seq (Mov rdi rax)
-          (Call 'write_byte)
-          (Mov rax (value->bits (void))))]))
+          (Call 'write_byte))]))
 
 ;; -> Asm
 ;; set rax to #t or #f if comparison flag is equal
