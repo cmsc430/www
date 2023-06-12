@@ -4,7 +4,7 @@
 
 (define prof (link "https://www.cs.umd.edu/~dvanhorn/" "David Van Horn"))
 (define prof-pronouns "he/him")
-(define prof-email "dvanhorn")
+(define prof-email "dvanhorn@cs.umd.edu")
 (define prof-initials "DVH")
 
 (define semester "summer")
