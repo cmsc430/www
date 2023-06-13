@@ -13,13 +13,8 @@ forms of control flow expressions: @racket[cond]-expressions and
 @racket[case]-expressions.
 
 
-You are given a starter compiler based on the Dupe language we studied
-in class.  The source code is available for download on ELMS and on
-GRACE.  On GRACE, the @tt{dupe-plus.zip} file can be found in:
-
-@verbatim|{
-/afs/glue.umd.edu/class/fall2022/cmsc/430/0101/public/
-}|
+You are given a file @tt{dupe-plus.zip} on ELMS with a starter
+compiler based on the @secref{Dupe} language we studied in class.
 
 
 You are tasked with extending the language in a number of
@@ -294,44 +289,8 @@ You can test your code in several ways:
 Note that only a small number of tests are given to you, so you should
 write additional test cases.
 
-@section[#:tag-prefix "a3-" #:style 'unnumbered]{Rubric}
-
-The autograder will grade based on these eight components:
-
-Handwritten Tests (proportionally graded)
-
-@itemlist[
-
- @item{(50%) Public and non-public handwritten tests: Gradescope's @tt{all.rkt} will contain additional private tests that does not match the ones in the publicly given file}
-
-]
-
-Randomized Property Testing (must pass all the associated tests for each property)
-
-@itemlist[
-
-  @item{(6.25%) Correct intepreter for primitives}
-
- @item{(6.25%) Correct compiler for primitives}
- 
- @item{(6.25%) Correct intepreter for cond}
-
- @item{(6.25%) Correct compiler for cond}
- 
-   @item{(6.25%) Correct intepreter for case}
-
- @item{(6.25%) Correct compiler for case}
- 
-   @item{(6.25%) Correct intepreter}
-
- @item{(6.25%) Correct compiler}
-]
-
-
 @section[#:tag-prefix "a3-" #:style 'unnumbered]{Submitting}
 
-You should submit on Gradescope. You should submit a zip file with
-exactly the same structure that the stub contains (a dupe-plus
-folder). We will only use the @tt{parse.rkt}, @tt{ast.rkt},
-@tt{compile.rkt}, @tt{interp.rkt}, and @tt{interp-prim.rkt} files for
-grading, so make sure all your work is contained there! The autograder will fail if it does not contain a dupe-plus folder with these files or there is a syntax error.
+Submit a zip file containing your work to Gradescope.  Use @tt{make
+submit.zip} from within the @tt{dupe-plus} directory to create a zip
+file with the proper structure.

@@ -5,6 +5,10 @@
 
 The goal of this assignment is to gain practice programming in Racket.
 
+@bold{This is a collaborative assignment.}  You may work with anyone
+you'd like on this assignment, but each person must submit their
+@tt{main.rkt} file on Gradescope.
+
 You are given a @tt{main.rkt} file (on ELMS under "Files"), that
 contains a number of sections.  In each section there are several
 function ``stubs,'' i.e. incomplete function definitions with type
