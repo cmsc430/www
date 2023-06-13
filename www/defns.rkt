@@ -4,7 +4,7 @@
 
 (define prof (link "https://www.cs.umd.edu/~dvanhorn/" "David Van Horn"))
 (define prof-pronouns "he/him")
-(define prof-email "dvanhorn")
+(define prof-email "dvanhorn@cs.umd.edu")
 (define prof-initials "DVH")
 
 (define semester "summer")
@@ -28,8 +28,8 @@
 (define racket-version "8.7")
 
 (define staff
-  (list (list "William Wegand" "wwegand@terpmail.umd.edu" "TBD")
-        (list "Pierce Darragh" "pdarragh@umd.edu" "TBD")
+  (list (list "William Wegand" "wwegand@terpmail.umd.edu" "3:00-4:00PM MTWThF")
+        (list "Pierce Darragh" "pdarragh@umd.edu" "10:30-11:30AM MTWTh")
         ))
 
 

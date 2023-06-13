@@ -228,9 +228,9 @@ There are two new kinds of expression constructors: @racket[Cond] and
 @racket[Case].  A @racket[Cond] AST node contains a list of
 cond-clauses and expression, which the expression of the @racket[else]
 clause.  Each cond-clause is represented by a @racket[Clause]
-structure containing two expressions: the right-hand-side of the
-clause which is used to determine whether the left-hand-side is
-evaluated, and the left-hand-side expression.
+structure containing two expressions: the left-hand-side of the
+clause which is used to determine whether the right-hand-side is
+evaluated, and the right-hand-side expression.
 
 The @racket[Case] AST node contains three things: an expression that
 is the subject of the dispatch (i.e. the expression that is evaluated
