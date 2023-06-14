@@ -6,9 +6,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-18.04, ubuntu-20.04]
+        os: [ubuntu-20.04, ubuntu-22.04]
         racket-variant: ['BC', 'CS']
-        racket-version: ['7.8', '8.0', '8.6']
+        racket-version: ['7.8', '8.0', '8.6', '8.8']
     name: Test on Racket ${{ matrix.racket-variant }} ${{ matrix.racket-version }} on ${{ matrix.os }}	
     steps:
     - name: Checkout
@@ -20,7 +20,7 @@ jobs:
         sudo apt-get install libunistring2
         sudo apt-get install libunistring-dev
     - name: Install Racket
-      uses: Bogdanp/setup-racket@v1.5
+      uses: Bogdanp/setup-racket@v1.10
       with:
         architecture: 'x64'
         distribution: 'full'
