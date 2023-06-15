@@ -44,6 +44,12 @@
   (check-equal? (run '(char? 8)) #f)
   (check-equal? (run '(char->integer #\a)) (char->integer #\a))
   (check-equal? (run '(integer->char 955)) #\λ)
+
+  ;; Evildoer examples
+  (check-equal? (run '(void)) (void))
+  (check-equal? (run '(begin 1 2)) 2)
+  (check-equal? (run '(eof-object? (void))) #f)
+
   ;; Extort examples
   (check-equal? (run '(add1 #f)) 'err)
   (check-equal? (run '(sub1 #f)) 'err)

@@ -18,7 +18,7 @@
 
 ;; Any -> Boolean
 (define (op0? x)
-  (memq x '(read-byte peek-byte)))
+  (memq x '(read-byte peek-byte void)))
 
 ;; Any -> Boolean
 (define (op1? x)

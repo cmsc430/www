@@ -13,6 +13,14 @@
 
 ;; type Env = (Listof (List Id Value))
 
+;; (list (list 'q 10) (list 'x 5) (list 'z #f) (list 'q 2))
+#;
+(let ((q 2))
+  (let ((z #f))
+    (let ((x 5))
+      (let ((q 10))
+        q))))
+
 ;; Expr -> Answer
 (define (interp e)
   (interp-env e '()))

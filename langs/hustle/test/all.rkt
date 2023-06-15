@@ -48,6 +48,7 @@
   (check-equal? (run '(if  0 3 4)) 3)
   (check-equal? (run '(zero? 4)) #f)
   (check-equal? (run '(zero? 0)) #t)
+
   ;; Dodger examples
   (check-equal? (run #\a) #\a)
   (check-equal? (run #\b) #\b)
@@ -56,6 +57,12 @@
   (check-equal? (run '(char? 8)) #f)
   (check-equal? (run '(char->integer #\a)) (char->integer #\a))
   (check-equal? (run '(integer->char 955)) #\λ)
+
+  ;; Evildoer examples
+  (check-equal? (run '(void)) (void))
+  (check-equal? (run '(begin 1 2)) 2)
+  (check-equal? (run '(eof-object? (void))) #f)
+
   ;; Extort examples
   (check-equal? (run '(add1 #f)) 'err)
   (check-equal? (run '(sub1 #f)) 'err)
@@ -66,6 +73,7 @@
   (check-equal? (run '(write-byte #f)) 'err)
   (check-equal? (run '(write-byte -1)) 'err)
   (check-equal? (run '(write-byte 256)) 'err)
+
   ;; Fraud examples
   (check-equal? (run '(let ((x 7)) x)) 7)
   (check-equal? (run '(let ((x 7)) 2)) 2)
