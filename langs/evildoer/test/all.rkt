@@ -53,7 +53,12 @@
   (check-equal? (run '(char? #t)) #f)
   (check-equal? (run '(char? 8)) #f)
   (check-equal? (run '(char->integer #\a)) (char->integer #\a))
-  (check-equal? (run '(integer->char 955)) #\λ))
+  (check-equal? (run '(integer->char 955)) #\λ)
+
+  ;; Evildoer examples
+  (check-equal? (run '(void)) (void))
+  (check-equal? (run '(begin 1 2)) 2)
+  (check-equal? (run '(eof-object? (void))) #f))
 
 (test-runner (λ (e) (interp (parse e))))
 (test-runner (λ (e) (bits->value (asm-interp (compile (parse e))))))
