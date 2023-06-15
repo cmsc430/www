@@ -686,6 +686,11 @@ There are 16 registers: @racket['rax], @racket['rbx], @racket['rcx],
 @racket['eax] which accesses the lower 32-bits of @racket['rax].
 This is useful in case you need to read or write 32-bits of memory.
 
+The registers @racket['rbx], @racket['rsp], @racket['rbp], and
+@racket['r12] through @racket['r15] are ``callee-saved'' registers,
+meaning they are preserved across function calls (and must be saved
+and restored by any callee code).
+
 Each register plays the same role as in x86, so for example
 @racket['rsp] holds the current location of the stack.
 
