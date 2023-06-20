@@ -203,7 +203,6 @@
 
 (define-metafunction G
   lookup : r x -> a
-  [(lookup () x) err]
   [(lookup ((x v) (x_1 v_1) ...) x) v]
   [(lookup ((x_0 v_0) (x_1 v_1) ...) x)
    (lookup ((x_1 v_1) ...) x)])
