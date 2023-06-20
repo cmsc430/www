@@ -336,7 +336,7 @@ The interpreter closely mirrors the semantics.  The top-level
 @racket[interp-env] that takes an expression and environment and
 computes the result.  It is defined by structural recursion on the
 expression.  Environments are represented as lists of associations
-between variables and integers.  There are two helper functions for
+between variables and values.  There are two helper functions for
 @racket[ext] and @racket[lookup]:
 
 @codeblock-include["fraud/interp.rkt"]
