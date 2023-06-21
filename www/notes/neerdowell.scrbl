@@ -16,7 +16,7 @@
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 @(void (ev '(current-objs '("runtime.o"))))
 @(for-each (λ (f) (ev `(require (file ,f))))
-	   '("interp.rkt" "compile.rkt" "compile-expr.rkt" "compile-literals.rkt" "compile-datum.rkt" "utils.rkt" "ast.rkt" "parse.rkt" "types.rkt" "unload-bits-asm.rkt"))
+	   '("interp.rkt" "compile.rkt" "compile-expr.rkt" "compile-literals.rkt" "compile-datum.rkt" "utils.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
 @(define this-lang "Neerdowell")
 
@@ -320,11 +320,11 @@ and @racket[struct-ref]:
             (Xor rax type-struct)    ; untag the structure pointer
             (Mov rax (Offset rax 0)) ; get the structure type symbol
             (Cmp r8 rax)             ; compare it to the type argument
-            (Mov rax (imm->bits #t))
+            (Mov rax (value->bits #t))
             (Jne f)                  ; a structure, but not this kind
             (Jmp t)                  ; a structure of the same kind
             (Label f)
-            (Mov rax (imm->bits #f))
+            (Mov rax (value->bits #f))
             (Label t)))]
 
    ['struct-ref
@@ -396,7 +396,7 @@ We can now see structures in action:
 
 @ex[
 (define (run . p)
-  (unload/free (asm-interp (compile (parse p)))))
+  (bits->value (asm-interp (compile (parse p)))))
 
 (run '(struct posn (x y))
      '(posn? (posn 3 4)))

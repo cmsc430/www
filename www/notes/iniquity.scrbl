@@ -15,7 +15,7 @@
 @(ev `(current-directory ,(path->string (build-path notes "iniquity"))))
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 @(for-each (λ (f) (ev `(require (file ,f))))
-	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt" "unload-bits-asm.rkt"))
+	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
 @(define (shellbox . s)
    (parameterize ([current-directory (build-path notes "iniquity")])
@@ -663,7 +663,7 @@ the interpreter:
 @ex[
 (current-objs '("runtime.o"))
 (define (run p)
-  (unload/free (asm-interp (compile (parse p)))))
+  (bits->value (asm-interp (compile (parse p)))))
 
 (run '[(define (double x) (+ x x))
        (double 5)])

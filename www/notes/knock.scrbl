@@ -22,7 +22,7 @@
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 @(ev '(current-objs '("runtime.o")))
 @(for-each (λ (f) (ev `(require (file ,f))))
-	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt" "unload-bits-asm.rkt"))
+	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
 @(define this-lang "Knock")
 
@@ -679,7 +679,7 @@ We can check that the compiler works for a complete example:
 
 @ex[
 (define (run p)
-  (unload/free (asm-interp (compile (parse p)))))
+  (bits->value (asm-interp (compile (parse p)))))
 
 (run
  '[(define (length xs)

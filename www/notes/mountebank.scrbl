@@ -16,7 +16,7 @@
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 @(void (ev '(current-objs '("runtime.o"))))
 @(for-each (λ (f) (ev `(require (file ,f))))
-	   '("interp.rkt" "compile.rkt" "compile-expr.rkt" "compile-literals.rkt" "compile-datum.rkt" "utils.rkt" "ast.rkt" "parse.rkt" "types.rkt" "unload-bits-asm.rkt"))
+	   '("interp.rkt" "compile.rkt" "compile-expr.rkt" "compile-literals.rkt" "compile-datum.rkt" "utils.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
 @(define this-lang "Mountebank")
 
@@ -298,7 +298,7 @@ examples behave as expected:
 @ex[
 (current-objs '("runtime.o"))
 (define (run . p)
-  (unload/free (asm-interp (compile (parse p)))))
+  (bits->value (asm-interp (compile (parse p)))))
 
 (run '#t)
 (run ''#t)

@@ -32,7 +32,7 @@
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 @(void (ev '(current-objs '("runtime.o"))))
 @(for-each (λ (f) (ev `(require (file ,f))))
-	   '(#;"interp.rkt" "compile.rkt" "compile-expr.rkt" "compile-literals.rkt" "compile-datum.rkt" "utils.rkt" "ast.rkt" "parse.rkt" "types.rkt" "unload-bits-asm.rkt"))
+	   '(#;"interp.rkt" "compile.rkt" "compile-expr.rkt" "compile-literals.rkt" "compile-datum.rkt" "utils.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
 @(define this-lang "Outlaw")
 
@@ -250,12 +250,12 @@ which would emit the following code:
       (loop (gensym 'loop)))
   (seq (Mov r8 0)                ; count = 0
        (Label loop)
-       (Cmp rax (imm->bits '())) ; if empty, done
+       (Cmp rax (value->bits '())) ; if empty, done
        (Je done)
        (assert-cons rax)         ; otherwise, should be a cons
        (Xor rax type-cons)
        (Mov rax (Offset rax 0))  ; move cdr into rax
-       (Add r8 (imm->bits 1))    ; increment count
+       (Add r8 (value->bits 1))    ; increment count
        (Jmp loop)                ; loop
        (Label done)
        (Mov rax r8)))            ; return count
@@ -287,12 +287,12 @@ computing the length of the list in @racket['rax]:
                (loop (gensym 'loop)))
            (seq (Mov r8 0)                ; count = 0
                 (Label loop)
-                (Cmp rax (imm->bits '())) ; if empty, done
+                (Cmp rax (value->bits '())) ; if empty, done
                 (Je done)
                 (assert-cons rax)         ; otherwise, should be a cons
                 (Xor rax type-cons)
                 (Mov rax (Offset rax 0))  ; move cdr into rax
-                (Add r8 (imm->bits 1))    ; increment count
+                (Add r8 (value->bits 1))    ; increment count
                 (Jmp loop)                ; loop
                 (Label done)
                 (Mov rax r8)))            ; return count
