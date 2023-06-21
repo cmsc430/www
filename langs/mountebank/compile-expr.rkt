@@ -19,7 +19,7 @@
 (define (compile-e e c t?)
   (match e
     [(Quote d)          (compile-datum d)]
-    [(Eof)              (seq (Mov rax (imm->bits eof)))]
+    [(Eof)              (seq (Mov rax (value->bits eof)))]
     [(Var x)            (compile-variable x c)]
     [(Prim0 p)          (compile-prim0 p c)]
     [(Prim1 p e)        (compile-prim1 p e c)]
@@ -68,7 +68,7 @@
   (let ((l1 (gensym 'if))
         (l2 (gensym 'if)))
     (seq (compile-e e1 c #f)
-         (Cmp rax val-false)
+         (Cmp rax (value->bits #f))
          (Je l1)
          (compile-e e2 c t?)
          (Jmp l2)
@@ -261,7 +261,7 @@
              cm))]
     [(PLit l)
      (let ((fail (gensym)))
-       (list (seq (Cmp rax (imm->bits l))
+       (list (seq (Cmp rax (value->bits l))
                   (Jne fail))
              (seq (Label fail)
                   (Add rsp (* 8 (length cm)))

@@ -1,5 +1,6 @@
 #lang racket
 (provide (all-defined-out))
+(require ffi/unsafe)
 
 (define imm-shift          3)
 (define imm-mask       #b111)
@@ -23,6 +24,8 @@
 (define val-void   #b1111000)
 (define val-empty #b10011000)
 
+(struct struct-val () #:transparent)
+
 (define (bits->value b)
   (cond [(= type-int (bitwise-and b mask-int))
          (arithmetic-shift b (- int-shift))]
@@ -33,9 +36,38 @@
         [(= b val-eof)  eof]
         [(= b val-void) (void)]
         [(= b val-empty) '()]
-        [else (error "invalid bits")]))
+        [(box-bits? b)
+         (box (bits->value (heap-ref b)))]
+        [(cons-bits? b)
+         (cons (bits->value (heap-ref (+ b 8)))
+               (bits->value (heap-ref b)))]
+        [(vect-bits? b)
+         (if (zero? (untag b))
+             (vector)
+             (build-vector (heap-ref b)
+                           (lambda (j)
+                             (bits->value (heap-ref (+ b (* 8 (add1 j))))))))]
+        [(str-bits? b)
+         (if (zero? (untag b))
+             (string)
+             (build-string (heap-ref b)
+                           (lambda (j)
+                             (char-ref (+ b 8) j))))]
+        [(symb-bits? b)
+         (string->symbol
+          (if (zero? (untag b))
+              (string)
+              (build-string (heap-ref b)
+                            (lambda (j)
+                              (char-ref (+ b 8) j)))))]
+        [(proc-bits? b)
+         (lambda _
+           (error "This function is not callable."))]
+        [(struct-bits? b)
+         (struct-val)]
+	[else (error "bad bits!" b)]))
 
-(define (imm->bits v)
+(define (value->bits v)
   (cond [(eof-object? v) val-eof]
         [(integer? v) (arithmetic-shift v int-shift)]
         [(char? v)
@@ -44,8 +76,8 @@
         [(eq? v #t) val-true]
         [(eq? v #f) val-false]
         [(void? v)  val-void]
-        [(empty? v) val-empty]))
-
+        [(empty? v) val-empty]
+        [else (error "not an immediate value")]))
 
 (define (imm-bits? v)
   (zero? (bitwise-and v imm-mask)))
@@ -76,3 +108,13 @@
 
 (define (struct-bits? v)
   (zero? (bitwise-xor (bitwise-and v imm-mask) type-struct)))
+
+(define (untag i)
+  (arithmetic-shift (arithmetic-shift i (- (integer-length ptr-mask)))
+                    (integer-length ptr-mask)))
+
+(define (heap-ref i)
+  (ptr-ref (cast (untag i) _int64 _pointer) _int64))
+
+(define (char-ref i j)
+  (integer->char (ptr-ref (cast (untag i) _int64 _pointer) _uint32 j)))

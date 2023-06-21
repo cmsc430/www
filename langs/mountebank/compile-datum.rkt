@@ -23,7 +23,7 @@
 
 ;; Value -> Asm
 (define (compile-atom v)
-  (seq (Mov rax (imm->bits v))))
+  (seq (Mov rax (value->bits v))))
 
 ;; Datum -> Boolean
 (define (compound? d)
@@ -48,7 +48,7 @@
     [(cons? c)   (compile-datum-cons (car c) (cdr c))]
     [(symbol? c) (cons (load-symbol c) '())]
     [(string? c) (cons (load-string c) '())]
-    [else        (cons (imm->bits c) '())]))
+    [else        (cons (value->bits c) '())]))
 
 ;; Datum -> (cons AsmExpr Asm)
 (define (compile-datum-box c)

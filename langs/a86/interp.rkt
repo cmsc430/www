@@ -32,6 +32,12 @@
 
 (define fmt (if (eq? (system-type 'os) 'macosx) 'macho64 'elf64))
 
+;; WARNING: The heap is re-used, so make sure you're done with it
+;; before calling asm-interp again
+(define *heap*
+  ; IMPROVE ME: hard-coded heap size
+  (malloc _int64 20000 'raw))
+
 ;; Asm String -> (cons Value String)
 ;; Like asm-interp, but uses given string for input and returns
 ;; result with string output
@@ -70,23 +76,17 @@
                   (function-ptr (λ () (raise 'err)) (_fun _-> _void))))
 
 
-  (define current-heap #f)
+  (define has-heap? #f)
 
-  ;; allocate a heap
   (when (ffi-obj-ref "heap" libt.so (thunk #f))
-    (set! current-heap (make-c-parameter "heap" libt.so _pointer))
+    (set! has-heap? #t)
 
-    (if (ffi-obj-ref "from" libt.so (thunk #f))
-        (begin
-          (current-heap
-           ; IMPROVE ME: hard-coded heap size
-           (malloc _int64 20000 'raw))
-          (set-ffi-obj! "from" libt.so _pointer (current-heap))
-          (set-ffi-obj! "to" libt.so _pointer (ptr-add (current-heap) 10000 _int64))
-          (set-ffi-obj! "types" libt.so _pointer (malloc _int32 10000)))
-        (current-heap
-         ; IMPROVE ME: hard-coded heap size
-         (malloc _int64 10000 'raw))))
+    ;; This is a GC-enabled run-time so set from, to, and types space
+    (when (ffi-obj-ref "from" libt.so (thunk #f))
+      ;; FIXME: leaks types memory
+      (set-ffi-obj! "from" libt.so _pointer *heap*)
+      (set-ffi-obj! "to" libt.so _pointer (ptr-add *heap* 10000 _int64))
+      (set-ffi-obj! "types" libt.so _pointer (malloc _int32 10000))))
 
   (delete-file t.s)
   (delete-file t.o)
@@ -109,15 +109,9 @@
         (current-out (fopen t.out "w"))
 
         (define result
-          (begin0
-            (with-handlers ((symbol? identity))
-              (guard-foreign-escape
-               (if current-heap
-                   (cons (current-heap) (entry (current-heap)))
-                   (entry #f))))
-            #;
-            (when current-heap
-              (free (current-heap)))))
+          (with-handlers ((symbol? identity))
+            (guard-foreign-escape
+             (entry *heap*))))
 
         (fflush (current-out))
         (fclose (current-in))
@@ -128,15 +122,9 @@
         (delete-file t.out)
         (cons result output))
 
-      (begin0
-        (with-handlers ((symbol? identity))
-          (guard-foreign-escape
-           (if current-heap
-               (cons (current-heap) (entry (current-heap)))
-               (entry #f))))
-        #;
-        (when current-heap
-          (free (current-heap))))))
+      (with-handlers ((symbol? identity))
+        (guard-foreign-escape
+         (entry *heap*)))))
 
 
 (define (string-splice xs)

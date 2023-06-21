@@ -1,5 +1,6 @@
 #lang racket
 (provide (all-defined-out))
+(require ffi/unsafe)
 
 (define imm-shift          3)
 (define imm-mask       #b111)
@@ -31,7 +32,27 @@
         [(= b val-eof)  eof]
         [(= b val-void) (void)]
         [(= b val-empty) '()]
-        [else (error "invalid bits")]))
+        [(box-bits? b)
+         (box (bits->value (heap-ref b)))]
+        [(cons-bits? b)
+         (cons (bits->value (heap-ref (+ b 8)))
+               (bits->value (heap-ref b)))]
+        [(vect-bits? b)
+         (if (zero? (untag b))
+             (vector)
+             (build-vector (heap-ref b)
+                           (lambda (j)
+                             (bits->value (heap-ref (+ b (* 8 (add1 j))))))))]
+        [(str-bits? b)
+         (if (zero? (untag b))
+             (string)
+             (build-string (heap-ref b)
+                           (lambda (j)
+                             (char-ref (+ b 8) j))))]
+        [(proc-bits? b)
+         (lambda _
+           (error "This function is not callable."))]
+	[else (error "bad bits!" b)]))
 
 (define (value->bits v)
   (cond [(eof-object? v) val-eof]
@@ -43,8 +64,7 @@
         [(eq? v #f) val-false]
         [(void? v)  val-void]
         [(empty? v) val-empty]
-        [else (error "not an immediate value" v)]))
-
+        [else (error "not an immediate value")]))
 
 (define (imm-bits? v)
   (zero? (bitwise-and v imm-mask)))
@@ -69,3 +89,13 @@
 
 (define (proc-bits? v)
   (zero? (bitwise-xor (bitwise-and v imm-mask) type-proc)))
+
+(define (untag i)
+  (arithmetic-shift (arithmetic-shift i (- (integer-length ptr-mask)))
+                    (integer-length ptr-mask)))
+
+(define (heap-ref i)
+  (ptr-ref (cast (untag i) _int64 _pointer) _int64))
+
+(define (char-ref i j)
+  (integer->char (ptr-ref (cast (untag i) _int64 _pointer) _uint32 j)))
