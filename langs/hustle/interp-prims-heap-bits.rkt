@@ -1,6 +1,6 @@
 #lang racket
 (provide interp-prim1 interp-prim2)
-(require "types.rkt"
+(require (except-in "types.rkt" heap-ref)
          "heap-bits.rkt")
 
 ;; Op1 Value* Heap -> Answer*
