@@ -7,20 +7,23 @@
 (define rbx 'rbx) ; heap
 (define rsp 'rsp) ; stack
 (define rdi 'rdi) ; arg
+(define r15 'r15) ; stack pad (non-volatile)
 
-;; type CEnv = [Listof Variable]
+;; type CEnv = (Listof [Maybe Id])
   
 ;; Prog -> Asm
 (define (compile p)
   (match p
-    [(Prog ds e)  
+    [(Prog ds e)
      (prog (externs)
            (Global 'entry)
            (Label 'entry)
-           (Push rbx)    ; save callee-saved register	   
+           (Push rbx)    ; save callee-saved register
+           (Push r15)
            (Mov rbx rdi) ; recv heap pointer
            (compile-e e '())
-           (Pop rbx)     ; restore callee-save register
+           (Pop r15)     ; restore callee-save register
+           (Pop rbx)
            (Ret)
            (compile-defines ds)
            (Label 'raise_error_align)

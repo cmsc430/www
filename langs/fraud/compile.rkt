@@ -6,8 +6,9 @@
 (define rax 'rax) ; return
 (define rsp 'rsp) ; stack
 (define rdi 'rdi) ; arg
+(define r15 'r15) ; stack pad (non-volatile)
 
-;; type CEnv = (Listof ID)
+;; type CEnv = (Listof [Maybe Id])
 
 ;; Expr -> Asm
 (define (compile e)
@@ -17,7 +18,9 @@
         (Extern 'raise_error)
         (Global 'entry)
         (Label 'entry)
+        (Push r15)    ; save callee-saved register
         (compile-e e '())
+        (Pop r15)     ; restore callee-save register
         (Ret)
         (Label 'raise_error_align)
         pad-stack

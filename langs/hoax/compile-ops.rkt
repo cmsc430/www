@@ -52,8 +52,7 @@
           pad-stack
           (Mov rdi rax)
           (Call 'write_byte)
-          unpad-stack
-          (Mov rax (value->bits (void))))]
+          unpad-stack)]
     ['box
      (seq (Mov (Offset rbx 0) rax)
           (Mov rax rbx)
@@ -144,11 +143,11 @@
      (seq (Pop r8)
           (Cmp rax r8)
 	  (if-equal))]
-    ['make-vector
+    ['make-vector ;; size value
      (let ((loop (gensym))
            (done (gensym))
            (empty (gensym)))
-       (seq (Pop r8)
+       (seq (Pop r8) ;; r8 = size
             (assert-natural r8)
             (Cmp r8 0) ; special case empty vector
             (Je empty)
@@ -174,7 +173,7 @@
             (Mov rax type-vect)
             (Label done)))]
 
-    ['vector-ref
+    ['vector-ref ; vector index
      (seq (Pop r8)
           (assert-vector r8)
           (assert-integer rax)

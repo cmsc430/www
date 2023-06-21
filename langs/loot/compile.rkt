@@ -7,8 +7,9 @@
 (define rbx 'rbx) ; heap
 (define rsp 'rsp) ; stack
 (define rdi 'rdi) ; arg
+(define r15 'r15) ; stack pad (non-volatile)
 
-;; type CEnv = [Listof Id]
+;; type CEnv = (Listof [Maybe Id])
 
 ;; Prog -> Asm
 (define (compile p)
@@ -17,12 +18,14 @@
      (prog (externs)
            (Global 'entry)
            (Label 'entry)
-           (Push rbx)    ; save callee-saved register	   
+           (Push rbx)    ; save callee-saved register
+           (Push r15)        
            (Mov rbx rdi) ; recv heap pointer
            (compile-defines-values ds)
            (compile-e e (reverse (define-ids ds)) #f)
            (Add rsp (* 8 (length ds))) ;; pop function definitions
-           (Pop rbx)     ; restore callee-save register
+           (Pop r15)     ; restore callee-save register
+           (Pop rbx)
            (Ret)
            (compile-defines ds)
            (compile-lambda-defines (lambdas p))

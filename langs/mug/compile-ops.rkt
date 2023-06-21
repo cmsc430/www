@@ -55,8 +55,7 @@
           pad-stack
           (Mov rdi rax)
           (Call 'write_byte)
-          unpad-stack
-          (Mov rax val-void))]
+          unpad-stack)]
     ['box
      (seq (Mov (Offset rbx 0) rax)
           (Mov rax rbx)

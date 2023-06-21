@@ -50,8 +50,7 @@
           pad-stack
           (Mov rdi rax)
           (Call 'write_byte)
-          unpad-stack
-          (Mov rax (value->bits (void))))]))
+          unpad-stack)]))
 
 ;; Op2 -> Asm
 (define (compile-op2 p)

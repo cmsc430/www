@@ -1016,14 +1016,16 @@ interpreter and compiler are free to do anything on this input.
 
 Since we know Racket will signal an error when the interpreter tries
 to interpret a meaningless expression, we can write an alternate
-@racket[check-correctness] function that catches any exceptions and
-produces void, effectively ignoring the test:
+@racket[check-correctness] function that first runs the interpreter
+with an exception handler installed.  Should an error occur,
+the test is ignored, otherwise the value produced is compared
+to that of the compiler:
 
 @ex[
 (define (check-correctness e)
   (with-handlers ([exn:fail? void])
-    (check-equal? (interp-compile e)
-                  (interp e))))
+    (let ((v (interp e)))
+      (check-equal? v (interp-compile e)))))
 
 (check-correctness (parse '(add1 7)))
 (check-correctness (parse '(add1 #f)))
