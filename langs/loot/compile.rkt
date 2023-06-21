@@ -9,7 +9,7 @@
 (define rdi 'rdi) ; arg
 (define r15 'r15) ; stack pad (non-volatile)
 
-;; type CEnv = [Listof Id]
+;; type CEnv = (Listof [Maybe Id])
 
 ;; Prog -> Asm
 (define (compile p)

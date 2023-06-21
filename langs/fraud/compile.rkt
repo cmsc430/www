@@ -8,7 +8,7 @@
 (define rdi 'rdi) ; arg
 (define r15 'r15) ; stack pad (non-volatile)
 
-;; type CEnv = (Listof ID)
+;; type CEnv = (Listof [Maybe Id])
 
 ;; Expr -> Asm
 (define (compile e)
