@@ -7,6 +7,7 @@
 (define rbx 'rbx) ; heap
 (define rsp 'rsp) ; stack
 (define rdi 'rdi) ; arg
+(define r15 'r15) ; stack pad (non-volatile)
 
 ;; type CEnv = [Listof Variable]
 
@@ -17,10 +18,12 @@
      (prog (externs)
            (Global 'entry)
            (Label 'entry)
-           (Push rbx)    ; save callee-saved register	   
+           (Push rbx)    ; save callee-saved register
+           (Push r15)
            (Mov rbx rdi) ; recv heap pointer
            (compile-e e '() #f)
-           (Pop rbx)     ; restore callee-save register
+           (Pop r15)     ; restore callee-save register
+           (Pop rbx)
            (Ret)
            (compile-defines ds)
            (Label 'raise_error_align)
