@@ -41,8 +41,7 @@
     ['write-byte
      (seq (assert-byte)
           (Mov rdi rax)
-          (Call 'write_byte)
-          (Mov rax (value->bits (void))))]))
+          (Call 'write_byte))]))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

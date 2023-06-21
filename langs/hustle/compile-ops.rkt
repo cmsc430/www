@@ -49,13 +49,12 @@
           pad-stack
           (Mov rdi rax)
           (Call 'write_byte)
-          unpad-stack
-          (Mov rax val-void))]
+          unpad-stack)]
     ['box
-     (seq (Mov (Offset rbx 0) rax)
-          (Mov rax rbx)
-          (Or rax type-box)
-          (Add rbx 8))]
+     (seq (Mov (Offset rbx 0) rax) ; memory write
+          (Mov rax rbx)            ; put box in rax
+          (Or rax type-box)        ; tag as a box
+          (Add rbx 8))]            ; move rbx 8 bytes over
     ['unbox
      (seq (assert-box rax)
           (Xor rax type-box)
