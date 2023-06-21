@@ -1,6 +1,6 @@
 #lang racket
 (provide interp interp-env-heap)
-(require "types.rkt"
+(require (except-in "types.rkt" heap-ref)
          "env.rkt"
          "heap-bits.rkt"
          "interp-prims-heap-bits.rkt"
