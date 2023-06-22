@@ -280,7 +280,7 @@ to represent the value itself, either true, false, or some integer.
 
 Let's use the least significant bit to indicate the type and
 let's use @binary[type-int] for integer and
-@binary[type-bool] for boolean. These are arbitrary choices
+@binary[(value->bits #t)] for boolean. These are arbitrary choices
 (more or less).
 
 The number @racket[1] would be represented as
@@ -290,10 +290,10 @@ The number @racket[1] would be represented as
 number is no longer the number itself: the Dupe value
 @racket[1] is represented by the number @racket[2]
 (@binary[2]). The Dupe value @racket[#t]
-is represented by the number @racket[#,val-true]
-(@binary[val-true 2]); the Dupe value @racket[#f]
-is represented by the number @racket[#,val-false]
-(@binary[val-false 2]).
+is represented by the number @racket[#,(value->bits #t)]
+(@binary[(value->bits #t) 2]); the Dupe value @racket[#f]
+is represented by the number @racket[#,(value->bits #f)]
+(@binary[(value->bits #f) 2]).
 
 One nice thing about our choice of encoding: @racket[0] is represented
 as @racket[0] (@binary[0 2]).
@@ -470,8 +470,8 @@ So we can replace the RHS of the first case with
 We can do similar reasoning on the second case with
 @racket[(value->bits b)] where @racket[b] is a boolean.  From the
 definition of @racket[value->bits], we can replace the RHS with
-@racket[(match b [#t val-true] [#f val-false])], which can be written
-more succinctly as @racket[(if b val-true val-false)].
+@racket[(match b [#t (value->bits #t)] [#f (value->bits #f)])], which can be written
+more succinctly as @racket[(if b (value->bits #t) (value->bits #f))].
 
 In the third case, let's suppose there is an analog of
 @racket[interp-prim1] called @racket[interp-prim1-bits] that operates
@@ -513,11 +513,11 @@ Of course, @racket[(value->bits (interp e1))] is just what
 ]
 
 Now observe that @racket[(interp e0)] produces @racket[#f] if and only
-if @racket[(interp-bits e0)] produces @racket[val-false].  We can therefore
+if @racket[(interp-bits e0)] produces @racket[(value->bits #f)].  We can therefore
 eliminate the use of @racket[interp] by replacing this conditional with:
 
 @racketblock[
-(if (eq? val-false (interp-bits e0))
+(if (eq? (value->bits #f) (interp-bits e0))
     (interp-bits e2)
     (interp-bits e1))
 ]
@@ -533,11 +533,11 @@ We've now arrived at the following @racket[interp]-free definition of
 (define (interp-bits e)
   (match e
     [(Int i) (arithmetic-shift i int-shift)]
-    [(Bool b) (if b val-true val-false)]
+    [(Bool b) (if b (value->bits #t) (value->bits #f))]
     [(Prim1 p e)
      (interp-prim1-bits p (interp-bits e))]
     [(If e1 e2 e3)
-     (if (eq? val-false (interp-bits e1))
+     (if (eq? (value->bits #f) (interp-bits e1))
          (interp-bits e3)
          (interp-bits e2))])))
 
@@ -580,7 +580,7 @@ Now notice the following:
 
 @item{@racket[(value->bits (sub1 (bits->value b)))] ≡ @racket[(- b (value->bits 1))] ≡ @racket[(- b (arithmetic-shift 1 int-shift))]}
 
-@item{@racket[(value->bits (zero? (bits->value b)))] ≡ @racket[(value->bits (zero? b))] ≡ @racket[(if (zero? b) val-true val-false)]}
+@item{@racket[(value->bits (zero? (bits->value b)))] ≡ @racket[(value->bits (zero? b))] ≡ @racket[(if (zero? b) (value->bits #t) (value->bits #f))]}
 
 ]
 
@@ -593,7 +593,7 @@ So we can define @racket[interp-prim1-bits] as:
   (match op
     ['add1  (+ b (arithmetic-shift 1 int-shift))]
     ['sub1  (- b (arithmetic-shift 1 int-shift))]
-    ['zero? (if (zero? b) val-true val-false)])))
+    ['zero? (if (zero? b) (value->bits #t) (value->bits #f))])))
 
 
 @;{
@@ -601,7 +601,7 @@ So we can define @racket[interp-prim1-bits] as:
 
 In the first two cases, we know that @racket[i] and @racket[b] are
 integers and booleans, respectively.  So we know @racket[(values->bits
-i) = (* 2 i)] and @racket[(values->bits b) = (if b #,val-true #,val-false)].  We can
+i) = (* 2 i)] and @racket[(values->bits b) = (if b #,(value->bits #t) #,(value->bits #f))].  We can
 rewrite the code as:
 
 @;{the #:escape identity thing is a cute solution to the
@@ -612,7 +612,7 @@ rewrite the code as:
  (define (interp-bits e)
    (match e
      [(Int i) (* 2 i)]
-     [(Bool b) (if b (identity val-true) (identity val-false))]
+     [(Bool b) (if b (identity (value->bits #t)) (identity (value->bits #f)))]
      [(Prim1 'add1 e0)
       (value->bits (add1 (interp e0)))]
      [(Prim1 'sub1 e0)
@@ -641,7 +641,7 @@ We can rewrite the last case by the following equation:
  (define (interp-bits e)
    (match e
      [(Int i) (* 2 i)]
-     [(Bool b) (if b (identity val-true) (identity val-false))]
+     [(Bool b) (if b (identity (value->bits #t)) (identity (value->bits #f)))]
      [(Prim1 'add1 e0)
       (value->bits (add1 (interp e0)))]
      [(Prim1 'sub1 e0)
@@ -675,7 +675,7 @@ to get:
  (define (interp-bits e)
    (match e
      [(Int i) (* 2 i)]
-     [(Bool b) (if b (identity val-true) (identity val-false))]
+     [(Bool b) (if b (identity (value->bits #t)) (identity (value->bits #f)))]
      [(Prim1 'add1 e0)
       (+ (value->bits (interp e0)) (value->bits 1))]
      [(Prim1 'sub1 e0)
@@ -705,7 +705,7 @@ We can now rewrite by the equation of our specification:
  (define (interp-bits e)
    (match e
      [(Int i) (* 2 i)]
-     [(Bool b) (if b (identity val-true) (identity val-false))]
+     [(Bool b) (if b (identity (value->bits #t)) (identity (value->bits #f)))]
      [(Prim1 'add1 e0)
       (+ (interp-bits e0) (identity (value->bits 1)))]
      [(Prim1 'sub1 e0)
@@ -731,15 +731,15 @@ and inline @racket[value->bits] specialized to a boolean argument:
  (define (interp-bits e)
    (match e
      [(Int i) (* 2 i)]
-     [(Bool b) (if b (identity val-true) (identity val-false))]
+     [(Bool b) (if b (identity (value->bits #t)) (identity (value->bits #f)))]
      [(Prim1 'add1 e0)
       (+ (interp-bits e0) (identity (value->bits 1)))]
      [(Prim1 'sub1 e0)
       (- (interp-bits e0) (identity (value->bits 1)))]
      [(Prim1 'zero? e0)
       (match (zero? (interp-bits e0))
-        [#t (identity val-true)]
-        [#f (identity val-false)])]
+        [#t (identity (value->bits #t))]
+        [#f (identity (value->bits #f))])]
      [(If e0 e1 e2)
       (if (interp e0)
           (interp-bits e1)
@@ -753,24 +753,24 @@ Still correct:
 Finally, in the last case, all that matters in @racket[(if (interp e0)
 ...)] is whether @racket[(interp e0)] returns @racket[#f] or something
 else.  So we can rewrite in terms of whether @racket[(interp-bits e0)]
-produces the representation of @racket[#f] (@binary[val-false 2]):
+produces the representation of @racket[#f] (@binary[(value->bits #f) 2]):
 
 @ex[#:escape identity #:no-prompt
 @code:comment{Expr -> Bits}
  (define (interp-bits e)
    (match e
      [(Int i) (* 2 i)]
-     [(Bool b) (if b (identity val-true) (identity val-false))]
+     [(Bool b) (if b (identity (value->bits #t)) (identity (value->bits #f)))]
      [(Prim1 'add1 e0)
       (+ (interp-bits e0) (identity (value->bits 1)))]
      [(Prim1 'sub1 e0)
       (- (interp-bits e0) (identity (value->bits 1)))]
      [(Prim1 'zero? e0)
       (match (zero? (interp-bits e0))
-        [#t (identity val-true)]
-        [#f (identity val-false)])]
+        [#t (identity (value->bits #t))]
+        [#f (identity (value->bits #f))])]
      [(If e0 e1 e2)
-      (if (= (interp-bits e0) (identity val-false))
+      (if (= (interp-bits e0) (identity (value->bits #f)))
           (interp-bits e2)
           (interp-bits e1))]))
  ]
@@ -836,9 +836,9 @@ Let's consider some simple examples:
 before, but needs to use the new representation, i.e. the compiler
 should produce @racket[(Mov 'rax 84)], which is @racket[(* 42 2)].}
 
-@item{@racket[#f]: this should produce @racket[(Mov 'rax #,val-false)].}
+@item{@racket[#f]: this should produce @racket[(Mov 'rax #,(value->bits #f))].}
 
-@item{@racket[#t]: this should produce @racket[(Mov 'rax #,val-true)].}
+@item{@racket[#t]: this should produce @racket[(Mov 'rax #,(value->bits #t))].}
 
 @item{@racket[(add1 _e)]: this should produce the instructions for
 @racket[_e] followed by an instruction to add @racket[#,(value->bits 1)], which is
@@ -850,8 +850,8 @@ subtracting @racket[#,(value->bits 1)].}
 @item{@racket[(zero? _e)]: this should produce the
   instructions for @racket[_e] followed by instructions that
   compare @racket['rax] to 0 and set @racket['rax] to
-  @racket[#t] (i.e. @binary[val-true 2]) if true and
-  @racket[#f] (i.e. @binary[val-false 2]) otherwise.
+  @racket[#t] (i.e. @binary[(value->bits #t) 2]) if true and
+  @racket[#f] (i.e. @binary[(value->bits #f) 2]) otherwise.
 
 This is a bit different from what we saw with Con, which combined
 conditional execution with testing for equality to @racket[0].  Here
@@ -867,7 +867,7 @@ of instruction, the @bold{conditional move} instruction: @racket[Cmov].
 compiling each subexpression, generating some labels and the
 appropriate comparison and conditional jump.  The only difference is
 we now want to compare the result of executing @racket[_e0] with
-@racket[#f] (i.e. @binary[val-false 2]) and jumping to the code for @racket[_e2] when
+@racket[#f] (i.e. @binary[(value->bits #f) 2]) and jumping to the code for @racket[_e2] when
 they are equal.}
 ]
 
@@ -948,7 +948,7 @@ integer, to recover the number being represented, we need to
 divide by 2, which can be done efficiently with a
 right-shift of 1 bit. Likewise with a boolean, if we shift
 right by 1 bit there are two possible results:
-@racket[#,val-false] for false and @racket[#,val-true] for
+@racket[#,(value->bits #f)] for false and @racket[#,(value->bits #t)] for
 true.
 
 We use the following interface for values in the runtime system:
