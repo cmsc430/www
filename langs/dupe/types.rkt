@@ -2,6 +2,7 @@
 (provide (all-defined-out))
 
 (define int-shift    1)
+(define mask-int   #b1)
 (define type-int   #b0)
 
 (define (bits->value b)
