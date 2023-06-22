@@ -29,11 +29,8 @@
 ;; Expr REnv Heap -> Answer*
 (define (interp-env-heap e r h)
   (match e
-    [(Int i)  (cons h i)]
-    [(Bool b) (cons h b)]
-    [(Char c) (cons h c)]
+    [(Lit d)  (cons h d)]
     [(Eof)    (cons h eof)]
-    [(Empty)  (cons h '())]
     [(Var x)  (cons h (lookup r x))]
     [(Prim0 'void) (cons h (void))]
     [(Prim0 'peek-byte) (cons h (peek-byte))]

@@ -33,11 +33,8 @@
 ;; Expr CEnv -> Asm
 (define (compile-e e c)
   (match e
-    [(Int i)            (compile-value i)]
-    [(Bool b)           (compile-value b)]
-    [(Char c)           (compile-value c)]
+    [(Lit d)            (compile-value d)]
     [(Eof)              (compile-value eof)]
-    [(Empty)            (compile-value '())]
     [(Var x)            (compile-variable x c)]
     [(Prim0 p)          (compile-prim0 p c)]
     [(Prim1 p e)        (compile-prim1 p e c)]

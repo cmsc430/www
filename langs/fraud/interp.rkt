@@ -20,10 +20,8 @@
 ;; Expr Env -> Answer
 (define (interp-env e r)
   (match e
-    [(Int i) i]
-    [(Bool b) b]
-    [(Char c) c]
-    [(Eof) eof]
+    [(Lit d) d]
+    [(Eof)   eof]
     [(Var x) (lookup r x)]
     [(Prim0 p) (interp-prim0 p)]
     [(Prim1 p e)

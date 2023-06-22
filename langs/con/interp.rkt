@@ -5,7 +5,7 @@
 ;; Expr -> Integer
 (define (interp e)
   (match e
-    [(Int i) i]
+    [(Lit i) i]
     [(Prim1 p e)
      (interp-prim1 p (interp e))]
     [(IfZero e1 e2 e3)

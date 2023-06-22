@@ -5,9 +5,7 @@
 ;; S-Expr -> Expr
 (define (parse s)
   (match s
-    [(? exact-integer?)      (Int s)]
-    [(? boolean? s)          (Bool s)]
-    [(? char? s)             (Char s)]
+    [(? datum?)              (Lit s)]
     ['eof                    (Eof)]
     [(? symbol? s)           (Var s)]    
     [(list (? op0? o))       (Prim0 o)]
@@ -20,6 +18,11 @@
      (Let x (parse e1) (parse e2))]
     [_ (error "Parse error" s)]))
 
+;; Any -> Boolean
+(define (datum? x)
+  (or (exact-integer? x)
+      (boolean? x)
+      (char? x)))
 
 ;; Any -> Boolean
 (define (op0? x)

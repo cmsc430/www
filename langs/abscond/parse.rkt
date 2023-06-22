@@ -5,5 +5,5 @@
 ;; S-Expr -> Expr
 (define (parse s)
   (match s
-    [(? exact-integer?) (Int s)]
+    [(? exact-integer?) (Lit s)]
     [_ (error "Parse error")]))

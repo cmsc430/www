@@ -11,10 +11,8 @@
 ;; IExpr VEnv -> Answer
 (define (interp-env e r)
   (match e
-    [(Int i) i]
-    [(Bool b) b]
-    [(Char c) c]
-    [(Eof) eof]       
+    [(Lit d) d]
+    [(Eof)   eof]
     [(Var a) (list-ref r a)]
     [(Prim0 p) (interp-prim0 p)]     
     [(Prim1 p e)

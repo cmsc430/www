@@ -25,11 +25,8 @@
 ;; Expr Env -> Answer
 (define (interp-env e r)
   (match e
-    [(Int i)  i]
-    [(Bool b) b]
-    [(Char c) c]
+    [(Lit d)  d]
     [(Eof)    eof]
-    [(Empty)  '()]
     [(Var x)  (lookup r x)]
     [(Prim0 'void) (void)]
     [(Prim0 'read-byte) (read-byte)]

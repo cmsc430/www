@@ -14,8 +14,7 @@
 ;; Expr -> Asm
 (define (compile-e e)
   (match e
-    [(Int i)       (compile-value i)]
-    [(Bool b)      (compile-value b)]
+    [(Lit d)       (compile-value d)]
     [(Prim1 p e)   (compile-prim1 p e)]
     [(If e1 e2 e3) (compile-if e1 e2 e3)]))
 

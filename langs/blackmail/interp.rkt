@@ -2,13 +2,13 @@
 (provide interp)
 (require "ast.rkt")
 
-;; Expr -> Integer
+;; Expr -> Liteger
 (define (interp e)
   (match e
-    [(Int i) i]
+    [(Lit i) i]
     [(Prim1 p e) (interp-prim1 p (interp e))]))
 
-;; Op Integer -> Integer
+;; Op Liteger -> Liteger
 (define (interp-prim1 op i)
   (match op
     ['add1 (add1 i)]

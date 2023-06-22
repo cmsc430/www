@@ -13,7 +13,7 @@
 (define (compile-e e)
   (match e
     [(Prim1 p e) (compile-prim1 p e)]
-    [(Int i)     (compile-integer i)]))
+    [(Lit i)     (compile-integer i)]))
 
 ;; Op Expr -> Asm
 (define (compile-prim1 p e)

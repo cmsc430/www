@@ -5,7 +5,7 @@
 ;; S-Expr -> Expr
 (define (parse s)
   (match s
-    [(? exact-integer?) (Int s)]
+    [(? exact-integer?) (Lit s)]
     [(list (? op1? o) e) (Prim1 o (parse e))]
     [_ (error "Parse error")]))
 

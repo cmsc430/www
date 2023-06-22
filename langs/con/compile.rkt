@@ -12,7 +12,7 @@
 ;; Expr -> Asm
 (define (compile-e e)
   (match e
-    [(Int i)           (compile-integer i)]
+    [(Lit i)           (compile-integer i)]
     [(Prim1 p e)       (compile-prim1 p (compile-e e))]
     [(IfZero e1 e2 e3) (compile-ifzero e1 e2 e3)]))
 

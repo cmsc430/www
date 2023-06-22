@@ -12,4 +12,4 @@
 ;; Expr -> Asm
 (define (compile-e e)
   (match e
-    [(Int i) (seq (Mov 'rax i))]))
+    [(Lit i) (seq (Mov 'rax i))]))

@@ -5,12 +5,10 @@
 ;; S-Expr -> Expr
 (define (parse s)
   (match s
-    [(? exact-integer?)            (Int s)]
-    [(? boolean?)                  (Bool s)]
-    [(? char?)                     (Char s)]
+    [(? datum?)                    (Lit s)]
+    [(list 'quote (list))          (Lit '())]
     ['eof                          (Eof)]
     [(? symbol?)                   (Var s)]
-    [(list 'quote (list))          (Empty)]
     [(list (? (op? op0) p0))       (Prim0 p0)]           
     [(list (? (op? op1) p1) e)     (Prim1 p1 (parse e))]
     [(list (? (op? op2) p2) e1 e2) (Prim2 p2 (parse e1) (parse e2))]
@@ -21,6 +19,12 @@
     [(list 'let (list (list (? symbol? x) e1)) e2)
      (Let x (parse e1) (parse e2))]
     [_ (error "Parse error" s)]))
+
+;; Any -> Boolean
+(define (datum? x)
+  (or (exact-integer? x)
+      (boolean? x)
+      (char? x)))
 
 (define op0
   '(read-byte peek-byte void))

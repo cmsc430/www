@@ -16,9 +16,7 @@
 ;; Expr -> Bits
 (define (interp-bits e)
   (match e
-    [(Int i)  (value->bits i)]
-    [(Char c) (value->bits c)]
-    [(Bool b) (value->bits b)]
+    [(Lit d)  (value->bits d)]
     [(Prim1 'add1 e0)
      (+ (interp-bits e0) (value->bits 1))]
     [(Prim1 'sub1 e0)

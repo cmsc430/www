@@ -3,10 +3,8 @@
 (require "ast.rkt")
 
 ;; type IExpr =
+;; | (Lit Datum)
 ;; | (Eof)
-;; | (Int Integer)
-;; | (Bool Boolean)
-;; | (Char Character)
 ;; | (Prim0 Op0)
 ;; | (Prim1 Op1 IExpr)
 ;; | (Prim2 Op2 IExpr IExpr)
@@ -25,10 +23,8 @@
 ;; Expr LEnv -> IExpr
 (define (translate-e e r)
   (match e
-    [(Eof)    e]
-    [(Int i)  e]
-    [(Bool b) e]   
-    [(Char c) e]
+    [(Eof)     e]
+    [(Lit d)   e]
     [(Prim0 p) e]
     [(Prim1 p e0)
      (Prim1 p (translate-e e0 r))]

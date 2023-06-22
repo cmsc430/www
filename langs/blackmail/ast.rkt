@@ -1,9 +1,9 @@
 #lang racket
-(provide Int Prim1)
+(provide Lit Prim1)
 
 ;; type Expr =
-;; | (Int Integer)
+;; | (Lit Integer)
 ;; | (Prim1 Op Expr)
 ;; type Op = 'add1 | 'sub1
-(struct Int (i)     #:prefab)
+(struct Lit (i)     #:prefab)
 (struct Prim1 (p e) #:prefab)

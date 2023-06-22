@@ -12,9 +12,7 @@
 ;; Expr -> Value
 (define (interp e)
   (match e
-    [(Int i)  i]
-    [(Bool b) b]
-    [(Char c) c]
+    [(Lit d)  d]
     [(Eof)    eof]
     [(Prim0 p)
      (interp-prim0 p)]
