@@ -16,22 +16,17 @@
 (define mask-int      #b1111)
 (define type-char    #b01000)
 (define mask-char    #b11111)
-(define val-true   #b0011000)
-(define val-false  #b0111000)
-(define val-eof    #b1011000)
-(define val-void   #b1111000)
-(define val-empty #b10011000)
 
 (define (bits->value b)
-  (cond [(= type-int (bitwise-and b mask-int))
+  (cond [(= b (value->bits #t))     #t]
+        [(= b (value->bits #f))     #f]
+        [(= b (value->bits eof))    eof]
+        [(= b (value->bits (void))) (void)]
+        [(= b (value->bits '()))    '()]
+        [(int-bits? b)
          (arithmetic-shift b (- int-shift))]
-        [(= type-char (bitwise-and b mask-char))
+        [(char-bits? b)
          (integer->char (arithmetic-shift b (- char-shift)))]
-        [(= b val-true)  #t]
-        [(= b val-false) #f]
-        [(= b val-eof)  eof]
-        [(= b val-void) (void)]
-        [(= b val-empty) '()]
         [(box-bits? b)
          (box (bits->value (heap-ref b)))]
         [(cons-bits? b)
@@ -52,43 +47,44 @@
         [(proc-bits? b)
          (lambda _
            (error "This function is not callable."))]
-	[else (error "bad bits!" b)]))
+        [else (error "invalid bits")]))
 
 (define (value->bits v)
-  (cond [(eof-object? v) val-eof]
-        [(integer? v) (arithmetic-shift v int-shift)]
+  (cond [(eq? v #t)      #b00011000]
+        [(eq? v #f)      #b00111000]
+        [(eof-object? v) #b01011000]
+        [(void? v)       #b01111000]
+        [(empty? v)      #b10011000]
+        [(integer? v)
+         (arithmetic-shift v int-shift)]
         [(char? v)
          (bitwise-ior type-char
                       (arithmetic-shift (char->integer v) char-shift))]
-        [(eq? v #t) val-true]
-        [(eq? v #f) val-false]
-        [(void? v)  val-void]
-        [(empty? v) val-empty]
         [else (error "not an immediate value")]))
 
 (define (imm-bits? v)
   (zero? (bitwise-and v imm-mask)))
 
 (define (int-bits? v)
-  (zero? (bitwise-and v mask-int)))
+  (= type-int (bitwise-and v mask-int)))
 
 (define (char-bits? v)
   (= type-char (bitwise-and v mask-char)))
 
 (define (cons-bits? v)
-  (zero? (bitwise-xor (bitwise-and v imm-mask) type-cons)))
+  (= type-cons (bitwise-and v imm-mask)))
 
 (define (box-bits? v)
-  (zero? (bitwise-xor (bitwise-and v imm-mask) type-box)))
+  (= type-box (bitwise-and v imm-mask)))
 
 (define (vect-bits? v)
-  (zero? (bitwise-xor (bitwise-and v imm-mask) type-vect)))
+  (= type-vect (bitwise-and v imm-mask)))
 
 (define (str-bits? v)
-  (zero? (bitwise-xor (bitwise-and v imm-mask) type-str)))
+  (= type-str (bitwise-and v imm-mask)))
 
 (define (proc-bits? v)
-  (zero? (bitwise-xor (bitwise-and v imm-mask) type-proc)))
+  (= type-proc (bitwise-and v imm-mask)))
 
 (define (untag i)
   (arithmetic-shift (arithmetic-shift i (- (integer-length ptr-mask)))

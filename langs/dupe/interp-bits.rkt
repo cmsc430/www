@@ -14,6 +14,6 @@
     [(Prim1 p e)
      (interp-prim1-bits p (interp-bits e))]
     [(If e1 e2 e3)
-     (if (= (interp-bits e1) val-false)
+     (if (= (interp-bits e1) (value->bits #f))
          (interp-bits e3)
          (interp-bits e2))]))
