@@ -31,8 +31,9 @@ jobs:
         nasm --version
         gcc --version
     - name: Install langs package
-      run: raco pkg install --auto ziggy/
-      run: raco pkg install langs/
+      run: |
+        raco pkg install --auto ziggy/
+        raco pkg install langs/
     - name: Run tests
       run: |
         raco test -p ziggy
