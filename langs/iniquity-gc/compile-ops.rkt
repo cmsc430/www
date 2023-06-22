@@ -20,7 +20,7 @@
 ;; Op0 -> Asm
 (define (compile-op0 p)
   (match p
-    ['void      (seq (Mov rax val-void))]
+    ['void      (seq (Mov rax (value->bits (void))))]
     ['read-byte (seq pad-stack
                      (Call 'read_byte)
                      unpad-stack)]
@@ -34,7 +34,7 @@
           pad-stack
           (Call 'print_memory)
           unpad-stack
-          (Mov rax val-void))]
+          (Mov rax (value->bits (void))))]
     ['collect-garbage
      (seq (Mov rdi rsp)
           (Mov rsi rbp)
@@ -43,17 +43,17 @@
           (Call 'collect_garbage)
           unpad-stack
           (Mov rbx rax)
-          (Mov rax val-void))]))
+          (Mov rax (value->bits (void))))]))
 
 ;; Op1 -> Asm
 (define (compile-op1 p)
   (match p
     ['add1
      (seq (assert-integer rax)
-          (Add rax (imm->bits 1)))]
+          (Add rax (value->bits 1)))]
     ['sub1
      (seq (assert-integer rax)
-          (Sub rax (imm->bits 1)))]
+          (Sub rax (value->bits 1)))]
     ['zero?
      (seq (assert-integer rax)
           (eq-imm 0))]
@@ -74,8 +74,7 @@
           pad-stack
           (Mov rdi rax)
           (Call 'write_byte)
-          unpad-stack
-          (Mov rax val-void))]
+          unpad-stack)]
     ['box
      (seq (Push rax)
           (allocate 1)
@@ -161,20 +160,20 @@
           (assert-integer r8)
           (assert-integer rax)
           (Cmp r8 rax)
-          (Mov rax val-true)
+          (Mov rax (value->bits #t))
           (let ((true (gensym)))
             (seq (Jl true)
-                 (Mov rax val-false)
+                 (Mov rax (value->bits #f))
                  (Label true))))]
     ['=
      (seq (Pop r8)
           (assert-integer r8)
           (assert-integer rax)
           (Cmp r8 rax)
-          (Mov rax val-true)
+          (Mov rax (value->bits #t))
           (let ((true (gensym)))
             (seq (Je true)
-                 (Mov rax val-false)
+                 (Mov rax (value->bits #f))
                  (Label true))))]
     ;; tricky: if you have a pointer in a register, GC might collect
     ;; what it points to and create a dangling reference
@@ -317,7 +316,7 @@
           (assert-box r8)
           (Xor r8 type-box)
           (Mov (Offset r8 0) rax)
-          (Mov rax val-void))]))
+          (Mov rax (value->bits (void))))]))
 
 ;; Op3 -> Asm
 (define (compile-op3 p)
@@ -338,7 +337,7 @@
           (Sal r10 3)
           (Add r8 r10)
           (Mov (Offset r8 8) rax)
-          (Mov rax val-void))]))
+          (Mov rax (value->bits (void))))]))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -354,9 +353,9 @@
   (let ((l (gensym)))
     (seq (And rax mask)
          (Cmp rax type)
-         (Mov rax (imm->bits #t))
+         (Mov rax (value->bits #t))
          (Je l)
-         (Mov rax (imm->bits #f))
+         (Mov rax (value->bits #f))
          (Label l))))
 
 (define assert-integer
@@ -375,44 +374,44 @@
 (define (assert-codepoint r)
   (let ((ok (gensym)))
     (seq (assert-integer r)
-         (Cmp r (imm->bits 0))
+         (Cmp r (value->bits 0))
          (Jl 'raise_error_align)
-         (Cmp r (imm->bits 1114111))
+         (Cmp r (value->bits 1114111))
          (Jg 'raise_error_align)
-         (Cmp r (imm->bits 55295))
+         (Cmp r (value->bits 55295))
          (Jl ok)
-         (Cmp r (imm->bits 57344))
+         (Cmp r (value->bits 57344))
          (Jg ok)
          (Jmp 'raise_error_align)
          (Label ok))))
 
 (define (assert-byte r)
   (seq (assert-integer r)
-       (Cmp r (imm->bits 0))
+       (Cmp r (value->bits 0))
        (Jl 'raise_error_align)
-       (Cmp r (imm->bits 255))
+       (Cmp r (value->bits 255))
        (Jg 'raise_error_align)))
 
 (define (assert-natural r)
   (seq (assert-integer r)
-       (Cmp r (imm->bits 0))
+       (Cmp r (value->bits 0))
        (Jl 'raise_error_align)))
 
 ;; Value -> Asm
 (define (eq-imm imm)
   (let ((l1 (gensym)))
-    (seq (Cmp rax (imm->bits imm))
-         (Mov rax val-true)
+    (seq (Cmp rax (value->bits imm))
+         (Mov rax (value->bits #t))
          (Je l1)
-         (Mov rax val-false)
+         (Mov rax (value->bits #f))
          (Label l1))))
 
 (define (eq ir1 ir2)
   (let ((l1 (gensym)))
     (seq (Cmp ir1 ir2)
-         (Mov rax val-true)
+         (Mov rax (value->bits #t))
          (Je l1)
-         (Mov rax val-false)
+         (Mov rax (value->bits #f))
          (Label l1))))
 
 ;; Asm
