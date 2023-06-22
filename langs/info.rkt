@@ -1,7 +1,7 @@
 #lang info
 (define version "1.0")
 (define collection 'multi)
-(define deps (list))
+(define deps (list "base" "rackunit" "redex-lib"))
 
 ;; Outlaw is omitted here because it depends on libraries that are a pain
 ;; to ensure are set up properly and we don't want students to see failing
