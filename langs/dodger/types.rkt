@@ -2,6 +2,7 @@
 (provide (all-defined-out))
 
 (define int-shift    1)
+(define mask-int   #b1)
 (define char-shift   2)
 (define type-int   #b0)
 (define type-char #b01)
@@ -10,9 +11,9 @@
 (define (bits->value b)
   (cond [(= b (value->bits #t))  #t]
         [(= b (value->bits #f)) #f]
-        [(= type-int (bitwise-and b #b1))
+        [(int-bits? b)
          (arithmetic-shift b (- int-shift))]
-        [(= type-char (bitwise-and b #b11))
+        [(char-bits? b)
          (integer->char (arithmetic-shift b (- char-shift)))]
         [else (error "invalid bits")]))
 
@@ -23,3 +24,9 @@
         [(char? v)
          (bitwise-ior type-char
                       (arithmetic-shift (char->integer v) char-shift))]))
+
+(define (int-bits? v)
+  (= type-int (bitwise-and v mask-int)))
+
+(define (char-bits? v)
+  (= type-char (bitwise-and v mask-char)))

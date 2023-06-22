@@ -7,7 +7,7 @@
 (define (bits->value b)
   (cond [(= b (value->bits #t))  #t]
         [(= b (value->bits #f)) #f]
-        [(= type-int (bitwise-and b #b1))
+        [(int-bits? b)
          (arithmetic-shift b (- int-shift))]
         [else (error "invalid bits")]))
 
@@ -15,3 +15,6 @@
   (cond [(eq? v #t) #b011]
         [(eq? v #f) #b111]
         [(integer? v) (arithmetic-shift v int-shift)]))
+
+(define (int-bits? v)
+  (= type-int (bitwise-and v mask-int)))

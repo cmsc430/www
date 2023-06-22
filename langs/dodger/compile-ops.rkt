@@ -12,14 +12,14 @@
     ['sub1 (Sub rax (value->bits 1))]
     ['zero?
      (seq (Cmp rax 0)
-          (Mov rax val-false)
-          (Mov r9 val-true)
+          (Mov rax (value->bits #f))
+          (Mov r9 (value->bits #t))
           (Cmove rax r9))]
     ['char?
      (seq (And rax mask-char)
           (Cmp rax type-char)
-          (Mov rax val-false)
-          (Mov r9 val-true)
+          (Mov rax (value->bits #f))
+          (Mov r9 (value->bits #t))
           (Cmove rax r9))]
     ['char->integer
      (seq (Sar rax char-shift)
