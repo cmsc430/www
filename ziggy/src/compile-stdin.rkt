@@ -1,6 +1,9 @@
-#lang racket
+#lang crook
+{:= A B C D0 D1}
 (provide main)
-(require "parse.rkt" "compile.rkt" a86/printer)
+(require "parse.rkt")
+(require "compile.rkt")
+(require a86/printer)
 
 ;; -> Void
 ;; Compile contents of stdin,

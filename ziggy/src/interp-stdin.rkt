@@ -1,6 +1,8 @@
-#lang racket
+#lang crook
+{:= A B C D0 D1}
 (provide main)
-(require "parse.rkt" "interp.rkt")
+(require "parse.rkt")
+(require "interp.rkt")
 
 ;; -> Void
 ;; Parse and interpret contents of stdin,
