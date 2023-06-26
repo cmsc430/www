@@ -15,8 +15,8 @@
 (define (compile-op0 p)
   (match p
     ['void      (seq (Mov rax (value->bits (void))))]
-    ['read-byte (seq (Call 'read_byte))]
-    ['peek-byte (seq (Call 'peek_byte))]))
+    ['read-byte (seq {:> F} pad-stack (Call 'read_byte) {:> F} unpad-stack)]
+    ['peek-byte (seq {:> F} pad-stack (Call 'peek_byte) {:> F} unpad-stack)]))
 
 ;; Op1 -> Asm
 (define (compile-op1 p)
@@ -59,8 +59,10 @@
                     if-equal)]
     {:> E0}   ['write-byte
                (seq {:> E1} assert-byte
+                    {:> F} pad-stack
                     (Mov rdi rax)
-                    (Call 'write_byte))]))
+                    (Call 'write_byte)
+                    {:> F} unpad-stack)]))
 
 {:> F} ;; Op2 -> Asm
 {:> F}
