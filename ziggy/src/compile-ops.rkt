@@ -10,6 +10,7 @@
 {:> F}  (define r8  'r8)  {:> F}  ; scratch in op2
 {:> D0} (define r9 'r9)   {:> E0} ; scratch
 {:> F}  (define r15 'r15) {:> F}  ; stack pad (non-volatile)
+{:> F}  (define rsp 'rsp) {:> F}  ; stack
 
 {:> E0} ;; Op0 -> Asm
 {:> E0}
