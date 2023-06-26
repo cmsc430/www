@@ -1,12 +1,13 @@
 #lang crook
-{:= B C D0 D1 E0 E1}
-(provide {:> E0} compile-op0 compile-op1)
+{:= B C D0 D1 E0 E1 F}
+(provide {:> E0} compile-op0 compile-op1 {:> F} compile-op2)
 (require "ast.rkt")
 {:> D0} (require "types.rkt")
 (require a86/ast)
 
 (define rax 'rax)
 {:> E0} (define rdi 'rdi) {:> E0} ; arg
+{:> F}  (define r8  'r8)  {:> F}  ; scratch in op2
 {:> D0} (define r9 'r9)   {:> E0} ; scratch
 
 {:> E0} ;; Op0 -> Asm
@@ -61,6 +62,34 @@
                     (Mov rdi rax)
                     (Call 'write_byte))]))
 
+{:> F} ;; Op2 -> Asm
+{:> F}
+(define (compile-op2 p)
+  (match p
+    ['+
+     (seq (Pop r8)
+          (assert-integer r8)
+          (assert-integer rax)
+          (Add rax r8))]
+    ['-
+     (seq (Pop r8)
+          (assert-integer r8)
+          (assert-integer rax)
+          (Sub r8 rax)
+          (Mov rax r8))]
+    ['<
+     (seq (Pop r8)
+          (assert-integer r8)
+          (assert-integer rax)
+          (Cmp r8 rax)
+          if-lt)]
+    ['=
+     (seq (Pop r8)
+          (assert-integer r8)
+          (assert-integer rax)
+          (Cmp r8 rax)          
+          if-equal)]))
+
 {:> D1} ;; -> Asm
 {:> D1} ;; set rax to #t or #f if comparison flag is equal
 {:> D1}
@@ -68,6 +97,14 @@
   (seq (Mov rax (value->bits #f))
        (Mov r9  (value->bits #t))
        (Cmove rax r9)))
+
+{:> F} ;; -> Asm
+{:> F} ;; set rax to #t or #f if comparison flag is less than
+{:> F}
+(define if-lt
+  (seq (Mov rax (value->bits #f))
+       (Mov r9  (value->bits #t))
+       (Cmovl rax r9)))
 
 {:> E1}
 (define (assert-type mask type)

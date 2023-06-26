@@ -15,4 +15,5 @@
                                 ("dupe"      . "D0")
                                 ("dodger"    . "D1")
                                 ("evildoer"  . "E0")
-                                ("extort"    . "E1"))))))
+                                ("extort"    . "E1")
+                                ("fraud"     . "F"))))))

@@ -1,6 +1,6 @@
 #lang crook
-{:= B C D0 D1 E0 E1}
-(provide interp-prim1 {:> E0} interp-prim0)
+{:= B C D0 D1 E0 E1 F}
+(provide {:> E0} interp-prim0 interp-prim1 {:> F} interp-prim2)
 
 {:> E0} ;; Op0 -> Value
 {:> E0}
@@ -47,6 +47,16 @@
     [(list 'char->integer (? char?))      (char->integer v)]
     [(list 'write-byte    (? byte?))      (write-byte v)]
     [(list 'eof-object? v)                (eof-object? v)]
+    [_ 'err]))
+
+{:> F} ;; Op2 Value Value -> Answer
+{:> F}
+(define (interp-prim2 op v1 v2)
+  (match (list op v1 v2)
+    [(list '+ (? integer?) (? integer?)) (+ v1 v2)]
+    [(list '- (? integer?) (? integer?)) (- v1 v2)]
+    [(list '< (? integer?) (? integer?)) (< v1 v2)]
+    [(list '= (? integer?) (? integer?)) (= v1 v2)]
     [_ 'err]))
 
 {:> E1} ;; Any -> Boolean
