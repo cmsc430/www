@@ -27,6 +27,7 @@
         (Ret)
         {:> E1} ;; Error handler
         {:> E1} (Label 'err)
+        {:> F}  pad-stack
         {:> E1} (Call 'raise_error)))
 
 {:> F} ;; type CEnv = (Listof [Maybe Id])

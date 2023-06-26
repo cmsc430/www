@@ -1,6 +1,6 @@
 #lang crook
 {:= B C D0 D1 E0 E1 F}
-(provide {:> E0} compile-op0 compile-op1 {:> F} compile-op2)
+(provide {:> E0} compile-op0 compile-op1 {:> F} compile-op2 {:> F} pad-stack)
 (require "ast.rkt")
 {:> D0} (require "types.rkt")
 (require a86/ast)
@@ -151,3 +151,17 @@
        (Jl 'err)
        (Cmp rax (value->bits 255))
        (Jg 'err)))
+
+{:> F} ;; Asm
+{:> F} ;; Dynamically pad the stack to be aligned for a call
+{:> F}
+(define pad-stack
+  (seq (Mov r15 rsp)
+       (And r15 #b1000)
+       (Sub rsp r15)))
+
+{:> F} ;; Asm
+{:> F} ;; Undo the stack alignment after a call
+{:> F}
+(define unpad-stack
+  (seq (Add rsp r15)))
