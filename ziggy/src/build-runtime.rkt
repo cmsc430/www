@@ -1,4 +1,5 @@
-#lang racket
+#lang crook
+{:= E0 E1 F}
 (provide runtime-path)
 
 (require racket/runtime-path)
