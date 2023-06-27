@@ -46,7 +46,7 @@
 
 ;; Value -> Asm
 (define (compile-value v)
-  (seq (Mov rax (imm->bits v))))
+  (seq (Mov rax (value->bits v))))
 
 ;; Id CEnv -> Asm
 (define (compile-variable x c)
@@ -230,31 +230,33 @@
 (define (compile-match-clause p e c done t?)
   (let ((next (gensym)))
     (match (compile-pattern p '() next)
-      [(list i f cm)
+      [(list i cm)
        (seq (Mov rax (Offset rsp 0)) ; restore value being matched
             i
             (compile-e e (append cm c) t?)
             (Add rsp (* 8 (length cm)))
             (Jmp done)
-            f
             (Label next))])))
 
-;; Pat CEnv Symbol -> (list Asm Asm CEnv)
+;; Pat CEnv Symbol -> (list Asm CEnv)
 (define (compile-pattern p cm next)
   (match p
     [(PWild)
-     (list (seq) (seq) cm)]
+     (list (seq) cm)]
     [(PVar x)
-     (list (seq (Push rax))
-           (seq)
-           (cons x cm))]
+     (list (seq (Push rax)) (cons x cm))]
     [(PStr s)
-     (let ((fail (gensym)))
+     (let ((ok (gensym))
+           (fail (gensym)))
        (list (seq (Lea rdi (symbol->data-label (string->symbol s)))
                   (Mov r8 rax)
                   (And r8 ptr-mask)
                   (Cmp r8 type-str)
-                  (Jne fail)
+                  (Je ok)
+                  (Label fail)
+                  (Add rsp (* 8 (length cm)))
+                  (Jmp next)
+                  (Label ok)
                   (Xor rax type-str)
                   (Mov rsi rax)
                   pad-stack
@@ -262,67 +264,65 @@
                   unpad-stack
                   (Cmp rax 0)
                   (Jne fail))
-             (seq (Label fail)
-                  (Add rsp (* 8 (length cm)))
-                  (Jmp next))
              cm))]
     [(PSymb s)
-     (let ((fail (gensym)))
+     (let ((ok (gensym)))
        (list (seq (Lea r9 (Plus (symbol->data-label s) type-symb))
                   (Cmp rax r9)
-                  (Jne fail))
-             (seq (Label fail)
+                  (Je ok)
                   (Add rsp (* 8 (length cm)))
-                  (Jmp next))
+                  (Jmp next)
+                  (Label ok))
              cm))]
     [(PLit l)
-     (let ((fail (gensym)))
-       (list (seq (Cmp rax (imm->bits l))
-                  (Jne fail))
-             (seq (Label fail)
+     (let ((ok (gensym)))
+       (list (seq (Cmp rax (value->bits l))
+                  (Je ok)
                   (Add rsp (* 8 (length cm)))
-                  (Jmp next))
+                  (Jmp next)
+                  (Label ok))
              cm))]
     [(PAnd p1 p2)
      (match (compile-pattern p1 (cons #f cm) next)
-       [(list i1 f1 cm1)
+       [(list i1 cm1)
         (match (compile-pattern p2 cm1 next)
-          [(list i2 f2 cm2)
+          [(list i2 cm2)
            (list
             (seq (Push rax)
                  i1
                  (Mov rax (Offset rsp (* 8 (- (sub1 (length cm1)) (length cm)))))
                  i2)
-            (seq f1 f2)
             cm2)])])]
     [(PBox p)
      (match (compile-pattern p cm next)
-       [(list i1 f1 cm1)
-        (let ((fail (gensym)))
+       [(list i1 cm1)
+        (let ((ok (gensym)))
           (list
            (seq (Mov r8 rax)
                 (And r8 ptr-mask)
                 (Cmp r8 type-box)
-                (Jne fail)
+                (Je ok)
+                (Add rsp (* 8 (length cm))) ; haven't pushed anything yet
+                (Jmp next)
+                (Label ok)
                 (Xor rax type-box)
                 (Mov rax (Offset rax 0))
                 i1)
-           (seq f1
-                (Label fail)
-                (Add rsp (* 8 (length cm))) ; haven't pushed anything yet
-                (Jmp next))
            cm1))])]
     [(PCons p1 p2)
      (match (compile-pattern p1 (cons #f cm) next)
-       [(list i1 f1 cm1)
+       [(list i1 cm1)
         (match (compile-pattern p2 cm1 next)
-          [(list i2 f2 cm2)
-           (let ((fail (gensym)))
+          [(list i2 cm2)
+           (let ((ok (gensym)))
              (list
               (seq (Mov r8 rax)
                    (And r8 ptr-mask)
                    (Cmp r8 type-cons)
-                   (Jne fail)
+                   (Je ok)
+                   (Add rsp (* 8 (length cm))) ; haven't pushed anything yet
+                   (Jmp next)
+                   (Label ok)
                    (Xor rax type-cons)
                    (Mov r8 (Offset rax 0))
                    (Push r8)                ; push cdr
@@ -330,9 +330,4 @@
                    i1
                    (Mov rax (Offset rsp (* 8 (- (sub1 (length cm1)) (length cm)))))
                    i2)
-              (seq f1
-                   f2
-                   (Label fail)
-                   (Add rsp (* 8 (length cm))) ; haven't pushed anything yet
-                   (Jmp next))
               cm2))])])]))
