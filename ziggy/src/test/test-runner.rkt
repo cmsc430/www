@@ -1,5 +1,5 @@
 #lang crook
-{:= A B C D0 D1 E0 E1 F}
+{:= A B C D0 D1 E0 E1 F H0}
 (provide test {:> E0} test/io)
 (require rackunit)
 
@@ -102,7 +102,31 @@
     (check-equal? (run '(= (add1 4) 5)) #t)
     (check-equal? (run '(< 5 5)) #f)
     (check-equal? (run '(< 4 5)) #t)
-    (check-equal? (run '(< (add1 4) 5)) #f)))
+    (check-equal? (run '(< (add1 4) 5)) #f))
+
+  {:> H0}
+  (begin ;; Hustle
+    (check-equal? (run ''()) '())  
+    (check-equal? (run '(box 1)) (box 1))
+    (check-equal? (run '(box -1)) (box -1))
+    (check-equal? (run '(cons 1 2)) (cons 1 2))
+    (check-equal? (run '(unbox (box 1))) 1)
+    (check-equal? (run '(car (cons 1 2))) 1)
+    (check-equal? (run '(cdr (cons 1 2))) 2)
+    (check-equal? (run '(cons 1 '())) (list 1))
+    (check-equal? (run '(let ((x (cons 1 2)))
+                          (begin (cdr x)
+                                 (car x))))
+                  1)
+    (check-equal? (run '(let ((x (cons 1 2)))
+                          (let ((y (box 3)))
+                            (unbox y))))
+                  3)
+    (check-equal? (run '(eq? 1 1)) #t)
+    (check-equal? (run '(eq? 1 2)) #f)
+    (check-equal? (run '(eq? (cons 1 2) (cons 1 2))) #f)
+    (check-equal? (run '(let ((x (cons 1 2))) (eq? x x))) #t)))
+    
 
 {:> E0}
 (define (test/io run)

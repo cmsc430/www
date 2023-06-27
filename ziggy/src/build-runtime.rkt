@@ -1,5 +1,5 @@
 #lang crook
-{:= E0 E1 F}
+{:= E0 E1 F H0}
 (provide runtime-path)
 
 (require racket/runtime-path)

@@ -1,5 +1,5 @@
 #lang crook
-{:= A B C D0 D1 E0 E1 F}
+{:= A B C D0 D1 E0 E1 F H0}
 (provide (all-defined-out))
 (require "ast.rkt")
 {:> B}   (require "compile-ops.rkt")
@@ -7,7 +7,9 @@
 (require a86/ast)
 
 (define rax 'rax)
+{:> H0} (define rbx 'rbx) {:> H0} ; heap
 {:> E0} (define rsp 'rsp) {:> E0} ; stack
+{:> H0} (define rdi 'rdi) ; arg
 {:> F}  (define r15 'r15) {:> F}  ; stack pad (non-volatile)
 
 ;; Expr -> Asm
@@ -21,9 +23,12 @@
         {:> E0 F} (Sub rsp 8)
         {:> A F}  (compile-e e)
         {:> E0 F} (Add rsp 8)
-        {:> F} (Push r15)    {:> F} ; save callee-saved register
-        {:> F} (compile-e e '())
-        {:> F} (Pop r15)     {:> F} ; restore callee-save register
+        {:> F}    (Push r15)    {:> F} ; save callee-saved register
+        {:> H0}   (Push rbx)
+        {:> H0}   (Mov rbx rdi) {:> H0} ; recv heap pointer
+        {:> F}    (compile-e e '())
+        {:> H0}   (Pop rbx)
+        {:> F}    (Pop r15)     {:> F} ; restore callee-save register
         (Ret)
         {:> E1} ;; Error handler
         {:> E1} (Label 'err)
@@ -39,6 +44,7 @@
     {:> A D0} [(Lit i) (seq (Mov rax i))]
     {:> D0}   [(Lit d)         (compile-value d)]
     {:> E0}   [(Eof)           (compile-value eof)]
+    {:> H0}   [(Empty)         (compile-value '())]
     {:> F}    [(Var x)         (compile-variable x c)]    
     {:> E0}   [(Prim0 p)       (compile-prim0 p)]
     {:> B}    [(Prim1 p e)     (compile-prim1 p e {:> F} c)]

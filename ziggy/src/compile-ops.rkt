@@ -1,11 +1,12 @@
 #lang crook
-{:= B C D0 D1 E0 E1 F}
+{:= B C D0 D1 E0 E1 F H0}
 (provide {:> E0} compile-op0 compile-op1 {:> F} compile-op2 {:> F} pad-stack)
 (require "ast.rkt")
 {:> D0} (require "types.rkt")
 (require a86/ast)
 
 (define rax 'rax)
+{:> H0} (define rbx 'rbx) {:> H0} ; heap
 {:> E0} (define rdi 'rdi) {:> E0} ; arg
 {:> F}  (define r8  'r8)  {:> F}  ; scratch in op2
 {:> D0} (define r9 'r9)   {:> E0} ; scratch
@@ -64,7 +65,31 @@
                     {:> F} pad-stack
                     (Mov rdi rax)
                     (Call 'write_byte)
-                    {:> F} unpad-stack)]))
+                    {:> F} unpad-stack)]
+
+    {:> H0}   ['box
+               (seq (Mov (Offset rbx 0) rax) ; memory write
+                    (Mov rax rbx)            ; put box in rax
+                    (Or rax type-box)        ; tag as a box
+                    (Add rbx 8))]
+
+    {:> H0}   ['unbox
+               (seq (assert-box rax)
+                    (Xor rax type-box)
+                    (Mov rax (Offset rax 0)))]
+    {:> H0}    ['car
+                (seq (assert-cons rax)
+                     (Xor rax type-cons)
+                     (Mov rax (Offset rax 8)))]
+    {:> H0}    ['cdr
+                (seq (assert-cons rax)
+                     (Xor rax type-cons)
+                     (Mov rax (Offset rax 0)))]
+    
+    {:> H0}    ['empty? (seq (Mov rax (value->bits '())) if-equal)]
+    {:> H0}    ['cons? (type-pred ptr-mask type-cons)]
+    {:> H0}    ['box?  (type-pred ptr-mask type-box)]))
+    
 
 {:> F} ;; Op2 -> Asm
 {:> F}
@@ -92,7 +117,21 @@
           (assert-integer r8)
           (assert-integer rax)
           (Cmp r8 rax)          
+          if-equal)]
+    {:> H0}
+    ['cons
+     (seq (Mov (Offset rbx 0) rax)
+          (Pop rax)
+          (Mov (Offset rbx 8) rax)
+          (Mov rax rbx)
+          (Or rax type-cons)
+          (Add rbx 16))]
+    {:> H0}
+    ['eq?
+     (seq (Pop r8)
+          (Cmp rax r8)
           if-equal)]))
+
 
 {:> D1} ;; -> Asm
 {:> D1} ;; set rax to #t or #f if comparison flag is equal
@@ -122,7 +161,7 @@
 (define (type-pred mask type)
   (seq (And rax mask)
        (Cmp rax type)
-       (if-equal)))
+       if-equal))
 
 {:> E1}
 (define assert-integer
@@ -130,6 +169,12 @@
 {:> E1}
 (define assert-char
   (assert-type mask-char type-char))
+{:> H0}
+(define assert-box
+  (assert-type ptr-mask type-box))
+{:> H0}
+(define assert-cons
+  (assert-type ptr-mask type-cons))
 
 {:> E1}
 (define (assert-codepoint)

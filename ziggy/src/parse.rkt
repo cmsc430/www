@@ -1,5 +1,5 @@
 #lang crook
-{:= A B C D0 D1 E0 E1 F}
+{:= A B C D0 D1 E0 E1 F H0}
 (provide parse)
 (require "ast.rkt")
 
@@ -14,6 +14,8 @@
     [(? datum?)          (Lit s)]
     {:> F}
     [(? symbol?)         (Var s)]
+    {:> H0}
+    [(list 'quote (list)) (Empty)]
     {:> E0}
     [(list (? op0? o))   (Prim0 o)]
     {:> B}
@@ -49,8 +51,9 @@
 {:> B}
 (define (op1? x)
   (memq x '(add1 sub1 {:> D0} zero? {:> D1} char? {:> D1} integer->char {:> D1} char->integer
-                 {:> E0} write-byte {:> E0} eof-object?)))
+                 {:> E0} write-byte {:> E0} eof-object?
+                 {:> H0} box {:> H0} unbox {:> H0} empty? {:> H0} cons? {:> H0} box? {:> H0} car {:> H0} cdr)))
 
 {:> F}
 (define (op2? x)
-  (memq x '(+ - < =)))
+  (memq x '(+ - < = {:> H0} eq? {:> H0} cons)))

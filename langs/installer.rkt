@@ -16,4 +16,5 @@
                                 ("dodger"    . "D1")
                                 ("evildoer"  . "E0")
                                 ("extort"    . "E1")
-                                ("fraud"     . "F"))))))
+                                ("fraud"     . "F")
+                                ("hustle"    . "H0"))))))

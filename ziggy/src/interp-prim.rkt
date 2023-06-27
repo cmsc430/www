@@ -1,5 +1,5 @@
 #lang crook
-{:= B C D0 D1 E0 E1 F}
+{:= B C D0 D1 E0 E1 F H0}
 (provide {:> E0} interp-prim0 interp-prim1 {:> F} interp-prim2)
 
 {:> E0} ;; Op0 -> Value
@@ -47,6 +47,13 @@
     [(list 'char->integer (? char?))      (char->integer v)]
     [(list 'write-byte    (? byte?))      (write-byte v)]
     [(list 'eof-object? v)                (eof-object? v)]
+    {:> H0} [(list 'box v)                        (box v)]
+    {:> H0} [(list 'unbox (? box?))               (unbox v)]
+    {:> H0} [(list 'car (? pair?))                (car v)]
+    {:> H0} [(list 'cdr (? pair?))                (cdr v)]
+    {:> H0} [(list 'empty? v)                     (empty? v)]
+    {:> H0} [(list 'cons? v)                      (cons? v)]
+    {:> H0} [(list 'box? v)                       (box? v)]    
     [_ 'err]))
 
 {:> F} ;; Op2 Value Value -> Answer
@@ -57,6 +64,8 @@
     [(list '- (? integer?) (? integer?)) (- v1 v2)]
     [(list '< (? integer?) (? integer?)) (< v1 v2)]
     [(list '= (? integer?) (? integer?)) (= v1 v2)]
+    {:> H0} [(list 'eq? v1 v2)                    (eq? v1 v2)]
+    {:> H0} [(list 'cons v1 v2)                   (cons v1 v2)]
     [_ 'err]))
 
 {:> E1} ;; Any -> Boolean
