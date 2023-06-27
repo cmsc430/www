@@ -1,5 +1,5 @@
 #lang crook
-{:= A B C D0 D1 E0 E1 F H0}
+{:= A B C D0 D1 E0 E1 F H0 H1}
 (require "../compile.rkt")
 (require "../parse.rkt")
 (require "../run.rkt")

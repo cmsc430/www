@@ -17,4 +17,5 @@
                                 ("evildoer"  . "E0")
                                 ("extort"    . "E1")
                                 ("fraud"     . "F")
-                                ("hustle"    . "H0"))))))
+                                ("hustle"    . "H0")
+                                ("hoax"    . "H1"))))))

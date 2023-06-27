@@ -1,5 +1,5 @@
 #lang crook
-{:= A B C D0 D1 E0 E1 F H0}
+{:= A B C D0 D1 E0 E1 F H0 H1}
 (provide test {:> E0} test/io)
 (require rackunit)
 
@@ -125,8 +125,51 @@
     (check-equal? (run '(eq? 1 1)) #t)
     (check-equal? (run '(eq? 1 2)) #f)
     (check-equal? (run '(eq? (cons 1 2) (cons 1 2))) #f)
-    (check-equal? (run '(let ((x (cons 1 2))) (eq? x x))) #t)))
-    
+    (check-equal? (run '(let ((x (cons 1 2))) (eq? x x))) #t))
+
+  {:> H1}
+  (begin ;; Hoax
+    (check-equal? (run '(make-vector 0 0)) #())
+    (check-equal? (run '(make-vector 1 0)) #(0))
+    (check-equal? (run '(make-vector 3 0)) #(0 0 0))
+    (check-equal? (run '(make-vector 3 5)) #(5 5 5))
+    (check-equal? (run '(vector? (make-vector 0 0))) #t)
+    (check-equal? (run '(vector? (cons 0 0))) #f)
+    (check-equal? (run '(vector-ref (make-vector 0 #f) 0)) 'err)
+    (check-equal? (run '(vector-ref (make-vector 3 5) -1)) 'err)
+    (check-equal? (run '(vector-ref (make-vector 3 5) 0)) 5)
+    (check-equal? (run '(vector-ref (make-vector 3 5) 1)) 5)
+    (check-equal? (run '(vector-ref (make-vector 3 5) 2)) 5)
+    (check-equal? (run '(vector-ref (make-vector 3 5) 3)) 'err)
+    (check-equal? (run '(let ((x (make-vector 3 5)))
+                          (begin (vector-set! x 0 4)
+                                 x)))
+                  #(4 5 5))
+    (check-equal? (run '(let ((x (make-vector 3 5)))
+                          (begin (vector-set! x 1 4)
+                                 x)))
+                  #(5 4 5))
+    (check-equal? (run '(vector-length (make-vector 3 #f))) 3)
+    (check-equal? (run '(vector-length (make-vector 0 #f))) 0)
+    (check-equal? (run '"") "")
+    (check-equal? (run '"fred") "fred")
+    (check-equal? (run '"wilma") "wilma")
+    (check-equal? (run '(make-string 0 #\f)) "")
+    (check-equal? (run '(make-string 3 #\f)) "fff")
+    (check-equal? (run '(make-string 3 #\g)) "ggg")
+    (check-equal? (run '(string-length "")) 0)
+    (check-equal? (run '(string-length "fred")) 4)
+    (check-equal? (run '(string-ref "" 0)) 'err)
+    (check-equal? (run '(string-ref (make-string 0 #\a) 0)) 'err)
+    (check-equal? (run '(string-ref "fred" 0)) #\f)
+    (check-equal? (run '(string-ref "fred" 1)) #\r)
+    (check-equal? (run '(string-ref "fred" 2)) #\e)
+    (check-equal? (run '(string-ref "fred" 4)) 'err)
+    (check-equal? (run '(string? "fred")) #t)
+    (check-equal? (run '(string? (cons 1 2))) #f)
+    (check-equal? (run '(begin (make-string 3 #\f)
+                               (make-string 3 #\f)))
+                  "fff")))
 
 {:> E0}
 (define (test/io run)
@@ -143,7 +186,8 @@
                   (cons (void) "ab"))
     
     (check-equal? (run '(peek-byte) "ab") (cons 97 ""))
-    (check-equal? (run '(begin (peek-byte) (read-byte)) "ab") (cons 97 "")))
+    (check-equal? (run '(begin (peek-byte) (read-byte)) "ab") (cons 97 ""))
+    (check-equal? (run '(read-byte) "†") (cons 226 "")))
 
   {:> E1}
   (begin ;; Extort

@@ -1,5 +1,5 @@
 #lang crook
-{:= D0 D1 E0 E1 F H0}
+{:= D0 D1 E0 E1 F H0 H1}
 (provide (all-defined-out))
 {:> H0} (require ffi/unsafe)
 
@@ -8,6 +8,8 @@
 {:> H0} (define ptr-mask       #b111)
 {:> H0} (define type-box       #b001)
 {:> H0} (define type-cons      #b010)
+{:> H1} (define type-vect      #b011)
+{:> H1} (define type-str       #b100)
 (define int-shift    {:> D0 H0} 1 {:> H0} (+ 1 imm-shift))
 (define mask-int   {:> D0 H0} #b1 {:> H0} #b1111)
 {:> D1}
@@ -39,6 +41,20 @@
         [(cons-bits? b)
          (cons (bits->value (heap-ref (+ b 8)))
                (bits->value (heap-ref b)))]
+        {:> H1}
+        [(vect-bits? b)
+         (if (zero? (untag b))
+             (vector)
+             (build-vector (heap-ref b)
+                           (lambda (j)
+                             (bits->value (heap-ref (+ b (* 8 (add1 j))))))))]
+        {:> H1}
+        [(str-bits? b)
+         (if (zero? (untag b))
+             (string)
+             (build-string (heap-ref b)
+                           (lambda (j)
+                             (char-ref (+ b 8) j))))]
         [else (error "invalid bits")]))
 
 (define (value->bits v)
@@ -74,6 +90,14 @@
 (define (box-bits? v)
   (= type-box (bitwise-and v imm-mask)))
 
+{:> H1}
+(define (vect-bits? v)
+  (= type-vect (bitwise-and v imm-mask)))
+
+{:> H1}
+(define (str-bits? v)
+  (= type-str (bitwise-and v imm-mask)))
+
 {:> H0}
 (define (untag i)
   (arithmetic-shift (arithmetic-shift i (- (integer-length ptr-mask)))
@@ -82,3 +106,7 @@
 {:> H0}
 (define (heap-ref i)
   (ptr-ref (cast (untag i) _int64 _pointer) _int64))
+
+{:> H1}
+(define (char-ref i j)
+  (integer->char (ptr-ref (cast (untag i) _int64 _pointer) _uint32 j)))

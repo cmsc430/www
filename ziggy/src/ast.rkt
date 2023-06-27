@@ -1,6 +1,6 @@
 #lang crook
-{:= A B C D0 D1 E0 E1 F H0}
-(provide {:> A} Lit {:> E0} Prim0 {:> B} Prim1 {:> F} Prim2 {:> C D0} IfZero {:> D0} If {:> E0} Eof {:> E0} Begin {:> F} Let {:> F} Var {:> H0} Empty)
+{:= A B C D0 D1 E0 E1 F H0 H1}
+(provide {:> A} Lit {:> E0} Prim0 {:> B} Prim1 {:> F} Prim2 {:> H1} Prim3 {:> C D0} IfZero {:> D0} If {:> E0} Eof {:> E0} Begin {:> F} Let {:> F} Var {:> H0} Empty)
 ;;
 {:> A D0} ;; type Expr = (Lit Integer)
 {:> D0}   ;; type Expr = (Lit Datum)
@@ -8,6 +8,8 @@
 {:> H0}   ;;           | (Empty)
 {:> E0}   ;;           | (Prim0 Op0)
 {:> B}    ;;           | (Prim1 Op1 Expr)
+{:> F}    ;;           | (Prim2 Op2 Expr Expr)
+{:> H1}   ;;           | (Prim3 Op3 Expr Expr Expr)
 {:> C D0} ;;           | (IfZero Expr Expr Expr)
 {:> D0}   ;;           | (If Expr Expr Expr)
 {:> F}    ;;           | (Let Id Expr Expr)
@@ -16,6 +18,7 @@
 {:> D0}   ;; type Datum = Integer
 {:> D0}   ;;            | Boolean
 {:> D1}   ;;            | Character
+{:> H1}   ;;            | String
 {:> E0}   ;; type Op0 = 'read-byte | 'peek-byte | 'void
 {:> B}    ;; type Op1 = 'add1 | 'sub1
 {:> D0}   ;;          | 'zero?
@@ -23,8 +26,13 @@
 {:> E0}   ;;          | 'write-byte | 'eof-object?
 {:> H0}   ;;          | 'box | 'car | 'cdr | 'unbox
 {:> H0}   ;;          | 'empty? | 'cons? | 'box?
+{:> H1}   ;;          | 'vector? | vector-length
+{:> H1}   ;;          | 'string? | string-length
 {:> F}    ;; type Op2 = '+ | '- | '< | '=
 {:> H0}   ;;          | eq? | 'cons
+{:> H1}   ;;          | 'make-vector | 'vector-ref
+{:> H1}   ;;          | 'make-string | 'string-ref
+{:> H1}   ;; type Op3 = 'vector-set!
 
 {:> E0}   (struct Eof () #:prefab)
 {:> H0}   (struct Empty () #:prefab)
@@ -33,6 +41,7 @@
 {:> E0}   (struct Prim0 (p) #:prefab)
 {:> B}    (struct Prim1 (p e) #:prefab)
 {:> F}    (struct Prim2 (p e1 e2)  #:prefab)
+{:> H1}   (struct Prim3 (p e1 e2 e3)  #:prefab)
 {:> C D0} (struct IfZero (e1 e2 e3) #:prefab)
 {:> D0}   (struct If (e1 e2 e3) #:prefab)
 {:> E0}   (struct Begin (e1 e2) #:prefab)

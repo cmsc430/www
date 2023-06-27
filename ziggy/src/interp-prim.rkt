@@ -1,6 +1,6 @@
 #lang crook
-{:= B C D0 D1 E0 E1 F H0}
-(provide {:> E0} interp-prim0 interp-prim1 {:> F} interp-prim2)
+{:= B C D0 D1 E0 E1 F H0 H1}
+(provide {:> E0} interp-prim0 interp-prim1 {:> F} interp-prim2 {:> H1} interp-prim3)
 
 {:> E0} ;; Op0 -> Value
 {:> E0}
@@ -53,7 +53,11 @@
     {:> H0} [(list 'cdr (? pair?))                (cdr v)]
     {:> H0} [(list 'empty? v)                     (empty? v)]
     {:> H0} [(list 'cons? v)                      (cons? v)]
-    {:> H0} [(list 'box? v)                       (box? v)]    
+    {:> H1} [(list 'box? v)                       (box? v)]
+    {:> H1} [(list 'vector? v)                    (vector? v)]
+    {:> H1} [(list 'vector-length (? vector?))    (vector-length v)]
+    {:> H1} [(list 'string? v)                    (string? v)]
+    {:> H1} [(list 'string-length (? string?))    (string-length v)]
     [_ 'err]))
 
 {:> F} ;; Op2 Value Value -> Answer
@@ -66,6 +70,36 @@
     [(list '= (? integer?) (? integer?)) (= v1 v2)]
     {:> H0} [(list 'eq? v1 v2)                    (eq? v1 v2)]
     {:> H0} [(list 'cons v1 v2)                   (cons v1 v2)]
+    {:> H1}
+    [(list 'make-vector (? integer?) _)
+     (if (<= 0 v1)
+         (make-vector v1 v2)
+         'err)]
+    {:> H1}
+    [(list 'vector-ref (? vector?) (? integer?))
+     (if (<= 0 v2 (sub1 (vector-length v1)))
+         (vector-ref v1 v2)
+         'err)]
+    {:> H1}
+    [(list 'make-string (? integer?) (? char?))
+     (if (<= 0 v1)
+         (make-string v1 v2)
+         'err)]
+    {:> H1}
+    [(list 'string-ref (? string?) (? integer?))
+     (if (<= 0 v2 (sub1 (string-length v1)))
+         (string-ref v1 v2)
+         'err)]
+    [_ 'err]))
+
+{:> H1} ;; Op3 Value Value Value -> Answer
+{:> H1}
+(define (interp-prim3 p v1 v2 v3)
+  (match (list p v1 v2 v3)
+    [(list 'vector-set! (? vector?) (? integer?) _)
+     (if (<= 0 v2 (sub1 (vector-length v1)))
+         (vector-set! v1 v2 v3)
+         'err)]
     [_ 'err]))
 
 {:> E1} ;; Any -> Boolean

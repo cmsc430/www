@@ -1,5 +1,5 @@
 #lang crook
-{:= A B C D0 D1 E0 E1 F H0}
+{:= A B C D0 D1 E0 E1 F H0 H1}
 (provide (all-defined-out))
 (require "ast.rkt")
 {:> B}   (require "compile-ops.rkt")
@@ -49,6 +49,7 @@
     {:> E0}   [(Prim0 p)       (compile-prim0 p)]
     {:> B}    [(Prim1 p e)     (compile-prim1 p e {:> F} c)]
     {:> F}    [(Prim2 p e1 e2) (compile-prim2 p e1 e2 c)]
+    {:> H1}   [(Prim3 p e1 e2 e3) (compile-prim3 p e1 e2 e3 c)]
     {:> C D0} [(IfZero e1 e2 e3)
                (compile-ifzero e1 e2 e3)]
     {:> D0}   [(If e1 e2 e3)
@@ -61,13 +62,41 @@
 {:> D0} ;; Value -> Asm
 {:> D0}
 (define (compile-value v)
-  (seq (Mov rax (value->bits v))))
+  {:> D0 H1}
+  (seq (Mov rax (value->bits v)))
+  {:> H1}
+  (cond [(string? v) (compile-string v)]
+        [else        (Mov rax (value->bits v))]))
 
 {:> F} ;; Id CEnv -> Asm
 {:> F}
 (define (compile-variable x c)
   (let ((i (lookup x c)))
     (seq (Mov rax (Offset rsp i)))))
+
+{:> H1} ;; String -> Asm
+{:> H1}
+(define (compile-string s)
+  (let ((len (string-length s)))
+    (if (zero? len)
+        (seq (Mov rax type-str))
+        (seq (Mov rax len)
+             (Mov (Offset rbx 0) rax)
+             (compile-string-chars (string->list s) 8)
+             (Mov rax rbx)
+             (Or rax type-str)
+             (Add rbx
+                  (+ 8 (* 4 (if (odd? len) (add1 len) len))))))))
+
+{:> H1} ;; [Listof Char] Integer -> Asm
+{:> H1}
+(define (compile-string-chars cs i)
+  (match cs
+    ['() (seq)]
+    [(cons c cs)
+     (seq (Mov rax (char->integer c))
+          (Mov (Offset rbx i) 'eax)
+          (compile-string-chars cs (+ 4 i)))]))
 
 {:> E0} ;; Op0 -> Asm
 {:> E0}
@@ -88,6 +117,17 @@
        (Push rax)
        (compile-e e2 (cons #f c))
        (compile-op2 p)))
+
+{:> H1} ;; Op3 Expr Expr Expr CEnv -> Asm
+{:> H1}
+(define (compile-prim3 p e1 e2 e3 c)
+  (seq (compile-e e1 c)
+       (Push rax)
+       (compile-e e2 (cons #f c))
+       (Push rax)
+       (compile-e e3 (cons #f (cons #f c)))
+       (compile-op3 p)))
+
 
 {:> C D0} ;; Expr Expr Expr -> Asm
 {:> C D0}

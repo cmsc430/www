@@ -1,5 +1,5 @@
 #lang crook
-{:= A B C D0 D1 E0 E1 F H0}
+{:= A B C D0 D1 E0 E1 F H0 H1}
 (provide interp)
 (require "ast.rkt")
 {:> B} (require "interp-prim.rkt")
@@ -13,6 +13,8 @@
 {:> H0} ;; | '()
 {:> H0} ;; | (cons Value Value)
 {:> H0} ;; | (box Value)
+{:> H1} ;; | (string Character ...)
+{:> H1} ;; | (vector Value ...)
 
 {:> F} ;; type Env = (Listof (List Id Value))
 
@@ -77,6 +79,15 @@
        [v1 (match (interp-env e2 r)
              ['err 'err]
              [v2 (interp-prim2 p v1 v2)])])]
+    {:> H1}
+    [(Prim3 p e1 e2 e3)
+     (match (interp-env e1 r)
+       ['err 'err]
+       [v1 (match (interp-env e2 r)
+             ['err 'err]
+             [v2 (match (interp-env e3 r)
+                   ['err 'err]
+                   [v3 (interp-prim3 p v1 v2 v3)])])])]
     [(If p e1 e2)
      (match (interp-env p r)
        ['err 'err]
