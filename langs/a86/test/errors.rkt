@@ -20,3 +20,12 @@
 (check-not-exn       (thunk (Add 'rax (sub1 (expt 2 32)))))
 (check-exn exn:fail? (thunk (Sub 'rax (expt 2 32))))
 (check-not-exn       (thunk (Sub 'rax (sub1 (expt 2 32)))))
+
+;; Check prog
+(check-exn exn:fail? (thunk (prog (Ret))))
+(check-exn exn:fail? (thunk (prog (Label 'start) (Ret))))
+(check-exn exn:fail? (thunk (prog (Global 'foo) (Label 'start) (Label 'foo) (Ret))))
+(check-not-exn       (thunk (prog (Global 'start) (Label 'start) (Ret))))
+(check-not-exn       (thunk (prog (Label 'start) (Ret) (Global 'start))))
+
+
