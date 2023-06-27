@@ -30,6 +30,7 @@
 (define (interp-env-heap e r h)
   (match e
     [(Lit d)  (cons h d)]
+    [(Empty)  (cons h '())]
     [(Eof)    (cons h eof)]
     [(Var x)  (cons h (lookup r x))]
     [(Prim0 'void) (cons h (void))]
