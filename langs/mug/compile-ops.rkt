@@ -31,10 +31,10 @@
   (match p
     ['add1
      (seq (assert-integer rax)
-          (Add rax (imm->bits 1)))]
+          (Add rax (value->bits 1)))]
     ['sub1
      (seq (assert-integer rax)
-          (Sub rax (imm->bits 1)))]
+          (Sub rax (value->bits 1)))]
     ['zero?
      (seq (assert-integer rax)
           (eq-imm 0))]
@@ -331,9 +331,9 @@
   (let ((l (gensym)))
     (seq (And rax mask)
          (Cmp rax type)
-         (Mov rax (imm->bits #t))
+         (Mov rax (value->bits #t))
          (Je l)
-         (Mov rax (imm->bits #f))
+         (Mov rax (value->bits #f))
          (Label l))))
 
 (define assert-integer
@@ -356,33 +356,33 @@
 (define (assert-codepoint r)
   (let ((ok (gensym)))
     (seq (assert-integer r)
-         (Cmp r (imm->bits 0))
+         (Cmp r (value->bits 0))
          (Jl 'raise_error_align)
-         (Cmp r (imm->bits 1114111))
+         (Cmp r (value->bits 1114111))
          (Jg 'raise_error_align)
-         (Cmp r (imm->bits 55295))
+         (Cmp r (value->bits 55295))
          (Jl ok)
-         (Cmp r (imm->bits 57344))
+         (Cmp r (value->bits 57344))
          (Jg ok)
          (Jmp 'raise_error_align)
          (Label ok))))
 
 (define (assert-byte r)
   (seq (assert-integer r)
-       (Cmp r (imm->bits 0))
+       (Cmp r (value->bits 0))
        (Jl 'raise_error_align)
-       (Cmp r (imm->bits 255))
+       (Cmp r (value->bits 255))
        (Jg 'raise_error_align)))
 
 (define (assert-natural r)
   (seq (assert-integer r)
-       (Cmp r (imm->bits 0))
+       (Cmp r (value->bits 0))
        (Jl 'raise_error_align)))
 
 ;; Value -> Asm
 (define (eq-imm imm)
   (let ((l1 (gensym)))
-    (seq (Cmp rax (imm->bits imm))
+    (seq (Cmp rax (value->bits imm))
          (Mov rax val-true)
          (Je l1)
          (Mov rax val-false)

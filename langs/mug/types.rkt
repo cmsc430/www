@@ -34,7 +34,7 @@
         [(= b val-empty) '()]
         [else (error "invalid bits")]))
 
-(define (imm->bits v)
+(define (value->bits v)
   (cond [(eof-object? v) val-eof]
         [(integer? v) (arithmetic-shift v int-shift)]
         [(char? v)
