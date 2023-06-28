@@ -10,7 +10,7 @@
 	   '("ast.rkt" "parse.rkt" "interp.rkt"))
 
 
-@bold{Due: Monday, June 26, 11:59PM EST}
+@bold{Due: Tuesday, June 27, 11:59PM EST}
 
 The goal of this assignment is to extend a compiler with arity
 checking for function calls, to add new kinds of function parameter
