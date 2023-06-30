@@ -782,14 +782,16 @@ Each register plays the same role as in x86, so for example
  outermost level of a function that produces a86 code and not
  nested.
 
- @ex[ 
- (prog (Label 'foo))
- (prog (list (Label 'foo)))
+ @ex[
+ (prog (Global 'foo) (Label 'foo))
+ (eval:error (prog (Label 'foo)))
+ (eval:error (prog (list (Label 'foo))))
  (eval:error (prog (Mov 'rax 32)))
  (eval:error (prog (Label 'foo)
                    (Label 'foo)))
  (eval:error (prog (Jmp 'foo)))
- (prog (Label 'foo)
+ (prog (Global 'foo)
+       (Label 'foo)
        (Jmp 'foo))
  ]
 }
@@ -807,7 +809,8 @@ Each register plays the same role as in x86, so for example
  @#reader scribble/comment-reader
  (ex
  (asm-display
-   (prog (%%% "Start of foo")
+   (prog (Global 'foo)
+         (%%% "Start of foo")
          (Label 'foo)
          ; Racket comments won't appear
          (%% "Inputs one argument in rdi")
