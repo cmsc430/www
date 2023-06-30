@@ -38,6 +38,26 @@
   ; IMPROVE ME: hard-coded heap size
   (malloc _int64 20000 'raw))
 
+
+;; Integer -> String
+(define (number->binary n)
+  (format "#b~a"
+          (~r n #:base 2 #:min-width 64 #:pad-string "0")))
+
+;; Integer -> String
+(define (number->octal n)
+  (format "#o~a"
+          (~r n #:base 8 #:min-width 22 #:pad-string "0")))
+
+(define (number->hex n)
+  (format "#x~a"
+          (~r n #:base 16 #:min-width 16 #:pad-string "0")))
+
+(define (show-state . regs)
+  (for-each (lambda (v)
+              (printf "reg: ~a\n" (number->hex v)))
+            regs))
+
 ;; Asm String -> (cons Value String)
 ;; Like asm-interp, but uses given string for input and returns
 ;; result with string output
@@ -75,6 +95,12 @@
     (set-ffi-obj! "error_handler" libt.so _pointer
                   (function-ptr (λ () (raise 'err)) (_fun _-> _void))))
 
+  (when (ffi-obj-ref "place" libt.so (thunk #f))
+    (set-ffi-obj! "place" libt.so _pointer
+                  (function-ptr (λ (n)
+                                  (apply show-state
+                                         (build-list 16 (lambda (i) (ptr-ref n _int64 (add1 i))))))
+                                (_fun _pointer _-> _void))))
 
   (define has-heap? #f)
 
