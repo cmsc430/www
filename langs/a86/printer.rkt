@@ -49,6 +49,8 @@
       [(? reg?) (reg->string t)]
       [(Offset (? reg? r) i)
        (string-append "[" (reg->string r) " + " (number->string i) "]")]
+      [(Offset (? label? l) i)
+       (string-append "[" (label-symbol->string l) " + " (number->string i) "]")]
       [_ (label-symbol->string t)]))
 
   ;; Arg -> String
