@@ -1,33 +1,13 @@
 #lang racket
-(provide symbol->label symbol->data-label lookup pad-stack unpad-stack)
+(provide symbol->data-label lookup pad-stack unpad-stack)
 (require a86/ast)
 
 (define rsp 'rsp)
 (define r15 'r15)
 
-;; Symbol -> Label
-;; Produce a symbol that is a valid Nasm label
-(define (symbol->label s)
-  (to-label "label_" s))
-
 (define (symbol->data-label s)
-  (to-label "data_" s))
-
-(define (to-label prefix s)
-  (string->symbol
-   (string-append
-    prefix
-    (list->string
-     (map (λ (c)
-            (if (or (char<=? #\a c #\z)
-                    (char<=? #\A c #\Z)
-                    (char<=? #\0 c #\9)
-                    (memq c '(#\_ #\$ #\# #\@ #\~ #\. #\?)))
-                c
-                #\_))
-         (string->list (symbol->string s))))
-    "_"
-    (number->string (eq-hash-code s) 16))))
+  (symbol->label
+   (string->symbol (string-append "data_" (symbol->string s)))))
 
 ;; Id CEnv -> [Maybe Integer]
 (define (lookup x cenv)
