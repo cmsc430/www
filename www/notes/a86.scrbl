@@ -1584,6 +1584,14 @@ Perform bitwise not operation (each 1 is set to 0, and each 0 is set to 1) on th
  ]
 }
 
+@defstruct*[Db ([d integer?])]{
+ Psuedo-instruction for declaring 8-bits of initialized static memory.
+}
+
+@defstruct*[Dw ([d integer?])]{
+ Psuedo-instruction for declaring 16-bits of initialized static memory.
+}
+
 @defstruct*[Dd ([d integer?])]{
  Psuedo-instruction for declaring 32-bits of initialized static memory.
 }

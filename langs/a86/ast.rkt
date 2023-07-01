@@ -250,6 +250,8 @@
 (instruct Const  (x)       check:label-symbol)
 
 ;; IMPROVE: do more checking
+(instruct Db (x) (lambda (a x n) (values a x)))
+(instruct Dw (x) (lambda (a x n) (values a x)))
 (instruct Dd (x) (lambda (a x n) (values a x)))
 (instruct Dq (x) (lambda (a x n) (values a x)))
 

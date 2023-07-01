@@ -234,6 +234,10 @@
                       " equ "
                       (number->string c))]
 
+      [(Db x)
+       (string-append tab "db " (arg->string x))]
+      [(Dw x)
+       (string-append tab "dw " (arg->string x))]
       [(Dd x)
        (string-append tab "dd " (arg->string x))]
       [(Dq x)
