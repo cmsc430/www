@@ -7,7 +7,7 @@
 val_t read_byte(void)
 {
   char c = getc(in);
-  return (c == EOF) ? val_wrap_eof() : val_wrap_int(c);  
+  return (c == EOF) ? val_wrap_eof() : val_wrap_byte(c);
 }
 
 val_t peek_byte(void)
