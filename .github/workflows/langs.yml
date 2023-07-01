@@ -37,5 +37,5 @@ jobs:
     - name: Run tests
       run: |
         raco test -p ziggy
-        raco test -p langs
+        xvfb-run raco test -p langs
         raco test -c outlaw
