@@ -211,6 +211,10 @@
       [(Push a)
        (string-append tab "push "
                       (arg->string a))]
+      [(Pushf)
+       (string-append tab "pushf")]
+      [(Popf)
+       (string-append tab "popf")]
       [(Pop r)
        (string-append tab "pop "
                       (reg->string r))]
@@ -234,6 +238,8 @@
                       " equ "
                       (number->string c))]
 
+      [(Db (? bytes? bs))
+       (apply string-append tab "db " (add-between (map number->string (bytes->list bs)) ", "))]
       [(Db x)
        (string-append tab "db " (arg->string x))]
       [(Dw x)

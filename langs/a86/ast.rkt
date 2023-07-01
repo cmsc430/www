@@ -238,6 +238,8 @@
 (instruct Sal    (dst i)   check:shift)
 (instruct Sar    (dst i)   check:shift)
 (instruct Push   (a1)      check:push)
+(instruct Pushf  ()        check:none)
+(instruct Popf   ()        check:none)
 (instruct Pop    (a1)      check:register)
 (instruct Lea    (dst x)   check:lea)
 (instruct Not    (x)       check:register)
@@ -385,3 +387,27 @@
 (define (check-has-initial-label asm)
   (unless (findf Label? asm)
     (error 'prog "no initial label found")))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Symbol to Label
+
+;; Symbol -> Label
+;; Produce a symbol that is a valid Nasm label
+;; Guarantees that (eq? s1 s2) <=> (eq? (symbol->label s1) (symbol->label s1))
+(provide symbol->label)
+(define (symbol->label s)
+  (string->symbol
+   (string-append
+    "label_"
+    (list->string
+     (map (λ (c)
+            (if (or (char<=? #\a c #\z)
+                    (char<=? #\A c #\Z)
+                    (char<=? #\0 c #\9)
+                    (memq c '(#\_ #\$ #\# #\@ #\~ #\. #\?)))
+                c
+                #\_))
+         (string->list (symbol->string s))))
+    "_"
+    (number->string (eq-hash-code s) 16))))
