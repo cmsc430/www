@@ -1,5 +1,5 @@
 #lang crook
-{:= A B C D0 D1 E0 E1 F H0 H1 I}
+{:= A B C D0 D1 E0 E1 F H0 H1 I J}
 (provide (all-defined-out))
 (require "ast.rkt")
 {:> B}   (require "compile-ops.rkt")
@@ -9,7 +9,8 @@
 (define rax 'rax)
 {:> H0} (define rbx 'rbx) {:> H0} ; heap
 {:> E0} (define rsp 'rsp) {:> E0} ; stack
-{:> H0} (define rdi 'rdi) ; arg
+{:> H0} (define rdi 'rdi) {:> H0} ; arg
+{:> J}  (define r8  'r8)  {:> J}  ; scratch
 {:> F}  (define r15 'r15) {:> F}  ; stack pad (non-volatile)
 
 {:> A I} ;; Expr -> Asm
@@ -50,7 +51,7 @@
            (Push rbx)    ; save callee-saved register
            (Push r15)
            (Mov rbx rdi) ; recv heap pointer
-           (compile-e e '())
+           (compile-e e '() {:> J} #f)
            (Pop r15)     ; restore callee-save register
            (Pop rbx)
            (Ret)
@@ -74,15 +75,16 @@
   (match d
     [(Defn f xs e)
      (seq (Label (symbol->label f))
-          (compile-e e (reverse xs))
+          (compile-e e (reverse xs) {:> J} #t)
           (Add rsp (* 8 (length xs))) ; pop args
           (Ret))]))
 
 {:> F} ;; type CEnv = (Listof [Maybe Id])
 
 {:> A F} ;; Expr -> Asm
-{:> F}   ;; Expr CEnv -> Asm
-(define (compile-e e {:> F} c)
+{:> F J} ;; Expr CEnv -> Asm
+{:> J}   ;; Expr CEnv Boolean -> Asm
+(define (compile-e e {:> F} c {:> J} t?)
   (match e
     {:> A D0} [(Lit i) (seq (Mov rax i))]
     {:> D0}   [(Lit d)         (compile-value d)]
@@ -94,15 +96,15 @@
     {:> F}    [(Prim2 p e1 e2) (compile-prim2 p e1 e2 c)]
     {:> H1}   [(Prim3 p e1 e2 e3) (compile-prim3 p e1 e2 e3 c)]
     {:> C D0} [(IfZero e1 e2 e3)
-               (compile-ifzero e1 e2 e3)]
+               (compile-ifzero e1 e2 e3 {:> J} t?)]
     {:> D0}   [(If e1 e2 e3)
-               (compile-if e1 e2 e3 {:> F} c)]
+               (compile-if e1 e2 e3 {:> F} c {:> J} t?)]
     {:> E0}   [(Begin e1 e2)
-               (compile-begin e1 e2 {:> F} c)]
+               (compile-begin e1 e2 {:> F} c {:> J} t?)]
     {:> F}    [(Let x e1 e2)
-               (compile-let x e1 e2 c)]
+               (compile-let x e1 e2 c {:> J} t?)]
     {:> I}    [(App f es)
-               (compile-app f es c)]))
+               (compile-app f es c {:> J} t?)]))
 
 {:> D0} ;; Value -> Asm
 {:> D0}
@@ -152,25 +154,25 @@
 {:> F}   ;; Op1 Expr CEnv -> Asm
 {:> B}
 (define (compile-prim1 p e {:> F} c)
-  (seq (compile-e e {:> F} c)
+  (seq (compile-e e {:> F} c {:> J} #f)
        (compile-op1 p)))
 
 {:> F} ;; Op2 Expr Expr CEnv -> Asm
 {:> F}
 (define (compile-prim2 p e1 e2 c)
-  (seq (compile-e e1 c)
+  (seq (compile-e e1 c {:> J} #f)
        (Push rax)
-       (compile-e e2 (cons #f c))
+       (compile-e e2 (cons #f c) {:> J} #f)
        (compile-op2 p)))
 
 {:> H1} ;; Op3 Expr Expr Expr CEnv -> Asm
 {:> H1}
 (define (compile-prim3 p e1 e2 e3 c)
-  (seq (compile-e e1 c)
+  (seq (compile-e e1 c {:> J} #f)
        (Push rax)
-       (compile-e e2 (cons #f c))
+       (compile-e e2 (cons #f c) {:> J} #f)
        (Push rax)
-       (compile-e e3 (cons #f (cons #f c)))
+       (compile-e e3 (cons #f (cons #f c)) {:> J} #f)
        (compile-op3 p)))
 
 
@@ -189,40 +191,78 @@
          (Label l2))))
 
 {:> D0 F} ;; Expr Expr Expr -> Asm
-{:> F}    ;; Expr Expr Expr CEnv -> Asm
+{:> F J}  ;; Expr Expr Expr CEnv -> Asm
+{:> J}    ;; Expr Expr Expr CEnv Boolean -> Asm
 {:> D0}
-(define (compile-if e1 e2 e3 {:> F} c)
+(define (compile-if e1 e2 e3 {:> F} c {:> J} t?)
   (let ((l1 (gensym 'if))
         (l2 (gensym 'if)))
-    (seq (compile-e e1 {:> F} c)
+    (seq (compile-e e1 {:> F} c {:> J} #f)
          (Cmp rax (value->bits #f))
          (Je l1)
-         (compile-e e2 {:> F} c)
+         (compile-e e2 {:> F} c {:> J} t?)
          (Jmp l2)
          (Label l1)
-         (compile-e e3 {:> F} c)
+         (compile-e e3 {:> F} c {:> J} t?)
          (Label l2))))
 
 {:> E0 F} ;; Expr Expr -> Asm
-{:> F}    ;; Expr Expr CEnv -> Asm
+{:> F J}  ;; Expr Expr CEnv -> Asm
+{:> J}    ;; Expr Expr CEnv Boolean -> Asm
 {:> E0}
-(define (compile-begin e1 e2 {:> F} c)
-  (seq (compile-e e1 {:> F} c)
-       (compile-e e2 {:> F} c)))
+(define (compile-begin e1 e2 {:> F} c {:> J} t?)
+  (seq (compile-e e1 {:> F} c {:> J} #f)
+       (compile-e e2 {:> F} c {:> J} t?)))
 
-{:> F} ;; Id Expr Expr CEnv -> Asm
+{:> F J} ;; Id Expr Expr CEnv -> Asm
+{:> J}   ;; Id Expr Expr CEnv -> Asm
 {:> F}
-(define (compile-let x e1 e2 c)
-  (seq (compile-e e1 c)
+(define (compile-let x e1 e2 c {:> F} t?)
+  (seq (compile-e e1 c {:> F} t?)
        (Push rax)
-       (compile-e e2 (cons x c))
+       (compile-e e2 (cons x c) {:> F} t?)
        (Add rsp 8)))
+
+{:> J} ;; Id [Listof Expr] CEnv Boolean -> Asm
+{:> J}
+(define (compile-app f es c t?)
+  (if t?
+      (compile-app-tail f es c)
+      (compile-app-nontail f es c)))
+
+{:> J} ;; Id [Listof Expr] CEnv -> Asm
+{:> J}
+(define (compile-app-tail f es c)
+  (seq (compile-es es c)
+       (move-args (length es) (length c))
+       (Add rsp (* 8 (length c)))
+       (Jmp (symbol->label f))))
+
+{:> J} ;; Integer Integer -> Asm
+{:> J}
+(define (move-args i off)
+  (cond [(zero? off) (seq)]
+        [(zero? i)   (seq)]
+        [else
+         (seq (Mov r8 (Offset rsp (* 8 (sub1 i))))
+              (Mov (Offset rsp (* 8 (+ off (sub1 i)))) r8)
+              (move-args (sub1 i) off))]))
 
 {:> I} ;; Id [Listof Expr] CEnv -> Asm
 {:> I} ;; The return address is placed above the arguments, so callee pops
 {:> I} ;; arguments and return address is next frame
-{:> I}
+{:> I J}
 (define (compile-app f es c)
+  (let ((r (gensym 'ret)))
+    (seq (Lea rax r)
+         (Push rax)
+         (compile-es es (cons #f c))
+         (Jmp (symbol->label f))
+         (Label r))))
+
+{:> Z:FIXME} ;; eats previous paren if we do ({:> I J} compile-app {:> J} compile-app-nontail ...)
+{:> J}
+(define (compile-app-nontail f es c)
   (let ((r (gensym 'ret)))
     (seq (Lea rax r)
          (Push rax)
@@ -236,7 +276,7 @@
   (match es
     ['() '()]
     [(cons e es)
-     (seq (compile-e e c)
+     (seq (compile-e e c {:> J} #f)
           (Push rax)
           (compile-es es (cons #f c)))]))
 

@@ -1,5 +1,5 @@
 #lang crook
-{:= I}
+{:= I J}
 (provide read-all)
 ;; read all s-expression until eof
 (define (read-all)

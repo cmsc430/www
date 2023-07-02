@@ -1,5 +1,5 @@
 #lang crook
-{:= B C D0 D1 E0 E1 F H0 H1 I}
+{:= B C D0 D1 E0 E1 F H0 H1 I J}
 (provide {:> E0} interp-prim0 interp-prim1 {:> F} interp-prim2 {:> H1} interp-prim3)
 
 {:> E0} ;; Op0 -> Value

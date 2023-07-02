@@ -19,4 +19,5 @@
                                 ("fraud"     . "F")
                                 ("hustle"    . "H0")
                                 ("hoax"      . "H1")
-                                ("iniquity"  . "I"))))))
+                                ("iniquity"  . "I")
+                                ("jig"       . "J"))))))

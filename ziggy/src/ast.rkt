@@ -1,5 +1,5 @@
 #lang crook
-{:= A B C D0 D1 E0 E1 F H0 H1 I}
+{:= A B C D0 D1 E0 E1 F H0 H1 I J}
 (provide {:> A} Lit {:> E0} Prim0 {:> B} Prim1 {:> F} Prim2 {:> H1} Prim3 {:> C D0} IfZero {:> D0} If {:> E0} Eof {:> E0} Begin {:> F} Let {:> F} Var {:> H0} Empty {:> I} Prog {:> I} Defn {:> I} App)
 ;;
 
