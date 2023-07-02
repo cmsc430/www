@@ -1,5 +1,5 @@
 #lang crook
-{:= A B C D0 D1 E0 E1 F H0 H1}
+{:= A B C D0 D1 E0 E1 F H0 H1 I}
 (provide test {:> E0} test/io)
 (require rackunit)
 
@@ -106,7 +106,10 @@
 
   {:> H0}
   (begin ;; Hustle
-    (check-equal? (run ''()) '())  
+    (check-equal? (run ''()) '())
+    (check-equal? (run '(empty? '())) #t)
+    (check-equal? (run '(empty? 3)) #f)
+    (check-equal? (run '(empty? (cons 1 2))) #f)
     (check-equal? (run '(box 1)) (box 1))
     (check-equal? (run '(box -1)) (box -1))
     (check-equal? (run '(cons 1 2)) (cons 1 2))
@@ -169,39 +172,124 @@
     (check-equal? (run '(string? (cons 1 2))) #f)
     (check-equal? (run '(begin (make-string 3 #\f)
                                (make-string 3 #\f)))
-                  "fff")))
+                  "fff"))
+
+  {:> I}
+  (begin ;; Iniquity
+    (check-equal? (run
+                   '(define (f x) x)
+                   '(f 5))
+                  5)
+    (check-equal? (run
+                   '(define (tri x)
+                      (if (zero? x)
+                          0
+                          (+ x (tri (sub1 x)))))
+                   '(tri 9))
+                  45)
+    
+    (check-equal? (run
+                   '(define (even? x)
+                      (if (zero? x)
+                          #t
+                          (odd? (sub1 x))))
+                   '(define (odd? x)
+                      (if (zero? x)
+                          #f
+                          (even? (sub1 x))))
+                   '(even? 101))
+                  #f)
+    
+    (check-equal? (run
+                   '(define (map-add1 xs)
+                      (if (empty? xs)
+                          '()
+                          (cons (add1 (car xs))
+                                (map-add1 (cdr xs)))))
+                   '(map-add1 (cons 1 (cons 2 (cons 3 '())))))
+                  '(2 3 4))
+    (check-equal? (run '(define (f x y) y)
+                       '(f 1 (add1 #f)))
+                  'err)))
 
 {:> E0}
 (define (test/io run)
   (begin ;; Evildoer
-    (check-equal? (run 7 "") (cons 7 ""))
-    (check-equal? (run '(write-byte 97) "") (cons (void) "a"))
-    (check-equal? (run '(read-byte) "a") (cons 97 ""))
-    (check-equal? (run '(begin (write-byte 97) (read-byte)) "b")
+    (check-equal? (run "" 7) (cons 7 ""))
+    (check-equal? (run "" '(write-byte 97)) (cons (void) "a"))
+    (check-equal? (run "a" '(read-byte)) (cons 97 ""))
+    (check-equal? (run "b" '(begin (write-byte 97) (read-byte)))
                   (cons 98 "a"))
-    (check-equal? (run '(read-byte) "") (cons eof ""))
-    (check-equal? (run '(eof-object? (read-byte)) "") (cons #t ""))
-    (check-equal? (run '(eof-object? (read-byte)) "a") (cons #f ""))
-    (check-equal? (run '(begin (write-byte 97) (write-byte 98)) "")
+    (check-equal? (run "" '(read-byte)) (cons eof ""))
+    (check-equal? (run "" '(eof-object? (read-byte))) (cons #t ""))
+    (check-equal? (run "a" '(eof-object? (read-byte))) (cons #f ""))
+    (check-equal? (run "" '(begin (write-byte 97) (write-byte 98)))
                   (cons (void) "ab"))
     
-    (check-equal? (run '(peek-byte) "ab") (cons 97 ""))
-    (check-equal? (run '(begin (peek-byte) (read-byte)) "ab") (cons 97 ""))
-    (check-equal? (run '(read-byte) "†") (cons 226 "")))
+    (check-equal? (run "ab" '(peek-byte)) (cons 97 ""))
+    (check-equal? (run "ab" '(begin (peek-byte) (read-byte))) (cons 97 ""))
+    (check-equal? (run "†" '(read-byte)) (cons 226 "")))
 
   {:> E1}
   (begin ;; Extort
-    (check-equal? (run '(write-byte #t) "") (cons 'err "")))
+    (check-equal? (run "" '(write-byte #t)) (cons 'err "")))
 
   {:> F}
   (begin ;; Fraud
-    (check-equal? (run '(let ((x 97)) (write-byte x)) "") (cons (void) "a"))
-    (check-equal? (run '(let ((x 97))
+    (check-equal? (run "" '(let ((x 97)) (write-byte x))) (cons (void) "a"))
+    (check-equal? (run ""
+                       '(let ((x 97))
                           (begin (write-byte x)
-                                 x))
-                       "")
+                                 x)))
                   (cons 97 "a"))
-    (check-equal? (run '(let ((x 97)) (begin (read-byte) x)) "b")
+    (check-equal? (run "b" '(let ((x 97)) (begin (read-byte) x)))
                   (cons 97 ""))
-    (check-equal? (run '(let ((x 97)) (begin (peek-byte) x)) "b")
-                  (cons 97 ""))))
+    (check-equal? (run "b" '(let ((x 97)) (begin (peek-byte) x)))
+                  (cons 97 "")))
+
+  {:> I}
+  (begin ;; Iniquity
+    (check-equal? (run ""
+                       '(define (print-alphabet i)
+                          (if (zero? i)
+                              (void)
+                              (begin (write-byte (- 123 i))
+                                   (print-alphabet (sub1 i)))))
+                       '(print-alphabet 26))
+                  (cons (void) "abcdefghijklmnopqrstuvwxyz"))
+
+    (check-equal? (run ""
+                       '(define (f x)
+                          (write-byte x))
+                       '(f 97))
+                  (cons (void) "a"))  
+    (check-equal? (run ""
+                       '(define (f x y)
+                          (write-byte x))
+                       '(f 97 98))
+                  (cons (void) "a"))  
+    (check-equal? (run ""
+                       '(define (f x)
+                          (let ((y x))
+                            (write-byte y)))
+                       '(f 97))
+                  (cons (void) "a"))
+    (check-equal? (run ""
+                       '(define (f x y)
+                          (let ((y x))
+                            (write-byte y)))
+                       '(f 97 98))
+                  (cons (void) "a"))  
+    (check-equal? (run ""
+                       '(define (f x)
+                          (write-byte x))
+                       '(let ((z 97))
+                          (f z)))
+                  (cons (void) "a"))  
+    (check-equal? (run ""
+                       '(define (f x y)
+                          (write-byte x))
+                       '(let ((z 97))
+                          (f z 98)))
+                  (cons (void) "a"))))
+

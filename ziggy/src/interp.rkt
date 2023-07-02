@@ -1,5 +1,5 @@
 #lang crook
-{:= A B C D0 D1 E0 E1 F H0 H1}
+{:= A B C D0 D1 E0 E1 F H0 H1 I}
 (provide interp)
 (require "ast.rkt")
 {:> B} (require "interp-prim.rkt")
@@ -20,10 +20,15 @@
 
 {:> A D0}  ;; Expr -> Integer
 {:> D0 E1} ;; Expr -> Value
-{:> E1}    ;; Expr -> Answer
-(define (interp e)
-  {:> F}
+{:> E1 I}  ;; Expr -> Answer
+{:> I}     ;; Prog -> Answer
+(define (interp {:> A I} e {:> I} p)
+  {:> F I}
   (interp-env e '())
+  {:> I}
+  (match p
+    [(Prog ds e)
+     (interp-env e '() ds)])
   {:> A F}
   (match e
     {:> A D0}  [(Lit i) i]
@@ -61,7 +66,7 @@
 
 {:> F} ;; Expr Env -> Answer
 {:> F}
-(define (interp-env e r)
+(define (interp-env e r {:> I} ds)
   (match e
     [(Lit d) d]
     [(Eof)   eof]
@@ -70,39 +75,76 @@
     [(Var x) (lookup r x)]
     [(Prim0 p) (interp-prim0 p)]
     [(Prim1 p e)
-     (match (interp-env e r)
+     (match (interp-env e r {:> I} ds)
        ['err 'err]
        [v (interp-prim1 p v)])]
     [(Prim2 p e1 e2)
-     (match (interp-env e1 r)
+     (match (interp-env e1 r {:> I} ds)
        ['err 'err]
-       [v1 (match (interp-env e2 r)
+       [v1 (match (interp-env e2 r {:> I} ds)
              ['err 'err]
              [v2 (interp-prim2 p v1 v2)])])]
     {:> H1}
     [(Prim3 p e1 e2 e3)
-     (match (interp-env e1 r)
+     (match (interp-env e1 r {:> I} ds)
        ['err 'err]
-       [v1 (match (interp-env e2 r)
+       [v1 (match (interp-env e2 r {:> I} ds)
              ['err 'err]
-             [v2 (match (interp-env e3 r)
+             [v2 (match (interp-env e3 r {:> I} ds)
                    ['err 'err]
                    [v3 (interp-prim3 p v1 v2 v3)])])])]
-    [(If p e1 e2)
-     (match (interp-env p r)
+    [(If e0 e1 e2)
+     (match (interp-env e0 r {:> I} ds)
        ['err 'err]
        [v
         (if v
-            (interp-env e1 r)
-            (interp-env e2 r))])]
+            (interp-env e1 r {:> I} ds)
+            (interp-env e2 r {:> I} ds))])]
     [(Begin e1 e2)
-     (match (interp-env e1 r)
+     (match (interp-env e1 r {:> I} ds)
        ['err 'err]
-       [v    (interp-env e2 r)])]
+       [v    (interp-env e2 r {:> I} ds)])]
     [(Let x e1 e2)
-     (match (interp-env e1 r)
+     (match (interp-env e1 r {:> I} ds)
        ['err 'err]
-       [v (interp-env e2 (ext r x v))])]))
+       [v (interp-env e2 (ext r x v) {:> I} ds)])]
+    {:> I}
+    [(App f es)
+     (match (interp-env* es r ds)
+       ['err 'err]
+       [vs
+        (match (defns-lookup ds f)
+          [(Defn f xs e)
+           ; check arity matches
+           (if (= (length xs) (length vs))
+               (interp-env e (zip xs vs) ds)
+               'err)])])]))   
+
+{:> I} ;; (Listof Expr) REnv Defns -> (Listof Value) | 'err
+{:> I}
+(define (interp-env* es r ds)
+  (match es
+    ['() '()]
+    [(cons e es)
+     (match (interp-env e r ds)
+       ['err 'err]
+       [v (match (interp-env* es r ds)
+            ['err 'err]
+            [vs (cons v vs)])])]))
+
+{:> I} ;; Defns Symbol -> Defn
+{:> I}
+(define (defns-lookup ds f)
+  (findf (match-lambda [(Defn g _ _) (eq? f g)])
+         ds))
+
+{:> I}
+(define (zip xs ys)
+  (match* (xs ys)
+    [('() '()) '()]
+    [((cons x xs) (cons y ys))
+     (cons (list x y)
+           (zip xs ys))]))
 
 {:> F} ;; Env Id -> Value
 {:> F}

@@ -1,4 +1,5 @@
-#lang racket
+#lang crook
+{:= I}
 (provide read-all)
 ;; read all s-expression until eof
 (define (read-all)

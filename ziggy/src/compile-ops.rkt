@@ -1,5 +1,5 @@
 #lang crook
-{:= B C D0 D1 E0 E1 F H0 H1}
+{:= B C D0 D1 E0 E1 F H0 H1 I}
 (provide {:> E0} compile-op0 compile-op1 {:> F} compile-op2 {:> H1} compile-op3 {:> F} pad-stack)
 (require "ast.rkt")
 {:> D0} (require "types.rkt")
@@ -89,7 +89,7 @@
                      (Xor rax type-cons)
                      (Mov rax (Offset rax 0)))]
     
-    {:> H0}    ['empty? (seq (Mov rax (value->bits '())) if-equal)]
+    {:> H0}    ['empty? (seq (Cmp rax (value->bits '())) if-equal)]
     {:> H0}    ['cons? (type-pred ptr-mask type-cons)]
     {:> H0}    ['box?  (type-pred ptr-mask type-box)]
     {:> H1}    ['vector? (type-pred ptr-mask type-vect)]

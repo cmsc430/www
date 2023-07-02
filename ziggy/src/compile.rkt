@@ -1,5 +1,5 @@
 #lang crook
-{:= A B C D0 D1 E0 E1 F H0 H1}
+{:= A B C D0 D1 E0 E1 F H0 H1 I}
 (provide (all-defined-out))
 (require "ast.rkt")
 {:> B}   (require "compile-ops.rkt")
@@ -12,8 +12,9 @@
 {:> H0} (define rdi 'rdi) ; arg
 {:> F}  (define r15 'r15) {:> F}  ; stack pad (non-volatile)
 
-;; Expr -> Asm
-(define (compile e)
+{:> A I} ;; Expr -> Asm
+{:> A I}
+(define (compile e)  
   (prog (Global 'entry)
         {:> E0} (Extern 'peek_byte)
         {:> E0} (Extern 'read_byte)
@@ -34,6 +35,48 @@
         {:> E1} (Label 'err)
         {:> F}  pad-stack
         {:> E1} (Call 'raise_error)))
+
+{:> I} ;; Prog -> Asm
+{:> I}
+(define (compile p)
+  (match p
+    [(Prog ds e)
+     (prog (Global 'entry)
+           (Extern 'peek_byte)
+           (Extern 'read_byte)
+           (Extern 'write_byte)
+           (Extern 'raise_error)
+           (Label 'entry)
+           (Push rbx)    ; save callee-saved register
+           (Push r15)
+           (Mov rbx rdi) ; recv heap pointer
+           (compile-e e '())
+           (Pop r15)     ; restore callee-save register
+           (Pop rbx)
+           (Ret)
+           (compile-defines ds)
+           (Label 'err)
+           pad-stack
+           (Call 'raise_error))]))
+
+{:> I} ;; [Listof Defn] -> Asm
+{:> I}
+(define (compile-defines ds)
+  (match ds
+    ['() (seq)]
+    [(cons d ds)
+     (seq (compile-define d)
+          (compile-defines ds))]))
+
+{:> I} ;; Defn -> Asm
+{:> I}
+(define (compile-define d)
+  (match d
+    [(Defn f xs e)
+     (seq (Label (symbol->label f))
+          (compile-e e (reverse xs))
+          (Add rsp (* 8 (length xs))) ; pop args
+          (Ret))]))
 
 {:> F} ;; type CEnv = (Listof [Maybe Id])
 
@@ -57,7 +100,9 @@
     {:> E0}   [(Begin e1 e2)
                (compile-begin e1 e2 {:> F} c)]
     {:> F}    [(Let x e1 e2)
-               (compile-let x e1 e2 c)]))
+               (compile-let x e1 e2 c)]
+    {:> I}    [(App f es)
+               (compile-app f es c)]))
 
 {:> D0} ;; Value -> Asm
 {:> D0}
@@ -172,6 +217,28 @@
        (Push rax)
        (compile-e e2 (cons x c))
        (Add rsp 8)))
+
+{:> I} ;; Id [Listof Expr] CEnv -> Asm
+{:> I} ;; The return address is placed above the arguments, so callee pops
+{:> I} ;; arguments and return address is next frame
+{:> I}
+(define (compile-app f es c)
+  (let ((r (gensym 'ret)))
+    (seq (Lea rax r)
+         (Push rax)
+         (compile-es es (cons #f c))
+         (Jmp (symbol->label f))
+         (Label r))))
+
+{:> I} ;; [Listof Expr] CEnv -> Asm
+{:> I}
+(define (compile-es es c)
+  (match es
+    ['() '()]
+    [(cons e es)
+     (seq (compile-e e c)
+          (Push rax)
+          (compile-es es (cons #f c)))]))
 
 {:> F} ;; Id CEnv -> Integer
 {:> F}

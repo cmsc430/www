@@ -1,7 +1,15 @@
 #lang crook
-{:= A B C D0 D1 E0 E1 F H0 H1}
-(provide {:> A} Lit {:> E0} Prim0 {:> B} Prim1 {:> F} Prim2 {:> H1} Prim3 {:> C D0} IfZero {:> D0} If {:> E0} Eof {:> E0} Begin {:> F} Let {:> F} Var {:> H0} Empty)
+{:= A B C D0 D1 E0 E1 F H0 H1 I}
+(provide {:> A} Lit {:> E0} Prim0 {:> B} Prim1 {:> F} Prim2 {:> H1} Prim3 {:> C D0} IfZero {:> D0} If {:> E0} Eof {:> E0} Begin {:> F} Let {:> F} Var {:> H0} Empty {:> I} Prog {:> I} Defn {:> I} App)
 ;;
+
+{:> I} ;; type Prog = (Prog (Listof Defn) Expr)
+{:> I} (struct Prog (ds e) #:prefab)
+
+{:> I} ;; type Defn = (Defn Id (Listof Id) Expr)
+{:> I} (struct Defn (f xs e) #:prefab)
+
+
 {:> A D0} ;; type Expr = (Lit Integer)
 {:> D0}   ;; type Expr = (Lit Datum)
 {:> E0}   ;;           | (Eof)
@@ -14,6 +22,7 @@
 {:> D0}   ;;           | (If Expr Expr Expr)
 {:> F}    ;;           | (Let Id Expr Expr)
 {:> F}    ;;           | (Var Id)
+{:> I}    ;;           | (App Id (Listof Expr))
 {:> F}    ;; type Id  = Symbol
 {:> D0}   ;; type Datum = Integer
 {:> D0}   ;;            | Boolean
@@ -47,3 +56,4 @@
 {:> E0}   (struct Begin (e1 e2) #:prefab)
 {:> F}    (struct Let (x e1 e2) #:prefab)
 {:> F}    (struct Var (x) #:prefab)
+{:> I}    (struct App (f es) #:prefab)
