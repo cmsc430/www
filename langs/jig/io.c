@@ -14,7 +14,7 @@ val_t peek_byte(void)
 {
   char c = getc(in);
   ungetc(c, in);
-  return (c == EOF) ? val_wrap_eof() : val_wrap_int(c);
+  return (c == EOF) ? val_wrap_eof() : val_wrap_byte(c);
   
 }
 

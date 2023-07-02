@@ -228,7 +228,8 @@
     
     (check-equal? (run "ab" '(peek-byte)) (cons 97 ""))
     (check-equal? (run "ab" '(begin (peek-byte) (read-byte))) (cons 97 ""))
-    (check-equal? (run "†" '(read-byte)) (cons 226 "")))
+    (check-equal? (run "†" '(read-byte)) (cons 226 ""))
+    (check-equal? (run "†" '(peek-byte)) (cons 226 "")))
 
   {:> E1}
   (begin ;; Extort
