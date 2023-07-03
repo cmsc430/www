@@ -217,7 +217,7 @@
 {:> F J} ;; Id Expr Expr CEnv -> Asm
 {:> J}   ;; Id Expr Expr CEnv -> Asm
 {:> F}
-(define (compile-let x e1 e2 c {:> F} t?)
+(define (compile-let x e1 e2 c {:> J} t?)
   (seq (compile-e e1 c {:> F} t?)
        (Push rax)
        (compile-e e2 (cons x c) {:> F} t?)
