@@ -20,14 +20,22 @@ reference interpreter, it is eliminated.  Your goal is to construct
 a set of test programs that eliminate the largest number of compilers.
 The player that eliminates the largest number of compilers, wins.
 
+Note that the notion of correctness we're using is the same one we've
+been using all semester: if the interpreter crashes when evaluating a
+program, that program has unspecified behavior and therefore the
+compiler cannot be incorrect for that program.  On the other hand if
+the interpreter produces an answer (either a value or the error
+result), then the compiler is obligated to produce the same answer.
+
 When you submit, choose a name to display on the leaderboard.  It does
 not need to be your real name, but please keep it appropriate for this
 setting.
 
 After submitting, click "Leaderboard" to see the latest standings.
 
-There are 133 compilers included.  Your score will be the number of
-compilers you are able to eliminate, with a maximum score of 100.
+There are 59 compilers included.  Your score will be 15 + 2.5 times
+the number of compilers you are able to eliminate, with a maximum
+score of 100.
 
 We reserve the right to update the reference interpreter and will
 announce any changes on Discord.
@@ -36,12 +44,11 @@ The following updates have been made since the release:
 
 @itemlist[
 
-@item{The interpreter now checks for integer overflow and crashes when
+@item{The interpreter checks for integer overflow and crashes when
 this happens, thereby making overflow behavior unspecified for the compilers.}
 
-@item{The interpreter now crashes when interpreting unbound variables
-instead of producing @racket['err], making unbound variable behavior
-unspecified.}
+@item{The interpreter crashes when interpreting unbound variables,
+ making unbound variable behavior unspecified.}
 
 ]
 
