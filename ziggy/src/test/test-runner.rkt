@@ -1,5 +1,5 @@
 #lang crook
-{:= A B C D0 D1 E0 E1 F H0 H1 I J}
+{:= A B C D0 D1 E0 E1 F H0 H1 I J K}
 (provide test {:> E0} test/io)
 (require rackunit)
 
@@ -210,7 +210,43 @@
                   '(2 3 4))
     (check-equal? (run '(define (f x y) y)
                        '(f 1 (add1 #f)))
-                  'err)))
+                  'err))
+
+    {:> K}
+    (begin ;; Knock
+      (check-equal? (run '(match 1)) 'err)
+      (check-equal? (run '(match 1 [1 2]))
+                    2)
+      (check-equal? (run '(match 1 [2 1] [1 2]))
+                    2)
+      (check-equal? (run '(match 1 [2 1] [1 2] [0 3]))
+                    2)
+      (check-equal? (run '(match 1 [2 1] [0 3]))
+                    'err)
+      (check-equal? (run '(match 1 [_ 2] [_ 3]))
+                    2)
+      (check-equal? (run '(match 1 [x 2] [_ 3]))
+                    2)
+      (check-equal? (run '(match 1 [x x] [_ 3]))
+                    1)
+      (check-equal? (run '(match (cons 1 2) [x x] [_ 3]))
+                    (cons 1 2))
+      (check-equal? (run '(match (cons 1 2) [(cons x y) x] [_ 3]))
+                    1)
+      (check-equal? (run '(match (cons 1 2) [(cons x 2) x] [_ 3]))
+                    1)
+      (check-equal? (run '(match (cons 1 2) [(cons 3 2) 0] [_ 3]))
+                    3)
+      (check-equal? (run '(match 1 [(cons x y) x] [_ 3]))
+                    3)
+      (check-equal? (run '(match (cons 1 2) [(cons 1 3) 0] [(cons 1 y) y] [_ 3]))
+                    2)
+      (check-equal? (run '(match (box 1) [(box 1) 0] [_ 1]))
+                    0)
+      (check-equal? (run '(match (box 1) [(box 2) 0] [_ 1]))
+                    1)
+      (check-equal? (run '(match (box 1) [(box x) x] [_ 2]))
+                    1)))
 
 {:> E0}
 (define (test/io run)
@@ -292,5 +328,12 @@
                           (write-byte x))
                        '(let ((z 97))
                           (f z 98)))
-                  (cons (void) "a"))))
+                  (cons (void) "a")))
+
+  {:> K}
+  (begin ;; Knock
+    (check-equal? (run ""
+                       '(match (write-byte 97)
+                          [_ 1]))
+                  (cons 1 "a"))))
 

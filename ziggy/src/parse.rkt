@@ -1,5 +1,5 @@
 #lang crook
-{:= A B C D0 D1 E0 E1 F H0 H1 I J}
+{:= A B C D0 D1 E0 E1 F H0 H1 I J K}
 (provide parse {:> I} parse-e {:> I} parse-define)
 (require "ast.rkt")
 
@@ -78,9 +78,39 @@
      (If (parse-e e1) (parse-e e2) (parse-e e3))]
     [(list 'let (list (list (? symbol? x) e1)) e2)
      (Let x (parse-e e1) (parse-e e2))]
+    {:> K}
+    [(cons 'match (cons e ms))
+     (parse-match (parse-e e) ms)]    
     [(cons (? symbol? f) es)
      (App f (map parse-e es))]
     [_ (error "Parse error" s)]))
+
+{:> K} ;; Expr [Listof S-Expr]
+{:> K}
+(define (parse-match e ms)
+  (match ms
+    ['() (Match e '() '())]
+    [(cons (list p r) ms)
+     (match (parse-match e ms)
+       [(Match e ps es)
+        (Match e
+               (cons (parse-pat p) ps)
+               (cons (parse-e r) es))])]
+    [_ (error "Parse match error" e ms)]))
+
+{:> K} ;; S-Expr -> Pat
+{:> K}
+(define (parse-pat p)
+  (match p
+    [(? datum?) (Lit p)]
+    [(? symbol?) (Var p)]
+    [(list 'quote (list)) (Lit '())]
+    [(list 'box p)
+     (Box (parse-pat p))]
+    [(list 'cons p1 p2)
+     (Cons (parse-pat p1) (parse-pat p2))]
+    [(list 'and p1 p2)
+     (Conj (parse-pat p1) (parse-pat p2))]))
 
 
 {:> D0} ;; Any -> Boolean

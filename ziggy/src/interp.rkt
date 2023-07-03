@@ -1,5 +1,5 @@
 #lang crook
-{:= A B C D0 D1 E0 E1 F H0 H1 I J}
+{:= A B C D0 D1 E0 E1 F H0 H1 I J K}
 (provide interp)
 (require "ast.rkt")
 {:> B} (require "interp-prim.rkt")
@@ -118,7 +118,14 @@
            ; check arity matches
            (if (= (length xs) (length vs))
                (interp-env e (zip xs vs) ds)
-               'err)])])]))   
+               'err)])])]
+
+    {:> K}
+    [(Match e ps es)
+     (match (interp-env e r ds)
+       ['err 'err]
+       [v
+        (interp-match v ps es r ds)])]))
 
 {:> I} ;; (Listof Expr) REnv Defns -> (Listof Value) | 'err
 {:> I}
@@ -131,6 +138,40 @@
        [v (match (interp-env* es r ds)
             ['err 'err]
             [vs (cons v vs)])])]))
+
+{:> K} ;; Value [Listof Pat] [Listof Expr] Env Defns -> Answer
+{:> K}
+(define (interp-match v ps es r ds)
+  (match* (ps es)
+    [('() '()) 'err]
+    [((cons p ps) (cons e es))
+     (match (interp-match-pat p v r)
+       [#f (interp-match v ps es r ds)]
+       [r  (interp-env e r ds)])]))
+
+{:> K} ;; Pat Value Env -> [Maybe Env]
+{:> K}
+(define (interp-match-pat p v r)
+  (match p
+    [(Var '_) r]
+    [(Var x) (ext r x v)]
+    [(Lit l) (and (eqv? l v) r)]
+    [(Box p)
+     (match v
+       [(box v)
+        (interp-match-pat p v r)]
+       [_ #f])]
+    [(Cons p1 p2)
+     (match v
+       [(cons v1 v2)
+        (match (interp-match-pat p1 v1 r)
+          [#f #f]
+          [r1 (interp-match-pat p2 v2 r1)])]
+       [_ #f])]
+    [(Conj p1 p2)
+     (match (interp-match-pat p1 v r)
+       [#f #f]
+       [r1 (interp-match-pat p2 v r1)])]))
 
 {:> I} ;; Defns Symbol -> Defn
 {:> I}

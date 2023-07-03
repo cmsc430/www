@@ -1,5 +1,5 @@
 #lang crook
-{:= A B C D0 D1 E0 E1 F H0 H1 I J}
+{:= A B C D0 D1 E0 E1 F H0 H1 I J K}
 (provide (all-defined-out))
 (require "ast.rkt")
 {:> B}   (require "compile-ops.rkt")
@@ -86,25 +86,41 @@
 {:> J}   ;; Expr CEnv Boolean -> Asm
 (define (compile-e e {:> F} c {:> J} t?)
   (match e
-    {:> A D0} [(Lit i) (seq (Mov rax i))]
-    {:> D0}   [(Lit d)         (compile-value d)]
-    {:> E0}   [(Eof)           (compile-value eof)]
-    {:> H0}   [(Empty)         (compile-value '())]
-    {:> F}    [(Var x)         (compile-variable x c)]    
-    {:> E0}   [(Prim0 p)       (compile-prim0 p)]
-    {:> B}    [(Prim1 p e)     (compile-prim1 p e {:> F} c)]
-    {:> F}    [(Prim2 p e1 e2) (compile-prim2 p e1 e2 c)]
-    {:> H1}   [(Prim3 p e1 e2 e3) (compile-prim3 p e1 e2 e3 c)]
-    {:> C D0} [(IfZero e1 e2 e3)
-               (compile-ifzero e1 e2 e3 {:> J} t?)]
-    {:> D0}   [(If e1 e2 e3)
-               (compile-if e1 e2 e3 {:> F} c {:> J} t?)]
-    {:> E0}   [(Begin e1 e2)
-               (compile-begin e1 e2 {:> F} c {:> J} t?)]
-    {:> F}    [(Let x e1 e2)
-               (compile-let x e1 e2 c {:> J} t?)]
-    {:> I}    [(App f es)
-               (compile-app f es c {:> J} t?)]))
+    {:> A D0}
+    [(Lit i) (seq (Mov rax i))]
+    {:> D0}
+    [(Lit d)         (compile-value d)]
+    {:> E0}
+    [(Eof)           (compile-value eof)]
+    {:> H0}
+    [(Empty)         (compile-value '())]
+    {:> F}
+    [(Var x)         (compile-variable x c)]    
+    {:> E0}
+    [(Prim0 p)       (compile-prim0 p)]
+    {:> B}
+    [(Prim1 p e)     (compile-prim1 p e {:> F} c)]
+    {:> F}
+    [(Prim2 p e1 e2) (compile-prim2 p e1 e2 c)]
+    {:> H1}
+    [(Prim3 p e1 e2 e3) (compile-prim3 p e1 e2 e3 c)]
+    {:> C D0}
+    [(IfZero e1 e2 e3)
+     (compile-ifzero e1 e2 e3 {:> J} t?)]
+    {:> D0}
+    [(If e1 e2 e3)
+     (compile-if e1 e2 e3 {:> F} c {:> J} t?)]
+    {:> E0}
+    [(Begin e1 e2)
+     (compile-begin e1 e2 {:> F} c {:> J} t?)]
+    {:> F}
+    [(Let x e1 e2)
+     (compile-let x e1 e2 c {:> J} t?)]
+    {:> I}
+    [(App f es)
+     (compile-app f es c {:> J} t?)]
+    {:> K}
+    [(Match e ps es) (compile-match e ps es c t?)]))
 
 {:> D0} ;; Value -> Asm
 {:> D0}
@@ -218,9 +234,9 @@
 {:> J}   ;; Id Expr Expr CEnv -> Asm
 {:> F}
 (define (compile-let x e1 e2 c {:> J} t?)
-  (seq (compile-e e1 c {:> F} t?)
+  (seq (compile-e e1 c {:> J} t?)
        (Push rax)
-       (compile-e e2 (cons x c) {:> F} t?)
+       (compile-e e2 (cons x c) {:> J} t?)
        (Add rsp 8)))
 
 {:> J} ;; Id [Listof Expr] CEnv Boolean -> Asm
@@ -279,6 +295,112 @@
      (seq (compile-e e c {:> J} #f)
           (Push rax)
           (compile-es es (cons #f c)))]))
+
+{:> K} ;; Expr [Listof Pat] [Listof Expr] CEnv Bool -> Asm
+{:> K}
+(define (compile-match e ps es c t?)
+  (let ((done (gensym)))  
+    (seq (compile-e e c #f)
+         (Push rax) ; save away to be restored by each clause
+         (compile-match-clauses ps es (cons #f c) done t?)
+         (Jmp 'raise_error_align)
+         (Label done)
+         (Add rsp 8)))) {:> K} ; pop the saved value being matched
+
+{:> K} ;; [Listof Pat] [Listof Expr] CEnv Symbol Bool -> Asm
+{:> K}
+(define (compile-match-clauses ps es c done t?)
+  (match* (ps es)
+    [('() '()) (seq)]
+    [((cons p ps) (cons e es))
+     (seq (compile-match-clause p e c done t?)
+          (compile-match-clauses ps es c done t?))]))
+
+{:> K} ;; Pat Expr CEnv Symbol Bool -> Asm
+{:> K}
+(define (compile-match-clause p e c done t?)
+  (let ((next (gensym)))
+    (match (compile-pattern p '() next)
+      [(list i f cm)
+       (seq (Mov rax (Offset rsp 0)) ; restore value being matched
+            i
+            (compile-e e (append cm c) t?)
+            (Add rsp (* 8 (length cm)))
+            (Jmp done)
+            f
+            (Label next))])))
+
+{:> K} ;; Pat CEnv Symbol -> (list Asm Asm CEnv)
+{:> K}
+(define (compile-pattern p cm next)
+  (match p
+    [(Var '_)
+     (list (seq) (seq) cm)]
+    [(Var x)
+     (list (seq (Push rax))
+           (seq)
+           (cons x cm))]
+    [(Lit l)
+     (let ((fail (gensym)))
+       (list (seq (Cmp rax (value->bits l))
+                  (Jne fail))
+             (seq (Label fail)
+                  (Add rsp (* 8 (length cm)))
+                  (Jmp next))
+             cm))]
+    [(Conj p1 p2)
+     (match (compile-pattern p1 (cons #f cm) next)
+       [(list i1 f1 cm1)
+        (match (compile-pattern p2 cm1 next)
+          [(list i2 f2 cm2)
+           (list
+            (seq (Push rax)
+                 i1
+                 (Mov rax (Offset rsp (* 8 (- (sub1 (length cm1)) (length cm)))))
+                 i2)
+            (seq f1 f2)
+            cm2)])])]
+    [(Box p)
+     (match (compile-pattern p cm next)
+       [(list i1 f1 cm1)
+        (let ((fail (gensym)))
+          (list
+           (seq (Mov r8 rax)
+                (And r8 ptr-mask)
+                (Cmp r8 type-box)
+                (Jne fail)
+                (Xor rax type-box)
+                (Mov rax (Offset rax 0))
+                i1)
+           (seq f1
+                (Label fail)
+                (Add rsp (* 8 (length cm))) ; haven't pushed anything yet
+                (Jmp next))
+           cm1))])]
+    [(Cons p1 p2)
+     (match (compile-pattern p1 (cons #f cm) next)
+       [(list i1 f1 cm1)
+        (match (compile-pattern p2 cm1 next)
+          [(list i2 f2 cm2)
+           (let ((fail (gensym)))
+             (list
+              (seq (Mov r8 rax)
+                   (And r8 ptr-mask)
+                   (Cmp r8 type-cons)
+                   (Jne fail)                   
+                   (Xor rax type-cons)
+                   (Mov r8 (Offset rax 0))
+                   (Push r8)                ; push cdr
+                   (Mov rax (Offset rax 8)) ; mov rax car
+                   i1
+                   (Mov rax (Offset rsp (* 8 (- (sub1 (length cm1)) (length cm)))))
+                   i2)
+              (seq f1
+                   f2
+                   (Label fail)
+                   (Add rsp (* 8 (length cm))) ; haven't pushed anything yet
+                   (Jmp next))
+              cm2))])])]))
 
 {:> F} ;; Id CEnv -> Integer
 {:> F}

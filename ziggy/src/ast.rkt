@@ -1,6 +1,8 @@
 #lang crook
-{:= A B C D0 D1 E0 E1 F H0 H1 I J}
-(provide {:> A} Lit {:> E0} Prim0 {:> B} Prim1 {:> F} Prim2 {:> H1} Prim3 {:> C D0} IfZero {:> D0} If {:> E0} Eof {:> E0} Begin {:> F} Let {:> F} Var {:> H0} Empty {:> I} Prog {:> I} Defn {:> I} App)
+{:= A B C D0 D1 E0 E1 F H0 H1 I J K}
+(provide {:> A} Lit {:> E0} Prim0 {:> B} Prim1 {:> F} Prim2 {:> H1} Prim3 {:> C D0} IfZero {:> D0} If {:> E0} Eof {:> E0} Begin
+         {:> F} Let {:> F} Var {:> H0} Empty {:> I} Prog {:> I} Defn {:> I} App
+         {:> K} Match {:> K} Box {:> K} Cons {:> K} Conj)
 ;;
 
 {:> I} ;; type Prog = (Prog (Listof Defn) Expr)
@@ -8,7 +10,6 @@
 
 {:> I} ;; type Defn = (Defn Id (Listof Id) Expr)
 {:> I} (struct Defn (f xs e) #:prefab)
-
 
 {:> A D0} ;; type Expr = (Lit Integer)
 {:> D0}   ;; type Expr = (Lit Datum)
@@ -23,6 +24,8 @@
 {:> F}    ;;           | (Let Id Expr Expr)
 {:> F}    ;;           | (Var Id)
 {:> I}    ;;           | (App Id (Listof Expr))
+{:> K}    ;;           | (Match Expr (Listof Pat) (Listof Expr))
+
 {:> F}    ;; type Id  = Symbol
 {:> D0}   ;; type Datum = Integer
 {:> D0}   ;;            | Boolean
@@ -42,6 +45,11 @@
 {:> H1}   ;;          | 'make-vector | 'vector-ref
 {:> H1}   ;;          | 'make-string | 'string-ref
 {:> H1}   ;; type Op3 = 'vector-set!
+{:> K}    ;; type Pat  = (Var Id)
+{:> K}    ;;           | (Lit Datum)
+{:> K}    ;;           | (Box Pat)
+{:> K}    ;;           | (Cons Pat Pat)
+{:> K}    ;;           | (Conj Pat Pat)
 
 {:> E0}   (struct Eof () #:prefab)
 {:> H0}   (struct Empty () #:prefab)
@@ -57,3 +65,8 @@
 {:> F}    (struct Let (x e1 e2) #:prefab)
 {:> F}    (struct Var (x) #:prefab)
 {:> I}    (struct App (f es) #:prefab)
+{:> K}    (struct Match (e ps es) #:prefab)
+
+{:> K}    (struct Box (p) #:prefab)
+{:> K}    (struct Cons (p1 p2) #:prefab)
+{:> K}    (struct Conj (p1 p2) #:prefab)

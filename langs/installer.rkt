@@ -20,4 +20,5 @@
                                 ("hustle"    . "H0")
                                 ("hoax"      . "H1")
                                 ("iniquity"  . "I")
-                                ("jig"       . "J"))))))
+                                ("jig"       . "J")
+                                ("knock"     . "K"))))))
