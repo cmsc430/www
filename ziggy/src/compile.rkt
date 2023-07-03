@@ -303,7 +303,7 @@
     (seq (compile-e e c #f)
          (Push rax) ; save away to be restored by each clause
          (compile-match-clauses ps es (cons #f c) done t?)
-         (Jmp 'raise_error_align)
+         (Jmp 'err)
          (Label done)
          (Add rsp 8)))) {:> K} ; pop the saved value being matched
 
