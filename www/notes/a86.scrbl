@@ -769,7 +769,7 @@ Each register plays the same role as in x86, so for example
 
  @itemlist[
 
- @item{Programs have at least one label; the first label is used as the entry point.}
+ @item{Programs have at least one label which is declared @racket[Global]; the first label is used as the entry point.}
  @item{All label declarations are unique.}
  @item{All label targets are declared.}
  @item{... other properties may be added in the future.}
@@ -783,13 +783,15 @@ Each register plays the same role as in x86, so for example
  nested.
 
  @ex[ 
- (prog (Label 'foo))
- (prog (list (Label 'foo)))
+ (prog (Global 'foo) (Label 'foo))
+ (eval:error (prog (Label 'foo)))
+ (eval:error (prog (list (Label 'foo))))
  (eval:error (prog (Mov 'rax 32)))
  (eval:error (prog (Label 'foo)
                    (Label 'foo)))
  (eval:error (prog (Jmp 'foo)))
- (prog (Label 'foo)
+ (prog (Global 'foo)
+       (Label 'foo)
        (Jmp 'foo))
  ]
 }
@@ -807,7 +809,8 @@ Each register plays the same role as in x86, so for example
  @#reader scribble/comment-reader
  (ex
  (asm-display
-   (prog (%%% "Start of foo")
+   (prog (Global 'foo)
+         (%%% "Start of foo")        
          (Label 'foo)
          ; Racket comments won't appear
          (%% "Inputs one argument in rdi")
