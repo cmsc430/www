@@ -11,7 +11,12 @@ completed project.
 
 Final deliverables are due on the last day of class, July 7.
 
-There are several projects to choose from, described below.
+@elem[#:style "strike"]{There are several projects to choose from,
+described below.}
+
+@emph{Summer update: Typically we allow projects to be chosen from a
+number of options, but for the summer semester we will streamline
+things a bit by settling on a single option.}
 
 Compared to assignments, the project is more open-ended.  You will
 need to select from a project description below and then select which
@@ -24,9 +29,9 @@ implementation). No tests are provided, so we recommend you write your
 own and suggest focusing on tests @emph{before} trying to implement
 these features.
 
-In addition to the source code for your project, you must write a
-2-page document in PDF format, which gives a summary of your work and
-describes how your project is implemented.
+@elem[#:style "strike"]{In addition to the source code for your
+project, you must write a 2-page document in PDF format, which gives a
+summary of your work and describes how your project is implemented.}
 
 @table-of-contents[]
 
@@ -399,8 +404,7 @@ at the end of @racket[entry], just before the @racket[(Ret)]:
 In order to return more values, you'd construct a larger vector.
 
 
-
-
+@;{
 @section{Exceptions and exception handling}
 
 Exceptions and exception handling mechanisms are widely used in modern
@@ -622,6 +626,7 @@ You may also design your own project, however, you will need to submit
 a one-page write-up that documents what you plan to do and how you
 will evaluate whether it is successful.  You must submit this document
 and have it approved by the instructor by November 22.
+}
 
 @section[#:tag "project"]{Submitting}
 
@@ -632,7 +637,6 @@ Your submission should be a zip file containing the following contents:
 
 @verbatim|{
 info.rkt
-summary.pdf
 <lang>/
 }|
 
@@ -643,13 +647,11 @@ The @tt{info.rkt} should contain the following information:
 
 @codeblock|{
 #lang info
-(define project '<project>)
+(define project 'values)
 (define language '<lang>)
 }|
 
-where @tt{<project>} indicates which project you are doing.  It should
-either be @tt{values}, @tt{exceptions}, @tt{garbage-collection}, or
-@tt{custom}.  The @tt{<lang>} should be @tt{iniquity}, @tt{loot},
+The @tt{<lang>} should be @tt{iniquity}, @tt{loot},
 etc. and should be the same as the directory that contains the
 implementation.
 
