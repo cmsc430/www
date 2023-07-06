@@ -389,8 +389,9 @@ You'll want:
 Let's say you make these changes to the run-time system and
 @racket[unload/free] before you make any changes to the compiler and
 now you want to adapt the compiler to work with the new set up (before
-trying to do anything with @racket[values]).  You can add the following
-at the end of @racket[entry], just before the @racket[(Ret)]:
+trying to do anything with @racket[values]).  You can add the
+following just after the call to @racket[compile-e] for the main expression
+of the program and before restoring volatile registers and returning:
 
 @#reader scribble/comment-reader
 (racketblock
