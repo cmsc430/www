@@ -810,11 +810,7 @@ Each register plays the same role as in x86, so for example
  (ex
  (asm-display
    (prog (Global 'foo)
-<<<<<<< HEAD
          (%%% "Start of foo")
-=======
-         (%%% "Start of foo")        
->>>>>>> main
          (Label 'foo)
          ; Racket comments won't appear
          (%% "Inputs one argument in rdi")
