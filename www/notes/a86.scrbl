@@ -769,7 +769,7 @@ Each register plays the same role as in x86, so for example
 
  @itemlist[
 
- @item{Programs have at least one label; the first label is used as the entry point.}
+ @item{Programs have at least one label which is declared @racket[Global]; the first label is used as the entry point.}
  @item{All label declarations are unique.}
  @item{All label targets are declared.}
  @item{... other properties may be added in the future.}
@@ -810,7 +810,11 @@ Each register plays the same role as in x86, so for example
  (ex
  (asm-display
    (prog (Global 'foo)
+<<<<<<< HEAD
          (%%% "Start of foo")
+=======
+         (%%% "Start of foo")        
+>>>>>>> main
          (Label 'foo)
          ; Racket comments won't appear
          (%% "Inputs one argument in rdi")

@@ -70,6 +70,7 @@
                       (arithmetic-shift (char->integer v) char-shift))]
         [else (error "not an immediate value")]))
 
+
 (define (imm-bits? v)
   (zero? (bitwise-and v imm-mask)))
 

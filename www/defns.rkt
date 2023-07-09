@@ -19,7 +19,7 @@
 
 
 (define m1-date "June 14")
-(define m2-date "June 28")
+(define m2-date "June 29")
 (define midterm-hours "24") ; for summer
 (define final-date "July 7")
 (define elms-url "https://umd.instructure.com/courses/1345891/")

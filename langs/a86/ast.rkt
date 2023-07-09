@@ -322,6 +322,7 @@
     (check-unique-label-decls p)
     (check-label-targets-declared p)
     (check-has-initial-label p)
+    (check-initial-label-global p)
     ;; anything else?
     p))
 
@@ -388,6 +389,13 @@
   (unless (findf Label? asm)
     (error 'prog "no initial label found")))
 
+;; Asm -> Void
+(define (check-initial-label-global asm)
+  (match (findf Label? asm)
+    [(Label init)
+     (unless (member init (map (lambda (i) (match i [(Global l) l]))
+                               (filter Global? asm)))
+       (error 'prog "initial label undeclared as global: ~v" init))]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Symbol to Label
