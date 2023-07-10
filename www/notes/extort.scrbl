@@ -124,9 +124,9 @@ We can confirm the interpreter computes the right result for the
 examples given earlier:
 
 @ex[
-(interp (Prim1 'add1 (Bool #f)))
-(interp (Prim1 'zero? (Bool #t)))
-(interp (If (Prim1 'zero? (Bool #f)) (Int 1) (Int 2)))
+(interp (Prim1 'add1 (Lit #f)))
+(interp (Prim1 'zero? (Lit #t)))
+(interp (If (Prim1 'zero? (Lit #f)) (Lit 1) (Lit 2)))
 ]
 
 The statement of correctness stays the same, but now observe that
@@ -203,7 +203,7 @@ usual way again:
                 (interp e)
                 e))
 
-(check-correctness (Prim1 'add1 (Int 7)))
-(check-correctness (Prim1 'add1 (Bool #f)))
+(check-correctness (Prim1 'add1 (Lit 7)))
+(check-correctness (Prim1 'add1 (Lit #f)))
 ]
 

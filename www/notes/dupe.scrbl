@@ -170,14 +170,14 @@ rule essentially defers the work to a new metafunction,
     (render-metafunction 𝑫-𝒑𝒓𝒊𝒎 #:contract? #t)))
 
 Returning to the issue of type mismatches, what does the
-semantics say about @racket[(Prim1 'add1 (Bool #f))]?
+semantics say about @racket[(Prim1 'add1 (Lit #f))]?
 
 What it says is: nothing.  These programs are simply not in the
 semantic relation for this language. There's only one rule for giving
 meaning to an @racket[(Prim1 'add1 _e0)] expression and it's premise is that
 @racket[_e] means some @emph{integer} @racket[_i0].  But
-@math{(@racket[(Bool #f)], i) ∉ 𝑫} for any @math{i}.  So there's no value
-@math{v} such that @math{(@racket[(Prim1 'add1 (Bool #f))], v) ∈ 𝑫}.  This
+@math{(@racket[(Lit #f)], i) ∉ 𝑫} for any @math{i}.  So there's no value
+@math{v} such that @math{(@racket[(Prim1 'add1 (Lit #f))], v) ∈ 𝑫}.  This
 expression is @bold{undefined} according to the semantics.
 
 
@@ -194,13 +194,13 @@ We can confirm the interpreter computes the right result for the
 examples given earlier:
 
 @ex[
-(interp (Bool #t))
-(interp (Bool #f))
-(interp (If (Bool #f) (Int 1) (Int 2)))
-(interp (If (Bool #t) (Int 1) (Int 2)))
-(interp (If (Int 0) (Int 1) (Int 2)))
-(interp (If (Int 7) (Int 1) (Int 2)))
-(interp (If (Prim1 'zero? (Int 7)) (Int 1) (Int 2)))
+(interp (Lit #t))
+(interp (Lit #f))
+(interp (If (Lit #f) (Lit 1) (Lit 2)))
+(interp (If (Lit #t) (Lit 1) (Lit 2)))
+(interp (If (Lit 0) (Lit 1) (Lit 2)))
+(interp (If (Lit 7) (Lit 1) (Lit 2)))
+(interp (If (Prim1 'zero? (Lit 7)) (Lit 1) (Lit 2)))
 ]
 
 Correctness follows the same pattern as before, although it is worth
@@ -222,7 +222,7 @@ which results in the @racket[interp] program crashing and Racket
 signalling an error:
 
 @ex[
-(eval:error (interp (Prim1 'add1 (Bool #f))))
+(eval:error (interp (Prim1 'add1 (Lit #f))))
 ]
 
 This isn't a concern for correctness, because the interpreter is free
@@ -310,17 +310,15 @@ encoding:
 @codeblock-include["dupe/types.rkt"]
 
 @#reader scribble/comment-reader
-(ex 
-
+(ex
 (bits->value #b000)
-(bits->value #b001)
+(eval:error (bits->value #b001))
 (bits->value #b010)
 (bits->value #b011)
 (bits->value #b100)
 (eval:error (bits->value #b101))
 (bits->value #b110)
-(eval:error (bits->value #b111))
-
+(bits->value #b111)
 )
 
 Notice that not all bits represent a value; name any odd number that's
@@ -417,8 +415,7 @@ the use of @racket[interp] with it's definition:
 (define (interp-bits e)
   (value->bits
    (match e
-     [(Int i) i]
-     [(Bool b) b]
+     [(Lit l) l]
      [(Prim1 p e)
       (interp-prim1 p (interp e))]
      [(If e1 e2 e3)
@@ -443,8 +440,7 @@ So we get:
 ;; Expr -> Bits
 (define (interp-bits e)
   (match e
-    [(Int i) (value->bits i)]
-    [(Bool b) (value->bits b)]
+    [(Lit l) (value->bits l)]
     [(Prim1 p e)
      (value->bits
       (interp-prim1 p (interp e)))]
@@ -532,8 +528,7 @@ We've now arrived at the following @racket[interp]-free definition of
 ;; Expr -> Bits
 (define (interp-bits e)
   (match e
-    [(Int i) (arithmetic-shift i int-shift)]
-    [(Bool b) (if b (value->bits #t) (value->bits #f))]
+    [(Lit l) (value->bits l)]
     [(Prim1 p e)
      (interp-prim1-bits p (interp-bits e))]
     [(If e1 e2 e3)
@@ -611,8 +606,7 @@ rewrite the code as:
 @code:comment{Expr -> Bits}
  (define (interp-bits e)
    (match e
-     [(Int i) (* 2 i)]
-     [(Bool b) (if b (identity (value->bits #t)) (identity (value->bits #f)))]
+     [(Lit l) (value->bits l)]
      [(Prim1 'add1 e0)
       (value->bits (add1 (interp e0)))]
      [(Prim1 'sub1 e0)
@@ -640,8 +634,8 @@ We can rewrite the last case by the following equation:
 @code:comment{Expr -> Bits}
  (define (interp-bits e)
    (match e
-     [(Int i) (* 2 i)]
-     [(Bool b) (if b (identity (value->bits #t)) (identity (value->bits #f)))]
+     [(Lit i) (* 2 i)]
+     [(Lit b) (if b (identity (value->bits #t)) (identity (value->bits #f)))]
      [(Prim1 'add1 e0)
       (value->bits (add1 (interp e0)))]
      [(Prim1 'sub1 e0)
@@ -674,8 +668,8 @@ to get:
 @code:comment{Expr -> Bits}
  (define (interp-bits e)
    (match e
-     [(Int i) (* 2 i)]
-     [(Bool b) (if b (identity (value->bits #t)) (identity (value->bits #f)))]
+     [(Lit i) (* 2 i)]
+     [(Lit b) (if b (identity (value->bits #t)) (identity (value->bits #f)))]
      [(Prim1 'add1 e0)
       (+ (value->bits (interp e0)) (value->bits 1))]
      [(Prim1 'sub1 e0)
@@ -704,8 +698,8 @@ We can now rewrite by the equation of our specification:
 @code:comment{Expr -> Bits}
  (define (interp-bits e)
    (match e
-     [(Int i) (* 2 i)]
-     [(Bool b) (if b (identity (value->bits #t)) (identity (value->bits #f)))]
+     [(Lit i) (* 2 i)]
+     [(Lit b) (if b (identity (value->bits #t)) (identity (value->bits #f)))]
      [(Prim1 'add1 e0)
       (+ (interp-bits e0) (identity (value->bits 1)))]
      [(Prim1 'sub1 e0)
@@ -730,8 +724,8 @@ and inline @racket[value->bits] specialized to a boolean argument:
 @code:comment{Expr -> Bits}
  (define (interp-bits e)
    (match e
-     [(Int i) (* 2 i)]
-     [(Bool b) (if b (identity (value->bits #t)) (identity (value->bits #f)))]
+     [(Lit i) (* 2 i)]
+     [(Lit b) (if b (identity (value->bits #t)) (identity (value->bits #f)))]
      [(Prim1 'add1 e0)
       (+ (interp-bits e0) (identity (value->bits 1)))]
      [(Prim1 'sub1 e0)
@@ -759,8 +753,11 @@ produces the representation of @racket[#f] (@binary[(value->bits #f) 2]):
 @code:comment{Expr -> Bits}
  (define (interp-bits e)
    (match e
-     [(Int i) (* 2 i)]
-     [(Bool b) (if b (identity (value->bits #t)) (identity (value->bits #f)))]
+     [(Lit l)
+      (cond
+        [(integer? l) (* 2 l)]
+        [(boolean? l)
+         (if l (identity (value->bits #t)) (identity (value->bits #f)))])]
      [(Prim1 'add1 e0)
       (+ (interp-bits e0) (identity (value->bits 1)))]
      [(Prim1 'sub1 e0)
@@ -804,15 +801,15 @@ interpreter in a final conversion:
 (define (interp.v2 e)
   (bits->value (interp-bits e)))
 
-(interp.v2 (Bool #t))
-(interp.v2 (Bool #f))
+(interp.v2 (Lit #t))
+(interp.v2 (Lit #f))
 (interp.v2 (parse '(if #f 1 2)))
 (interp.v2 (parse '(if #t 1 2)))
 (interp.v2 (parse '(if 0 1 2)))
 (interp.v2 (parse '(if 7 1 2)))
 (interp.v2 (parse '(if (zero? 7) 1 2)))
 (eval:error (interp.v2 (parse '(add1 #f))))
-(interp.v2 (parse '(add1 #t)))
+(eval:error (interp.v2 (parse '(add1 #t))))
 )
 
 Notice the last two examples.  What's going on?
@@ -872,9 +869,9 @@ they are equal.}
 ]
 
 @ex[
-(compile-e (Int 42))
-(compile-e (Bool #t))
-(compile-e (Bool #f))
+(compile-e (Lit 42))
+(compile-e (Lit #t))
+(compile-e (Lit #f))
 (compile-e (parse '(zero? 0)))
 (compile-e (parse '(if #t 1 2)))
 (compile-e (parse '(if #f 1 2)))
@@ -896,8 +893,8 @@ We can try out the compiler with the help of @racket[asm-interp],
 but you'll notice the results are a bit surprising:
 
 @ex[
-(asm-interp (compile (Bool #t)))
-(asm-interp (compile (Bool #f)))
+(asm-interp (compile (Lit #t)))
+(asm-interp (compile (Lit #f)))
 (asm-interp (compile (parse '(zero? 0))))
 (asm-interp (compile (parse '(zero? -7))))
 (asm-interp (compile (parse '(if #t 1 2))))
@@ -917,8 +914,8 @@ values:
 (define (interp-compile e)
   (bits->value (asm-interp (compile e))))
 
-(interp-compile (Bool #t))
-(interp-compile (Bool #f))
+(interp-compile (Lit #t))
+(interp-compile (Lit #f))
 (interp-compile (parse '(zero? 0)))
 (interp-compile (parse '(zero? -7)))
 (interp-compile (parse '(if #t 1 2)))

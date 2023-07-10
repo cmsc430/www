@@ -141,10 +141,10 @@ primitives:
    (render-metafunction 𝑯-𝒑𝒓𝒊𝒎 #:contract? #t))
 ]
 
-The interpreter similarly has an update to the @racket[interp-prims]
+The interpreter similarly has an update to the @racket[interp-prim]
 module:
 
-@codeblock-include["hustle/interp-prims.rkt"]
+@codeblock-include["hustle/interp-prim.rkt"]
 
 Inductively defined data is easy to model in the semantics and
 interpreter because we can rely on inductively defined data at the

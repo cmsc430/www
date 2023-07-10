@@ -1,6 +1,8 @@
 #lang crook
 {:= A B C D0 D1 E0 E1 F H0 H1 I J K}
 (provide interp)
+{:> F} (provide interp-env)
+{:> K} (provide interp-match-pat)
 (require "ast.rkt")
 {:> B} (require "interp-prim.rkt")
 
