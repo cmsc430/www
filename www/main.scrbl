@@ -21,9 +21,16 @@
 
 @emph{@string-titlecase[semester], @year}
 
-@emph{Lectures: @lecture-schedule, @classroom}
+@emph{Sections:}
+@itemlist[
+@item{0101:  @lecture-schedule2, @classroom2
 
-@emph{Professor: @prof (@prof-pronouns)}
+@emph{Professor}: @prof2}
+
+@item{0201: @lecture-schedule1, @classroom1
+
+@emph{Professor}: @prof1}]
+
 
 CMSC 430 is an introduction to compilers.  Its major goal is to arm
 students with the ability to design, implement, and extend a
@@ -35,10 +42,11 @@ implement several related languages.
          #:row-properties '(bottom-border ())
 	 (list* (list @bold{Staff} 'cont 'cont)
 	        (list @bold{Name} @elem{@bold{E-mail}} @elem{@bold{Hours}})
-	        (list prof prof-email "By appt.")
+	        (list prof1 prof1-email "TBD")
+	        (list prof2 prof2-email "TBD")
 		staff)]
 
-@bold{Communications:} @link[@elms-url]{ELMS}, @link[@discord]{Discord}
+@bold{Communications:} @link[@elms-url]{ELMS}, @link[@piazza]{Piazza}
 
 @bold{Assumptions:} This course assumes you know the material in CMSC 330 and
 CMSC 216. In particular, you need to know how to program in a functional

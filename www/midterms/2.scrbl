@@ -12,6 +12,7 @@
 Midterm 2 will be released at least @midterm-hours hours prior to
 its due date.
 
+@;{
 @section{Instructions}
 
 The midterm will be released as a zip file @tt{m2.zip} on ELMS.
@@ -40,3 +41,4 @@ You should submit your work as a single zip file of this directory on
 Gradescope.  Unlike past assignments, Gradescope will not provide
 feedback on the correctness of your solutions so you are encouraged to
 check your own work.
+}
