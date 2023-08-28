@@ -15,8 +15,7 @@ function AddAccessibilityToMainDiv()
 	var g = document.createElement('div');
 	g.setAttribute("class", "stale-warning");
 	g.innerHTML = "This is NOT the current webpage! See " +
-            "<a href=\"http://www.cs.umd.edu/class/\">Class web pages</a> for curre
-nt listing.";
+            "<a href=\"http://www.cs.umd.edu/class/\">Class web pages</a> for current listing.";
 	main_div.insertBefore(g, main_div.firstChild);
     };
 }
