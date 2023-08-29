@@ -23,11 +23,11 @@
 (define KEY "KEY")
 
 
-(define m1-date "TBD")
-(define m2-date "TBD")
+(define m1-date "Oct 11")
+(define m2-date "Nov 20")
 (define midterm-hours "24") ; for summer
 (define final-date "TBD")
-(define elms-url "TBD")
+(define elms-url "https://umd.instructure.com/courses/1350066")
 
 
 (define racket-version "8.10")
@@ -53,6 +53,6 @@
 (define classroom1 "BRB 1101")
 (define classroom2 "IRB 0318")
 
-(define discord "TBD")
-(define piazza "TBD")
-(define gradescope "TBD")
+;(define discord "TBD")
+(define piazza "https://piazza.com/class/llwlfinnxr63c0/")
+(define gradescope "https://www.gradescope.com/courses/593113")
