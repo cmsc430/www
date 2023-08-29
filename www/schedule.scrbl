@@ -52,7 +52,7 @@
                (list @wk{10/9}
 	       	     ""
 		     @secref["Hoax"]
-		     "")
+		     @secref["Midterm_1"])
 		     
                (list @wk{10/16}
 	       	     ""
@@ -63,7 +63,7 @@
                (list @wk{10/30} "" "" "")
                (list @wk{11/6} "" "" "")
                (list @wk{11/13} "" "" "")
-               (list @wk{11/20} "" "" "Thanksgiving break (no lecture)")
+               (list @wk{11/20} "" @secref["Midterm_2"] "Thanksgiving break (no lecture)")
                (list @wk{11/27} "" "" "")
                (list @wk{12/4} "" "" "")
                (list @wk{12/11} "" "" "")
