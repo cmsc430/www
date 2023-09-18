@@ -40,11 +40,30 @@ implement several related languages.
 
 @tabular[#:style 'boxed 
          #:row-properties '(bottom-border ())
-	 (list* (list @bold{Staff} 'cont 'cont)
-	        (list @bold{Name} @elem{@bold{E-mail}} @elem{@bold{Hours}})
-	        (list prof1 prof1-email "TBD")
-	        (list prof2 prof2-email "TBD")
+	 (list* (list @bold{Staff} 'cont)
+	        (list @bold{Name} @elem{@bold{E-mail}})
+	        (list prof1 prof1-email)
+	        (list prof2 prof2-email)
 		staff)]
+
+@bold{Office hours:} AVW 4140
+
+@tabular[#:style 'boxed 
+         #:row-properties '(bottom-border ())
+	 (list (list @bold{Time} @bold{Monday} @bold{Tuesday} @bold{Wednesday} @bold{Thursday} @bold{Friday})
+	       (list "9 AM"  "William"         'cont    "William"      'cont 'cont)
+	       (list "10 AM" "William"         'cont    "Ian, William" 'cont 'cont)
+	       (list "11 AM" 'cont             "Pierce" "Ian"          'cont "Pierce")
+	       (list "12 PM" "Dalton, Fuxiao"  "Pierce" "Dalton"       'cont "Pierce")
+	       (list "1 PM"  "Dalton, Fuxiao, Ian, Wilson" 'cont "Matthew, Wilson" "Fuxiao" "Wilson")
+	       (list "2 PM"  "Ian, Wilson" "Pierce" "Matthew" "Fuxiao, Pierce" 'cont)
+	       (list "3 PM"  "Matthew, Yuhwan" "Pierce" "Matthew, Yuhwan" "Pierce" "Vivian")
+	       (list "4 PM"  "Yuhwan" 'cont "Yuhwan, Dalton" 'cont 'cont)
+	       (list "5 PM"  'cont "Vivian" 'cont "Vivian" 'cont)
+	       (list "6 PM"  'cont 'cont 'cont "Vivian" 'cont))]
+	      
+
+
 
 @bold{Communications:} @link[@elms-url]{ELMS}, @link[@piazza]{Piazza}
 
@@ -59,7 +78,7 @@ change. Any substantive change will be accompanied with an announcement to the
 class via ELMS.
 
 @bold{Feedback:} We welcome anonymous feedback on the course and its
-staff using this @link["https://docs.google.com/forms/d/e/1FAIpQLSdUNNY5Vun42xATeByf_V9JLce1hbDZuCd0Qj_YJo4z_e5vcA/viewform?usp=sf_link"]{form}.
+staff using this @link[feedback]{form}.
 
 @include-section{syllabus.scrbl}
 @include-section{texts.scrbl}
