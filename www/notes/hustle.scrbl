@@ -45,7 +45,7 @@ Boxes are like unary pairs, they simply hold a value, which can be
 projected out.  Pairs hold two values which each can be projected out.
 
 To see how values are now inductively defined notice that if you have
-a value @racket[_v], you can make anoter value with @racket[(box _v)].
+a value @racket[_v], you can make another value with @racket[(box _v)].
 Similarly, if @racket[_v1] and @racket[_v2] are values, then so is
 @racket[(cons _v1 _v2)].  This suggests the following recursive type
 definition for values:
