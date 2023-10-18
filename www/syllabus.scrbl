@@ -40,8 +40,8 @@ of department; or CMSC graduate student.
 
 @bold{Lectures:}
 @itemlist[
-@item{0101: @lecture-schedule2, @classroom2}
-@item{0201: @lecture-schedule1, @classroom1}]
+@item{0101: @lecture-schedule2, @classroom2 (@prof2-initials)}
+@item{0201: @lecture-schedule1, @classroom1 (@prof1-initials)}]
 
 
 @bold{Course Description:} @courseno is an introduction to compilers.

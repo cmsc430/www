@@ -40,27 +40,27 @@
                      @itemlist[@item{@secref["Dupe"]} @item{@secref{Dodger}}])
 		     
                (list @wk{9/25}
-	             ""
+       	       	     @seclink["Assignment 3"]{A3}
 		     @secref["Evildoer"]
 		     @secref["Extort"])
 		     
                (list @wk{10/2}
 	       	     ""
 		     @secref["Fraud"]
-		     @secref["Hustle"])
+		     @elem{@secref["Fraud"], cont.})
 		     
                (list @wk{10/9}
 	       	     ""
-		     @secref["Hoax"]
+		     @elem{@secref["Fraud"], cont.}
 		     @secref["Midterm_1"])
 		     
                (list @wk{10/16}
-	       	     ""
-		     ""
-		     "")
+	             ""
+	       	     @elem{@secref["Fraud"], cont.}
+		     @elem{@secref["Hustle"]})
 		     
                (list @wk{10/23} "" "" "")
-               (list @wk{10/30} "" "" "")
+               (list @wk{10/30} @secref["Assignment 4"] "" "")
                (list @wk{11/6} "" "" "")
                (list @wk{11/13} "" "" "")
                (list @wk{11/20} "" @secref["Midterm_2"] "Thanksgiving break (no lecture)")

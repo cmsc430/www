@@ -5,7 +5,8 @@
 @(require "../../langs/con-plus/semantics.rkt")
 @(require redex/pict)
 
-@bold{Due: Monday, June 12, 11:59PM}
+@bold{Due: @elem[#:style "strike"]{Friday, September 29, 11:59PM}
+ Monday, October 2, 11:59PM}
 
 The goal of this assignment is to extend the parser, interpreter, and
 compiler with some simple unary numeric and boolean operations and two

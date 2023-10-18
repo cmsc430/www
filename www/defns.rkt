@@ -34,16 +34,16 @@
 
 (define staff
   (list #;(list "William Wegand" "wwegand@terpmail.umd.edu" "3:00-4:00PM MTWThF")
-        (list "Pierce Darragh" "pdarragh@umd.edu" "TBD")
-	(list "Fuxiao Liu" "fl3es@umd.edu" "TBD")
-	(list "Vivian Chen" "vchen8@terpmail.umd.edu" "TBD")
-	(list "Ian Morrill" "imorrill@terpmail.umd.edu" "TBD")
-	(list "Matthew Schneider" "mgl@umd.edu" "TBD")
-	(list "Rhea Jajodia" "rjajodia@terpmail.umd.edu" "TBD")
-	(list "Syed Zaidi" "szaidi@umd.edu" "TBD")
-	(list "William Wegand" "wfweg@verizon.net" "TBD")
-	(list "Wilson Smith" "smith@umd.edu" "TBD")
-	(list "Yuhwan Lee" "ylee9251@terpmail.umd.edu" "TBD")
+        (list "Pierce Darragh" "pdarragh@umd.edu")
+	(list "Fuxiao Liu" "fl3es@umd.edu")
+	(list "Vivian Chen" "vchen8@terpmail.umd.edu")
+	(list "Ian Morrill" "imorrill@terpmail.umd.edu")
+	(list "Matthew Schneider" "mgl@umd.edu")
+	(list "Rhea Jajodia" "rjajodia@terpmail.umd.edu")
+	(list "Syed Zaidi" "szaidi@umd.edu")
+	(list "William Wegand" "wfweg@verizon.net")
+	(list "Wilson Smith" "smith@umd.edu")
+	(list "Yuhwan Lee" "ylee9251@terpmail.umd.edu")
         ))
 
 
@@ -56,3 +56,5 @@
 ;(define discord "TBD")
 (define piazza "https://piazza.com/class/llwlfinnxr63c0/")
 (define gradescope "https://www.gradescope.com/courses/593113")
+
+(define feedback "https://docs.google.com/forms/d/e/1FAIpQLSc80xQELhHb_Ef-tn0DkpH2b6pYadQiT3aYSEJFNqEqBjzdGg/viewform?usp=sf_link")

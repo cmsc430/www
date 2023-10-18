@@ -312,13 +312,13 @@ encoding:
 @#reader scribble/comment-reader
 (ex
 (bits->value #b000)
-(eval:error (bits->value #b001))
+(bits->value #b001)
 (bits->value #b010)
 (bits->value #b011)
 (bits->value #b100)
 (eval:error (bits->value #b101))
 (bits->value #b110)
-(bits->value #b111)
+(eval:error (bits->value #b111))
 )
 
 Notice that not all bits represent a value; name any odd number that's
@@ -809,7 +809,7 @@ interpreter in a final conversion:
 (interp.v2 (parse '(if 7 1 2)))
 (interp.v2 (parse '(if (zero? 7) 1 2)))
 (eval:error (interp.v2 (parse '(add1 #f))))
-(eval:error (interp.v2 (parse '(add1 #t))))
+(interp.v2 (parse '(add1 #t)))
 )
 
 Notice the last two examples.  What's going on?
