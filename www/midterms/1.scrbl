@@ -10,6 +10,7 @@
 Midterm 1 will be released at least @midterm-hours hours prior to
 its due date.
 
+@;{
 @section{Instructions}
 
 The midterm will be released as a zip file @tt{m1.zip} on ELMS.
@@ -46,4 +47,4 @@ If you fail these tests, we will not be able to grade your submission.
 Passing these tests only means your submission is well-formed.  Your
 actual grade will be computed after the deadline.
 
-You are encouraged to check your own work.
+You are encouraged to check your own work.}
