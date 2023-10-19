@@ -1,5 +1,5 @@
 #lang crook
-{:= B C D0 D1 E0 E1 F H0 H1 I J K}
+{:= B C D0 D0.A D1 E0 E1 F H0 H1 I J K}
 (provide {:> E0} compile-op0 compile-op1 {:> F} compile-op2 {:> H1} compile-op3 {:> F} pad-stack)
 (require "ast.rkt")
 {:> D0} (require "types.rkt")
@@ -27,18 +27,18 @@
 ;; Op1 -> Asm
 (define (compile-op1 p)
   (match p
-    {:> B D0}  ['add1 (Add rax 1)]
-    {:> B D0}  ['sub1 (Sub rax 1)]
-    {:> D0 E1} ['add1 (Add rax (value->bits 1))]
+    {:> B C}   ['add1 (Add rax 1)]
+    {:> B C}   ['sub1 (Sub rax 1)]
+    {:> D0 E0} ['add1 (Add rax (value->bits 1))]
     {:> E1}    ['add1
                 (seq (assert-integer rax)
                      (Add rax (value->bits 1)))]
-    {:> D0 E1} ['sub1 (Sub rax (value->bits 1))]
+    {:> D0 E0} ['sub1 (Sub rax (value->bits 1))]
     {:> E1}    ['sub1
                 (seq (assert-integer rax)
                      (Sub rax (value->bits 1)))]
     {:> D0}    ['zero?
-                {:> D0 D1}
+                {:> D0 D0.A}
                 (seq (Cmp rax 0)
                      (Mov rax (value->bits #f))
                      (Mov r9  (value->bits #t))

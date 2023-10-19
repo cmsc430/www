@@ -1,6 +1,6 @@
 #lang crook
-{:= A B C D0 D1 E0 E1 F H0 H1 I J K}
-(provide {:> A} Lit {:> E0} Prim0 {:> B} Prim1 {:> F} Prim2 {:> H1} Prim3 {:> C D0} IfZero {:> D0} If {:> E0} Eof {:> E0} Begin
+{:= A B C D0 D0.A D1 E0 E1 F H0 H1 I J K}
+(provide {:> A} Lit {:> E0} Prim0 {:> B} Prim1 {:> F} Prim2 {:> H1} Prim3 {:> C C} IfZero {:> D0} If {:> E0} Eof {:> E0} Begin
          {:> F} Let {:> F} Var {:> H0} Empty {:> I} Prog {:> I} Defn {:> I} App
          {:> K} Match {:> K} Box {:> K} Cons {:> K} Conj)
 ;;
@@ -11,7 +11,7 @@
 {:> I} ;; type Defn = (Defn Id (Listof Id) Expr)
 {:> I} (struct Defn (f xs e) #:prefab)
 
-{:> A D0} ;; type Expr = (Lit Integer)
+{:> A C} ;; type Expr = (Lit Integer)
 {:> D0}   ;; type Expr = (Lit Datum)
 {:> E0}   ;;           | (Eof)
 {:> H0}   ;;           | (Empty)
@@ -19,12 +19,21 @@
 {:> B}    ;;           | (Prim1 Op1 Expr)
 {:> F}    ;;           | (Prim2 Op2 Expr Expr)
 {:> H1}   ;;           | (Prim3 Op3 Expr Expr Expr)
-{:> C D0} ;;           | (IfZero Expr Expr Expr)
+{:> C C}  ;;           | (IfZero Expr Expr Expr)
 {:> D0}   ;;           | (If Expr Expr Expr)
+{:> D0.A D0.A}
+          ;;           | (Cond [Listof CondClause] Expr)
+{:> D0.A D0.A}
+          ;;           | (Case Expr [Listof CaseClause] Expr)
 {:> F}    ;;           | (Let Id Expr Expr)
 {:> F}    ;;           | (Var Id)
 {:> I}    ;;           | (App Id (Listof Expr))
 {:> K}    ;;           | (Match Expr (Listof Pat) (Listof Expr))
+
+{:> D0.A D0.A}
+;; type CondClause = (Clause Expr Expr)
+{:> D0.A D0.A}
+;; type CaseClause = (Clause [Listof Datum] Expr)
 
 {:> F}    ;; type Id  = Symbol
 {:> D0}   ;; type Datum = Integer
@@ -34,6 +43,8 @@
 {:> E0}   ;; type Op0 = 'read-byte | 'peek-byte | 'void
 {:> B}    ;; type Op1 = 'add1 | 'sub1
 {:> D0}   ;;          | 'zero?
+{:> D0.A D0.A}
+          ;;          | 'abs | '- | 'not
 {:> D1}   ;;          | 'char? | 'integer->char | 'char->integer
 {:> E0}   ;;          | 'write-byte | 'eof-object?
 {:> H0}   ;;          | 'box | 'car | 'cdr | 'unbox
@@ -53,13 +64,13 @@
 
 {:> E0}   (struct Eof () #:prefab)
 {:> H0}   (struct Empty () #:prefab)
-{:> A D0} (struct Lit (i) #:prefab)
+{:> A C}  (struct Lit (i) #:prefab)
 {:> D0}   (struct Lit (d) #:prefab)
 {:> E0}   (struct Prim0 (p) #:prefab)
 {:> B}    (struct Prim1 (p e) #:prefab)
 {:> F}    (struct Prim2 (p e1 e2)  #:prefab)
 {:> H1}   (struct Prim3 (p e1 e2 e3)  #:prefab)
-{:> C D0} (struct IfZero (e1 e2 e3) #:prefab)
+{:> C C}  (struct IfZero (e1 e2 e3) #:prefab)
 {:> D0}   (struct If (e1 e2 e3) #:prefab)
 {:> E0}   (struct Begin (e1 e2) #:prefab)
 {:> F}    (struct Let (x e1 e2) #:prefab)

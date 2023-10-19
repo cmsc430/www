@@ -1,5 +1,5 @@
 #lang crook
-{:= D0 D1 E0 E1 F H0 H1 I J K}
+{:= D0 D0.A D1 E0 E1 F H0 H1 I J K}
 (provide (all-defined-out))
 {:> H0} (require ffi/unsafe)
 
@@ -10,15 +10,15 @@
 {:> H0} (define type-cons      #b010)
 {:> H1} (define type-vect      #b011)
 {:> H1} (define type-str       #b100)
-(define int-shift    {:> D0 H0} 1 {:> H0} (+ 1 imm-shift))
-(define mask-int   {:> D0 H0} #b1 {:> H0} #b1111)
+(define int-shift    {:> D0 F} 1 {:> H0} (+ 1 imm-shift))
+(define mask-int   {:> D0 F} #b1 {:> H0} #b1111)
 {:> D1}
-(define char-shift   {:> D1 H0} 2 {:> H0} (+ 2 imm-shift))
-(define type-int   {:> D0 H0} #b0 {:> H0} #b0000)
+(define char-shift   {:> D1 F} 2 {:> H0} (+ 2 imm-shift))
+(define type-int   {:> D0 F} #b0 {:> H0} #b0000)
 {:> D1}
-(define type-char {:> D0 H0} #b01 {:> H0} #b01000)
+(define type-char {:> D0 F} #b01 {:> H0} #b01000)
 {:> D1}
-(define mask-char {:> D0 H0} #b11 {:> H0} #b11111)
+(define mask-char {:> D0 F} #b11 {:> H0} #b11111)
 
 (define (bits->value b)
   (cond [(= b (value->bits #t))  #t]
@@ -58,11 +58,11 @@
         [else (error "invalid bits")]))
 
 (define (value->bits v)
-  (cond [(eq? v #t) {:> D0 H0} #b011 {:> H0} #b00011000]
-        [(eq? v #f) {:> D0 H0} #b111 {:> H0} #b00111000]
+  (cond [(eq? v #t) {:> D0 F} #b011 {:> H0} #b00011000]
+        [(eq? v #f) {:> D0 F} #b111 {:> H0} #b00111000]
         [(integer? v) (arithmetic-shift v int-shift)]
-        {:> E0} [(eof-object? v) {:> E0 H0} #b1011 {:> H0} #b01011000]
-        {:> E0} [(void? v)       {:> E0 H0} #b1111 {:> H0} #b01111000]
+        {:> E0} [(eof-object? v) {:> E0 F} #b1011 {:> H0} #b01011000]
+        {:> E0} [(void? v)       {:> E0 F} #b1111 {:> H0} #b01111000]
         {:> H0} [(empty? v)      #b10011000]
         {:> D1}
         [(char? v)

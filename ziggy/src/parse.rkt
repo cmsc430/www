@@ -1,15 +1,15 @@
 #lang crook
-{:= A B C D0 D1 E0 E1 F H0 H1 I J K}
+{:= A B C D0 D0.A D1 E0 E1 F H0 H1 I J K}
 (provide parse {:> I} parse-e {:> I} parse-define)
 (require "ast.rkt")
 
-{:> A I} ;; S-Expr -> Expr
-{:> A I}
+{:> A H1} ;; S-Expr -> Expr
+{:> A H1}
 (define (parse s)
   (match s
     {:> E0}
     ['eof                (Eof)]
-    {:> A D0}
+    {:> A C}
     [(? exact-integer?) (Lit s)]
     {:> D0}
     [(? datum?)          (Lit s)]
@@ -27,7 +27,7 @@
     [(list (? op3? o) e1 e2 e3) (Prim3 o (parse e1) (parse e2) (parse e3))]
     {:> E0}
     [(list 'begin e1 e2) (Begin (parse e1) (parse e2))]
-    {:> C D0}
+    {:> C C}
     [(list 'if (list 'zero? e1) e2 e3)
      (IfZero (parse e1) (parse e2) (parse e3))]
     {:> D0}

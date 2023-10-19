@@ -1,5 +1,5 @@
 #lang crook
-{:= A B C D0 D1 E0 E1 F H0 H1 I J K}
+{:= A B C D0 D0.A D1 E0 E1 F H0 H1 I J K}
 (provide interp)
 {:> F} (provide interp-env)
 {:> K} (provide interp-match-pat)
@@ -20,35 +20,35 @@
 
 {:> F} ;; type Env = (Listof (List Id Value))
 
-{:> A D0}  ;; Expr -> Integer
-{:> D0 E1} ;; Expr -> Value
-{:> E1 I}  ;; Expr -> Answer
+{:> A C}   ;; Expr -> Integer
+{:> D0 E0} ;; Expr -> Value
+{:> E1 H1} ;; Expr -> Answer
 {:> I}     ;; Prog -> Answer
-(define (interp {:> A I} e {:> I} p)
-  {:> F I}
+(define (interp {:> A H1} e {:> I} p)
+  {:> F H1}
   (interp-env e '())
   {:> I}
   (match p
     [(Prog ds e)
      (interp-env e '() ds)])
-  {:> A F}
+  {:> A H1}
   (match e
-    {:> A D0}  [(Lit i) i]
+    {:> A C}   [(Lit i) i]
     {:> D0}    [(Lit d) d]
     {:> E0}    [(Eof)   eof]
     {:> E0}    [(Prim0 p)
                 (interp-prim0 p)]
-    {:> B E1}  [(Prim1 p e)
+    {:> B E0}  [(Prim1 p e)
                 (interp-prim1 p (interp e))]
     {:> E1}    [(Prim1 p e)
                 (match (interp e)
                   ['err 'err]
                   [v (interp-prim1 p v)])]
-    {:> C D0}  [(IfZero e1 e2 e3)
+    {:> C C}   [(IfZero e1 e2 e3)
                 (if (zero? (interp e1))
                     (interp e2)
                     (interp e3))]
-    {:> D0 E1} [(If e1 e2 e3)
+    {:> D0 E0} [(If e1 e2 e3)
                 (if (interp e1)
                     (interp e2)
                     (interp e3))]
@@ -58,7 +58,7 @@
                   [v (if v
                          (interp e2)
                          (interp e3))])]
-    {:> E0 E1} [(Begin e1 e2)
+    {:> E0 E0} [(Begin e1 e2)
                 (begin (interp e1)
                        (interp e2))]
     {:> E1}    [(Begin e1 e2)

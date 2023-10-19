@@ -1,21 +1,21 @@
 #lang crook
-{:= A B C D0 D1 E0 E1 F H0 H1 I J K}
+{:= A B C D0 D0.A D1 E0 E1 F H0 H1 I J K}
 (require a86/interp)
 {:> D0} (require "types.rkt")
 {:> E0} (require "build-runtime.rkt")
 (provide run {:> E0} run/io)
 
-{:> A D0}  ;; Asm -> Integer
-{:> D0 E1} ;; Asm -> Value
+{:> A C}   ;; Asm -> Integer
+{:> D0 E0} ;; Asm -> Value
 {:> E1}    ;; Asm -> Answer
 (define (run is)
-  {:> A D0}
+  {:> A C}
   (asm-interp is)
   {:> D0 E1}
   (bits->value (asm-interp is))
   {:> E0}
   (parameterize ((current-objs (list (path->string runtime-path))))
-    {:> E0 E1}
+    {:> E0 E0}
     (bits->value (asm-interp is))
     {:> E1}
     (match (asm-interp is)
