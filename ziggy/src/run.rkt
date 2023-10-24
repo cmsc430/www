@@ -5,17 +5,17 @@
 {:> E0} (require "build-runtime.rkt")
 (provide run {:> E0} run/io)
 
-{:> A C}   ;; Asm -> Integer
-{:> D0 E0} ;; Asm -> Value
+{:> A D0}  ;; Asm -> Integer
+{:> D0 E1} ;; Asm -> Value
 {:> E1}    ;; Asm -> Answer
 (define (run is)
-  {:> A C}
+  {:> A D0}
   (asm-interp is)
-  {:> D0 E1}
+  {:> D0 E0}
   (bits->value (asm-interp is))
   {:> E0}
   (parameterize ((current-objs (list (path->string runtime-path))))
-    {:> E0 E0}
+    {:> E0 E1}
     (bits->value (asm-interp is))
     {:> E1}
     (match (asm-interp is)

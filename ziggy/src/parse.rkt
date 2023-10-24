@@ -3,13 +3,13 @@
 (provide parse {:> I} parse-e {:> I} parse-define)
 (require "ast.rkt")
 
-{:> A H1} ;; S-Expr -> Expr
-{:> A H1}
+{:> A I} ;; S-Expr -> Expr
+{:> A I}
 (define (parse s)
   (match s
     {:> E0}
     ['eof                (Eof)]
-    {:> A C}
+    {:> A D0}
     [(? exact-integer?) (Lit s)]
     {:> D0}
     [(? datum?)          (Lit s)]
@@ -27,7 +27,7 @@
     [(list (? op3? o) e1 e2 e3) (Prim3 o (parse e1) (parse e2) (parse e3))]
     {:> E0}
     [(list 'begin e1 e2) (Begin (parse e1) (parse e2))]
-    {:> C C}
+    {:> C D0}
     [(list 'if (list 'zero? e1) e2 e3)
      (IfZero (parse e1) (parse e2) (parse e3))]
     {:> D0}
@@ -80,7 +80,7 @@
      (Let x (parse-e e1) (parse-e e2))]
     {:> K}
     [(cons 'match (cons e ms))
-     (parse-match (parse-e e) ms)]    
+     (parse-match (parse-e e) ms)]
     [(cons (? symbol? f) es)
      (App f (map parse-e es))]
     [_ (error "Parse error" s)]))

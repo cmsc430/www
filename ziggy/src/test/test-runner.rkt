@@ -51,7 +51,7 @@
       (check-equal? (run '(cond [(if #t #t #f) 2] [else 3])) 2)
       (check-equal? (run '(cond [(zero? 1) 2] [(if (not (zero? (sub1 2))) #t #f) 4] [else 3])) 4)
       (check-equal? (run '(cond [#t 1] [else 2])) 1)
-      (check-equal? (run '(cond [1 1] [else 2])) 1)      
+      (check-equal? (run '(cond [1 1] [else 2])) 1)
       (check-equal? (run '(case 2 [else 1])) 1)
       (check-equal? (run '(case 2 [() 3] [else 1])) 1)
       (check-equal? (run '(case 2 [(2) 3] [else 1])) 3)
@@ -61,8 +61,8 @@
       (check-equal? (run '(case 2 [(7 2 #t) 3] [else 1])) 3)
       (check-equal? (run '(case 4 [(7 2 #t) 3] [else 1])) 1)
       (check-equal? (run '(case #t [(7 2 #t) 3] [else 1])) 3)
-      (check-equal? (run '(case #f [(7 2 #t) 3] [else 1])) 1))      
-      
+      (check-equal? (run '(case #f [(7 2 #t) 3] [else 1])) 1))
+
   {:> D1}
   (begin ;; Dodger
     (check-equal? (run #\a) #\a)
@@ -103,7 +103,7 @@
     (check-equal? (run '(let ((x 7)) (let ((y 2)) x))) 7)
     (check-equal? (run '(let ((x 7)) (let ((x 2)) x))) 2)
     (check-equal? (run '(let ((x 7)) (let ((x (add1 x))) x))) 8)
-    
+
     (check-equal? (run '(let ((x 0))
                           (if (zero? x) 7 8)))
                   7)
@@ -118,7 +118,7 @@
                           (let ((z (- 4 x)))
                             (+ (+ x x) z))))
                   7)
-    
+
     (check-equal? (run '(= 5 5)) #t)
     (check-equal? (run '(= 4 5)) #f)
     (check-equal? (run '(= (add1 4) 5)) #t)
@@ -209,7 +209,7 @@
                           (+ x (tri (sub1 x)))))
                    '(tri 9))
                   45)
-    
+
     (check-equal? (run
                    '(define (even? x)
                       (if (zero? x)
@@ -221,7 +221,7 @@
                           (even? (sub1 x))))
                    '(even? 101))
                   #f)
-    
+
     (check-equal? (run
                    '(define (map-add1 xs)
                       (if (empty? xs)
@@ -283,7 +283,7 @@
     (check-equal? (run "a" '(eof-object? (read-byte))) (cons #f ""))
     (check-equal? (run "" '(begin (write-byte 97) (write-byte 98)))
                   (cons (void) "ab"))
-    
+
     (check-equal? (run "ab" '(peek-byte)) (cons 97 ""))
     (check-equal? (run "ab" '(begin (peek-byte) (read-byte))) (cons 97 ""))
     (check-equal? (run "†" '(read-byte)) (cons 226 ""))
@@ -321,12 +321,12 @@
                        '(define (f x)
                           (write-byte x))
                        '(f 97))
-                  (cons (void) "a"))  
+                  (cons (void) "a"))
     (check-equal? (run ""
                        '(define (f x y)
                           (write-byte x))
                        '(f 97 98))
-                  (cons (void) "a"))  
+                  (cons (void) "a"))
     (check-equal? (run ""
                        '(define (f x)
                           (let ((y x))
@@ -338,13 +338,13 @@
                           (let ((y x))
                             (write-byte y)))
                        '(f 97 98))
-                  (cons (void) "a"))  
+                  (cons (void) "a"))
     (check-equal? (run ""
                        '(define (f x)
                           (write-byte x))
                        '(let ((z 97))
                           (f z)))
-                  (cons (void) "a"))  
+                  (cons (void) "a"))
     (check-equal? (run ""
                        '(define (f x y)
                           (write-byte x))
@@ -358,4 +358,3 @@
                        '(match (write-byte 97)
                           [_ 1]))
                   (cons 1 "a"))))
-

@@ -3,7 +3,7 @@
 (provide (all-defined-out))
 (require "ast.rkt")
 {:> B}   (require "compile-ops.rkt")
-{:> D0 } (require "types.rkt")
+{:> D0}  (require "types.rkt")
 (require a86/ast)
 
 (define rax 'rax)
@@ -13,9 +13,9 @@
 {:> J}  (define r8  'r8)  {:> J}  ; scratch
 {:> F}  (define r15 'r15) {:> F}  ; stack pad (non-volatile)
 
-{:> A H0} ;; Expr -> Asm
-{:> A H0}
-(define (compile e)  
+{:> A I} ;; Expr -> Asm
+{:> A I}
+(define (compile e)
   (prog (Global 'entry)
         {:> E0} (Extern 'peek_byte)
         {:> E0} (Extern 'read_byte)
@@ -86,7 +86,7 @@
 {:> J}   ;; Expr CEnv Boolean -> Asm
 (define (compile-e e {:> F} c {:> J} t?)
   (match e
-    {:> A C}
+    {:> A D0}
     [(Lit i) (seq (Mov rax i))]
     {:> D0}
     [(Lit d)         (compile-value d)]
@@ -95,7 +95,7 @@
     {:> H0}
     [(Empty)         (compile-value '())]
     {:> F}
-    [(Var x)         (compile-variable x c)]    
+    [(Var x)         (compile-variable x c)]
     {:> E0}
     [(Prim0 p)       (compile-prim0 p)]
     {:> B}
@@ -104,7 +104,7 @@
     [(Prim2 p e1 e2) (compile-prim2 p e1 e2 c)]
     {:> H1}
     [(Prim3 p e1 e2 e3) (compile-prim3 p e1 e2 e3 c)]
-    {:> C C}
+    {:> C D0}
     [(IfZero e1 e2 e3)
      (compile-ifzero e1 e2 e3)]
     {:> D0}
@@ -125,7 +125,7 @@
 {:> D0} ;; Value -> Asm
 {:> D0}
 (define (compile-value v)
-  {:> D0 H0}
+  {:> D0 H1}
   (seq (Mov rax (value->bits v)))
   {:> H1}
   (cond [(string? v) (compile-string v)]
@@ -166,8 +166,8 @@
 (define (compile-prim0 p)
   (compile-op0 p))
 
-{:> B H0} ;; Op1 Expr -> Asm
-{:> F}    ;; Op1 Expr CEnv -> Asm
+{:> B F} ;; Op1 Expr -> Asm
+{:> F}   ;; Op1 Expr CEnv -> Asm
 {:> B}
 (define (compile-prim1 p e {:> F} c)
   (seq (compile-e e {:> F} c {:> J} #f)
@@ -192,8 +192,8 @@
        (compile-op3 p)))
 
 
-{:> C C} ;; Expr Expr Expr -> Asm
-{:> C C}
+{:> C D0} ;; Expr Expr Expr -> Asm
+{:> C D0}
 (define (compile-ifzero e1 e2 e3)
   (let ((l1 (gensym 'ifz))
         (l2 (gensym 'ifz)))
@@ -206,9 +206,9 @@
          (compile-e e3)
          (Label l2))))
 
-{:> D0 H0} ;; Expr Expr Expr -> Asm
-{:> F I}   ;; Expr Expr Expr CEnv -> Asm
-{:> J}     ;; Expr Expr Expr CEnv Boolean -> Asm
+{:> D0 F} ;; Expr Expr Expr -> Asm
+{:> F J}  ;; Expr Expr Expr CEnv -> Asm
+{:> J}    ;; Expr Expr Expr CEnv Boolean -> Asm
 {:> D0}
 (define (compile-if e1 e2 e3 {:> F} c {:> J} t?)
   (let ((l1 (gensym 'if))
@@ -222,16 +222,16 @@
          (compile-e e3 {:> F} c {:> J} t?)
          (Label l2))))
 
-{:> E0 H0} ;; Expr Expr -> Asm
-{:> F I}   ;; Expr Expr CEnv -> Asm
-{:> J}     ;; Expr Expr CEnv Boolean -> Asm
+{:> E0 F} ;; Expr Expr -> Asm
+{:> F J}  ;; Expr Expr CEnv -> Asm
+{:> J}    ;; Expr Expr CEnv Boolean -> Asm
 {:> E0}
 (define (compile-begin e1 e2 {:> F} c {:> J} t?)
   (seq (compile-e e1 {:> F} c {:> J} #f)
        (compile-e e2 {:> F} c {:> J} t?)))
 
-{:> F I} ;; Id Expr Expr CEnv -> Asm
-{:> J}   ;; Id Expr Expr CEnv -> Asm
+{:> F J} ;; Id Expr Expr CEnv -> Asm
+{:> J}   ;; Id Expr Expr CEnv Boolean -> Asm
 {:> F}
 (define (compile-let x e1 e2 c {:> J} t?)
   (seq (compile-e e1 c {:> J} t?)
@@ -267,7 +267,7 @@
 {:> I} ;; Id [Listof Expr] CEnv -> Asm
 {:> I} ;; The return address is placed above the arguments, so callee pops
 {:> I} ;; arguments and return address is next frame
-{:> I I}
+{:> I J}
 (define (compile-app f es c)
   (let ((r (gensym 'ret)))
     (seq (Lea rax r)
@@ -299,7 +299,7 @@
 {:> K} ;; Expr [Listof Pat] [Listof Expr] CEnv Bool -> Asm
 {:> K}
 (define (compile-match e ps es c t?)
-  (let ((done (gensym)))  
+  (let ((done (gensym)))
     (seq (compile-e e c #f)
          (Push rax) ; save away to be restored by each clause
          (compile-match-clauses ps es (cons #f c) done t?)

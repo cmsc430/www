@@ -5,12 +5,12 @@
 (require "../run.rkt")
 (require "test-runner.rkt")
 
-{:> A H0}
+{:> A I}
 (test (λ (e) (run (compile (parse e)))))
 {:> I}
 (test (λ p (run (compile (apply parse p)))))
 
-{:> E0 H0}
+{:> E0 I}
 (test/io (λ (in e) (run/io (compile (parse e)) in)))
 {:> I}
 (test/io (λ (in . p) (run/io (compile (apply parse p)) in)))

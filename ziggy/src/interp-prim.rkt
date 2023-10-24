@@ -1,6 +1,6 @@
 #lang crook
 {:= B C D0 D0.A D1 E0 E1 F H0 H1 I J K}
-(provide {:> E0} interp-prim0 interp-prim1 {:> F} interp-prim2 {:> H1} interp-prim3)
+(provide {:> E0} interp-prim0 {:> B} interp-prim1 {:> F} interp-prim2 {:> H1} interp-prim3)
 
 {:> E0} ;; Op0 -> Value
 {:> E0}
@@ -10,15 +10,15 @@
     ['peek-byte (peek-byte)]
     ['void      (void)]))
 
-{:> B C} ;; Op1 Integer -> Integer
-{:> B C}
+{:> B D0} ;; Op1 Integer -> Integer
+{:> B D0}
 (define (interp-prim1 op i)
   (match op
     ['add1 (add1 i)]
     ['sub1 (sub1 i)]))
 
-{:> D0 E0} ;; Op1 Value -> Value
-{:> D0 E0}
+{:> D0 E1} ;; Op1 Value -> Value
+{:> D0 E1}
 (define (interp-prim1 op v)
   (match op
     ['add1 (add1 v)]

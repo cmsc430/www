@@ -20,35 +20,29 @@
 
 {:> F} ;; type Env = (Listof (List Id Value))
 
-{:> A C}   ;; Expr -> Integer
-{:> D0 E0} ;; Expr -> Value
-{:> E1 H1} ;; Expr -> Answer
+{:> A D0}  ;; Expr -> Integer
+{:> D0 E1} ;; Expr -> Value
+{:> E1 I}  ;; Expr -> Answer
 {:> I}     ;; Prog -> Answer
-(define (interp {:> A H1} e {:> I} p)
-  {:> F H1}
-  (interp-env e '())
-  {:> I}
-  (match p
-    [(Prog ds e)
-     (interp-env e '() ds)])
-  {:> A H1}
+(define (interp {:> A I} e {:> I} p)
+  {:> A F}
   (match e
-    {:> A C}   [(Lit i) i]
+    {:> A D0}  [(Lit i) i]
     {:> D0}    [(Lit d) d]
     {:> E0}    [(Eof)   eof]
     {:> E0}    [(Prim0 p)
                 (interp-prim0 p)]
-    {:> B E0}  [(Prim1 p e)
+    {:> B E1}  [(Prim1 p e)
                 (interp-prim1 p (interp e))]
     {:> E1}    [(Prim1 p e)
                 (match (interp e)
                   ['err 'err]
                   [v (interp-prim1 p v)])]
-    {:> C C}   [(IfZero e1 e2 e3)
+    {:> C D0}  [(IfZero e1 e2 e3)
                 (if (zero? (interp e1))
                     (interp e2)
                     (interp e3))]
-    {:> D0 E0} [(If e1 e2 e3)
+    {:> D0 E1} [(If e1 e2 e3)
                 (if (interp e1)
                     (interp e2)
                     (interp e3))]
@@ -58,13 +52,19 @@
                   [v (if v
                          (interp e2)
                          (interp e3))])]
-    {:> E0 E0} [(Begin e1 e2)
+    {:> E0 E1} [(Begin e1 e2)
                 (begin (interp e1)
                        (interp e2))]
     {:> E1}    [(Begin e1 e2)
                 (match (interp e1)
                   ['err 'err]
-                  [v (interp e2)])]))
+                  [v (interp e2)])])
+  {:> F I}
+  (interp-env e '())
+  {:> I}
+  (match p
+    [(Prog ds e)
+     (interp-env e '() ds)]))
 
 {:> F} ;; Expr Env -> Answer
 {:> F}
@@ -202,4 +202,3 @@
 {:> F}
 (define (ext r x v)
   (cons (list x v) r))
-

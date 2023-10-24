@@ -27,18 +27,18 @@
 ;; Op1 -> Asm
 (define (compile-op1 p)
   (match p
-    {:> B C}   ['add1 (Add rax 1)]
-    {:> B C}   ['sub1 (Sub rax 1)]
-    {:> D0 E0} ['add1 (Add rax (value->bits 1))]
+    {:> B D0}  ['add1 (Add rax 1)]
+    {:> B D0}  ['sub1 (Sub rax 1)]
+    {:> D0 E1} ['add1 (Add rax (value->bits 1))]
     {:> E1}    ['add1
                 (seq (assert-integer rax)
                      (Add rax (value->bits 1)))]
-    {:> D0 E0} ['sub1 (Sub rax (value->bits 1))]
+    {:> D0 E1} ['sub1 (Sub rax (value->bits 1))]
     {:> E1}    ['sub1
                 (seq (assert-integer rax)
                      (Sub rax (value->bits 1)))]
     {:> D0}    ['zero?
-                {:> D0 D0.A}
+                {:> D0 D1}
                 (seq (Cmp rax 0)
                      (Mov rax (value->bits #f))
                      (Mov r9  (value->bits #t))
@@ -88,7 +88,7 @@
                 (seq (assert-cons rax)
                      (Xor rax type-cons)
                      (Mov rax (Offset rax 0)))]
-    
+
     {:> H0}    ['empty? (seq (Cmp rax (value->bits '())) if-equal)]
     {:> H0}    ['cons? (type-pred ptr-mask type-cons)]
     {:> H0}    ['box?  (type-pred ptr-mask type-box)]
@@ -121,7 +121,7 @@
             (Label zero)
             (Mov rax 0)
             (Label done)))]))
-    
+
 
 {:> F} ;; Op2 -> Asm
 {:> F}
@@ -148,7 +148,7 @@
      (seq (Pop r8)
           (assert-integer r8)
           (assert-integer rax)
-          (Cmp r8 rax)          
+          (Cmp r8 rax)
           if-equal)]
     {:> H0}
     ['cons
