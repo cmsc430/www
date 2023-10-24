@@ -22,9 +22,9 @@
         {:> E0} (Extern 'write_byte)
         {:> E1} (Extern 'raise_error)
         (Label 'entry)
-        {:> E0 H0} (Sub rsp 8)
-        {:> A H0}  (compile-e e)
-        {:> E0 H0} (Add rsp 8)
+        {:> E0 F} (Sub rsp 8)
+        {:> A F}  (compile-e e)
+        {:> E0 F} (Add rsp 8)
         {:> F}    (Push r15)    {:> F} ; save callee-saved register
         {:> H0}   (Push rbx)
         {:> H0}   (Mov rbx rdi) {:> H0} ; recv heap pointer
