@@ -15,58 +15,94 @@
 
 
 @tabular[#:style 'boxed
-         #:sep @hspace[1] 
+         #:sep @hspace[1]
          #:row-properties '(bottom-border)
-         (list (list @bold{Week} @bold{Due} @bold{Monday} @bold{Wednesday})
+         (list (list @bold{Week}
+                     @bold{Due}
+                     @bold{Monday}
+                     @bold{Wednesday})
+
                (list @wk{8/28}
-	       	     ""
+	       	           ""
                      @secref["Intro"]
-		     @elem{@secref["OCaml to Racket"]})
-		     
+		                 @elem{@secref["OCaml to Racket"]})
 
                (list @wk{9/4}
-	       	     @seclink["Assignment 1"]{A1}
-		     @elem{Labor day (no lecture)}
-                     @elem{@secref["OCaml to Racket"], cont.})
+	       	           @seclink["Assignment 1"]{A1}
+		                 @elem{Labor day (no lecture)}
+                     @elem{@secref["OCaml to Racket"] (cont.)})
 
                (list @wk{9/11}
-	       	     @seclink["Assignment 2"]{A2}
- 		     @elem{@secref["a86"]}
+	       	           @seclink["Assignment 2"]{A2}
+ 		                 @elem{@secref["a86"]}
                      @elem{@secref["Abscond"]})
 
                (list @wk{9/18}
-	             ""
-		     @itemlist[@item{@secref["Blackmail"]} @item{@secref["Con"]}]
-                     @itemlist[@item{@secref["Dupe"]} @item{@secref{Dodger}}])
-		     
+	                   ""
+		                 @itemlist[@item{@secref["Blackmail"]}
+                               @item{@secref["Con"]}]
+                     @itemlist[@item{@secref["Dupe"]}
+                               @item{@secref{Dodger}}])
+
                (list @wk{9/25}
        	       	     @seclink["Assignment 3"]{A3}
-		     @secref["Evildoer"]
-		     @secref["Extort"])
-		     
+		                 @secref["Evildoer"]
+		                 @secref["Extort"])
+
                (list @wk{10/2}
-	       	     ""
-		     @secref["Fraud"]
-		     @elem{@secref["Fraud"], cont.})
-		     
+	       	           ""
+		                 @secref["Fraud"]
+		                 @elem{@secref["Fraud"] (cont.)})
+
                (list @wk{10/9}
-	       	     ""
-		     @elem{@secref["Fraud"], cont.}
-		     @secref["Midterm_1"])
-		     
+	       	           ""
+		                 @elem{@secref["Fraud"] (cont.)}
+		                 @secref["Midterm_1"])
+
                (list @wk{10/16}
-	             ""
-	       	     @elem{@secref["Fraud"], cont.}
-		     @elem{@secref["Hustle"]})
-		     
-               (list @wk{10/23} "" "" "")
-               (list @wk{10/30} @secref["Assignment 4"] "" "")
-               (list @wk{11/6} "" "" "")
-               (list @wk{11/13} "" "" "")
-               (list @wk{11/20} "" @secref["Midterm_2"] "Thanksgiving break (no lecture)")
-               (list @wk{11/27} "" "" "")
-               (list @wk{12/4} "" "" "")
-               (list @wk{12/11} "" "" "")
+	                   ""
+	       	           @elem{@secref["Fraud"] (cont.)}
+		                 @elem{@secref["Hustle"]})
+
+               (list @wk{10/23}
+                     ""
+                     @elem{@secref["Hustle"] (cont.)}
+                     @elem{@secref["Hoax"]})
+
+               (list @wk{10/30}
+                     @seclink["Assignment 4"]{A4}
+                     ""
+                     "")
+
+               (list @wk{11/6}
+                     ""
+                     ""
+                     "")
+
+               (list @wk{11/13}
+                     ""
+                     ""
+                     "")
+
+               (list @wk{11/20}
+                     ""
+                     @secref["Midterm_2"]
+                     "Thanksgiving break (no lecture)")
+
+               (list @wk{11/27}
+                     ""
+                     ""
+                     "")
+
+               (list @wk{12/4}
+                     ""
+                     ""
+                     "")
+
+               (list @wk{12/11}
+                     ""
+                     ""
+                     "")
 )]
 @;{
 @tabular[#:style 'boxed
@@ -96,8 +132,8 @@
 (list @day{6/27} @elem{GC} @seclink["Assignment 5"]{A5})
 (list @day{6/28} @secref["Mug"] "")
 (list @day{6/29} "Midterm 2" @secref["Midterm_2"])
-(list @day{6/30} @secref["Mountebank"] "") 
-(list @day{7/3}  @secref["Neerdowell"] @seclink["Assignment 6"]{A6}) 
+(list @day{6/30} @secref["Mountebank"] "")
+(list @day{7/3}  @secref["Neerdowell"] @seclink["Assignment 6"]{A6})
 (list @day{7/4} "Independence Day Holiday" "")
 (list @day{7/5} @secref["Outlaw"] "")
 (list @day{7/6} @elem{@secref["Outlaw"], cont.} "")
