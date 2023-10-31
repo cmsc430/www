@@ -71,8 +71,8 @@
 
                (list @wk{10/30}
                      @seclink["Assignment 4"]{A4}
-                     ""
-                     "")
+                     @elem{@secref["Iniquity"]}
+                     @elem{@secref["Jig"]})
 
                (list @wk{11/6}
                      ""
