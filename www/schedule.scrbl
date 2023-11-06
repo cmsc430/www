@@ -76,8 +76,8 @@
 
                (list @wk{11/6}
                      ""
-                     ""
-                     "")
+                     @elem{@secref["Knock"]}
+                     @elem{@secref["Knock"] (cont.)})
 
                (list @wk{11/13}
                      ""
