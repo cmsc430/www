@@ -9,7 +9,7 @@
 (define r15 'r15) ; stack pad (non-volatile)
 
 ;; Expr -> Asm
-(define (compile e)  
+(define (compile e)
   (prog (Global 'entry)
         (Extern 'peek_byte)
         (Extern 'read_byte)
@@ -26,14 +26,12 @@
         (Call 'raise_error)))
 
 ;; type CEnv = (Listof [Maybe Id])
-
-;; Expr -> Asm
 ;; Expr CEnv -> Asm
 (define (compile-e e c)
   (match e
     [(Lit d)         (compile-value d)]
     [(Eof)           (compile-value eof)]
-    [(Var x)         (compile-variable x c)]    
+    [(Var x)         (compile-variable x c)]
     [(Prim0 p)       (compile-prim0 p)]
     [(Prim1 p e)     (compile-prim1 p e c)]
     [(Prim2 p e1 e2) (compile-prim2 p e1 e2 c)]
@@ -57,7 +55,6 @@
 (define (compile-prim0 p)
   (compile-op0 p))
 
-;; Op1 Expr -> Asm
 ;; Op1 Expr CEnv -> Asm
 (define (compile-prim1 p e c)
   (seq (compile-e e c)
@@ -70,7 +67,6 @@
        (compile-e e2 (cons #f c))
        (compile-op2 p)))
 
-;; Expr Expr Expr -> Asm
 ;; Expr Expr Expr CEnv -> Asm
 (define (compile-if e1 e2 e3 c)
   (let ((l1 (gensym 'if))
@@ -84,7 +80,6 @@
          (compile-e e3 c)
          (Label l2))))
 
-;; Expr Expr -> Asm
 ;; Expr Expr CEnv -> Asm
 (define (compile-begin e1 e2 c)
   (seq (compile-e e1 c)
@@ -105,4 +100,3 @@
      (match (eq? x y)
        [#t 0]
        [#f (+ 8 (lookup x rest))])]))
-

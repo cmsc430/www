@@ -53,7 +53,7 @@
                     (Mov rdi rax)
                     (Call 'write_byte)
                     unpad-stack)]))
-    
+
 
 ;; Op2 -> Asm
 (define (compile-op2 p)
@@ -79,7 +79,7 @@
      (seq (Pop r8)
           (assert-integer r8)
           (assert-integer rax)
-          (Cmp r8 rax)          
+          (Cmp r8 rax)
           if-equal)]))
 
 

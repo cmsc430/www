@@ -234,7 +234,7 @@
 {:> J}   ;; Id Expr Expr CEnv Boolean -> Asm
 {:> F}
 (define (compile-let x e1 e2 c {:> J} t?)
-  (seq (compile-e e1 c {:> J} t?)
+  (seq (compile-e e1 c {:> J} #f)
        (Push rax)
        (compile-e e2 (cons x c) {:> J} t?)
        (Add rsp 8)))

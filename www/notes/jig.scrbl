@@ -212,7 +212,7 @@ Here's what this code will compile to, roughly:
 (asm-interp
  (seq (Global 'entry)
       (Label 'entry)
-      
+
       ;; calling (f 100), so set up return address,
       ;; push argument, then jump
       (Lea 'rax 'r1)
@@ -221,20 +221,20 @@ Here's what this code will compile to, roughly:
       (Push 'rax)
       (Jmp 'f)
       (Label 'r1)
-      
+
       ;; done with (f 100), return
       (Ret)
-      
+
       ;; (define (f x) ...)
       (Label 'f)
       (Mov 'rax (Offset 'rsp 0))
       (Cmp 'rax 0)
       (Jne 'if_false)
-      
+
       ;; if-then branch
       (Mov 'rax 42)
       (Jmp 'done)
-      
+
       ;; if-else branch
       (Label 'if_false)
       ;; calling (f (sub1 x)), so set up return address,
@@ -246,7 +246,7 @@ Here's what this code will compile to, roughly:
       (Push 'rax)
       (Jmp 'f)
       (Label 'r2)
-      
+
       (Label 'done)
       (Add 'rsp 8)  ; pop x
       (Ret)))
@@ -348,11 +348,11 @@ You can see where this is going.
 	 |          .           |
 	 |          .           |
          |          .           |
-         +----------------------+	 
+         +----------------------+
          |   return to r2       |
          +----------------------+
          |   x : 1              |
-         +----------------------+	 
+         +----------------------+
          |   return to r2       |
          +----------------------+
 rsp ---> |   x : 0              |
@@ -422,7 +422,7 @@ We can modify the code to embody these ideas:
 (asm-interp
  (seq (Global 'entry)
       (Label 'entry)
-      
+
       ;; calling (f 100), so set up return address,
       ;; push argument, then jump
       (Lea 'rax 'r1)
@@ -431,20 +431,20 @@ We can modify the code to embody these ideas:
       (Push 'rax)
       (Jmp 'f)
       (Label 'r1)
-      
+
       ;; done with (f 100), return
       (Ret)
-      
+
       ;; (define (f x) ...)
       (Label 'f)
       (Mov 'rax (Offset 'rsp 0))
       (Cmp 'rax 0)
       (Jne 'if_false)
-      
+
       ;; if-then branch
       (Mov 'rax 42)
       (Jmp 'done)
-      
+
       ;; if-else branch
       (Label 'if_false)
       ;; TAIL calling (f (sub1 x)),
@@ -456,7 +456,7 @@ We can modify the code to embody these ideas:
       (Add 'rsp 8) ; pop x
       (Push 'rax)  ; push arg
       (Jmp 'f)
-      
+
       (Label 'done)
       (Add 'rsp 8)  ; pop x
       (Ret)))
@@ -550,17 +550,17 @@ call:
 
       ;; No need for this since we never come back:
       ;; (Ret)
-      
+
       ;; (define (f x) ...)
       (Label 'f)
       (Mov 'rax (Offset 'rsp 0))
       (Cmp 'rax 0)
       (Jne 'if_false)
-      
+
       ;; if-then branch
       (Mov 'rax 42)
       (Jmp 'done)
-      
+
       ;; if-else branch
       (Label 'if_false)
       ;; TAIL calling (f (sub1 x)),
@@ -572,7 +572,7 @@ call:
       (Add 'rsp 8) ; pop x
       (Push 'rax)  ; push arg
       (Jmp 'f)
-      
+
       (Label 'done)
       (Add 'rsp 8)  ; pop x
       (Ret)))
@@ -637,7 +637,7 @@ ready to be made, the stack will look like:
          |       3              |
          +----------------------+
 rsp ---> |       5              |
-         +----------------------+	 
+         +----------------------+
 }|
 
 At which point we need to remove the @racket[x] and @racket[y] part,
@@ -651,7 +651,7 @@ below the return address, i.e. we want:
          |       3              |
          +----------------------+
 rsp ---> |       5              |
-         +----------------------+	 
+         +----------------------+
 }|
 
 To accomplish, we rely on the following helper function for generating
@@ -731,6 +731,7 @@ There are two important places where @racket[t?] is seeded to @racket[#t]:
 @item{The top-level expression is in tail position.}
 @item{The body of every function is in tail position.}
 ]
+
 
 The complete compiler:
 
