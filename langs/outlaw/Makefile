@@ -78,7 +78,8 @@ stdlib.s: stdlib.rkt
 	cat $< | racket -t compile-stdin.rkt -m > $@
 
 clean:
-	rm *.o *.s *.run outlaw.rkt
+	@$(RM) *.o *.s *.run outlaw.rkt ||:
+	@echo "$(shell basename $(shell pwd)): cleaned!"
 
 outlaw2.s: outlaw.rkt outlaw.run
 	cat outlaw.rkt | ./outlaw.run > outlaw2.s

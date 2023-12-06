@@ -38,7 +38,8 @@ runtime.o: $(objs)
 	cat $< | racket -t compile-stdin.rkt -m > $@
 
 clean:
-	rm *.o *.s *.run
+	@$(RM) *.o *.s *.run ||:
+	@echo "$(shell basename $(shell pwd)): cleaned!"
 
 %.test: %.run %.rkt
 	@test "$(shell ./$(<))" = "$(shell racket $(word 2,$^))"

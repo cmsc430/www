@@ -40,6 +40,7 @@ runtime.o: $(objs)
 	make $@
 
 clean:
-	-rm *.o *.s *.run $(BUILD_DIR)/*.make
+	@$(RM) *.o *.s *.run $(BUILD_DIR)/*.make ||:
+	@echo "$(shell basename $(shell pwd)): cleaned!"
 
 -include $(wildcard $(BUILD_DIR)/*.make)
