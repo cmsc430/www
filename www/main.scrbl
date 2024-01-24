@@ -21,15 +21,9 @@
 
 @emph{@string-titlecase[semester], @year}
 
-@emph{Sections:}
-@itemlist[
-@item{0101:  @lecture-schedule2, @classroom2
+@emph{Lecture}: @lecture-schedule1, @classroom1
 
-@emph{Professor}: @prof2}
-
-@item{0201: @lecture-schedule1, @classroom1
-
-@emph{Professor}: @prof1}]
+@emph{Professor}: @prof1
 
 
 CMSC 430 is an introduction to compilers.  Its major goal is to arm
@@ -43,11 +37,14 @@ implement several related languages.
 	 (list* (list @bold{Staff} 'cont)
 	        (list @bold{Name} @elem{@bold{E-mail}})
 	        (list prof1 prof1-email)
-	        (list prof2 prof2-email)
+	        #;(list prof2 prof2-email)
 		staff)]
 
 @bold{Office hours:} AVW 4140
 
+Schedule, TBD.
+
+@;{
 @tabular[#:style 'boxed
          #:row-properties '(bottom-border ())
 	 (list (list @bold{Time}  @bold{Monday}          @bold{Tuesday}  @bold{Wednesday}   @bold{Thursday}  @bold{Friday})
@@ -63,7 +60,7 @@ implement several related languages.
 	       (list      "4 PM"  "Yuhwan"               'cont           "Yuhwan, Dalton"   'cont            'cont)
 	       (list      "5 PM"  'cont                  "Vivian"        'cont              "Vivian"         'cont)
 	       (list      "6 PM"  'cont                  'cont           'cont              "Vivian"         'cont))]
-
+}
 
 
 

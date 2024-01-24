@@ -22,16 +22,17 @@
                      @bold{Monday}
                      @bold{Wednesday})
 
-               (list @wk{8/28}
+               (list @wk{1/22}
 	       	           ""
-                     @secref["Intro"]
-		                 @elem{@secref["OCaml to Racket"]})
+	             "No class"
+                     @secref["Intro"])
+		               
 
-               (list @wk{9/4}
+               (list @wk{1/29}
 	       	           @seclink["Assignment 1"]{A1}
-		                 @elem{Labor day (no lecture)}
-                     @elem{@secref["OCaml to Racket"] (cont.)})
-
+			     @elem{@secref["OCaml to Racket"]}
+                     @elem{@secref["OCaml to Racket"]})
+#|
                (list @wk{9/11}
 	       	           @seclink["Assignment 2"]{A2}
  		                 @elem{@secref["a86"]}
@@ -103,6 +104,7 @@
                      ""
                      ""
                      "")
+		     |#
 )]
 @;{
 @tabular[#:style 'boxed

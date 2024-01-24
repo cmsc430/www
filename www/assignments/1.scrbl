@@ -4,7 +4,7 @@
 
 @title[#:tag "Assignment 1" #:style 'unnumbered]{Assignment 1: Learning about Programming Languages}
 
-@bold{Due: Wednesday, September 6, 11:59PM}
+@bold{Due: Wednesday, January 31, 11:59PM}
 
 Find two programming languages that are new to you, and answer the following questions:
 

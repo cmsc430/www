@@ -24,9 +24,9 @@
 
 @bold{Term:} @string-titlecase[semester], @year
 
-@bold{Professors:} @prof1 (@prof1-pronouns), @prof2 (@prof2-pronouns)
+@bold{Professor:} @prof1 (@prof1-pronouns)
 
-@bold{Email:} @prof1-email, @prof2-email
+@bold{Email:} @prof1-email
 
 @bold{Office Hours:} By appointment.  Send email or ELMS message to set
 up.
@@ -39,10 +39,7 @@ of department; or CMSC graduate student.
 @;{@bold{Lecture dates:} @lecture-dates}
 
 @bold{Lectures:}
-@itemlist[
-@item{0101: @lecture-schedule2, @classroom2 (@prof2-initials)}
-@item{0201: @lecture-schedule1, @classroom1 (@prof1-initials)}]
-
+@lecture-schedule1, @classroom1 (@prof1-initials)
 
 @bold{Course Description:} @courseno is an introduction to compilers.
 Its major goal is to arm students with the ability to design,
@@ -109,8 +106,8 @@ and we ask you to do the same for all of your fellow Terps.
 
 @bold{Communication with Instructor:}
 
-Email: If you need to reach out and communicate with @prof1 or @prof2,
-please email at @|prof1-email| or @|prof2-email|. Please DO NOT email
+Email: If you need to reach out and communicate with @prof1,
+please email at @|prof1-email|. Please DO NOT email
 questions that are easily found in the syllabus or on ELMS (i.e. When
 is this assignment due?  How much is it worth? etc.) but please DO
 reach out about personal, academic, and intellectual
