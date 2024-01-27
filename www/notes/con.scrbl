@@ -269,7 +269,7 @@ The complete compiler code is:
 Mirroring the change we made to the interpreter, we separate out a
 module for compiling primitives:
 
-@codeblock-include["con/compile-prim.rkt"]
+@codeblock-include["con/compile-ops.rkt"]
 
 Let's take a look at a few examples:
 @ex[

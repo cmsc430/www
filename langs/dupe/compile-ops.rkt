@@ -1,9 +1,11 @@
 #lang racket
-(provide (all-defined-out))
-(require "ast.rkt" "types.rkt" a86/ast)
+(provide compile-op1)
+(require "ast.rkt")
+(require "types.rkt")
+(require a86/ast)
 
 (define rax 'rax)
-(define r9 'r9)   ; scratch
+(define r9  'r9)
 
 ;; Op1 -> Asm
 (define (compile-op1 p)
@@ -15,3 +17,4 @@
           (Mov rax (value->bits #f))
           (Mov r9  (value->bits #t))
           (Cmove rax r9))]))
+

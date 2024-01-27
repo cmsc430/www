@@ -146,7 +146,7 @@ You will also want to make sure your Racket installation is visible
 from your @tt{PATH} environment variable.  Assuming Racket was
 installed in the usual location, you can run:
 
-@verbatim|{   export PATH=$PATH:"/Applications/Racket v8.9/bin"}|
+@verbatim|{   export PATH=$PATH:"/Applications/Racket v|@|racket-version|/bin"}|
 
 NOTE: You'll need to know what version of Racket you installed and use that
 version's name in the above command. For example, if you install Racket 8.6,

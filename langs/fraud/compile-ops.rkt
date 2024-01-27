@@ -1,11 +1,13 @@
 #lang racket
-(provide (all-defined-out))
-(require "ast.rkt" "types.rkt" a86/ast)
+(provide compile-op0 compile-op1 compile-op2 pad-stack)
+(require "ast.rkt")
+(require "types.rkt")
+(require a86/ast)
 
-(define rax 'rax) ; return
-(define rdi 'rdi) ; arg
-(define r8  'r8)  ; scratch in +, -
+(define rax 'rax)(define rdi 'rdi) ; arg
+(define r8  'r8)  ; scratch in op2
 (define r9  'r9)  ; scratch
+
 (define r15 'r15) ; stack pad (non-volatile)
 (define rsp 'rsp) ; stack
 
@@ -13,44 +15,45 @@
 (define (compile-op0 p)
   (match p
     ['void      (seq (Mov rax (value->bits (void))))]
-    ['read-byte (seq pad-stack
-                     (Call 'read_byte)
-                     unpad-stack)]
-    ['peek-byte (seq pad-stack
-                     (Call 'peek_byte)
-                     unpad-stack)]))
+    ['read-byte (seq pad-stack (Call 'read_byte) unpad-stack)]
+    ['peek-byte (seq pad-stack (Call 'peek_byte) unpad-stack)]))
 
 ;; Op1 -> Asm
 (define (compile-op1 p)
   (match p
     ['add1
-     (seq (assert-integer rax)
-          (Add rax (value->bits 1)))]
+                (seq (assert-integer rax)
+                     (Add rax (value->bits 1)))]
     ['sub1
-     (seq (assert-integer rax)
-          (Sub rax (value->bits 1)))]
+                (seq (assert-integer rax)
+                     (Sub rax (value->bits 1)))]
     ['zero?
-     (seq (assert-integer rax)
-          (Cmp rax 0)
-          (if-equal))]
+                (seq (assert-integer rax)
+                     (Cmp rax 0)
+                     if-equal)]
     ['char?
-     (type-pred mask-char type-char)]
+               (seq (And rax mask-char)
+                    (Cmp rax type-char)
+                    if-equal)]
     ['char->integer
-     (seq (assert-char rax)
-          (Sar rax char-shift)
-          (Sal rax int-shift))]
+               (seq (assert-char rax)
+                    (Sar rax char-shift)
+                    (Sal rax int-shift))]
     ['integer->char
-     (seq (assert-codepoint rax)
-          (Sar rax int-shift)
-          (Sal rax char-shift)
-          (Xor rax type-char))]
-    ['eof-object? (eq-value eof)]
+               (seq (assert-codepoint)
+                    (Sar rax int-shift)
+                    (Sal rax char-shift)
+                    (Xor rax type-char))]
+    ['eof-object?
+               (seq (Cmp rax (value->bits eof))
+                    if-equal)]
     ['write-byte
-     (seq (assert-byte rax)
-          pad-stack
-          (Mov rdi rax)
-          (Call 'write_byte)
-          unpad-stack)]))
+               (seq assert-byte
+                    pad-stack
+                    (Mov rdi rax)
+                    (Call 'write_byte)
+                    unpad-stack)]))
+
 
 ;; Op2 -> Asm
 (define (compile-op2 p)
@@ -71,69 +74,66 @@
           (assert-integer r8)
           (assert-integer rax)
           (Cmp r8 rax)
-          (if-lt))]
+          if-lt)]
     ['=
      (seq (Pop r8)
           (assert-integer r8)
           (assert-integer rax)
-          (Cmp r8 rax)          
-          (if-equal))]))
-    
+          (Cmp r8 rax)
+          if-equal)]))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; -> Asm
+;; set rax to #t or #f if comparison flag is equal
+(define if-equal
+  (seq (Mov rax (value->bits #f))
+       (Mov r9  (value->bits #t))
+       (Cmove rax r9)))
+
+;; -> Asm
+;; set rax to #t or #f if comparison flag is less than
+(define if-lt
+  (seq (Mov rax (value->bits #f))
+       (Mov r9  (value->bits #t))
+       (Cmovl rax r9)))
 
 (define (assert-type mask type)
   (λ (arg)
     (seq (Mov r9 arg)
          (And r9 mask)
          (Cmp r9 type)
-         (Jne 'raise_error_align))))
+         (Jne 'err))))
 
 (define (type-pred mask type)
   (seq (And rax mask)
        (Cmp rax type)
-       (if-equal)))
+       if-equal))
 
 (define assert-integer
   (assert-type mask-int type-int))
 (define assert-char
   (assert-type mask-char type-char))
 
-(define (assert-codepoint r)
+(define (assert-codepoint)
   (let ((ok (gensym)))
-    (seq (assert-integer r)
-         (Cmp r (value->bits 0))
-         (Jl 'raise_error_align)
+    (seq (assert-integer rax)
+         (Cmp rax (value->bits 0))
+         (Jl 'err)
          (Cmp rax (value->bits 1114111))
-         (Jg 'raise_error_align)
+         (Jg 'err)
          (Cmp rax (value->bits 55295))
          (Jl ok)
          (Cmp rax (value->bits 57344))
          (Jg ok)
-         (Jmp 'raise_error_align)
+         (Jmp 'err)
          (Label ok))))
 
-(define (assert-byte r)
-  (seq (assert-integer r)
-       (Cmp r (value->bits 0))
-       (Jl 'raise_error_align)
-       (Cmp r (value->bits 255))
-       (Jg 'raise_error_align)))
-
-;; -> Asm
-;; set rax to #t or #f based on given comparison
-(define (if-compare c)
-  (seq (Mov rax (value->bits #f))
-       (Mov r9  (value->bits #t))
-       (c rax r9)))
-
-(define (if-equal) (if-compare Cmove))
-(define (if-lt) (if-compare Cmovl))
-
-;; Value -> Asm
-(define (eq-value v)
-  (seq (Cmp rax (value->bits v))
-       (if-equal)))
+(define assert-byte
+  (seq (assert-integer rax)
+       (Cmp rax (value->bits 0))
+       (Jl 'err)
+       (Cmp rax (value->bits 255))
+       (Jg 'err)))
 
 ;; Asm
 ;; Dynamically pad the stack to be aligned for a call
@@ -146,3 +146,4 @@
 ;; Undo the stack alignment after a call
 (define unpad-stack
   (seq (Add rsp r15)))
+

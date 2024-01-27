@@ -4,15 +4,11 @@
          "compile.rkt"
          "types.rkt"
          "parse.rkt"
-         "unload-bits-asm.rkt"
-         a86 rackunit)
+         "run.rkt"
+         rackunit)
 
-(unless (file-exists? "runtime.o")
-  (system "make runtime.o"))
-(current-objs
- (list (path->string (normalize-path "runtime.o"))))
 
 (define (check-compiler e)  
-  (check-equal? (unload/free (asm-interp (compile (parse e))))
+  (check-equal? (run (compile (parse e)))
                 (interp (parse e))
                 e))

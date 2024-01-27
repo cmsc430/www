@@ -1,6 +1,6 @@
 #lang racket
 (provide interp interp-env-heap)
-(require "types.rkt"
+(require (except-in "types.rkt" heap-ref)
          "env.rkt"
          "heap-bits.rkt"
          "interp-prims-heap-bits.rkt"
@@ -18,9 +18,7 @@
 ;; Expr REnv Heap -> Answer
 (define (interp-env-heap e r h)
   (match e    
-    [(Int i)  (cons h (value->bits i))]
-    [(Bool b) (cons h (value->bits b))]
-    [(Char c) (cons h (value->bits c))]
+    [(Lit d)  (cons h (value->bits d))]
     [(Eof)    (cons h (value->bits eof))]
     [(Empty)  (cons h (value->bits '()))]
     [(Var x)  (cons h (lookup r x))]

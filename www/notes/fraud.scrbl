@@ -464,24 +464,24 @@ variable name either.
 The idea is that we will translate expression (@tt{Expr}) like:
 
 @racketblock[
-(Let 'x (Int 7) (Var 'x))]
+(Let 'x (Lit 7) (Var 'x))]
 
 into intermediate expressions (@tt{IExpr}) like:
 
 @racketblock[
-(Let '_ (Int 7) (Var 0))
+(Let '_ (Lit 7) (Var 0))
 ]
 
 And:
 
 @racketblock[
-(Let 'x (Int 7) (Let 'y (Int 9) (Var 'x)))
+(Let 'x (Lit 7) (Let 'y (Lit 9) (Var 'x)))
 ]
 
 into:
 
 @racketblock[
-(Let '_ (Int 7) (Let '_ (Int 9) (Var 1)))
+(Let '_ (Lit 7) (Let '_ (Lit 9) (Var 1)))
 ]
 
 
@@ -507,8 +507,8 @@ by raising a (compile-time) error in the case of unbound variables.
 We can try out some examples to confirm it works as expected.
 
 @ex[
- (translate (Let 'x (Int 7) (Var 'x)))
- (translate (Let 'x (Int 7) (Let 'y (Int 9) (Var 'x))))
+ (translate (Let 'x (Lit 7) (Var 'x)))
+ (translate (Let 'x (Lit 7) (Let 'y (Lit 9) (Var 'x))))
  ]
 
 The interpreter for @tt{IExpr}s will still have an

@@ -9,6 +9,10 @@
 The final assessment for this course consists of an individually
 completed project.
 
+Details to be released later in the semester.
+
+@;{
+
 Final deliverables are due on the last day of class, July 7.
 
 @elem[#:style "strike"]{There are several projects to choose from,
@@ -656,3 +660,4 @@ The @tt{<lang>} should be @tt{iniquity}, @tt{loot},
 etc. and should be the same as the directory that contains the
 implementation.
 
+}

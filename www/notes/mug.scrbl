@@ -16,7 +16,7 @@
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 @(void (ev '(current-objs '("runtime.o"))))
 @(for-each (λ (f) (ev `(require (file ,f))))
-	   '("interp.rkt" "compile.rkt" "compile-expr.rkt" "compile-literals.rkt" "utils.rkt" "ast.rkt" "parse.rkt" "types.rkt" "unload-bits-asm.rkt"))
+	   '("interp.rkt" "compile.rkt" "compile-expr.rkt" "compile-literals.rkt" "utils.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
 @(define this-lang "Mug")
 
@@ -80,7 +80,7 @@ that returns @racket["Hello!"]:
 We can run it just to make sure:
 
 @ex[
-(unload/free
+(bits->value
  (asm-interp
   (seq (Global 'entry)
        (Label 'entry)
@@ -142,7 +142,7 @@ So to write a similar program that returns @racket["Hello!"] but
 following:
 
 @ex[
-(unload/free
+(bits->value
  (asm-interp
   (seq (Global 'entry)
        (Label 'entry)
@@ -191,7 +191,7 @@ Here is a version of the same program that avoids the @racket[Or]
 instruction, instead computing that type tagging at link time:
 
 @ex[
-(unload/free
+(bits->value
  (asm-interp
   (seq (Global 'entry)
        (Label 'entry)
@@ -226,7 +226,7 @@ efficient to evaluate string literals.  We could replace the old
 
 (compile-string "Hello!")
 
-(unload/free
+(bits->value
  (asm-interp
   (seq (Global 'entry)
        (Label 'entry)
@@ -475,7 +475,7 @@ We can try it out to confirm some examples.
 
 @ex[
 (define (run . p)
-  (unload/free (asm-interp (compile (parse p)))))
+  (bits->value (asm-interp (compile (parse p)))))
 
 (run "Hello!")
 

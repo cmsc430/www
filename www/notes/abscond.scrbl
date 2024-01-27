@@ -150,10 +150,10 @@ parse the concrete expression as an s-expression.
 While not terribly useful for a language as overly simplistic as Abscond, we use
 an AST datatype for representing expressions and another syntactic categories.
 For each category, we will have an appropriate constructor.  In the case of Abscond
-all expressions are integers, so we have a single constructor, @racket[Int].
+all expressions are integers, so we have a single constructor, @racket[Lit].
 
 @(define-language A-concrete
-  (e ::= (Int i))
+  (e ::= (Lit i))
   (i ::= integer))
 
 @centered{@render-language[A-concrete]}
@@ -171,7 +171,7 @@ it is, otherwise it signals an error:
 @section{Meaning of Abscond programs}
 
 The meaning of an Abscond program is simply the number itself.  So
-@racket[(Int 42)] evaluates to @racket[42].
+@racket[(Lit 42)] evaluates to @racket[42].
 
 We can write an ``interpreter'' that consumes an expression and
 produces it's meaning:
@@ -180,8 +180,8 @@ produces it's meaning:
 
 @#reader scribble/comment-reader
 (examples #:eval ev
-(interp (Int 42))
-(interp (Int -8))
+(interp (Lit 42))
+(interp (Lit -8))
 )
 
 We can add a command line wrapper program for interpreting Abscond
@@ -213,15 +213,15 @@ language, just a single inference rule suffices:
   #:mode (𝑨 I O)
   #:contract (𝑨 e i)
   [----------
-   (𝑨 (Int i) i)])
+   (𝑨 (Lit i) i)])
 
 @(centered (render-judgment-form 𝑨))
 
 Here, we are defining a binary relation, called
 @render-term[A 𝑨], and saying every integer literal
 expression is paired with the integer itself in the
-relation. So @math{((Int 2),2)} is in @render-term[A 𝑨],
-@math{((Int 5),5)} is in @render-term[A 𝑨], and so on.
+relation. So @math{((Lit 2),2)} is in @render-term[A 𝑨],
+@math{((Lit 5),5)} is in @render-term[A 𝑨], and so on.
 
 The inference rules define the binary relation by defining the
 @emph{evidence} for being in the relation.  The rule makes use of
@@ -419,8 +419,8 @@ Writing the @racket[compile] function is easy:
 
 @#reader scribble/comment-reader
 (examples #:eval ev 
-(compile (Int 42))
-(compile (Int 38))
+(compile (Lit 42))
+(compile (Lit 38))
 )
 
 To convert back to the concrete NASM syntax, we use
@@ -432,7 +432,7 @@ appropriately.}
 
 @#reader scribble/comment-reader
 (examples #:eval ev
-(asm-display (compile (Int 42))))
+(asm-display (compile (Lit 42))))
                    
 Putting it all together, we can write a command line compiler much
 like the command line interpreter before, except now we emit assembly
@@ -533,17 +533,17 @@ compilation within Racket:
 
 
 @examples[#:eval ev
-(asm-interp (compile (Int 42)))
-(asm-interp (compile (Int 37)))
-(asm-interp (compile (Int -8)))
+(asm-interp (compile (Lit 42)))
+(asm-interp (compile (Lit 37)))
+(asm-interp (compile (Lit -8)))
 ]
 
 This of course agrees with what we will get from the interpreter:
 
 @examples[#:eval ev
-(interp (Int 42))
-(interp (Int 37))
-(interp (Int -8))
+(interp (Lit 42))
+(interp (Lit 37))
+(interp (Lit -8))
 ]
 
 We can turn this in a @bold{property-based test}, i.e. a function that
@@ -554,9 +554,9 @@ correctness claim:
   (check-eqv? (interp e)
               (asm-interp (compile e))))
 
-(check-compiler (Int 42))
-(check-compiler (Int 37))
-(check-compiler (Int -8))
+(check-compiler (Lit 42))
+(check-compiler (Lit 37))
+(check-compiler (Lit -8))
 ]
 
 This is a powerful testing technique when combined with random
@@ -565,11 +565,11 @@ Abscond programs, we can randomly generate @emph{any} Abscond program
 and check that it holds.
 
 @examples[#:eval ev
-(check-compiler (Int (random 100)))
+(check-compiler (Lit (random 100)))
 
 ; test 10 random programs
 (for ([i (in-range 10)])
-  (check-compiler (Int (random 10000))))
+  (check-compiler (Lit (random 10000))))
 ]
 
 The last expression is taking 10 samples from the space of Abscond

@@ -8,7 +8,7 @@ jobs:
       matrix:
         os: [ubuntu-20.04, ubuntu-22.04]
         racket-variant: ['BC', 'CS']
-        racket-version: ['7.8', '8.0', '8.6', '8.8']
+        racket-version: ['8.6', '8.8']
     name: Test on Racket ${{ matrix.racket-variant }} ${{ matrix.racket-version }} on ${{ matrix.os }}	
     steps:
     - name: Checkout
@@ -31,8 +31,11 @@ jobs:
         nasm --version
         gcc --version
     - name: Install langs package
-      run: raco pkg install langs/
+      run: |
+        raco pkg install --auto ziggy/
+        raco pkg install langs/
     - name: Run tests
       run: |
-        raco test -p langs
+        raco test -p ziggy
+        xvfb-run raco test -p langs
         raco test -c outlaw

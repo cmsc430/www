@@ -1,6 +1,7 @@
 #lang racket
 (provide main)
-(require "parse.rkt" "interp.rkt")
+(require "parse.rkt")
+(require "interp.rkt")
 
 ;; -> Void
 ;; Parse and interpret contents of stdin,
@@ -8,3 +9,4 @@
 (define (main)
   (read-line) ; ignore #lang racket line
   (println (interp (parse (read)))))
+

@@ -1,11 +1,14 @@
 #lang racket
 (provide (all-defined-out))
-(require "ast.rkt" "types.rkt" "compile-ops.rkt" a86/ast)
+(require "ast.rkt")
+(require "compile-ops.rkt")
+(require "types.rkt")
+(require a86/ast)
 
 (define rax 'rax)
 
 ;; Expr -> Asm
-(define (compile e)
+(define (compile e)  
   (prog (Global 'entry)
         (Label 'entry)
         (compile-e e)
@@ -14,10 +17,10 @@
 ;; Expr -> Asm
 (define (compile-e e)
   (match e
-    [(Int i)       (compile-value i)]
-    [(Bool b)      (compile-value b)]
-    [(Prim1 p e)   (compile-prim1 p e)]
-    [(If e1 e2 e3) (compile-if e1 e2 e3)]))
+    [(Lit d)         (compile-value d)]
+    [(Prim1 p e)     (compile-prim1 p e)]
+    [(If e1 e2 e3)
+     (compile-if e1 e2 e3)]))
 
 ;; Value -> Asm
 (define (compile-value v)
@@ -40,3 +43,4 @@
          (Label l1)
          (compile-e e3)
          (Label l2))))
+

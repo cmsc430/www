@@ -1,5 +1,6 @@
 #lang racket
-(provide Int)
+(provide Lit)
 
-;; type Expr = (Int Integer)
-(struct Int (i) #:prefab)
+;; type Expr = (Lit Integer)
+
+(struct Lit (i) #:prefab)

@@ -2,9 +2,9 @@
 
 @(require (for-label (except-in racket compile)
                      a86))
-          
+
 @(require scribble/examples
-	  redex/reduction-semantics	  
+	  redex/reduction-semantics
           redex/pict
 	  (only-in pict scale)
 	  (only-in racket system)
@@ -67,7 +67,7 @@ int gcd(int n1, int n2) {
 }
 HERE
      )
-      
+
    (parameterize ([current-directory (build-path notes "a86")])
      (save-file "tri.s" (asm-string (tri 36)))
      (save-file "main.c" main.c)
@@ -178,7 +178,7 @@ Suppose we start executing at @tt{entry}.
    rbx} to zero. Executing this instruction sets a flag in the
   CPU, which affects subsequent ``conditional'' instructions.
   In this program, the next instruction is a conditional jump.}
- 
+
  @item{@tt{je done} either jumps to the instruction
   following label @tt{done} or proceeds to the next
   instruction, based on the state of the comparison flag. The
@@ -192,7 +192,7 @@ Suppose we start executing at @tt{entry}.
   (register @tt{rsp}).}
 
  @item{@tt{sub rbx, 1} decrements @tt{rbx} by 1.}
- 
+
  @item{@tt{call tri} performs something like a function
   call; it uses memory as a stack to save the current location
   in the code (which is where control should return to after
@@ -222,7 +222,7 @@ Suppose we start executing at @tt{entry}.
   ``output'') is 0.}
 
  @item{@tt{ret} does a ``return,'' either to a prior call to
-  @tt{tri} or the caller of @tt{entry}.}  
+  @tt{tri} or the caller of @tt{entry}.}
  ]
 
 Despite the lower-level mechanisms, this code computes in a
@@ -535,7 +535,7 @@ save the result of @racket['f]:
 (ex
 (eg (seq (Call 'f)
          (Mov 'rbx 'rax)
-         (Call 'g)         
+         (Call 'g)
          (Add 'rax 'rbx)))
 )
 
@@ -634,13 +634,13 @@ address to jump to, we could've also written it as:
 (ex
 (eg (seq (Sub 'rsp 8)      ; allocate a frame on the stack
                            ; load address of 'fret label into top of stack
-         (Lea (Offset 'rsp 0) 'fret)           
+         (Lea (Offset 'rsp 0) 'fret)
          (Jmp 'f)          ; jump to 'f
          (Label 'fret)     ; <-- return point for "call" to 'f
          (Push 'rax)       ; save result (like before)
          (Sub 'rsp 8)      ; allocate a frame on the stack
                            ; load address of 'gret label into top of stack
-         (Lea (Offset 'rsp 0) 'gret)         
+         (Lea (Offset 'rsp 0) 'gret)
          (Jmp 'g)          ; jump to 'g
          (Label 'gret)     ; <-- return point for "call" to 'g
          (Pop 'rbx)        ; pop saved result from calling 'f
@@ -706,7 +706,7 @@ Each register plays the same role as in x86, so for example
  @tt{?}. The only characters which may be used as the first character of an
  identifier are letters, @tt{.} (with special meaning), @tt{_}
  and @tt{?}."
- 
+
  @ex[
  (label? 'foo)
  (label? "foo")
@@ -782,7 +782,7 @@ Each register plays the same role as in x86, so for example
  outermost level of a function that produces a86 code and not
  nested.
 
- @ex[ 
+ @ex[
  (prog (Global 'foo) (Label 'foo))
  (eval:error (prog (Label 'foo)))
  (eval:error (prog (list (Label 'foo))))
@@ -794,6 +794,17 @@ Each register plays the same role as in x86, so for example
        (Label 'foo)
        (Jmp 'foo))
  ]
+}
+
+@defproc[(symbol->label [s symbol?]) label?]{
+
+  Returns a modified form of a symbol that follows NASM label conventions.
+
+  @ex[
+  (let ([l (symbol->label 'my-great-label)])
+    (seq (Label l)
+         (Jmp l)))
+  ]
 }
 
 @deftogether[(@defstruct*[% ([s string?])]
@@ -810,7 +821,7 @@ Each register plays the same role as in x86, so for example
  (ex
  (asm-display
    (prog (Global 'foo)
-         (%%% "Start of foo")        
+         (%%% "Start of foo")
          (Label 'foo)
          ; Racket comments won't appear
          (%% "Inputs one argument in rdi")
@@ -820,7 +831,7 @@ Each register plays the same role as in x86, so for example
          (%% "we're done!")
          (Ret))))
 }
-               
+
 @defstruct*[Offset ([r register?] [i exact-integer?])]{
 
  Creates an memory offset from a register. Offsets are used
@@ -865,7 +876,7 @@ Each register plays the same role as in x86, so for example
 @defstruct*[Extern ([x label?])]{
 
  Declares an external label.
- 
+
 }
 
 @defstruct*[Global ([x label?])]{
@@ -909,7 +920,7 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Mov ([dst (or/c register? offset?)] [src (or/c register? offset? 64-bit-integer?)])]{
-                              
+
  A move instruction. Moves @racket[src] to @racket[dst].
 
  Either @racket[dst] or @racket[src] may be offsets, but not both.
@@ -918,7 +929,7 @@ Each register plays the same role as in x86, so for example
  (asm-interp
   (prog
    (Global 'entry)
-   (Label 'entry)                   
+   (Label 'entry)
    (Mov 'rbx 42)
    (Mov 'rax 'rbx)
    (Ret)))
@@ -931,12 +942,12 @@ Each register plays the same role as in x86, so for example
 
  An addition instruction. Adds @racket[src] to @racket[dst]
  and writes the result to @racket[dst].
- 
+
  @ex[
  (asm-interp
   (prog
    (Global 'entry)
-   (Label 'entry)                   
+   (Label 'entry)
    (Mov 'rax 32)
    (Add 'rax 10)
    (Ret)))
@@ -952,14 +963,14 @@ Each register plays the same role as in x86, so for example
  (asm-interp
   (prog
    (Global 'entry)
-   (Label 'entry)                   
+   (Label 'entry)
    (Mov 'rax 32)
    (Sub 'rax 10)
    (Ret)))
  ]
 }
 
-@defstruct*[Cmp ([a1 (or/c register? offset?)] [a2 (or/c register? offset? 32-bit-integer?)])]{ 
+@defstruct*[Cmp ([a1 (or/c register? offset?)] [a2 (or/c register? offset? 32-bit-integer?)])]{
  Compare @racket[a1] to @racket[a2].  Doing a comparison
  sets the status flags that affect the conditional instructions like @racket[Je], @racket[Jl], etc.
 
@@ -972,14 +983,14 @@ Each register plays the same role as in x86, so for example
    (Cmp 'rax 2)
    (Jg 'l1)
    (Mov 'rax 0)
-   (Label 'l1)                   
+   (Label 'l1)
    (Ret)))
- ] 
+ ]
 }
 
 @defstruct*[Jmp ([x (or/c label? register?)])]{
  Jump to label @racket[x].
-               
+
  @ex[
  (asm-interp
   (prog
@@ -996,15 +1007,15 @@ Each register plays the same role as in x86, so for example
    (Global 'entry)
    (Label 'entry)
    (Mov 'rax 42)
-   (Pop 'rbx)   
+   (Pop 'rbx)
    (Jmp 'rbx)))
  ]
- 
+
 }
 
 @defstruct*[Je ([x (or/c label? register?)])]{
  Jump to label @racket[x] if the conditional flag is set to ``equal.''
-               
+
  @ex[
  (asm-interp
   (prog
@@ -1014,14 +1025,14 @@ Each register plays the same role as in x86, so for example
    (Cmp 'rax 2)
    (Je 'l1)
    (Mov 'rax 0)
-   (Label 'l1)                   
+   (Label 'l1)
    (Ret)))
  ]
 }
 
 @defstruct*[Jne ([x (or/c label? register?)])]{
  Jump to label @racket[x] if the conditional flag is set to ``not equal.''
-               
+
  @ex[
  (asm-interp
   (prog
@@ -1031,14 +1042,14 @@ Each register plays the same role as in x86, so for example
    (Cmp 'rax 2)
    (Jne 'l1)
    (Mov 'rax 0)
-   (Label 'l1)                   
+   (Label 'l1)
    (Ret)))
  ]
 }
 
 @defstruct*[Jl ([x (or/c label? register?)])]{
  Jump to label @racket[x] if the conditional flag is set to ``less than.''
-               
+
  @ex[
  (asm-interp
   (prog
@@ -1048,14 +1059,14 @@ Each register plays the same role as in x86, so for example
    (Cmp 'rax 2)
    (Jl 'l1)
    (Mov 'rax 0)
-   (Label 'l1)                   
+   (Label 'l1)
    (Ret)))
  ]
 }
 
 @defstruct*[Jle ([x (or/c label? register?)])]{
  Jump to label @racket[x] if the conditional flag is set to ``less than or equal.''
-               
+
  @ex[
  (asm-interp
   (prog
@@ -1065,14 +1076,14 @@ Each register plays the same role as in x86, so for example
    (Cmp 'rax 42)
    (Jle 'l1)
    (Mov 'rax 0)
-   (Label 'l1)                   
+   (Label 'l1)
    (Ret)))
  ]
 }
 
 @defstruct*[Jg ([x (or/c label? register?)])]{
  Jump to label @racket[x] if the conditional flag is set to ``greater than.''
-               
+
  @ex[
  (asm-interp
   (prog
@@ -1082,14 +1093,14 @@ Each register plays the same role as in x86, so for example
    (Cmp 'rax 2)
    (Jg 'l1)
    (Mov 'rax 0)
-   (Label 'l1)                   
+   (Label 'l1)
    (Ret)))
  ]
 }
 
 @defstruct*[Jge ([x (or/c label? register?)])]{
  Jump to label @racket[x] if the conditional flag is set to ``greater than or equal.''
-               
+
  @ex[
  (asm-interp
   (prog
@@ -1099,7 +1110,7 @@ Each register plays the same role as in x86, so for example
    (Cmp 'rax 42)
    (Jg 'l1)
    (Mov 'rax 0)
-   (Label 'l1)                   
+   (Label 'l1)
    (Ret)))
  ]
 }
@@ -1523,13 +1534,13 @@ Each register plays the same role as in x86, so for example
 
  Decrements the stack pointer and then stores the source
  operand on the top of the stack.
- 
+
  @ex[
  (asm-interp
   (prog
    (Global 'entry)
    (Label 'entry)
-   (Mov 'rax 42) 
+   (Mov 'rax 42)
    (Push 'rax)
    (Mov 'rax 0)
    (Pop 'rax)
@@ -1539,13 +1550,13 @@ Each register plays the same role as in x86, so for example
 
 @defstruct*[Pop ([a1 register?])]{
  Loads the value from the top of the stack to the destination operand and then increments the stack pointer.
- 
+
  @ex[
  (asm-interp
   (prog
    (Global 'entry)
    (Label 'entry)
-   (Mov 'rax 42) 
+   (Mov 'rax 42)
    (Push 'rax)
    (Mov 'rax 0)
    (Pop 'rax)
@@ -1569,7 +1580,7 @@ Perform bitwise not operation (each 1 is set to 0, and each 0 is set to 1) on th
 
 @defstruct*[Lea ([dst (or/c register? offset?)] [x label?])]{
  Loads the address of the given label into @racket[dst].
- 
+
  @ex[
  (asm-interp
   (prog
@@ -1582,6 +1593,14 @@ Perform bitwise not operation (each 1 is set to 0, and each 0 is set to 1) on th
    (Label 'done)
    (Ret)))
  ]
+}
+
+@defstruct*[Db ([d integer?])]{
+ Psuedo-instruction for declaring 8-bits of initialized static memory.
+}
+
+@defstruct*[Dw ([d integer?])]{
+ Psuedo-instruction for declaring 16-bits of initialized static memory.
 }
 
 @defstruct*[Dd ([d integer?])]{
@@ -1606,12 +1625,12 @@ Perform bitwise not operation (each 1 is set to 0, and each 0 is set to 1) on th
                     (Mov 'rax 42)
                     (Ret)))
  ]
-                                                          
+
 }
 
 @defproc[(asm-string [is (listof instruction?)]) string?]{
 
- Converts an a86 program to a string in nasm syntax. 
+ Converts an a86 program to a string in nasm syntax.
 
  @ex[
  (asm-string (prog (Global 'entry)
@@ -1619,7 +1638,7 @@ Perform bitwise not operation (each 1 is set to 0, and each 0 is set to 1) on th
                    (Mov 'rax 42)
                    (Ret)))
  ]
-                                                          
+
 }
 
 @section{An Interpreter for a86}
@@ -1677,7 +1696,7 @@ The simplest form of interpreting an a86 program is to use
                                (Mov 'rax 0)
                                (Jmp 'rax))))
  ]
- 
+
 }
 
 It is often the case that we want our assembly programs to
@@ -1724,7 +1743,7 @@ code:
                     (Sub 'rsp 8)
                     (Call 'gcd)
                     (Add 'rsp 8)
-                    (Ret))))]               
+                    (Ret))))]
 
 This will be particularly relevant for writing a compiler
 where emitted code will make use of functionality defined in
@@ -1750,8 +1769,5 @@ linking error saying a symbol is undefined:
 
  Like @racket[asm-interp], but uses @racket[in] for input and produce the result along
  with any output as a string.
-                                                          
+
 }
-
-
-

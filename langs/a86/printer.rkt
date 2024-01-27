@@ -49,6 +49,8 @@
       [(? reg?) (reg->string t)]
       [(Offset (? reg? r) i)
        (string-append "[" (reg->string r) " + " (number->string i) "]")]
+      [(Offset (? label? l) i)
+       (string-append "[" (label-symbol->string l) " + " (number->string i) "]")]
       [_ (label-symbol->string t)]))
 
   ;; Arg -> String
@@ -209,6 +211,10 @@
       [(Push a)
        (string-append tab "push "
                       (arg->string a))]
+      [(Pushf)
+       (string-append tab "pushf")]
+      [(Popf)
+       (string-append tab "popf")]
       [(Pop r)
        (string-append tab "pop "
                       (reg->string r))]
@@ -232,6 +238,12 @@
                       " equ "
                       (number->string c))]
 
+      [(Db (? bytes? bs))
+       (apply string-append tab "db " (add-between (map number->string (bytes->list bs)) ", "))]
+      [(Db x)
+       (string-append tab "db " (arg->string x))]
+      [(Dw x)
+       (string-append tab "dw " (arg->string x))]
       [(Dd x)
        (string-append tab "dd " (arg->string x))]
       [(Dq x)

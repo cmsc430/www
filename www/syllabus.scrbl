@@ -24,11 +24,11 @@
 
 @bold{Term:} @string-titlecase[semester], @year
 
-@bold{Professor:} @prof (@prof-pronouns)
+@bold{Professor:} @prof1 (@prof1-pronouns)
 
-@bold{Email:} @prof-email
+@bold{Email:} @prof1-email
 
-@bold{Office Hours:} By appointment.  Send email or Discord DM to set
+@bold{Office Hours:} By appointment.  Send email or ELMS message to set
 up.
 
 @bold{Prerequisite:} a grade of C or better in CMSC330; and permission
@@ -36,11 +36,10 @@ of department; or CMSC graduate student.
 
 @bold{Credits:} 3.
 
-@bold{Lecture dates:} @lecture-dates
+@;{@bold{Lecture dates:} @lecture-dates}
 
-@bold{Lecture Times:} @lecture-schedule
-
-@bold{Classroom:} @classroom
+@bold{Lectures:}
+@lecture-schedule1, @classroom1 (@prof1-initials)
 
 @bold{Course Description:} @courseno is an introduction to compilers.
 Its major goal is to arm students with the ability to design,
@@ -54,8 +53,8 @@ OCaml from CMSC 330, and, to a lesser extent, imperative programming
 in C and Assembly as covered in CMSC 216.
 
 
-@bold{Course Structure:} The course will consist of synchronous
-@bold{zoom} lectures, which will be recorded and available on ELMS
+@bold{Course Structure:} The course will consist of
+in-person lectures, which will be recorded and available on ELMS
 immediately after each lecture.  There are two midterms, a final
 project, which counts as the final assessment for the class, several
 assignments, and several quizes and surveys.  Midterms are take-home
@@ -107,11 +106,12 @@ and we ask you to do the same for all of your fellow Terps.
 
 @bold{Communication with Instructor:}
 
-Email: If you need to reach out and communicate with @prof, please
-email at @|prof-email|. Please DO NOT email questions that are easily
-found in the syllabus or on ELMS (i.e. When is this assignment due?
-How much is it worth? etc.) but please DO reach out about personal,
-academic, and intellectual concerns/questions.
+Email: If you need to reach out and communicate with @prof1,
+please email at @|prof1-email|. Please DO NOT email
+questions that are easily found in the syllabus or on ELMS (i.e. When
+is this assignment due?  How much is it worth? etc.) but please DO
+reach out about personal, academic, and intellectual
+concerns/questions.
 
 ELMS: IMPORTANT announcements will be sent via ELMS messaging. You
 must make sure that your email & announcement notifications (including
@@ -147,9 +147,7 @@ hindered by the learning environment.
 
 @section{Office Hours}
 
-Office hours will be held on @link[@discord]{this discord
-server}. Make sure that your 'nickname' is set to something appropriate for
-class.
+Office hours will be held online and in-person.  Details TBD.
 
 @;{Please make sure that you fill out
 @link["https://docs.google.com/spreadsheets/d/1sDCpekBHIGjVSuGDsabPb74wZ5nHA_sTLvIPOzTUQ4k/edit?usp=sharing"]{
@@ -162,7 +160,7 @@ up repeatedly, the staff can make an announcement that addresses the concern
 for the entire class. Lastly, it helps the course staff keep an eye on what
 topics might need more attention.}
 
-The discord server is there for you to organize as a class, ask questions of
+@;{The discord server is there for you to organize as a class, ask questions of
 each other, and to get help from staff. Its main purpose is as a vehicle for
 office hours. That said, feel free to use the discord for discussion. I (@prof-initials)
 will check periodically, but if you would like to ask a question directly to
@@ -172,7 +170,7 @@ communication.
 There is a channel '#course-discussion' that is meant for
 discussion/questions/help regarding the material of the course, make sure that
 you keep that channel free from noise so that other students and course staff
-can easily see what issues are being brought up.
+can easily see what issues are being brought up.}
 
 @section{Topics}
 
@@ -305,7 +303,7 @@ will be provided during office hours.  Office hours for the
 instructional staff will be posted on the course web page.
 
 Additional assistance will provided via discussion on
-@link[@discord]{Discord}. You may use this forum to ask general
+@link[@piazza]{Piazza}. You may use this forum to ask general
 questions of interest to the class as a whole, e.g., administrative
 issues or problem set clarification questions. The course staff will
 monitor it on a daily basis, but do not expect immediate answers to
@@ -313,15 +311,15 @@ questions. Please do not post publicly any information that would
 violate the university academic integrity policy (e.g., problem set
 code).
 
-Discord allows students to send private questions that are only
+@;{Discord allows students to send private questions that are only
 visible to instructors. Please use this feature if you wish to ask
-specific questions concerning your assignment solutions.
+specific questions concerning your assignment solutions.}
 
 Personal e-mail to TAs should be reserved for issues
 that cannot be handled by the above methods.
 
 Important announcements will be made in class or on the class web
-page, and via Discord.
+page, and via Piazza.
 
 @section{Excused Absences}
 

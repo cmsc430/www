@@ -1,6 +1,7 @@
 #lang racket
 (provide interp)
-(require "ast.rkt" "interp-prim.rkt")
+(require "ast.rkt")
+(require "interp-prim.rkt")
 
 ;; type Value =
 ;; | Integer
@@ -9,8 +10,7 @@
 ;; Expr -> Value
 (define (interp e)
   (match e
-    [(Int i) i]
-    [(Bool b) b]
+    [(Lit d) d]
     [(Prim1 p e)
      (interp-prim1 p (interp e))]
     [(If e1 e2 e3)

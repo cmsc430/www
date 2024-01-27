@@ -22,7 +22,7 @@
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 @(ev '(current-objs '("runtime.o")))
 @(for-each (λ (f) (ev `(require (file ,f))))
-	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt" "unload-bits-asm.rkt"))
+	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
 @(define this-lang "Knock")
 
@@ -207,52 +207,52 @@ communicates the binding of the pattern variables to values.
 
 Let's consider some examples:
 @ex[
-(interp-match-pat (PWild) 99 '())
+(interp-match-pat (Var '_) 99 '())
 ]
 
 Here the pattern matches, but binds no variables so the result is the
 same environment as given.
 
 @ex[
-(interp-match-pat (PVar 'x) 99 '())
+(interp-match-pat (Var 'x) 99 '())
 ]
 
 Here the pattern matches and binds @racket[x] to @racket[99], which is
 reflected in the output environment.
 
 @ex[
-(interp-match-pat (PLit 99) 99 '())
+(interp-match-pat (Lit 99) 99 '())
 ]
 
 Here the pattern matches but binds nothing.
 
 @ex[
-(interp-match-pat (PLit 100) 99 '())
+(interp-match-pat (Lit 100) 99 '())
 ]
 
 Here the pattern doesn't match.
 
 
 @ex[
-(interp-match-pat (PAnd (PLit 99) (PVar 'x)) 99 '())
+(interp-match-pat (Conj (Lit 99) (Var 'x)) 99 '())
 ]
 
 Here the pattern matches and binds @racket[x] to @racket[99].
 
 @ex[
-(interp-match-pat (PAnd (PLit 100) (PVar 'x)) 99 '())
+(interp-match-pat (Conj (Lit 100) (Var 'x)) 99 '())
 ]
 
 Here the pattern doesn't match.
 
 @ex[
-(interp-match-pat (PCons (PVar 'x) (PVar 'y)) 99 '())
+(interp-match-pat (Cons (Var 'x) (Var 'y)) 99 '())
 ]
 
 Here the pattern doesn't match.
 
 @ex[
-(interp-match-pat (PCons (PVar 'x) (PVar 'y)) (cons 99 100) '())
+(interp-match-pat (Cons (Var 'x) (Var 'y)) (cons 99 100) '())
 ]
 
 Here the pattern matches and binds @racket[x] to @racket[99] and
@@ -263,8 +263,8 @@ environment produced will bind each variable to the appropriate
 sub-part of the given value:
 
 @ex[
-(interp-match-pat (PCons (PCons (PVar 'x) (PVar 'y))
-                         (PCons (PVar 'p) (PVar 'q)))
+(interp-match-pat (Cons (Cons (Var 'x) (Var 'y))
+                         (Cons (Var 'p) (Var 'q)))
                   (cons (cons 99 100)
                         (cons #t #f))
                   '())
@@ -277,22 +277,22 @@ The complete code for @racket[interp-match-pat] is:
 ;; Pat Value Env -> [Maybe Env]
 (define (interp-match-pat p v r)
   (match p
-    [(PWild) r]
-    [(PVar x) (ext r x v)]
-    [(PLit l) (and (eqv? l v) r)]
-    [(PBox p)
+    [(Var '_) r]
+    [(Var x) (ext r x v)]
+    [(Lit l) (and (eqv? l v) r)]
+    [(Box p)
      (match v
        [(box v)
         (interp-match-pat p v r)]
        [_ #f])]
-    [(PCons p1 p2)
+    [(Cons p1 p2)
      (match v
        [(cons v1 v2)
         (match (interp-match-pat p1 v1 r)
           [#f #f]
           [r1 (interp-match-pat p2 v2 r1)])]
        [_ #f])]
-    [(PAnd p1 p2)
+    [(Conj p1 p2)
      (match (interp-match-pat p1 v r)
        [#f #f]
        [r1 (interp-match-pat p2 v r1)])]))
@@ -353,12 +353,12 @@ to what we've been using all semester:
 @ex[
 (interp
  (parse
-  '[(define (length xs)
-      (match xs
-        ['() 0]
-	[(cons x xs)
-	 (add1 (length xs))]))
-    (length (cons 7 (cons 8 (cons 9 '()))))]))
+  '(define (length xs)
+     (match xs
+       ['() 0]
+       [(cons x xs)
+        (add1 (length xs))]))
+  '(length (cons 7 (cons 8 (cons 9 '()))))))
 ]
 
 
@@ -414,7 +414,7 @@ in case it matches.}
 Let's look at some examples.  First, consider the wildcard pattern:
 
 @ex[
-(compile-pattern (PWild) '() 'next)
+(compile-pattern (Var '_) '() 'next)
 ]
 
 When the pattern is a wildcard, it produces an empty sequence of
@@ -428,7 +428,7 @@ given because it doesn't bind anything.
 Now pattern variables:
 
 @ex[
-(compile-pattern (PVar 'x) '() 'next)
+(compile-pattern (Var 'x) '() 'next)
 ]
 
 A pattern variable always matches and binds the value to @racket[x],
@@ -443,7 +443,7 @@ pattern binds @racket[x] when it matches.
 Pattern literals:
 
 @ex[
-(compile-pattern (PLit 0) '() 'next)
+(compile-pattern (Lit 0) '() 'next)
 ]
 
 In the ``determine and bind'' part, we compare the value in
@@ -458,10 +458,10 @@ The environment stays the same because a literal doesn't bind anything.
 Supposing we had changed the example to:
 
 @ex[
-(compile-pattern (PLit 0) '(x y z) 'next)
+(compile-pattern (Lit 0) '(x y z) 'next)
 ]
 
-This is essentially saying ``compile the pattern @racket[(PLit 0)]
+This is essentially saying ``compile the pattern @racket[(Lit 0)]
 assuming it occurs in the context of a surrounding pattern that binds
 @racket[x], @racket[y], and @racket[z] before getting to this point.''
 If it fails, it needs to pop all three bindings of the stack, hence
@@ -472,7 +472,7 @@ Now we get to the inductive patterns, which will be more interesting.
 Let's start with the @racket[box]-pattern.
 
 @ex[
-(compile-pattern (PBox (PWild)) '() 'next)
+(compile-pattern (Box (Var '_)) '() 'next)
 ]
 
 This ``determine and bind'' part moves the value to a temporary
@@ -488,7 +488,7 @@ so no changes in the output environment.
 Let's change the wild card to a literal:
 
 @ex[
-(compile-pattern (PBox (PLit 0)) '() 'next)
+(compile-pattern (Box (Lit 0)) '() 'next)
 ]
 
 This works just like before but now in the ``determine and bind''
@@ -521,7 +521,7 @@ values: push it on the stack and fetch it later.  With this in mind,
 consider the following example for matching @racket[(cons 0 0)]:
 
 @ex[
-(compile-pattern (PCons (PLit 0) (PLit 0)) '() 'next)
+(compile-pattern (Cons (Lit 0) (Lit 0)) '() 'next)
 ]
 
 This starts off like the @racket[box] pattern checking the tag bits of
@@ -542,7 +542,7 @@ push a value on the stack in order to restore it after matching the
 first subpattern:
 
 @ex[
-(compile-pattern (PAnd (PLit 0) (PLit 0)) '() 'next)
+(compile-pattern (Conj (Lit 0) (Lit 0)) '() 'next)
 ]
 
 The @racket[compile-pattern] function is used by
@@ -573,7 +573,7 @@ this it emits the code for what to do if the pattern doesn't fail
 Consider a match clause like @racket[[_ #t]]:
 
 @ex[
-(compile-match-clause (PWild) (Bool #t) '() 'done #f)
+(compile-match-clause (Var '_) (Lit #t) '() 'done #f)
 ]
 
 Here we can see the value being matched is fetched from the top of the
@@ -587,7 +587,7 @@ order to try matching the next clause.
 Let's look at a literal; consider a clause @racket[[0 #t]]:
 
 @ex[
-(compile-match-clause (PLit 0) (Bool #t) '() 'done #f)
+(compile-match-clause (Lit 0) (Lit #t) '() 'done #f)
 ]
 
 As always, it starts by fetching the top of the stack and putting the
@@ -606,7 +606,7 @@ e.g. @racket[[x x]].  Here we're going to reference the variable bound
 in the pattern in the right-hand-side:
 
 @ex[
-(compile-match-clause (PVar 'x) (Var 'x) '() 'done #f)
+(compile-match-clause (Var 'x) (Var 'x) '() 'done #f)
 ]
 
 The value being matched is fetched from the stack.  It's immediately
@@ -618,7 +618,7 @@ stack, then pops this off and jumps to @racket[done].
 OK, now let's try something like @racket[[(box x) x]]:
 
 @ex[
-(compile-match-clause (PBox (PVar 'x)) (Var 'x) '() 'done #f)
+(compile-match-clause (Box (Var 'x)) (Var 'x) '() 'done #f)
 ]
 
 The value being matched is fetched from the stack.  It's checked for
@@ -678,15 +678,15 @@ expression:
 We can check that the compiler works for a complete example:
 
 @ex[
-(define (run p)
-  (unload/free (asm-interp (compile (parse p)))))
+(define (run . p)
+  (bits->value (asm-interp (compile (apply parse p)))))
 
 (run
- '[(define (length xs)
-     (match xs
-       ['() 0]
-       [(cons x xs) (add1 (length xs))]))
-   (length (cons 7 (cons 8 (cons 9 '()))))])
+ '(define (length xs)
+    (match xs
+      ['() 0]
+      [(cons x xs) (add1 (length xs))]))
+ '(length (cons 7 (cons 8 (cons 9 '())))))
 ]
 
 

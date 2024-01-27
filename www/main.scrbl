@@ -21,9 +21,10 @@
 
 @emph{@string-titlecase[semester], @year}
 
-@emph{Lectures: @lecture-schedule, @classroom}
+@emph{Lecture}: @lecture-schedule1, @classroom1
 
-@emph{Professor: @prof (@prof-pronouns)}
+@emph{Professor}: @prof1
+
 
 CMSC 430 is an introduction to compilers.  Its major goal is to arm
 students with the ability to design, implement, and extend a
@@ -31,14 +32,39 @@ programming language. Throughout the course, students will design and
 implement several related languages.
 
 
-@tabular[#:style 'boxed 
+@tabular[#:style 'boxed
          #:row-properties '(bottom-border ())
-	 (list* (list @bold{Staff} 'cont 'cont)
-	        (list @bold{Name} @elem{@bold{E-mail}} @elem{@bold{Hours}})
-	        (list prof prof-email "By appt.")
+	 (list* (list @bold{Staff} 'cont)
+	        (list @bold{Name} @elem{@bold{E-mail}})
+	        (list prof1 prof1-email)
+	        #;(list prof2 prof2-email)
 		staff)]
 
-@bold{Communications:} @link[@elms-url]{ELMS}, @link[@discord]{Discord}
+@bold{Office hours:} AVW 4140
+
+Schedule, TBD.
+
+@;{
+@tabular[#:style 'boxed
+         #:row-properties '(bottom-border ())
+	 (list (list @bold{Time}  @bold{Monday}          @bold{Tuesday}  @bold{Wednesday}   @bold{Thursday}  @bold{Friday})
+	       (list      "9 AM"  "William"              'cont           "William"          'cont            'cont)
+	       (list     "10 AM"  "William"              'cont           "Ian, William"     'cont            'cont)
+	       (list     "11 AM"  'cont                  "Pierce"        "Ian"              'cont            'cont)
+	       (list     "12 PM"  "Dalton, Fuxiao"       "Pierce"        "Dalton"           'cont            'cont)
+	       (list      "1 PM"  "Dalton, Fuxiao, Ian"  'cont           "Matthew, Wilson"  "Fuxiao"         "Wilson")
+         (list          ""  "Wilson"               'cont           'cont              'cont            'cont)
+	       (list      "2 PM"  "Ian, Wilson"          "Pierce"        "Matthew"          "Fuxiao"         'cont)
+         (list          ""  'cont                  'cont           'cont              "Pierce"         'cont)
+	       (list      "3 PM"  "Matthew, Yuhwan"      "Pierce"        "Matthew, Yuhwan"  "Pierce"         "Vivian")
+	       (list      "4 PM"  "Yuhwan"               'cont           "Yuhwan, Dalton"   'cont            'cont)
+	       (list      "5 PM"  'cont                  "Vivian"        'cont              "Vivian"         'cont)
+	       (list      "6 PM"  'cont                  'cont           'cont              "Vivian"         'cont))]
+}
+
+
+
+@bold{Communications:} @link[@elms-url]{ELMS}, @link[@piazza]{Piazza}
 
 @bold{Assumptions:} This course assumes you know the material in CMSC 330 and
 CMSC 216. In particular, you need to know how to program in a functional
@@ -51,7 +77,7 @@ change. Any substantive change will be accompanied with an announcement to the
 class via ELMS.
 
 @bold{Feedback:} We welcome anonymous feedback on the course and its
-staff using this @link["https://docs.google.com/forms/d/e/1FAIpQLSdUNNY5Vun42xATeByf_V9JLce1hbDZuCd0Qj_YJo4z_e5vcA/viewform?usp=sf_link"]{form}.
+staff using this @link[feedback]{form}.
 
 @include-section{syllabus.scrbl}
 @include-section{texts.scrbl}

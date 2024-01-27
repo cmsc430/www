@@ -19,7 +19,7 @@
 (define (compile-op p)
   (match p
     ;; Op0
-    ['void      (seq (Mov rax val-void))]
+    ['void      (seq (Mov rax (value->bits (void))))]
     ['read-byte (seq pad-stack
                      (Call 'read_byte)
                      unpad-stack)]
@@ -144,20 +144,20 @@
           (assert-integer r8)
           (assert-integer rax)
           (Cmp r8 rax)
-          (Mov rax val-true)
+          (Mov rax (value->bits #t))
           (let ((true (gensym)))
             (seq (Jl true)
-                 (Mov rax val-false)
+                 (Mov rax (value->bits #f))
                  (Label true))))]
     ['=
      (seq (Pop r8)
           (assert-integer r8)
           (assert-integer rax)
           (Cmp r8 rax)
-          (Mov rax val-true)
+          (Mov rax (value->bits #t))
           (let ((true (gensym)))
             (seq (Je true)
-                 (Mov rax val-false)
+                 (Mov rax (value->bits #f))
                  (Label true))))]
     ['cons
      (seq (Mov (Offset rbx 0) rax)
@@ -310,7 +310,7 @@
           (Sal r10 3)
           (Add r8 r10)
           (Mov (Offset r8 8) rax)
-          (Mov rax val-void))]
+          (Mov rax (value->bits (void))))]
 
     ['struct-ref ; symbol, int, struct
      (seq (Pop r8)
@@ -430,15 +430,15 @@
 (define (eq-imm imm)
   (let ((l1 (gensym)))
     (seq (Cmp rax (value->bits imm))
-         (Mov rax val-true)
+         (Mov rax (value->bits #t))
          (Je l1)
-         (Mov rax val-false)
+         (Mov rax (value->bits #f))
          (Label l1))))
 
 (define (eq ir1 ir2)
   (let ((l1 (gensym)))
     (seq (Cmp ir1 ir2)
-         (Mov rax val-true)
+         (Mov rax (value->bits #t))
          (Je l1)
-         (Mov rax val-false)
+         (Mov rax (value->bits #f))
          (Label l1))))

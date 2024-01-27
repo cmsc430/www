@@ -1,6 +1,6 @@
 #lang racket
 (provide unload unload-value)
-(require "types.rkt"
+(require (except-in "types.rkt" heap-ref)
          "heap-bits.rkt")
 
 ;; Answer* -> Answer
