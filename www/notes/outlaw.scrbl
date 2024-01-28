@@ -20,7 +20,7 @@
 @(define-syntax (shell-expand stx)
    (syntax-case stx ()
      [(_ s ...)
-      (parameterize ([current-directory (build-path notes "abscond")])
+      (parameterize ([current-directory (build-path notes "outlaw")])
         (begin (apply shell (syntax->datum #'(s ...)))
 	       #'(void)))]))
 
