@@ -24,7 +24,8 @@ jobs:
     - name: Build and test
       run: |
         export LINK_DIR=/usr/lib/x86_64-linux-gnu
-        raco pkg install langs/
+        raco pkg install --auto ziggy/
+	raco pkg install langs/
         raco make www/main.scrbl
         raco test langs
         make -C www main
