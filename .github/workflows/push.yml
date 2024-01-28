@@ -27,7 +27,7 @@ jobs:
         raco pkg install --auto ziggy/
         raco pkg install langs/
         raco make www/main.scrbl
-        raco test langs
+	xvfb-run raco test -p langs
         make -C www main
     - name: Archive www
       uses: actions/upload-artifact@v2
