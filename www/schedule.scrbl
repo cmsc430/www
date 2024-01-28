@@ -4,109 +4,144 @@
 
 @title[#:style 'unnumbered]{Schedule}
 
-@;(TuTh 2-3:15, Online)
+@;(TuTh 9:30-10:45, IRB 0318)
 
 @(define (wk d) (nonbreaking (bold d)))
 
 @; for unreleased assignments, switch to seclink when ready to release
 @(define (tbaseclink lnk txt) txt)
 
+@(define (day s) @elem[s])
+
+
 @tabular[#:style 'boxed
-         #:sep @hspace[1] 
+         #:sep @hspace[1]
          #:row-properties '(bottom-border)
-         (list (list @bold{Week} @bold{Due} @bold{Tuesday} @bold{Thursday})
-               (list @wk{8/31}
-	       	     ""
-                     @secref["Intro"]
-                     @elem{@secref["OCaml to Racket"], (@link["https://youtu.be/xKCFkXUcmK4"]{video})} )
+         (list (list @bold{Week}
+                     @bold{Due}
+                     @bold{Monday}
+                     @bold{Wednesday})
 
-               (list @wk{9/7}
-	       	     @seclink["Assignment 1"]{A1}
-                     @elem{@secref["OCaml to Racket"], cont., (@link["https://youtu.be/sLOMQ_j7cPE"]{video}) }
-                     @elem{@secref["a86"], (@link["https://www.youtube.com/watch?v=25tV38STdbQ"]{video})} )
+               (list @wk{1/22}
+	       	           ""
+	             "No class"
+                     @secref["Intro"])
+		               
 
-               (list @wk{9/14}
-	       	     @seclink["Assignment 2"]{A2}
-                     @itemlist[@item{@secref["Abscond"]}
-                               @item{@secref["Blackmail"], (@link["https://www.youtube.com/watch?v=28F-5sCUfzg"]{video})}
-			       @item{@secref["Con"], (@link["https://youtu.be/nh8x0EQsQQY"]{video})}]
-                     @elem{@secref["Dupe"], (@link["https://youtu.be/GdQZ2D1lyZA"]{video})})
+               (list @wk{1/29}
+	       	           @seclink["Assignment 1"]{A1}
+			     @elem{@secref["OCaml to Racket"]}
+                     @elem{@secref["OCaml to Racket"]})
+#|
+               (list @wk{9/11}
+	       	           @seclink["Assignment 2"]{A2}
+ 		                 @elem{@secref["a86"]}
+                     @elem{@secref["Abscond"]})
 
-               (list @wk{9/21}
-	             ""
-                     @itemlist[@item{@secref["Dodger"], (@link["https://youtu.be/-SuINAKs7gE"]{video})}
-                               @item{Semantics, Correctness, Testing}]
-                     @elem{@secref["Evildoer"], (@link["https://youtu.be/ouOgFdbT9fk"]{video})})
-                                    
-               (list @wk{9/28}
-	       	     @seclink["Assignment 3"]{A3}
-		     @elem{@secref["Extort"], (@link["https://youtu.be/4lU-0i5sl-Q"]{video})}
-		     @elem{@secref["Fraud"], (@link["https://youtu.be/XmezNX4qfWE"]{video})})
-               
-               (list @wk{10/5}
-	       	     ""
-                     @elem{@secref["Fraud"], cont. (@link["https://youtu.be/XmezNX4qfWE"]{video})}
-                     @itemlist[@item{Exam Review}
-		               @item{@secref["Hustle"] (@link["https://youtu.be/SwKc_FeEmHk"]{video})}])
-               
-               (list @wk{10/12}
-	       	     @bold{@seclink["Midterm_1"]{M1}}
-                     @itemlist[
-		       @item{@secref["Hustle"], cont. (@link["https://youtu.be/SwKc_FeEmHk"]{video})}
-		       @item{@secref["Hoax"]}]
-                     @elem{No lecture (exam)})
+               (list @wk{9/18}
+	                   ""
+		                 @itemlist[@item{@secref["Blackmail"]}
+                               @item{@secref["Con"]}]
+                     @itemlist[@item{@secref["Dupe"]}
+                               @item{@secref{Dodger}}])
 
-               (list @wk{10/19}                     
-	       	     @seclink["Assignment 4"]{A4}
-		     @itemlist[
-		       @item{@secref["Hoax"], cont.}
-                       @item{Hoodwink}]
-                     @elem{@secref{Iniquity}})
-		                    
-               (list @wk{10/26}
+               (list @wk{9/25}
+       	       	     @seclink["Assignment 3"]{A3}
+		                 @secref["Evildoer"]
+		                 @secref["Extort"])
+
+               (list @wk{10/2}
+	       	           ""
+		                 @secref["Fraud"]
+		                 @elem{@secref["Fraud"] (cont.)})
+
+               (list @wk{10/9}
+	       	           ""
+		                 @elem{@secref["Fraud"] (cont.)}
+		                 @secref["Midterm_1"])
+
+               (list @wk{10/16}
+	                   ""
+	       	           @elem{@secref["Fraud"] (cont.)}
+		                 @elem{@secref["Hustle"]})
+
+               (list @wk{10/23}
                      ""
-                     @elem{@secref["Jig"]}
-                     @elem{@secref["Knock"]})
-               
-               (list @wk{11/2}
-                     @tbaseclink["Assignment 5"]{A5}                     
-                     @elem{@secref["Loot"]}
-                     @elem{@secref["Loot"], cont.})
-               
-               (list @wk{11/9}
-                     @bold{@seclink["Midterm_2"]{M2}}
-                     @elem{(slack.)}
-                     @elem{No lecture (exam)})
-                                    
-               (list @wk{11/16}
-	             ""
-                     @elem{Mountebank} @;{Match}
-		     @elem{Neerdowell} @;{ ?? }
-                     )
+                     @elem{@secref["Hustle"] (cont.)}
+                     @elem{@secref["Hoax"]})
 
-               (list @wk{11/23}
+               (list @wk{10/30}
+                     @seclink["Assignment 4"]{A4}
+                     @elem{@secref["Iniquity"]}
+                     @elem{@secref["Jig"]})
+
+               (list @wk{11/6}
                      ""
-                     @elem{Self-hosting}
-                     @elem{No class, Thanksgiving.})
+                     @elem{@secref["Knock"]}
+                     @elem{@secref["Knock"] (cont.)})
 
-               (list @wk{11/30}
-                     @tbaseclink["Assignment 6"]{A6}
-		     @elem{GC}
-		     @elem{GC}
-		     )
+               (list @wk{11/13}
+                     ""
+                     ""
+                     "")
 
-               (list @wk{12/7}
-               @bold{@tbaseclink["Settle on Final Project"]{Final Project}}                     
-                     @elem{Final Project Q&A}
-		     @elem{Slack}
-		     )
-               
-               (list @wk{12/14}
-                     "Final Projects due on exam date"
-                     @elem{No lectures}
-                     'cont)
+               (list @wk{11/20}
+                     ""
+                     @secref["Midterm_2"]
+                     "Thanksgiving break (no lecture)")
 
-               )]
+               (list @wk{11/27}
+                     ""
+                     ""
+                     "")
 
+               (list @wk{12/4}
+                     ""
+                     ""
+                     "")
 
-@bold{Final project assessment: @final-date .}
+               (list @wk{12/11}
+                     ""
+                     ""
+                     "")
+		     |#
+)]
+@;{
+@tabular[#:style 'boxed
+#:sep @hspace[1]
+#:row-properties '(bottom-border)
+(list (list @bold{Date} @bold{Topic} @bold{Due})
+(list @day{5/30} @secref["Intro"] "")
+(list @day{5/31} @secref["OCaml to Racket"] "")
+(list @day{6/1}  @secref["a86"] "")
+(list @day{6/2}  @secref["Abscond"] @seclink["Assignment 1"]{A1})
+(list @day{6/5}  @itemlist[@item{@secref["Blackmail"]} @item{@secref["Con"]}] @seclink["Assignment 2"]{A2})
+(list @day{6/6}  @itemlist[@item{@secref["Dupe"]} @item{@secref{Dodger}}] "")
+(list @day{6/7}  @secref["Evildoer"] "")
+(list @day{6/8}  @secref["Extort"] "")
+(list @day{6/9}  @secref["Fraud"] "")
+(list @day{6/12} @secref["Hustle"] @seclink["Assignment 3"]{A3})
+(list @day{6/13} @secref["Hoax"] "")
+(list @day{6/14} "Midterm 1" @secref["Midterm_1"])
+(list @day{6/15} @secref["Iniquity"] "")
+(list @day{6/16} @elem{@secref["Iniquity"], cont.} "")
+(list @day{6/19} @elem{Juneteenth Holiday} "")
+(list @day{6/20} @secref["Jig"] @seclink["Assignment 4"]{A4})
+(list @day{6/21} @secref["Knock"] "")
+(list @day{6/22} @elem{@secref["Knock"], cont.} "")
+(list @day{6/23} @secref["Loot"] "")
+(list @day{6/26} @elem{@secref["Loot"], cont.} "")
+(list @day{6/27} @elem{GC} @seclink["Assignment 5"]{A5})
+(list @day{6/28} @secref["Mug"] "")
+(list @day{6/29} "Midterm 2" @secref["Midterm_2"])
+(list @day{6/30} @secref["Mountebank"] "")
+(list @day{7/3}  @secref["Neerdowell"] @seclink["Assignment 6"]{A6})
+(list @day{7/4} "Independence Day Holiday" "")
+(list @day{7/5} @secref["Outlaw"] "")
+(list @day{7/6} @elem{@secref["Outlaw"], cont.} "")
+(list @day{7/7} "Slack" @secref{Project})
+)
+]
+}
+
+@bold{Final project assessment: @|final-date|.}

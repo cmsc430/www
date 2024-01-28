@@ -23,6 +23,8 @@
 
 @title[#:tag "Con"]{Con: branching with conditionals}
 
+@src-code["con"]
+
 @emph{When you come to a fork in the road, take it.}
 
 @table-of-contents[]
@@ -215,7 +217,9 @@ branch, then (unconditionally) jump over the then branch code.
 To accomplish this, we will need two new labels: one for the then
 branch code and one for the end of the then branch code.  The
 @racket[gensym] function can be used to generate symbols that have not
-appeared before.
+appeared before. @margin-note{Q: Why should we generate label names
+here?  What would go wrong if simply used labels like @racket['l0] and
+@racket['l1]?}
 
 In total, the code for this example would look like:
 
@@ -265,7 +269,7 @@ The complete compiler code is:
 Mirroring the change we made to the interpreter, we separate out a
 module for compiling primitives:
 
-@codeblock-include["con/compile-prim.rkt"]
+@codeblock-include["con/compile-ops.rkt"]
 
 Let's take a look at a few examples:
 @ex[

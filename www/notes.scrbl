@@ -30,4 +30,8 @@ suggestions for improving the material, @bold{please},
 @include-section{notes/jig.scrbl}
 @include-section{notes/knock.scrbl}
 @include-section{notes/loot.scrbl}
-@include-section{notes/shakedown.scrbl}
+@include-section{notes/mug.scrbl}
+@include-section{notes/mountebank.scrbl}
+@include-section{notes/neerdowell.scrbl}
+@include-section{notes/outlaw.scrbl}
+@;include-section{notes/shakedown.scrbl}

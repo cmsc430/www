@@ -1,9 +1,10 @@
 #lang scribble/manual
-@(require "../defns.rkt")
+@(require "../defns.rkt"
+          (only-in scribble/html/html div))
 
 @title[#:tag "Assignment 1" #:style 'unnumbered]{Assignment 1: Learning about Programming Languages}
 
-@bold{Due: Tuesday, September 7, 11:59PM}
+@bold{Due: Wednesday, January 31, 11:59PM}
 
 Find two programming languages that are new to you, and answer the following questions:
 
@@ -33,7 +34,11 @@ Racket, Ruby, Scheme, SML, Visual Basic.
 
 @section[#:style 'unnumbered]{What to turn in}
 
-Submit this assignment via @link[@gradescope]{Gradescope}.
+Submit a PDF or plain text file containing your write-up via
+@link[@gradescope]{Gradescope}.
+
+@;{Until this assignment is officially assigned (see the due date), submissions
+will not be accepted.}
 
 @;{We will be using GitHub Classroom.  This means you will work with git
 repositories and turning in your work consists of pushing the

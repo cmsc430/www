@@ -4,18 +4,16 @@
 
 ;; Title
 (slide
-  #:title "CMSC 430, Jan 30th 2020"
+  #:title "CMSC 430, Jan 27th 2022"
   (with-size 64 (tt "OCaml to Racket")))
 
 ;; Stuff I forgot from last time
 (slide
   #:title "Admin take 2"
   'next
-  (item "My name: José")
+  (item "My email: " (tt "jmct@umd.edu"))
   'next
-  (item "My email (for now): " (tt "jmct@jmct.cc"))
-  'next
-  (item "Website: " (tt "cs.umd.edu/class/spring2020/cmsc430/")) )
+  (item "Website: " (tt "cs.umd.edu/class/spring2022/cmsc430/")) )
 
 ;; Remind them that OCaml is 'cool'
 (slide
@@ -63,7 +61,7 @@
   'next
   (item "PLT Scheme was original aimed as a" (text "pedagogical" '(italic) (current-font-size)) "tool for those learning programming and PLT")
   'next
-  (item "Racket has a notion of 'language levels'")
+  (item "Racket has a notion of `language levels'")
   'next
   (subitem "This allows features to be enabled/disabled so that they can be learned/understood individually")
   'next
@@ -78,7 +76,7 @@
  (para "The code for the first slide looked like this:")
  (code (slide
           #:title "OCaml to Racket"
-          (item "CMSC 430, Jan 30th 2020"))))
+          (item "CMSC 430, Jan 27th 2022"))))
 
 ;; Is it still used (answer to question #3)
 (slide

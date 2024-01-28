@@ -16,7 +16,11 @@
 @(for-each (λ (f) (ev `(require (file ,f))))
 	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
-@title[#:tag "Jig"]{Jig: jumping to tail calls}
+@(define this-lang "Jig")
+
+@title[#:tag this-lang]{@|this-lang|: jumping to tail calls}
+
+@src-code[this-lang]
 
 @table-of-contents[]
 
@@ -88,15 +92,15 @@ the function still needs to be applied, but the body of the function,
 
 The significance of tail position is relevant to the compilation of
 calls.  Consider the compilation of a call as described in
-@secref{Iniquity}: arguments are pushed on the call stack, then the
-@racket['call] instruction is issued, which pushes the address of the
-return point on the stack and jumps to the called position.  When the
-function returns, the return point is popped off the stack and jumped
-back to.
+@secref{Iniquity}: a return address is pushed on the stack,
+arguments are pushed on the call stack, then the
+@racket[Jmp] instruction is issued, which jumps to the called function.
+The function computes its result, pops its arguments, the pops the return
+address and jumps back to the caller.
 
 But if the call is in tail position, what else is there to do?
 Nothing.  So after the call, return transfers back to the caller, who
-then just returns itself.
+then just pops their arguments and returns to their caller.
 
 This leads to unconditional stack space consumption on @emph{every}
 function call, even function calls that don't need to consume space.
@@ -141,7 +145,8 @@ the overall call to @racket[sum].  There's no need for a new return
 point and there's no need to keep the local binding of @racket[b]
 since there's no way this program can depend on it after the recursive
 call.  Instead of pushing a new, useless, return point, we should make
-the call with whatever the current return point.  This is the idea of
+the call with whatever the current return address is, because that's
+where control is going to jump to anyway.  This is the idea of
 @tt{proper tail calls}.
 
 @bold{An axe to grind:} the notion of proper tail calls is often
@@ -184,105 +189,550 @@ re-write the interpreter, but as it is, we're already done.
 
 @section[#:tag-prefix "jig"]{A Compiler with Proper Tail Calls}
 
-The compiler requires a bit more work, because of how the @tt{Call} instruction
-is implemented in the hardware itself, we always use a little bit of stack
-space each time we execute a function call. Therefore, in order to implement
-tail-calls correctly, we need to @emph{avoid} the @tt{Call} instruction!
-
-How do we perform function calls without the @tt{Call} instruction, well we're
-going to have to do a little bit of extra work in the compiler. First, let's
-remind ourselves of how a `normal' function call works (we'll just look at the
-case where we don't have to adjust for alignment):
+Consider the following program:
 
 @#reader scribble/comment-reader
 (racketblock
-(define (compile-app f es c)
-
-         ; Generate the code for each argument
-         ; and push each on the stack
-    (seq (compile-es es c)
-
-         ; Generate the instruction for calling the function itself
-         (Call (symbol->label f))
-
-         ; `pop` all of the arguments off of the stack
-         (Add rsp (* 8 (length es)))))
+(define (f x)
+  (if (zero? x)
+      42
+      (f (sub1 x))))
+(f 100)
 )
 
-The first insight regards what the stack will look like once we are
-@emph{inside the function we are calling}. Upon entry to the function's code,
-@tt{rsp} will point to the return address that the last @tt{Call} instruction
-pushed onto the stack, with the arguments to the function at positive offsets
-to @tt{rsp}. As long as we ensure that this is the case we don't @emph{have} to
-call functions with @tt{Call}.
+It's a silly program, but it will help illuminate what tail calls are
+all about and how we can make them work.
 
-The second insight is what we mentioned above, when describing tail calls
-themselves: If we're performing a call in the tail position then there is
-nothing else to do when we return. So instead of returning here, we can return
-to the @emph{previous} call, we can overwrite the current environment on the
-stack, since we won't need it (there's nothing else to do, after all). In
-jargon: we can @emph{reuse the stack frame}. The only thing we have to
-be careful about is whether the current environment is `big enough' to
-hold all of the arguments for our function call, since we are going
-to reuse it, we'll want to make sure there's enough space.
+Here's what this code will compile to, roughly:
 
-For now assume we've performed that check and that there is enough space.
-Let's go through the process bit by bit:
+@(void (ev '(current-objs '())))
+
+@#reader scribble/comment-reader
+(ex
+(asm-interp
+ (seq (Global 'entry)
+      (Label 'entry)
+
+      ;; calling (f 100), so set up return address,
+      ;; push argument, then jump
+      (Lea 'rax 'r1)
+      (Push 'rax)
+      (Mov 'rax 100)
+      (Push 'rax)
+      (Jmp 'f)
+      (Label 'r1)
+
+      ;; done with (f 100), return
+      (Ret)
+
+      ;; (define (f x) ...)
+      (Label 'f)
+      (Mov 'rax (Offset 'rsp 0))
+      (Cmp 'rax 0)
+      (Jne 'if_false)
+
+      ;; if-then branch
+      (Mov 'rax 42)
+      (Jmp 'done)
+
+      ;; if-else branch
+      (Label 'if_false)
+      ;; calling (f (sub1 x)), so set up return address,
+      ;; push argument, then jump
+      (Lea 'rax 'r2)
+      (Push 'rax)
+      (Mov 'rax (Offset 'rsp 8))
+      (Sub 'rax 1)
+      (Push 'rax)
+      (Jmp 'f)
+      (Label 'r2)
+
+      (Label 'done)
+      (Add 'rsp 8)  ; pop x
+      (Ret)))
+)
+
+Now let's think about how this computes, paying attention to the stack.
+
+First, the run-time system would call @racket['entry], so there's
+going to be an address on the stack telling us where to return to when
+the program is done:
+
+@verbatim|{
+         + ---------------------+
+rsp ---> |   return to runtime  |
+         +----------------------+
+}|
+
+Next, the call to @racket[(f 100)] is set up, pushing the address of
+@racket['r1] for where the call should return to, and then pushing the
+argument, @racket[100].  So before the @racket[Jmp] to @racket['f],
+the stack looks like:
+
+@verbatim|{
+         + ---------------------+
+         |   return to runtime  |
+         +----------------------+
+         |   return to r1       |
+         +----------------------+
+rsp ---> |   x : 100            |
+         +----------------------+
+}|
+
+Control jumps to @racket['f], which asks if @racket[x] is 0 by
+referencing the argument on the top of the stack.  It is not, so
+control jumps to the @racket['if_false] label, which now sets up the
+call @racket[(f (sub1 x))] by computing a return address for
+@racket['r2], pushing it, subtracting @racket[1] from @racket[x], and
+pushing that, then jumping to @racket['f].
+
+Now the stack looks like:
+
+@verbatim|{
+         + ---------------------+
+         |   return to runtime  |
+         +----------------------+
+         |   return to r1       |
+         +----------------------+
+         |   x : 100            |
+         +----------------------+
+         |   return to r2       |
+         +----------------------+
+rsp ---> |   x : 99             |
+         +----------------------+
+}|
+
+This asks if @racket[x] is 0 by referencing the argument on the top of
+the stack (now: @racket[99]).  It is not, so control jumps to the
+@racket['if_false] label, which now sets up the call @racket[(f
+(sub1 x))] by computing a return address for @racket['r2], pushing it,
+subtracting @racket[1] from @racket[x], and pushing that, then jumping
+to @racket['f].
+
+@verbatim|{
+         + ---------------------+
+         |   return to runtime  |
+         +----------------------+
+         |   return to r1       |
+         +----------------------+
+         |   x : 100            |
+         +----------------------+
+         |   return to r2       |
+         +----------------------+
+         |   x : 99             |
+         +----------------------+
+         |   return to r2       |
+         +----------------------+
+rsp ---> |   x : 98             |
+         +----------------------+
+}|
+
+You can see where this is going.
+
+@verbatim|{
+         + ---------------------+
+         |   return to runtime  |
+         +----------------------+
+         |   return to r1       |
+         +----------------------+
+         |   x : 100            |
+         +----------------------+
+         |   return to r2       |
+         +----------------------+
+         |   x : 99             |
+         +----------------------+
+         |   return to r2       |
+         +----------------------+
+         |   x : 98             |
+         +----------------------+
+	 |          .           |
+	 |          .           |
+         |          .           |
+         +----------------------+
+         |   return to r2       |
+         +----------------------+
+         |   x : 1              |
+         +----------------------+
+         |   return to r2       |
+         +----------------------+
+rsp ---> |   x : 0              |
+         +----------------------+
+}|
+
+At this point, we make a final jump to @racket['f].  Since @racket[x]
+is @racket[0], @racket[42] is moved into @racket['rax], control jumps
+tp @racket['done], at which point we pop the current @racket[x] off
+the stack, then return, which pops off the next frame of the stack.
+Since that frame says to jump to @racket['r2], that's where control
+jumps to.
+
+But @racket['r2] is the same as @racket['done]!  So we pop off the
+current @racket[x] (now: @racket[1]) and return, which pops of the
+next frame saying jump to @racket['r2].
+
+This process continues, popping two frames and jumping back to
+@racket['r2] until the stack looks like:
+
+@verbatim|{
+         + ---------------------+
+         |   return to runtime  |
+         +----------------------+
+         |   return to r1       |
+         +----------------------+
+rsp ---> |   x : 100            |
+         +----------------------+
+}|
+
+And we're back at @racket['r2].  Next we pop the current @racket[x]
+(now: 100) and return, which pops the top frame off and jumps to
+@racket['r1].  But the code following @racket['r1] is simply a
+@racket[Ret] intruction, so we pop another frame (the stack is now
+empty) and jump back to the runtime system (with @racket['rax] holding
+@racket[42]).
+
+So to summarize, each call to @racket[f] pushes two words on the
+stack: one for where to return and one for the argument to the
+function.  Then, when the base case is finally reached, we
+spin through a loop popping all this information off.
+
+Let's take another look at the function:
 
 @#reader scribble/comment-reader
 (racketblock
-;; Variable (Listof Expr) CEnv -> Asm
-;; Compile a call in tail position
-(define (compile-tail-call f es c)
-  (let ((cnt (length es)))
-
-            ; Generate the code for the arguments to the function,
-            ; pushing them on the stack, this is no different
-            ; than a normal call
-       (seq (compile-es es c)
-
-
-            ; Now we _move_ the arguments from where they are on the
-            ; stack to where the _previous_ values in the environment
-            ; the function `move-args` takes the number of values we
-            ; have to move, and the number of stack slots that we have to 
-            ; move them.
-            (move-args cnt (+ cnt (in-frame c)))
-
-            ; Once we've moved the arguments, we no longer need them at the
-            ; top of the stack. This is a big part of the benefit for
-            ; tail-calls
-            (Add rsp (* 8 (+ cnt (in-frame c))))
-
-            ; Now that `rsp` points to the _previous_ return address,
-            ; and the arguments are at a positive offset of `rsp`,
-            ; we no longer need the `call` instruction (in fact, it would
-            ; be incorrect to use it!), instead we jump to the function
-            ; directly.
-            (Jmp (symbol->label f)))))
+(define (f x)
+  (if (zero? x)
+      42
+      (f (sub1 x))))
 )
 
-@tt{move-args} is defined below:
+In the call to @racket[(f (sub1 x))], that expression is in a tail
+position of the function.  Intuitively this means once you've computed
+the result of @racket[(f (sub1 x))] there's nothing further to
+compute, you now have the answer for @racket[(f x)].  This suggests
+that you don't need to keep the current binding for @racket[x] on the
+stack; if there's no further work to do, you can't possibly need
+@racket[x].  It also suggests there's no need to return to the point
+after @racket[(f (sub1 x))]; you could instead just return to the
+caller of @racket[(f x)]!
 
+We can modify the code to embody these ideas:
+
+@#reader scribble/comment-reader
+(ex
+(asm-interp
+ (seq (Global 'entry)
+      (Label 'entry)
+
+      ;; calling (f 100), so set up return address,
+      ;; push argument, then jump
+      (Lea 'rax 'r1)
+      (Push 'rax)
+      (Mov 'rax 100)
+      (Push 'rax)
+      (Jmp 'f)
+      (Label 'r1)
+
+      ;; done with (f 100), return
+      (Ret)
+
+      ;; (define (f x) ...)
+      (Label 'f)
+      (Mov 'rax (Offset 'rsp 0))
+      (Cmp 'rax 0)
+      (Jne 'if_false)
+
+      ;; if-then branch
+      (Mov 'rax 42)
+      (Jmp 'done)
+
+      ;; if-else branch
+      (Label 'if_false)
+      ;; TAIL calling (f (sub1 x)),
+      ;; so pop off the argument (don't need it anymore)
+      ;; and don't push a new return address, just leave
+      ;; our caller's return address on stack
+      (Mov 'rax (Offset 'rsp 0))
+      (Sub 'rax 1)
+      (Add 'rsp 8) ; pop x
+      (Push 'rax)  ; push arg
+      (Jmp 'f)
+
+      (Label 'done)
+      (Add 'rsp 8)  ; pop x
+      (Ret)))
+)
+
+Let's step through the computation again.  It starts off the same: the
+runtime calls @racket['entry], which sets up the call to @racket[(f
+100)], so when control jumps to @racket['f], the stack again looks
+like:
+
+@verbatim|{
+         + ---------------------+
+         |   return to runtime  |
+         +----------------------+
+         |   return to r1       |
+         +----------------------+
+rsp ---> |   x : 100            |
+         +----------------------+
+}|
+
+The checks if @racket[x] is @racket[0], which it is not, so jumps to
+@racket['if_false].  Now the code computes @racket[x-1] and then pops
+@racket[x], and pushes @racket[x-1], so when we jump to @racket['f],
+the stack looks like:
+
+@verbatim|{
+         + ---------------------+
+         |   return to runtime  |
+         +----------------------+
+         |   return to r1       |
+         +----------------------+
+rsp ---> |   x : 99             |
+         +----------------------+
+}|
+
+Again we go through the same instructions, popping @racket[x] and
+pushing @racket[x-1], then jumping to @racket['f] with stack:
+
+@verbatim|{
+         + ---------------------+
+         |   return to runtime  |
+         +----------------------+
+         |   return to r1       |
+         +----------------------+
+rsp ---> |   x : 98             |
+         +----------------------+
+}|
+
+This continues, but the stack never grows further, until finally jumping to @racket['f]
+with the stack:
+
+@verbatim|{
+         + ---------------------+
+         |   return to runtime  |
+         +----------------------+
+         |   return to r1       |
+         +----------------------+
+rsp ---> |   x : 0              |
+         +----------------------+
+}|
+
+At which point, @racket[42] is moved in to @racket['rax] and control
+jumps to @racket['done], where @racket[x] is popped and then
+@racket[Ret] pops the next frame and jumps to @racket['r1], which
+issues another @racket[Ret], popping the stack (now empty) and jumping
+back to the runtime system.
+
+So this program makes 100 calls to @racket[f], but it uses a constant
+amount of stack space.  Indeed, we could've made it @racket[(f 200)]
+and it would still use the same three stack frames.  The program
+is really computing a loop.
+
+Moreover, we can do one better: notice that the initial call
+@racket[(f 100)] is itself in a tail position: whatever it's result is
+is the result of the whole program.  We can turn this in to a tail
+call:
+
+@#reader scribble/comment-reader
+(ex
+(asm-interp
+ (seq (Global 'entry)
+      (Label 'entry)
+
+      ;; TAIL calling (f 100),
+      ;; no args to pop
+      ;; don't push a new return address, just leave
+      ;; our caller's return address on stack
+      (Mov 'rax 100)
+      (Push 'rax)
+      (Jmp 'f)
+
+      ;; No need for this since we never come back:
+      ;; (Ret)
+
+      ;; (define (f x) ...)
+      (Label 'f)
+      (Mov 'rax (Offset 'rsp 0))
+      (Cmp 'rax 0)
+      (Jne 'if_false)
+
+      ;; if-then branch
+      (Mov 'rax 42)
+      (Jmp 'done)
+
+      ;; if-else branch
+      (Label 'if_false)
+      ;; TAIL calling (f (sub1 x)),
+      ;; so pop off the argument (don't need it anymore)
+      ;; and don't push a new return address, just leave
+      ;; our caller's return address on stack
+      (Mov 'rax (Offset 'rsp 0))
+      (Sub 'rax 1)
+      (Add 'rsp 8) ; pop x
+      (Push 'rax)  ; push arg
+      (Jmp 'f)
+
+      (Label 'done)
+      (Add 'rsp 8)  ; pop x
+      (Ret)))
+)
+
+Now the stack looks like this:
+
+@verbatim|{
+         + ---------------------+
+         |   return to runtime  |
+         +----------------------+
+rsp ---> |   x : 100            |
+         +----------------------+
+}|
+
+decrementing until @racket[x] reaches @racket[0] at which point
+@racket[42] is put in @racket['rax] and control jumps back to the
+runtime system.
+
+
+In general, when a function call @racket[(_f _e0 ...)]  is in tail
+position, there are going to be some number of things currently pushed
+on the stack, which are described by the current environment
+@racket[_c].  To carry out a tail call, we need to pop all of those
+things described by @racket[_c], then push the values of @racket[_e0
+...] which are the arguments for @racket[_f], then jump to
+@racket[_f].
+
+There is a problem here, which is that we need to evaluate the
+subexpressions @racket[_e0 ...] and doing so may depend on things in
+the current environment, e.g. they may reference bound variables.
+
+So we have to wait to pop the things described by @racket[_c] until
+@emph{after} evaluating @racket[_e0 ...], but evaluating @racket[_e0
+...] will need to save the values somewhere... and that somewhere is
+the stack.
+
+Let's say we have an expression that looks like this:
+
+@#reader scribble/comment-reader
+(racketblock
+(let ((x 1))
+  (let ((y 2))
+    (f (+ x y) 5))))
+
+The call to @racket[f] is in tail position and it will be compiled in
+a compile-time environment of @racket['(y x)].  The compiler will need
+to compile @racket[(+ x y)] in that same environment, but then emit code
+to save the result on the stack while the next argument is evaluated.
+
+That means by the time the arguments are evaluated and the call is
+ready to be made, the stack will look like:
+
+@verbatim|{
+         + ---------------------+
+         |   return address     |
+         +----------------------+
+         |   x : 1              |
+         +----------------------+
+         |   y : 2              |
+         +----------------------+
+         |       3              |
+         +----------------------+
+rsp ---> |       5              |
+         +----------------------+
+}|
+
+At which point we need to remove the @racket[x] and @racket[y] part,
+but then also have the arguments @racket[3] and @racket[5] sitting just
+below the return address, i.e. we want:
+
+@verbatim|{
+         + ---------------------+
+         |   return address     |
+         +----------------------+
+         |       3              |
+         +----------------------+
+rsp ---> |       5              |
+         +----------------------+
+}|
+
+To accomplish, we rely on the following helper function for generating
+code that moves arguments on the stack:
 
 @#reader scribble/comment-reader
 (racketblock
 ;; Integer Integer -> Asm
-;; Move i arguments upward on stack by offset off
-(define (move-args i cnt)
-  (match i
-    [0 (seq)]
-    [_ (seq
-         ; mov first arg to temp reg
-         (Mov r9 (Offset rsp (* 8 (sub1 i))))
-         ; mov value to correct place on the old frame
-         (Mov (Offset rsp (* 8 (+ i cnt))) r9)
-         ; Now do the next one
-         (move-args (sub1 i) cnt))]))
+(define (move-args i off)
+  (cond [(zero? off) (seq)]
+        [(zero? i)   (seq)]
+        [else
+         (seq (Mov r8 (Offset rsp (* 8 (sub1 i))))
+              (Mov (Offset rsp (* 8 (+ off (sub1 i)))) r8)
+              (move-args (sub1 i) off))]))
 )
 
-The entire compiler will be illuminated for seeing how we keep track of which
-expressions are in a tail-call position and whether we have enough space to
-re-use the stack frame.
+It moves @racket[i] elements on the stack up @racket[off]-positions.
+So if you have @racket[(length _c)] items in the environment and
+@racket[_n] arguments, then @racket[(move-args _n (length _c))] will
+move the arguments the right spot, just below the return address.
+
+Once the arguments are moved to the proper spot on the stack, we can
+pop off the local environment and jump.  So the complete code for
+compiling a tail call is:
+
+@#reader scribble/comment-reader
+(racketblock
+;; Id [Listof Expr] CEnv -> Asm
+(define (compile-app-tail f es c)
+  (seq (compile-es es c)
+       (move-args (length es) (length c))
+       (Add rsp (* 8 (length c)))
+       (Jmp (symbol->label f))))
+)
+
+What's left is determining @emph{when} to use this strategy for a
+function application and when to use the prior version which pushes a
+return pointer.
+
+The way we do this is to add a parameter to the expression compiler,
+so the new signature is:
+
+@#reader scribble/comment-reader
+(racketblock
+;; Expr CEnv Bool -> Asm
+(define (compile-e e c t?)
+   ...)
+)
+
+Calling @racket[(compile-e _e _c #t)] signals that the expression
+@racket[_e] should be compiled assuming it is in tail position, while
+@racket[(compile-e _e _c #f)] signals it is not in tail position.
+
+If @racket[_e] is an application, then the compiler selects between
+@racket[compile-app-nontail] and @racket[compile-app-tail] based on
+@racket[t?].
+
+If @racket[_e] is any other kind of expression that has
+sub-expressions, then the compiler function for that form also adds a
+@racket[t?] parameter and sets @racket[t?] to @racket[#f] for any that
+are not tail positions and passes on the @racket[t?] given for those
+in tail position.  For example, here is how @racket[begin] is
+compiled:
+
+@#reader scribble/comment-reader
+(racketblock
+;; Expr Expr CEnv Bool -> Asm
+(define (compile-begin e1 e2 c t?)
+  (seq (compile-e e1 c #f)
+       (compile-e e2 c t?)))
+)
+
+There are two important places where @racket[t?] is seeded to @racket[#t]:
+
+@itemlist[
+@item{The top-level expression is in tail position.}
+@item{The body of every function is in tail position.}
+]
+
+
+The complete compiler:
 
 @codeblock-include["jig/compile.rkt"]

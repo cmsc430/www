@@ -4,65 +4,150 @@
 
 @provide[exam-table]
 
+@(define grades:m1 (list @elem{Midterm, @m1-date} "10%"))
+@(define grades:f  (list @elem{Final Exam, @final-date} "20%"))
+
+@(define (make-grade-component-table . entries)
+  @tabular[#:style 'boxed
+	   #:sep @hspace[1] 
+           (list* (list @bold{Component} @bold{Percentage}) entries)])
+
+
+@(define exam-table
+  @make-grade-component-table[
+    @grades:m1
+    @grades:f])
+
 @title[#:style 'unnumbered]{Syllabus}
 
-@local-table-of-contents[]
+@bold{Introduction to Compilers, CMSC 430}
 
-@section{Prerequisites and Description}
+@bold{Term:} @string-titlecase[semester], @year
+
+@bold{Professor:} @prof1 (@prof1-pronouns)
+
+@bold{Email:} @prof1-email
+
+@bold{Office Hours:} By appointment.  Send email or ELMS message to set
+up.
 
 @bold{Prerequisite:} a grade of C or better in CMSC330; and permission
 of department; or CMSC graduate student.
 
 @bold{Credits:} 3.
 
-@courseno is an introduction to compilers.  Its major goal is to arm
-students with the ability to design, implement, and extend a
-programming language. Throughout the course, students will design and
-implement several related high-level programming languages, building
-compilers that target the x86 CPU architecture.
+@;{@bold{Lecture dates:} @lecture-dates}
+
+@bold{Lectures:}
+@lecture-schedule1, @classroom1 (@prof1-initials)
+
+@bold{Course Description:} @courseno is an introduction to compilers.
+Its major goal is to arm students with the ability to design,
+implement, and extend a programming language. Throughout the course,
+students will design and implement several related high-level
+programming languages, building compilers that target the x86 CPU
+architecture.
 
 The course assumes familiarity with a functional programming such as
 OCaml from CMSC 330, and, to a lesser extent, imperative programming
 in C and Assembly as covered in CMSC 216.
 
-@section{Course Workflow}
 
-The course will be a combination of synchronous in-person lectures,
-video lectures, live Q+A sessions, and online course notes. The short
-lecture videos will be available online, to view at your own pace. The
-scheduled in-person lecture time will supplement and expand upon the
-videos and incorporate Q+A time, focusing on the topic of the most
-recent video lectures.
+@bold{Course Structure:} The course will consist of
+in-person lectures, which will be recorded and available on ELMS
+immediately after each lecture.  There are two midterms, a final
+project, which counts as the final assessment for the class, several
+assignments, and several quizes and surveys.  Midterms are take-home
+exams and completed online over a @midterm-hours period.
 
-In-person lectures will be recorded and posted shortly after each
-class.
+@bold{Contents:}
 
-@section{COVID-19}
+@local-table-of-contents[]
 
-In the Fall of 2021, we are still in the midst of the global COVID-19
-pandemic.  Although this semester marks a return to in-person
-instruction, a number of changes have been made by the university in
-order to anticipate and accomodate this situation.  Please review the
-Provost's FAQ on @link["https://provost.umd.edu/node/4243"]{Fall 2021
-Instruction}.
+@section{Policies and Resources for Undergraduate Courses}
 
-@section{Mask Policy}
+It is our shared responsibility to know and abide by the University of
+Maryland's policies that relate to all courses, which include topics
+like:
 
-@bold{Face coverings over the nose and mouth are required while you
-are indoors at all times.} There are no exceptions when it comes to
-classrooms, laboratories, and campus offices.  Students not wearing a
-mask will be given a warning and asked to wear one, or will be asked
-to leave the room immediately. Students who have additional issues
-with the mask expectation after a first warning will be referred to
-the Office of Student Conduct for failure to comply with a directive
-of University officials.
+@itemlist[
+@item{Academic integrity}
+@item{Student and instructor conduct}
+@item{Accessibility and accommodations}
+@item{Attendance and excused absences}
+@item{Grades and appeals}
+@item{Copyright and intellectual property}
+]
 
+Please visit
+@link["https://www.ugst.umd.edu/courserelatedpolicies.html"]{https://www.ugst.umd.edu/courserelatedpolicies.html}
+for the Office of Undergraduate Studies' full list of campus-wide
+policies and follow up with the instructor if you have questions.
+
+@section{Course Guidelines}
+
+@bold{Names/Pronouns and Self-Identifications:} The University of
+Maryland recognizes the importance of a diverse student body, and we
+are committed to fostering inclusive and equitable classroom
+environments. We invite you, if you wish, to tell us how you want to
+be referred to in this class, both in terms of your name and your
+pronouns (he/him, she/her, they/them, etc.). Keep in mind that the
+pronouns someone uses are not necessarily indicative of their gender
+identity. Visit @link["https://trans.umd.edu"]{https://trans.umd.edu}
+to learn more.
+
+Additionally, it is your choice whether to disclose how you identify
+in terms of your gender, race, class, sexuality, religion, and
+dis/ability, among all aspects of your identity (e.g., should it come
+up in classroom conversation about our experiences and perspectives)
+and should be self-identified, not presumed or imposed.  Course staff
+will do their best to address and refer to all students accordingly,
+and we ask you to do the same for all of your fellow Terps.
+
+@bold{Communication with Instructor:}
+
+Email: If you need to reach out and communicate with @prof1,
+please email at @|prof1-email|. Please DO NOT email
+questions that are easily found in the syllabus or on ELMS (i.e. When
+is this assignment due?  How much is it worth? etc.) but please DO
+reach out about personal, academic, and intellectual
+concerns/questions.
+
+ELMS: IMPORTANT announcements will be sent via ELMS messaging. You
+must make sure that your email & announcement notifications (including
+changes in assignments and/or due dates) are enabled in ELMS so you do
+not miss any messages.  You are responsible for checking your email
+and Canvas/ELMS inbox with regular frequency.
+
+@bold{Communication with Peers:}
+
+With a diversity of perspectives and experience, we may find ourselves
+in disagreement and/or debate with one another. As such, it is
+important that we agree to conduct ourselves in a professional manner
+and that we work together to foster and preserve a virtual classroom
+environment in which we can respectfully discuss and deliberate
+controversial questions. We encourage you to confidently exercise your
+right to free speech—bearing in mind, of course, that you will be
+expected to craft and defend arguments that support your
+position. Keep in mind, that free speech has its limit and this course
+is NOT the space for hate speech, harassment, and derogatory
+language. We will make every reasonable attempt to create an
+atmosphere in which each student feels comfortable voicing their
+argument without fear of being personally attacked, mocked, demeaned,
+or devalued.
+
+Any behavior (including harassment, sexual harassment, and racially
+and/or culturally derogatory language) that threatens this atmosphere
+will not be tolerated. Please alert the instructor immediately if you
+feel threatened, dismissed, or silenced at any point during the
+semester and/or if your engagement in discussion has been in some way
+hindered by the learning environment.
+
+@;{HERE}
 
 @section{Office Hours}
 
-Office hours will be held on @link[@discord]{this discord
-server}. Make sure that your 'nickname' is set to something appropriate for
-class.
+Office hours will be held online and in-person.  Details TBD.
 
 @;{Please make sure that you fill out
 @link["https://docs.google.com/spreadsheets/d/1sDCpekBHIGjVSuGDsabPb74wZ5nHA_sTLvIPOzTUQ4k/edit?usp=sharing"]{
@@ -75,9 +160,9 @@ up repeatedly, the staff can make an announcement that addresses the concern
 for the entire class. Lastly, it helps the course staff keep an eye on what
 topics might need more attention.}
 
-The discord server is there for you to organize as a class, ask questions of
+@;{The discord server is there for you to organize as a class, ask questions of
 each other, and to get help from staff. Its main purpose is as a vehicle for
-office hours. That said, feel free to use the discord for discussion. I (DVH)
+office hours. That said, feel free to use the discord for discussion. I (@prof-initials)
 will check periodically, but if you would like to ask a question directly to
 the course staff, office hours and email remain the prioritized forms of
 communication.
@@ -85,7 +170,7 @@ communication.
 There is a channel '#course-discussion' that is meant for
 discussion/questions/help regarding the material of the course, make sure that
 you keep that channel free from noise so that other students and course staff
-can easily see what issues are being brought up.
+can easily see what issues are being brought up.}
 
 @section{Topics}
 
@@ -105,31 +190,24 @@ of the course:
   @item{Language design}
   @item{Advanced topics in compilation}]
 
-@section{Grading}
+@section{Grades}
 
-Grades will be maintained on @link[elms-url]{ELMS}.
+All assessment scores will be posted on the course
+@link[elms-url]{ELMS} page.
 
-You are responsible for all material discussed in lecture and posted
-on the class web page, including announcements, deadlines, policies,
-etc.
+Late work will not be accepted for course credit so please plan to
+have it submitted well before the scheduled deadline.
+
+Any formal grade disputes must be submitted in writing and within one
+week of receiving the grade.  Final letter grades are assigned based
+on the percentage of total assessment points earned.  To be fair to
+everyone I have to establish clear standards and apply them
+consistently, so please understand that being close to a cutoff is not
+the same as making the cut (89.99 ≠ 90.00).  It would be unethical to
+make exceptions for some and not others.
 
 Your final course grade will be determined according to the following
 percentages:
-
-@(define grades:m1 (list @elem{Midterm, @m1-date} "10%"))
-@(define grades:f  (list @elem{Final Exam, @final-date} "20%"))
-
-@(define (make-grade-component-table . entries)
-  @tabular[#:style 'boxed
-	   #:sep @hspace[1] 
-           (list* (list @bold{Component} @bold{Percentage}) entries)])
-
-
-@(define exam-table
-  @make-grade-component-table[
-    @grades:m1
-    @grades:f])
-
 
 @make-grade-component-table[
   (list "Assignments" "45%")
@@ -137,22 +215,29 @@ percentages:
   (list "Midterms (2)" "25%")
   (list "Final project" "15%")]
 
+Final letter grades will be assigned based on the following cutoff
+table:
+
+@tabular[#:style 'boxed #:sep @hspace[1]
+         (list (list "A+" "97%" "C+" "77%" "D+" "67%" " " " ")
+	       (list "A"  "94%" "C"  "74%" "D"  "64%" "F" "<60%")
+	       (list "A-" "90%" "C-" "70%" "D-" "60%" " " " "))]
+
 
 @section[#:tag "syllabus-videos"]{Videos}
 
-Videos will be a core part of this course.  There are two types of
-videos: (1) short, pre-recorded video lectures which will be made
-available before each class, and (2) screen and audio captures of each
-in-person lecture.
+Lectures will be recorded and posted to ELMS shortly after every
+class.  There are also prepared videos available covering the
+material.
 
-These videos will be made available as the course progresses. If there
-is ever any issue with accessing these videos, let the instructor know
-as soon as possible.
+These videos will be made available as the course
+progresses. If there is ever any issue with accessing these videos,
+let the instructor know as soon as possible.
 
 
 @section[#:tag "syllabus-assignments"]{Assignments}
 
-There will be several programming @secref{Assignments}, often with full week
+There will be several programming @secref{Assignments}, often with a full week
 given for completion and submission (e.g. if it assigned on a Tuesday it will
 be due the following Tuesday at 11:59pm EST unless otherwise noted).
 
@@ -218,7 +303,7 @@ will be provided during office hours.  Office hours for the
 instructional staff will be posted on the course web page.
 
 Additional assistance will provided via discussion on
-@link[@discord]{Discord}. You may use this forum to ask general
+@link[@piazza]{Piazza}. You may use this forum to ask general
 questions of interest to the class as a whole, e.g., administrative
 issues or problem set clarification questions. The course staff will
 monitor it on a daily basis, but do not expect immediate answers to
@@ -226,15 +311,15 @@ questions. Please do not post publicly any information that would
 violate the university academic integrity policy (e.g., problem set
 code).
 
-Discord allows students to send private questions that are only
+@;{Discord allows students to send private questions that are only
 visible to instructors. Please use this feature if you wish to ask
-specific questions concerning your assignment solutions.
+specific questions concerning your assignment solutions.}
 
 Personal e-mail to TAs should be reserved for issues
 that cannot be handled by the above methods.
 
 Important announcements will be made in class or on the class web
-page, and via Discord.
+page, and via Piazza.
 
 @section{Excused Absences}
 
@@ -329,12 +414,6 @@ All arrangements for exam accommodations as a result of disability
 three business days prior to the exam date; later requests (including
 retroactive ones) will be refused.
 
-@section{University of Maryland Policies for Undergraduate Students}
-
-Please read the university's guide on
-@link["https://www.ugst.umd.edu/courserelatedpolicies.html"]{Course
-Related Policies}, which provides you with resources and information
-relevant to your participation in a UMD course.
 
 
 @section{Academic Integrity}
@@ -464,3 +543,9 @@ syllabus.
 
 Portions of the course materials are based on material developed by
 Ranjit Jhala and Joe Gibbs Politz.
+
+We gratefully acknowledge the work of past CMSC 430 TAs William Chung,
+Pierce Darragh, Justin Frank, Vyas Gupta, Sankha Narayan Guria, Tasnim
+Kabir, John Kastner, Yiyun Liu, Dhruv Maniktala, Christopher Maxey,
+Deena Postol, Ivan Quiles-Rodriguez, Benjamin Quiring, Temur
+Saidkhodjaev, Matvey Stepanov, Alex Taber.

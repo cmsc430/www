@@ -23,6 +23,20 @@ visibility:hidden;
    float: right;
 }
 
+.stale-warning {
+    color: red;
+    background-color: #fbc9c7;
+    border: 1px solid red;
+    padding: 10px;
+}
+
+.warning {
+    color: red;
+    background-color: #fbc9c7;
+    border: 1px solid red;
+    padding: 10px;
+}
+
 .tocset td a.tocviewselflink {
    color: black;
    text-decoration: underline;
@@ -47,7 +61,7 @@ visibility:hidden;
     background-color: hsl(293, 33%, 90%);
 }
 
-a, .toclink, .toptoclink, .tocviewlink, .tocviewselflink, .tocviewtoggle, .plainlink, 
+a, .toclink, .toptoclink, .tocviewlink, .tocviewselflink, .tocviewtoggle, .plainlink,
 .techinside, .techoutside:hover, .techinside:hover {
     color: hsl(296, 100%, 22%);
 }

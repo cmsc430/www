@@ -1,8 +1,8 @@
 #lang racket
-(provide interp interp-env)
-(require "ast.rkt" "interp-prim.rkt")
-
-;; type Answer = Value | 'err
+(provide interp)
+(provide interp-env)
+(require "ast.rkt")
+(require "interp-prim.rkt")
 
 ;; type Value =
 ;; | Integer
@@ -11,8 +11,7 @@
 ;; | Eof
 ;; | Void
 
-;; type REnv = (Listof (List Id Value))
-
+;; type Env = (Listof (List Id Value))
 ;; Expr -> Answer
 (define (interp e)
   (interp-env e '()))
@@ -20,12 +19,10 @@
 ;; Expr Env -> Answer
 (define (interp-env e r)
   (match e
-    [(Int i) i]
-    [(Bool b) b]
-    [(Char c) c]
-    [(Eof) eof]       
+    [(Lit d) d]
+    [(Eof)   eof]
     [(Var x) (lookup r x)]
-    [(Prim0 p) (interp-prim0 p)]     
+    [(Prim0 p) (interp-prim0 p)]
     [(Prim1 p e)
      (match (interp-env e r)
        ['err 'err]
@@ -36,8 +33,8 @@
        [v1 (match (interp-env e2 r)
              ['err 'err]
              [v2 (interp-prim2 p v1 v2)])])]
-    [(If p e1 e2)
-     (match (interp-env p r)
+    [(If e0 e1 e2)
+     (match (interp-env e0 r)
        ['err 'err]
        [v
         (if v
@@ -61,6 +58,6 @@
          (lookup r x))]))
 
 ;; Env Id Value -> Env
-(define (ext r v val)
-  (cons (list v val) r))
+(define (ext r x v)
+  (cons (list x v) r))
 

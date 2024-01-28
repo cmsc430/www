@@ -104,12 +104,34 @@
                                                (Prim1 'add1 (Var x)))))
                           8)))
 
+;; replace any free variables with 0
+(define-metafunction F
+  F-close-with-zero : e (x ...) -> e
+  [(F-close-with-zero (Var x) (x_0 ... x x_1 ...)) (Var x)]
+  [(F-close-with-zero (Var x) any) (Int 0)]
+  [(F-close-with-zero (Int i) any) (Int i)]
+  [(F-close-with-zero (Bool b) any) (Bool b)]
+  [(F-close-with-zero (If e_1 e_2 e_3) any_r)
+   (If (F-close-with-zero e_1 any_r)
+       (F-close-with-zero e_2 any_r)
+       (F-close-with-zero e_3 any_r))]
+  [(F-close-with-zero (Prim1 p1 e_1) any_r)
+   (Prim1 p1 (close-with-zero e_1 any_r))]
+  #;[(F-close-with-zero (Prim2 p2 e_1 e_2) any_r)
+   (Prim2 p2
+          (close-with-zero e_1 any_r)
+          (close-with-zero e_2 any_r))]
+  [(F-close-with-zero (Let x e_1 e_2) (x_0 ...))
+   (Let x (close-with-zero e_1 (x_0 ...))
+        (close-with-zero e_2 (x x_0 ...)))])
+
 
 (module+ test
   (require rackunit)
-  ;; Check that the semantics is total function
+  ;; Check that the semantics is total function on closed expressions
   (redex-check F e
-               (check-true (redex-match? F (a_0) (judgment-holds (𝑭 e a) a)) (term e))
+               (redex-let F ([e_0 (term (F-close-with-zero e ()))])
+                          (check-true (redex-match? F (a_0) (judgment-holds (𝑭 e_0 a) a)) (format "~a" (term e))))
                #:print? #f))
 
 
@@ -203,7 +225,6 @@
 
 (define-metafunction G
   lookup : r x -> a
-  [(lookup () x) err]
   [(lookup ((x v) (x_1 v_1) ...) x) v]
   [(lookup ((x_0 v_0) (x_1 v_1) ...) x)
    (lookup ((x_1 v_1) ...) x)])
@@ -246,9 +267,31 @@
   (test-judgment-holds (𝑮 (Prim2 '- (Int 1) (Bool #f)) err))
   (test-judgment-holds (𝑮 (Prim2 '- (Prim1 'add1 (Bool #f)) (Bool #f)) err)))
 
+;; replace any free variables with 0
+(define-metafunction G
+  close-with-zero : e (x ...) -> e
+  [(close-with-zero (Var x) (x_0 ... x x_1 ...)) (Var x)]
+  [(close-with-zero (Var x) any) (Int 0)]
+  [(close-with-zero (Int i) any) (Int i)]
+  [(close-with-zero (Bool b) any) (Bool b)]
+  [(close-with-zero (If e_1 e_2 e_3) any_r)
+   (If (close-with-zero e_1 any_r)
+       (close-with-zero e_2 any_r)
+       (close-with-zero e_3 any_r))]
+  [(close-with-zero (Prim1 p1 e_1) any_r)
+   (Prim1 p1 (close-with-zero e_1 any_r))]
+  [(close-with-zero (Prim2 p2 e_1 e_2) any_r)
+   (Prim2 p2
+          (close-with-zero e_1 any_r)
+          (close-with-zero e_2 any_r))]
+  [(close-with-zero (Let x e_1 e_2) (x_0 ...))
+   (Let x (close-with-zero e_1 (x_0 ...))
+        (close-with-zero e_2 (x x_0 ...)))])
+
 (module+ test
   (require rackunit)
-  ;; Check that the semantics is total function
+  ;; Check that the semantics is total function -- for closed expressions
   (redex-check G e
-               (check-true (redex-match? G (a_0) (judgment-holds (𝑮 e a) a)))
+               (redex-let G ([e_0 (term (close-with-zero e ()))])
+                          (check-true (redex-match? G (a_0) (judgment-holds (𝑮 e_0 a) a))))
                #:print? #f))

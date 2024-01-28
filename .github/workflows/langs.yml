@@ -6,17 +6,21 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-18.04, ubuntu-20.04]
+        os: [ubuntu-20.04, ubuntu-22.04]
         racket-variant: ['BC', 'CS']
-        racket-version: ['7.8', '7.9', '8.0', '8.1', '8.2']
+        racket-version: ['8.6', '8.8']
     name: Test on Racket ${{ matrix.racket-variant }} ${{ matrix.racket-version }} on ${{ matrix.os }}	
     steps:
     - name: Checkout
       uses: actions/checkout@main
     - name: Install nasm
       run: sudo apt-get install nasm
+    - name: Install libunistring
+      run: |
+        sudo apt-get install libunistring2
+        sudo apt-get install libunistring-dev
     - name: Install Racket
-      uses: Bogdanp/setup-racket@v1.5
+      uses: Bogdanp/setup-racket@v1.10
       with:
         architecture: 'x64'
         distribution: 'full'
@@ -25,8 +29,13 @@ jobs:
     - name: Version info
       run: |
         nasm --version
-        gcc --version        
+        gcc --version
     - name: Install langs package
-      run: raco pkg install langs/
+      run: |
+        raco pkg install --auto ziggy/
+        raco pkg install langs/
     - name: Run tests
-      run: raco test -p langs
+      run: |
+        raco test -p ziggy
+        xvfb-run raco test -p langs
+        raco test -c outlaw

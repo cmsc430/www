@@ -23,6 +23,8 @@
 
 @title[#:tag this-lang]{@|this-lang|: local binding, variables, and binary operations}
 
+@src-code[this-lang]
+
 @emph{To be is to be the value of a variable.}
 
 @table-of-contents[]
@@ -334,7 +336,7 @@ The interpreter closely mirrors the semantics.  The top-level
 @racket[interp-env] that takes an expression and environment and
 computes the result.  It is defined by structural recursion on the
 expression.  Environments are represented as lists of associations
-between variables and integers.  There are two helper functions for
+between variables and values.  There are two helper functions for
 @racket[ext] and @racket[lookup]:
 
 @codeblock-include["fraud/interp.rkt"]
@@ -462,24 +464,24 @@ variable name either.
 The idea is that we will translate expression (@tt{Expr}) like:
 
 @racketblock[
-(Let 'x (Int 7) (Var 'x))]
+(Let 'x (Lit 7) (Var 'x))]
 
 into intermediate expressions (@tt{IExpr}) like:
 
 @racketblock[
-(Let '_ (Int 7) (Var 0))
+(Let '_ (Lit 7) (Var 0))
 ]
 
 And:
 
 @racketblock[
-(Let 'x (Int 7) (Let 'y (Int 9) (Var 'x)))
+(Let 'x (Lit 7) (Let 'y (Lit 9) (Var 'x)))
 ]
 
 into:
 
 @racketblock[
-(Let '_ (Int 7) (Let '_ (Int 9) (Var 1)))
+(Let '_ (Lit 7) (Let '_ (Lit 9) (Var 1)))
 ]
 
 
@@ -505,8 +507,8 @@ by raising a (compile-time) error in the case of unbound variables.
 We can try out some examples to confirm it works as expected.
 
 @ex[
- (translate (Let 'x (Int 7) (Var 'x)))
- (translate (Let 'x (Int 7) (Let 'y (Int 9) (Var 'x))))
+ (translate (Let 'x (Lit 7) (Var 'x)))
+ (translate (Let 'x (Lit 7) (Let 'y (Lit 9) (Var 'x))))
  ]
 
 The interpreter for @tt{IExpr}s will still have an
@@ -768,37 +770,65 @@ the second example, then it couldn't be in the first.
 So our previous once-and-done solution to the stack alignment issue
 will no longer work.  Instead, we will have to emit code that aligns
 the stack at every @racket[Call] and this adjustment will depend upon
-the compile-time environment in which the call occurs.
+the state of the stack pointer when the call occurs.
 
-For example, let's assume we no longer adjust the stack at the entry
-of our code.  The first example (occuring in the empty compile-time
-environment) will need subtract 8 to the stack pointer, call, and then
-add 8 to the stack pointer.  In the second example, the
-@racket[write-byte] call occurs in a compile-time environment of
-@racket['(x)].  The single binding being pushed on the stack, in
-combination with the original call from the run-time system, results
-in an aligned stack, so no adjustment is needed.  Had there been two
-elements on the stack, an adjustment similar to the first example
-would be needed.  In other words, if there are an even number of
-elements on the stack, we need to adjust.
+It's possible to compute the needed adjustment to the stack statically
+using the compile-time environment, however we opt for a simpler,
+one-size-fits-all approach of @emph{dynamically} aligning the stack
+immediately before issuing a @racket[Call].  We do this by emitting
+code that adjusts the stack pointer based on its current value,
+computing a pad: either @racket[0] or @racket[8], which is subtracted
+from @racket['rsp].  We then stash this pad value away in a
+non-volatile register, which means the called function is not allowed
+to modify it---or at least, if they do, they must restore before
+returning.  When the call returns, we add the pad value back to
+@racket['rsp] to restore the stack pointer to where it was before
+being aligned.
 
-This means, compared to the previous compiler for primitive
-operations, each part of the compiler that may issue @racket[Call]
-instructions will need to be informed of the current environment.
+Note that stack pointer is either divisible by 16 (meaning the last
+four bits are @racket[0]) or by 8 but not by 16 (meaning the last four
+bits are @binary[8]).  When the stack pointer is divisible by 16, it's
+aligned and no adjustment is needed.  Otherwise we need to adjust by
+subtracting 8.
 
-We will use a helper function @racket[(pad-stack _c)] and
-@racket[(unpad-stack _c)] that takes a compile-time environment and
-produce instructions to align and revert the stack (if needed) before
-and after @racket[Call]s.
+Here is the code we can use to pad and unpad the stack.  It does an
+@racket[And] of the stack address and @binary[8], saving the result
+into @racket['r15].  So @racket['r15] is @racket[0] when @racket['rsp]
+is aligned and @racket[8] when misaligned.  In both cases, subtracting
+@racket['r15] from @racket['rsp] ensures @racket['rsp] is aligned.
+The @racket[unpad-stack] simply adds @racket['r15] back.
 
-Signalling errors is likewise complicated and we handle it by having
-two target labels that can be jumped to when an error happens:
-@racket['raise_error] and @racket['raise_error_align].  The latter
-adds 8 to @racket['rsp] and jumps to @racket['raise_error].  Since we
-don't expect the the error handler function to return, we don't need
-to worry about adjusting the stack afterward.  We use another helper
-function @racket[(error-label _c)] that computes the appropriate target
-based on the given compile-time environment.
+@#reader scribble/comment-reader
+(racketblock
+;; Asm
+;; Dynamically pad the stack to be aligned for a call
+(define pad-stack
+  (seq (Mov r15 rsp)
+       (And r15 #b1000)
+       (Sub rsp r15)))
+
+;; Asm
+;; Undo the stack alignment after a call
+(define unpad-stack
+  (seq (Add rsp r15)))
+)
+
+Since @racket['r15] is a @emph{non-volatile} register, meaning a
+called function must preserve its value when returning, it's safe to
+stash away the stack adjustment value in this register.
+
+We can now call C functions by first padding then unpadding the stack:
+
+@#reader scribble/comment-reader
+(racketblock
+(seq pad-stack
+     (Call 'read_byte)
+     unpad-stack))
+
+Signalling errors is likewise complicated and we handle it by having a
+target @racket['raise_error_align] that aligns the stack using
+@racket[pad-stack] before calling @racket['raise_error].  It doesn't
+bother with @racket[unpad-stack] because there's no coming back.
 
 Here is the compiler for primitives that incorporates all of these
 stack-alignment issues, but is otherwise the same as before:

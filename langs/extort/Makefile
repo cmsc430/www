@@ -1,37 +1,44 @@
 UNAME := $(shell uname)
-.PHONY: test
 
 ifeq ($(UNAME), Darwin)
   format=macho64
+  CC=arch -x86_64 gcc
 else
   format=elf64
+  CC=gcc
 endif
 
 objs = \
 	main.o \
-	values.o \
 	print.o \
+	values.o \
 	io.o
 
-default: runtime.o
+default: submit.zip
+
+submit.zip:
+	zip submit.zip -r * \
+		-x \*.[os] -x \*~ -x \*zip \
+		-x \*Zone.Identifier -x **compiled**
 
 runtime.o: $(objs)
 	ld -r $(objs) -o runtime.o
 
 %.run: %.o runtime.o
-	gcc runtime.o $< -o $@
+	$(CC) runtime.o $< -o $@
 
 .c.o:
-	gcc -fPIC -c -g -o $@ $<
+	$(CC) -fPIC -c -g -o $@ $<
 
 .s.o:
 	nasm -g -f $(format) -o $@ $<
 
 %.s: %.rkt
-	racket -t compile-file.rkt -m $< > $@
+	cat $< | racket -t compile-stdin.rkt -m > $@
 
 clean:
-	rm *.o *.s *.run
+	@$(RM) *.o *.s *.run ||:
+	@echo "$(shell basename $(shell pwd)): cleaned!"
 
-test: example.run
-	@test "$(shell ./example.run)" = "$(shell racket example.rkt)"
+%.test: %.run %.rkt
+	@test "$(shell ./$(<))" = "$(shell racket $(word 2,$^))"

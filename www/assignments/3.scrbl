@@ -1,11 +1,12 @@
 #lang scribble/manual
 @title[#:tag "Assignment 3" #:style 'unnumbered]{Assignment 3: Primitives, Conditionals, and Dispatch}
 
-@(require (for-label (except-in racket ...)))
+@(require (for-label a86 (except-in racket ...)))
 @(require "../../langs/con-plus/semantics.rkt")
 @(require redex/pict)
 
-@bold{Due: Thu, Sept 30, 11:59PM}
+@bold{Due: @elem[#:style "strike"]{Friday, September 29, 11:59PM}
+ Monday, October 2, 11:59PM}
 
 The goal of this assignment is to extend the parser, interpreter, and
 compiler with some simple unary numeric and boolean operations and two
@@ -13,9 +14,12 @@ forms of control flow expressions: @racket[cond]-expressions and
 @racket[case]-expressions.
 
 
-You are given a zip file on ELMS with a starter compiler based on the
-Dupe language we studied in class.  You are tasked with extending the
-language in a number of ways:
+You are given a file @tt{dupe-plus.zip} on ELMS with a starter
+compiler based on the @secref{Dupe} language we studied in class.
+
+
+You are tasked with extending the language in a number of
+ways:
 
 @itemlist[
 @item{adding new primitive operations,}
@@ -89,8 +93,8 @@ true in general for Racket.  The parser should reject any
 
 
 The meaning of a @racket[cond] expression is computed by evaluating
-each expression @racket[_e-pi] in order until the first one that is
-true is found, in which case, the corresponding expression
+each expression @racket[_e-pi] in order until the first one that
+does not evaluate to @racket[#f] is found, in which case, the corresponding expression
 @racket[_e-ai] is evaluated and its value is the value of the
 @racket[cond] expression.  If no such @racket[_e-pi] exists, the
 expression @racket[_e-an]'s value is the value of the @racket[cond].
@@ -225,9 +229,9 @@ There are two new kinds of expression constructors: @racket[Cond] and
 @racket[Case].  A @racket[Cond] AST node contains a list of
 cond-clauses and expression, which the expression of the @racket[else]
 clause.  Each cond-clause is represented by a @racket[Clause]
-structure containing two expressions: the right-hand-side of the
-clause which is used to determine whether the left-hand-side is
-evaluated, and the left-hand-side expression.
+structure containing two expressions: the left-hand-side of the
+clause which is used to determine whether the right-hand-side is
+evaluated, and the right-hand-side expression.
 
 The @racket[Case] AST node contains three things: an expression that
 is the subject of the dispatch (i.e. the expression that is evaluated
@@ -288,8 +292,6 @@ write additional test cases.
 
 @section[#:tag-prefix "a3-" #:style 'unnumbered]{Submitting}
 
-You should submit on Gradescope. You should submit a zip file with
-exactly the same structure that the stub contains (a dupe-plus
-folder). We will only use the @tt{parse.rkt}, @tt{ast.rkt},
-@tt{compile.rkt}, @tt{interp.rkt}, and @tt{interp-prim.rkt} files for
-grading, so make sure all your work is contained there!
+Submit a zip file containing your work to Gradescope.  Use @tt{make
+submit.zip} from within the @tt{dupe-plus} directory to create a zip
+file with the proper structure.

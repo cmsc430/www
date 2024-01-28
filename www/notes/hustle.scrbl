@@ -23,6 +23,7 @@
 
 @title[#:tag this-lang]{@|this-lang|: heaps and lists}
 
+@src-code[this-lang]
 
 @emph{A little and a little, collected together, become a great deal;
 the heap in the barn consists of single grains, and drop and drop
@@ -140,10 +141,10 @@ primitives:
    (render-metafunction 𝑯-𝒑𝒓𝒊𝒎 #:contract? #t))
 ]
 
-The interpreter similarly has an update to the @racket[interp-prims]
+The interpreter similarly has an update to the @racket[interp-prim]
 module:
 
-@codeblock-include["hustle/interp-prims.rkt"]
+@codeblock-include["hustle/interp-prim.rkt"]
 
 Inductively defined data is easy to model in the semantics and
 interpreter because we can rely on inductively defined data at the
@@ -362,7 +363,7 @@ the address of the boxes content.  Likewise with pairs.
 We use a register, @racket['rbx], to hold the address of the next free
 memory location in memory.  To allocate memory, we simply increment
 the content of @racket['rbx] by a multiple of 8.  To initialize the
-memory, we just write into the memory at that location.  To contruct a
+memory, we just write into the memory at that location.  To construct a
 pair or box value, we just tag the unused bits of the address.
 
 
@@ -374,7 +375,7 @@ So for example the following creates a box containing the value 7:
 
 @#reader scribble/comment-reader
 (racketblock
-(seq (Mov 'rax (arithmetic-shift 7 imm-shift))  
+(seq (Mov 'rax (value->bits 7))
      (Mov (Offset 'rbx 0) 'rax) ; write '7' into address held by rbx
      (Mov 'rax 'rbx)            ; copy pointer into return register
      (Or 'rax type-box)         ; tag pointer as a box
@@ -391,18 +392,31 @@ dereferencing the memory:
      (Mov 'rax (Offset 'rax 0))) ; load memory into rax
 )
 
-Pairs are similar.  Suppose we want to make @racket[(cons 3 4)]:
+Pairs are similar, only they are represented as tagged pointers to two
+words of memory.  Suppose we want to make @racket[(cons 3 4)]:
 
 @#reader scribble/comment-reader
 (racketblock
-(seq (Mov 'rax (arithmetic-shift 3 imm-shift))
-     (Mov (Offset 'rbx 0) 'rax) ; write '3' into address held by rbx
-     (Mov 'rax (arithmetic-shift 4 imm-shift))
-     (Mov (Offset 'rbx 8) 'rax) ; write '4' into word after address held by rbx
+(seq (Mov 'rax (value->bits 4))
+     (Mov (Offset 'rbx 0) 'rax) ; write '4' into address held by rbx
+     (Mov 'rax (value->bits 3))
+     (Mov (Offset 'rbx 8) 'rax) ; write '3' into word after address held by rbx
      (Mov 'rax rbx)             ; copy pointer into return register
-     (Or 'rax type-pair)        ; tag pointer as a pair
+     (Or 'rax type-cons)        ; tag pointer as a pair
      (Add 'rbx 16))             ; advance rbx 2 words
 )
+
+This code writes two words of memory and leaves a tagged pointer in
+@racket['rax].  It's worth noting that we chose to write the
+@racket[cdr] of the pair into the @emph{first} word of memory and the
+@racket[car] into the @emph{second}.  This may seem like a strange
+choice, but how we lay out the memory is in some sense an arbitrary
+choice, so long as all our pair operations respect this layout.  We
+could have just as easily done the @racket[car] first and @racket[cdr]
+second.  The reason for laying out pairs as we did will make things
+slightly more convenient when implementing the @racket[cons] primitive
+as we'll see later.
+
 
 If @racket['rax] holds a pair value, we can project out the elements
 by erasing the pair tag, leaving just the address of the pair contents,
@@ -410,9 +424,9 @@ then dereferencing either the first or second word of memory:
 
 @#reader scribble/comment-reader
 (racketblock
-(seq (Xor 'rax type-pair)         ; erase the pair tag
-     (Mov 'rax (Offset 'rax 0))   ; load car into rax
-     (Mov 'rax (Offset 'rax 8)))  ; or... load cdr into rax
+(seq (Xor 'rax type-cons)         ; erase the pair tag
+     (Mov 'rax (Offset 'rax 8))   ; load car into rax
+     (Mov 'rax (Offset 'rax 0)))  ; or... load cdr into rax
 )
 
 From here, writing the compiler for @racket[box], @racket[unbox],
@@ -467,6 +481,16 @@ one:
 (show '(car x) '(x))
 (show '(cdr x) '(x))
 ]
+
+We can now see why we chose to layout pairs with the @racket[cdr]
+first and @racket[car] second.  Since @racket[cons] is a binary
+operation, the expression which produces the @racket[car] value will
+be evaluated first and pushed on the stack.  Then the expression that
+produces the @racket[cdr] value will execute with its result sitting
+in @racket[rax].  So at this point it's easiest to write out the
+@racket[cdr] since it's already sitting in a register.  Once we do
+that, we can pop the @racket[car] value into @racket['rax] and write
+that.  Hence our choice for the layout.
 
 @section[#:tag "hustle-run-time"]{A Run-Time for @this-lang}
 

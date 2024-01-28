@@ -34,6 +34,7 @@
     [(list '< (? integer?) (? integer?))  (< v1 v2)]
     [(list '= (? integer?) (? integer?))  (= v1 v2)]    
     [(list 'cons v1 v2)                   (cons v1 v2)]
+    [(list 'eq? v1 v2)                    (eq? v1 v2)]
     [(list 'make-vector (? integer?) _)
      (if (<= 0 v1)
          (make-vector v1 v2)

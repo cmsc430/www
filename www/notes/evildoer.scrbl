@@ -63,6 +63,8 @@ HERE
 
 @title[#:tag "Evildoer"]{Evildoer: change the world a couple nibbles at a time}
 
+@src-code["evildoer"]
+
 @emph{Warning: Side effects may include itching, burning,
  oozing, weeping. Not intended for heart patients and those
  with nervous disorders.}
@@ -83,10 +85,10 @@ writing!) do not have this property. Instead they interact
 with the outside world and compute results based on the
 state of the world.
 
-For example, consider the @tt{compile-file.rkt} program,
-which reads the contents of a file from disk and compiles
-it. The meaning of this program depends on the state of your
-computer's hard drive. Similarly, it prints out assembly
+For example, consider the @tt{compile-stdin.rkt} program,
+which reads the contents of stdin and compiles
+it. The meaning of this program depends on the state of input
+port. Similarly, it prints out assembly
 code to the standard output port. So not only does this
 program depend on the outside world, it changes it too.
 
@@ -426,7 +428,7 @@ Let's save it to a file called @tt{p.s}:
 @ex[
  (with-output-to-file "p.s"
    (λ ()
-     (displayln (asm-string p)))
+     (asm-display p))
    #:exists 'truncate)]
 
 We can assemble it, link it together with the printer, and run it:
@@ -501,11 +503,11 @@ Now save each program in its nasm format:
 @ex[
 (with-output-to-file "p.s"
   (λ ()
-    (displayln (asm-string p)))
+    (asm-display p))
   #:exists 'truncate)
 (with-output-to-file "life.s"
   (λ ()
-    (displayln (asm-string life)))
+    (asm-display life))
   #:exists 'truncate)]
 
 And assemble:
@@ -597,7 +599,7 @@ of its argument in @racket['rdi] before the call:
          (Ret)))                           
 (with-output-to-file "q.s"
   (λ ()
-    (displayln (asm-string q)))
+    (asm-display q))
   #:exists 'truncate)]
 
 We can assemble it into an object file:
@@ -641,7 +643,7 @@ pop around the call:
          (Ret)))
 (with-output-to-file "q.s"
   (λ ()
-    (displayln (asm-string q)))
+    (asm-display q))
   #:exists 'truncate)]
 
 @shellbox[(string-append "nasm -f " format " q.s -o q.o")

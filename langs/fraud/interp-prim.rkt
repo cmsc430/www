@@ -1,7 +1,7 @@
 #lang racket
 (provide interp-prim0 interp-prim1 interp-prim2)
 
-;; Op0 -> Answer
+;; Op0 -> Value
 (define (interp-prim0 op)
   (match op
     ['read-byte (read-byte)]
@@ -10,26 +10,29 @@
 
 ;; Op1 Value -> Answer
 (define (interp-prim1 op v)
-  (match op
-    ['add1          (if (integer? v) (add1 v) 'err)]
-    ['sub1          (if (integer? v) (sub1 v) 'err)]
-    ['zero?         (if (integer? v) (zero? v) 'err)]
-    ['char?         (char? v)]
-    ['char->integer (if (char? v) (char->integer v) 'err)]
-    ['integer->char (if (codepoint? v) (integer->char v) 'err)]
-    ['eof-object?   (eof-object? v)]
-    ['write-byte    (if (byte? v) (write-byte v) 'err)]))
+  (match (list op v)
+    [(list 'add1 (? integer?))            (add1 v)]
+    [(list 'sub1 (? integer?))            (sub1 v)]
+    [(list 'zero? (? integer?))           (zero? v)]
+    [(list 'char? v)                      (char? v)]
+    [(list 'integer->char (? codepoint?)) (integer->char v)]
+    [(list 'char->integer (? char?))      (char->integer v)]
+    [(list 'write-byte    (? byte?))      (write-byte v)]
+    [(list 'eof-object? v)                (eof-object? v)]
+    [_ 'err]))
 
 ;; Op2 Value Value -> Answer
 (define (interp-prim2 op v1 v2)
-  (match op
-    ['+ (if (and (integer? v1) (integer? v2)) (+ v1 v2) 'err)]
-    ['- (if (and (integer? v1) (integer? v2)) (- v1 v2) 'err)]
-    ['< (if (and (integer? v1) (integer? v2)) (< v1 v2) 'err)]
-    ['= (if (and (integer? v1) (integer? v2)) (= v1 v2) 'err)]))
+  (match (list op v1 v2)
+    [(list '+ (? integer?) (? integer?)) (+ v1 v2)]
+    [(list '- (? integer?) (? integer?)) (- v1 v2)]
+    [(list '< (? integer?) (? integer?)) (< v1 v2)]
+    [(list '= (? integer?) (? integer?)) (= v1 v2)]
+    [_ 'err]))
 
 ;; Any -> Boolean
 (define (codepoint? v)
   (and (integer? v)
        (or (<= 0 v 55295)
            (<= 57344 v 1114111))))
+

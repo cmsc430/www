@@ -29,9 +29,11 @@
 	       #'(void)))]))
 
 @;{ Have to compile 42.s (at expand time) before listing it }
-@(shell-expand "racket -t compile-file.rkt -m add1-add1-40.rkt > add1-add1-40.s")
+@(shell-expand "cat add1-add1-40.rkt | racket -t compile-stdin.rkt -m > add1-add1-40.s")
 
 @title[#:tag "Blackmail"]{Blackmail: incrementing and decrementing}
+
+@src-code["blackmail"]
 
 @emph{Let's Do It Again!}
 
@@ -75,10 +77,10 @@ The grammar of abstract Backmail expressions is:
 
 @centered{@render-language[B]}
 
-So, @racket[(Int 0)], @racket[(Int 120)], and
-@racket[(Int -42)] are Blackmail AST expressions, but so are
-@racket[(Prim1 'add1 (Int 0))], @racket[(Sub1 (Int 120))],
-@racket[(Prim1 'add1 (Prim1 'add1 (Prim1 'add1 (Int -42))))].
+So, @racket[(Lit 0)], @racket[(Lit 120)], and
+@racket[(Lit -42)] are Blackmail AST expressions, but so are
+@racket[(Prim1 'add1 (Lit 0))], @racket[(Sub1 (Lit 120))],
+@racket[(Prim1 'add1 (Prim1 'add1 (Prim1 'add1 (Lit -42))))].
 
 A datatype for representing expressions can be defined as:
 
@@ -127,7 +129,7 @@ contrast to the first rule, which applies unconditionally.
 
 We can understand these rules as saying the following:
 @itemlist[
-@item{For all integers @math{i}, @math{((Int i),i)} is in @render-term[B 𝑩].}
+@item{For all integers @math{i}, @math{((Lit i),i)} is in @render-term[B 𝑩].}
 
 @item{For expressions @math{e_0} and all integers @math{i_0} and
 @math{i_1}, if @math{(e_0,i_0)} is in @render-term[B 𝑩] and @math{i_1
@@ -155,11 +157,11 @@ interpreter, one for each form of expression:
 @codeblock-include["blackmail/interp.rkt"]
 
 @examples[#:eval ev
-(interp (Int 42))
-(interp (Int -7))
-(interp (Prim1 'add1 (Int 42)))
-(interp (Prim1 'sub1 (Int 8)))
-(interp (Prim1 'add1 (Prim1 'add1 (Prim1 'add1 (Int 8)))))
+(interp (Lit 42))
+(interp (Lit -7))
+(interp (Prim1 'add1 (Lit 42)))
+(interp (Prim1 'sub1 (Lit 8)))
+(interp (Prim1 'add1 (Prim1 'add1 (Prim1 'add1 (Lit 8)))))
 ]
 
 Here's how to connect the dots between the semantics and interpreter:
@@ -170,7 +172,7 @@ expression, which determines which rule of the semantics applies.
 
 @itemlist[
 
-@item{if @math{e} is an integer @math{(Int i)}, then we're done: this is the
+@item{if @math{e} is an integer @math{(Lit i)}, then we're done: this is the
 right-hand-side of the pair @math{(e,i)} in @render-term[B 𝑩].}
 
 @item{if @math{e} is an expression @RACKET[(Prim1 'add1 (UNSYNTAX
@@ -218,13 +220,12 @@ To compile Blackmail, we make use of two more a86
 instructions, @racket[Add] and @racket[Sub]:
 
 @ex[
-(displayln
- (asm-string
-  (list (Label 'entry)
-        (Mov 'rax 40)
-        (Add 'rax 1)
-        (Add 'rax 1)
-        (Ret))))
+(asm-display
+ (list (Label 'entry)
+       (Mov 'rax 40)
+       (Add 'rax 1)
+       (Add 'rax 1)
+       (Ret)))
 ]
 
 The compiler consists of two functions: the first, which is given a
@@ -240,16 +241,16 @@ recursion, much like the interpreter.
 We can now try out a few examples:
 
 @ex[
-(compile (Prim1 'add1 (Prim1 'add1 (Int 40))))
-(compile (Prim1 'sub1 (Int 8)))
-(compile (Prim1 'add1 (Prim1 'add1 (Prim1 'sub1 (Prim1 'add1 (Int -8))))))
+(compile (Prim1 'add1 (Prim1 'add1 (Lit 40))))
+(compile (Prim1 'sub1 (Lit 8)))
+(compile (Prim1 'add1 (Prim1 'add1 (Prim1 'sub1 (Prim1 'add1 (Lit -8))))))
 ]
 
 And give a command line wrapper for parsing, checking, and compiling
-files in @link["code/blackmail/compile-file.rkt"]{@tt{compile-file.rkt}},
+in @link["code/blackmail/compile-stdin.rkt"]{@tt{compile-stdin.rkt}},
 we can compile files as follows:
 
-@shellbox["racket -t compile-file.rkt -m add1-add1-40.rkt"]
+@shellbox["cat add1-add1-40.rkt | racket -t compile-stdin.rkt -m"]
 
 And using the same @link["code/blackmail/Makefile"]{@tt{Makefile}}
 setup as in Abscond, we capture the whole compilation process with a
@@ -263,9 +264,9 @@ the same @racket[asm-interp] function to encapsulate running
 assembly code:
 
 @ex[
-(asm-interp (compile (Prim1 'add1 (Prim1 'add1 (Int 40)))))
-(asm-interp (compile (Prim1 'sub1 (Int 8))))
-(asm-interp (compile (Prim1 'add1 (Prim1 'add1 (Prim1 'add1 (Prim1 'add1 (Int -8)))))))
+(asm-interp (compile (Prim1 'add1 (Prim1 'add1 (Lit 40)))))
+(asm-interp (compile (Prim1 'sub1 (Lit 8))))
+(asm-interp (compile (Prim1 'add1 (Prim1 'add1 (Prim1 'add1 (Prim1 'add1 (Lit -8)))))))
 ]
 
 @section{Correctness and random testing}
@@ -331,10 +332,10 @@ x86 does.  Let's see:
 @ex[
 (define max-int (sub1 (expt 2 63)))
 (define min-int (- (expt 2 63)))
-(asm-interp (compile (Int max-int)))
-(asm-interp (compile (Prim1 'add1 (Int max-int))))
-(asm-interp (compile (Int min-int)))
-(asm-interp (compile (Prim1 'sub1 (Int min-int))))]
+(asm-interp (compile (Lit max-int)))
+(asm-interp (compile (Prim1 'add1 (Lit max-int))))
+(asm-interp (compile (Lit min-int)))
+(asm-interp (compile (Prim1 'sub1 (Lit min-int))))]
 
 Now there's a fact you didn't learn in grade school: in the
 first example, adding 1 to a number made it smaller; in the
@@ -343,18 +344,18 @@ second, subtracting 1 made it bigger!
 This problem doesn't exist in the interpreter:
 
 @ex[
-(interp (Int max-int))
-(interp (Prim1 'add1 (Int max-int)))
-(interp (Int min-int))
-(interp (Prim1 'sub1 (Int min-int)))
+(interp (Lit max-int))
+(interp (Prim1 'add1 (Lit max-int)))
+(interp (Lit min-int))
+(interp (Prim1 'sub1 (Lit min-int)))
 ]
 
 So we have found a counter-example to the claim of compiler
 correctness:
 
 @ex[
-(check-compiler (Prim1 'add1 (Int max-int)))
-(check-compiler (Prim1 'sub1 (Int min-int)))
+(check-compiler (Prim1 'add1 (Lit max-int)))
+(check-compiler (Prim1 'sub1 (Lit min-int)))
 ]
 
 What can we do? This is the basic problem of a program not
@@ -414,7 +415,7 @@ these pieces in the two compilers we've written:
 @item{@bold{Generated} into assembly x86
 
 @itemlist[@item{we use @racket[compile] to generate assembly (in AST form),
-  and use @racket[asm-string] to obtain printable concrete X86-64 code}]}
+  and use @racket[asm-display] to print concrete X86-64 code}]}
 
 @item{@bold{Linked} against a run-time (usually written in C)
 

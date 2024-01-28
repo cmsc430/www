@@ -26,6 +26,8 @@
 
 @title[#:tag this-lang]{@|this-lang|: function definitions and calls}
 
+@src-code[this-lang]
+
 @table-of-contents[]
 
 @section[#:tag-prefix "iniquity"]{Functions}
@@ -63,7 +65,7 @@ incorporating @bold{ functions}, and in particular,
 @bold{recursive functions}, which will allow us to compute over
 arbitrarily large data with finite-sized programs.
 
-Let's call it @bold{Iniquity}.
+Let's call it @bold{@|this-lang|}.
 
 We will extend the syntax by introducing a new syntactic category of
 @bold{programs}, which consist of a sequence of function definitions
@@ -111,10 +113,10 @@ is updated to include function applications.
 
 Because of the change from a program being a single expression to a
 sequence, we have to update the utilities that read program files,
-i.e. @tt{interp-file.rkt} and @tt{compile-file.rkt}:
+i.e. @tt{interp-stdin.rkt} and @tt{compile-stdin.rkt}:
 
-@codeblock-include["iniquity/interp-file.rkt"]
-@codeblock-include["iniquity/compile-file.rkt"]
+@codeblock-include["iniquity/interp-stdin.rkt"]
+@codeblock-include["iniquity/compile-stdin.rkt"]
 
 
 
@@ -122,7 +124,7 @@ i.e. @tt{interp-file.rkt} and @tt{compile-file.rkt}:
 
 @section[#:tag-prefix "iniquity"]{An Interpreter for Functions}
 
-Writing an interpreter for Inquity is not too hard.  The main idea is
+Writing an interpreter for @|this-lang| is not too hard.  The main idea is
 that the interpretation of expression is now parameterized by a set of
 function definitions from the program.  It serves as a second kind of
 environment that gets passed around and is used to resolve function
@@ -158,8 +160,8 @@ We can try it out:
 @ex[
 (interp
  (parse
-  '[(define (double x) (+ x x))
-    (double 5) ]))
+  '(define (double x) (+ x x))
+  '(double 5)))
 ]
 
 We can see it works with recursive functions, too. Here's a recursive
@@ -168,12 +170,12 @@ function for computing triangular numbers:
 @ex[
 (interp
   (parse
-   '[(define (tri x)
-       (if (zero? x)
-           0
-           (+ x (tri (sub1 x)))))
+   '(define (tri x)
+      (if (zero? x)
+          0
+          (+ x (tri (sub1 x)))))
      
-     (tri 9)]))
+   '(tri 9)))
  ]
 
 We can even define mutually recursive functions such as @racket[even?]
@@ -182,20 +184,20 @@ and @racket[odd?]:
 @ex[
 (interp
   (parse
-   '[(define (even? x)
-       (if (zero? x)
-           #t
-           (odd? (sub1 x))))
+   '(define (even? x)
+      (if (zero? x)
+          #t
+          (odd? (sub1 x))))
      
-     (define (odd? x)
-       (if (zero? x)
-           #f
-           (even? (sub1 x))))
-     (even? 101)]))]
+   '(define (odd? x)
+      (if (zero? x)
+          #f
+          (even? (sub1 x))))
+   '(even? 101)))]
 
 And the utility for interpreting programs in files works as well:
 
-@shellbox["racket -t interp-file.rkt -m example/len.rkt"]
+@shellbox["cat example/len.rkt | racket -t interp-stdin.rkt -m"]
 
 
 @section[#:tag-prefix "iniquity"]{Conventions of Calling}
@@ -547,56 +549,6 @@ parameters.  Touching up the code, we compile function definitions as:
      (Ret))
 )
 
-There is another issue which we must deal with: the aligning of the
-stack.  As we saw when added code to call C functions, we are required
-to align the stack to 16-bytes (or 2 64-bit words) when making a call.
-
-Because function definitions may include expressions that make such
-calls to C, we need to make sure the stack is aligned before doing so.
-And because a user-defined function may be called from a point where
-the stack is aligned @emph{or} where the stack is off by 8-bytes---in
-fact the same function may be called from @emph{both}---it will be the
-responsibility of the caller to align the stack for the function.
-
-@#reader scribble/comment-reader
-(racketblock
-(let ((r (gensym 'ret)))
-  (seq (pad-stack c)
-       (Lea rax r)
-       (Push rax)
-       (compile-es es (static-pad (cons #f c)))
-       (Jmp (symbol->label f))
-       (Label r)
-       (unpad-stack c)))
-       )
-
-The @racket[pad-stack] and @racket[unpad-stack] are functions we used
-when implementing calls to C functions.  Recall that on entry to the
-code our compiler generates, the stack is off by one word (because of
-the call to @racket['entry] from the run-time system).  If the static
-environment's length is even, it means we've pushed an even number of
-elements on the stack, and so it remains misaligned by one word.  On
-the other hand if the static environment is odd, an odd number of
-pushes have occurred, so the stack is aligned.  Hence,
-@racket[pad-stack] decrements @racket['rsp] by @racket[8] when
-@racket[c] is of even length and does nothing otherwise;
-@racket[unpad-stack] undoes the padding by incrementing when
-@racket[c] is even.
-
-The @racket[static-pad] function does something similar but instead of
-modifying the run-time static, it works on the compile-time
-environment, adding an extra frame whenever the stack would be padded
-for alignment purposes:
-
-@#reader scribble/comment-reader
-(racketblock
-;; CEnv -> CEnv
-(define (static-pad c)
-  (if (odd? (length c))
-      (cons #f c)
-      c))
-)
-
 Now writing the complete definitions for @racket[compile-define] and
 @racket[compile-app], we have:
 
@@ -614,13 +566,11 @@ Now writing the complete definitions for @racket[compile-define] and
 ;; Id [Listof Expr] CEnv -> Asm
 (define (compile-app f es c)
   (let ((r (gensym 'ret)))
-    (seq (pad-stack c)
-         (Lea rax r)
+    (seq (Lea rax r)
          (Push rax)
-         (compile-es es (static-pad (cons #f c)))
+         (compile-es es (cons #f c))
          (Jmp (symbol->label f))
-         (Label r)
-         (unpad-stack c))))
+         (Label r))))         
 )
 
 
@@ -660,7 +610,7 @@ Using this function, we can touch up our code:
 )
 
 
-@section[#:tag-prefix "iniquity"]{A Compiler for Iniquity}
+@section[#:tag-prefix "iniquity"]{A Compiler for @|this-lang|}
 
 The last piece of the puzzle is the function for emitting code for a
 complete program:
@@ -702,10 +652,9 @@ single list:
 Here's an example of the code this compiler emits:
 
 @ex[
-(displayln
- (asm-string
-  (compile
-   (parse '[(define (double x) (+ x x)) (double 5)]))))
+(asm-display
+ (compile
+  (parse '(define (double x) (+ x x)) '(double 5))))
 ]
 
 And we can confirm running the code produces results consistent with
@@ -713,27 +662,27 @@ the interpreter:
 
 @ex[
 (current-objs '("runtime.o"))
-(define (run p)
-  (asm-interp (compile (parse p))))
+(define (run . p)
+  (bits->value (asm-interp (compile (apply parse p)))))
 
-(run '[(define (double x) (+ x x))
-       (double 5)])
+(run '(define (double x) (+ x x))
+     '(double 5))
 
-(run '[(define (tri x)
-         (if (zero? x)
-             0
-             (+ x (tri (sub1 x)))))
-       (tri 9)])
+(run '(define (tri x)
+        (if (zero? x)
+            0
+            (+ x (tri (sub1 x)))))
+     '(tri 9))
 
-(run '[(define (even? x)
-         (if (zero? x)
-             #t
-             (odd? (sub1 x))))
-       (define (odd? x)
-         (if (zero? x)
-             #f
-             (even? (sub1 x))))
-       (even? 101)])
+(run '(define (even? x)
+        (if (zero? x)
+            #t
+            (odd? (sub1 x))))
+     '(define (odd? x)
+        (if (zero? x)
+            #f
+            (even? (sub1 x))))
+     '(even? 101))
 ]
 
 The complete compiler code:

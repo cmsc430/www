@@ -20,6 +20,8 @@
 
 @title[#:tag "Dodger"]{Dodger: addressing a lack of character}
 
+@src-code["dodger"]
+
 @emph{There are 11 types of values...}
 
 @table-of-contents[]
@@ -112,19 +114,19 @@ The meaning of characters and their operations are just lifted from Racket.
 We can try out some examples:
 
 @ex[
-(interp (Char #\a))
-(interp (Char #\b))
-(interp (Prim1 'char? (Char #\a)))
-(interp (Prim1 'char? (Bool #t)))
-(interp (Prim1 'char->integer (Char #\a)))
-(interp (Prim1 'integer->char (Prim1 'char->integer (Char #\a))))
+(interp (Lit #\a))
+(interp (Lit #\b))
+(interp (Prim1 'char? (Lit #\a)))
+(interp (Prim1 'char? (Lit #t)))
+(interp (Prim1 'char->integer (Lit #\a)))
+(interp (Prim1 'integer->char (Prim1 'char->integer (Lit #\a))))
 ]
 
 Just as in Dupe, type errors result in the interpreter crashing:
 
 
 @ex[
-(eval:error (interp (Prim1 'char->integer (Bool #f))))
+(eval:error (interp (Prim1 'char->integer (Lit #f))))
 ]
 
 Also, not every integer corresponds to a character, so when
@@ -132,7 +134,7 @@ Also, not every integer corresponds to a character, so when
 (more on this in a minute):
 
 @ex[
-(eval:error (interp (Prim1 'integer->char (Int -1))))
+(eval:error (interp (Prim1 'integer->char (Lit -1))))
 ]
 
 @section{Ex uno plures iterum: Out of One, Many... Again}

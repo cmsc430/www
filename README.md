@@ -7,10 +7,8 @@ University of Maryland, College Park.
 
 The current instance of this course is:
 
-* http://www.cs.umd.edu/class/fall2021/cmsc430/
+* http://www.cs.umd.edu/class/summer2023/cmsc430/
 
-Copyright © 2019 David Van Horn
-
-Copyright © 2020 David Van Horn and José Manuel Calderón Trilla
+Copyright © David Van Horn and José Manuel Calderón Trilla and Leonidas Lampropoulos
 
 Licensed under the Academic Free License version 3.0

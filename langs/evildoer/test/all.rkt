@@ -4,14 +4,13 @@
          "../interp-io.rkt"
          "../parse.rkt"
          "../types.rkt"
+	 "../build-runtime.rkt"
          a86/interp
          rackunit)
 
 ;; link with runtime for IO operations
-(unless (file-exists? "../runtime.o")
-  (system "make -C .. runtime.o"))
 (current-objs
- (list (path->string (normalize-path "../runtime.o"))))
+ (list (path->string runtime-path)))
 
 (define (test-runner run)
   ;; Abscond examples
@@ -38,9 +37,9 @@
   ;; Dupe examples
   (check-equal? (run #t) #t)
   (check-equal? (run #f) #f)
-  (check-equal? (run (if #t 1 2)) 1)
-  (check-equal? (run (if #f 1 2)) 2)
-  (check-equal? (run (if 0 1 2)) 1)
+  (check-equal? (run '(if #t 1 2)) 1)
+  (check-equal? (run '(if #f 1 2)) 2)
+  (check-equal? (run '(if 0 1 2)) 1)
   (check-equal? (run '(if #t 3 4)) 3)
   (check-equal? (run '(if #f 3 4)) 4)
   (check-equal? (run '(if  0 3 4)) 3)
@@ -54,7 +53,12 @@
   (check-equal? (run '(char? #t)) #f)
   (check-equal? (run '(char? 8)) #f)
   (check-equal? (run '(char->integer #\a)) (char->integer #\a))
-  (check-equal? (run '(integer->char 955)) #\λ))
+  (check-equal? (run '(integer->char 955)) #\λ)
+
+  ;; Evildoer examples
+  (check-equal? (run '(void)) (void))
+  (check-equal? (run '(begin 1 2)) 2)
+  (check-equal? (run '(eof-object? (void))) #f))
 
 (test-runner (λ (e) (interp (parse e))))
 (test-runner (λ (e) (bits->value (asm-interp (compile (parse e))))))

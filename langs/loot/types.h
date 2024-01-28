@@ -1,3 +1,6 @@
+#ifndef TYPES_H
+#define TYPES_H
+
 /*
   Bit layout of values
 
@@ -13,18 +16,14 @@
   - Eof:            #b10 11 000
   - Void:           #b11 11 000
   - Empty:         #b100 11 000
-
-  Pointers are
-  - Box:  end in #b001
-  - Cons: end in #b010
-  - Proc: end in #b100
 */
 #define imm_shift        3
 #define ptr_type_mask    ((1 << imm_shift) - 1)
-#define ptr_addr_mask    ~ptr_type_mask
 #define box_type_tag     1
 #define cons_type_tag    2
-#define proc_type_tag    4
+#define vect_type_tag    3
+#define str_type_tag     4
+#define proc_type_tag    5
 #define int_shift        (1 + imm_shift)
 #define int_type_mask    ((1 << int_shift) - 1)
 #define int_type_tag     (0 << (int_shift - 1))
@@ -38,3 +37,5 @@
 #define val_eof   ((2 << char_shift) | nonchar_type_tag)
 #define val_void  ((3 << char_shift) | nonchar_type_tag)
 #define val_empty ((4 << char_shift) | nonchar_type_tag)
+
+#endif

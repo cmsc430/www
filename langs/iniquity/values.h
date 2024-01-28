@@ -49,6 +49,7 @@ type_t val_typeof(val_t x);
  */
 int64_t val_unwrap_int(val_t x);
 val_t val_wrap_int(int64_t i);
+val_t val_wrap_byte(unsigned char b);
 
 int val_unwrap_bool(val_t x);
 val_t val_wrap_bool(int b);

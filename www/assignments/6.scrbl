@@ -1,87 +1,88 @@
 #lang scribble/manual
-@title[#:tag "Assignment 6" #:style 'unnumbered]{Assignment 6: Arities!}
+@title[#:tag "Assignment 6" #:style 'unnumbered]{Assignment 6: Squid Game}
 
 @(require (for-label (except-in racket ...)))
-@(require redex/pict)
+@(require "../notes/ev.rkt"
+          "../notes/utils.rkt")
 
-@(require "../notes/ev.rkt")
+@bold{Due: Monday, July 3, 11:59PM EST}
 
-@bold{Due: Thursday, April 29th, 11:59PM EST}
+The goal of this assignment is to hone your testing skills.
 
-@(define repo "https://github.com/cmsc430/assign06")
+@section[#:tag-prefix "a6-" #:style 'unnumbered #:tag "game"]{The Game}
 
-The goal of this assignment is (1) to implement arity checking in a
-language with functions, and (2) to implement the @racket[procedure-arity]
-operation for accessing the arity of a function.
+The autograder for this assignment includes a collection of compilers
+that implement @secref["Assignment 5"] and a reference interpreter.
 
-Assignment repository:
-@centered{@link[repo repo]}
+You must submit a list of programs that will be run on each compiler.
+If a compiler produces a result that is inconsistent with the
+reference interpreter, it is eliminated.  Your goal is to construct
+a set of test programs that eliminate the largest number of compilers.
+The player that eliminates the largest number of compilers, wins.
 
-You are given a repository with a starter compiler similar to the
-@seclink["Loot"]{Loot} language we studied in class. The only change
-has been the addition of parsing code for the unary
-@racket[procedure-arity] primitive.
+Note that the notion of correctness we're using is the same one we've
+been using all semester: if the interpreter crashes when evaluating a
+program, that program has unspecified behavior and therefore the
+compiler cannot be incorrect for that program.  On the other hand if
+the interpreter produces an answer (either a value or the error
+result), then the compiler is obligated to produce the same answer.
 
-@section[#:tag-prefix "a6-" #:style 'unnumbered]{Arity-check yourself, before you wreck yourself}
+When you submit, choose a name to display on the leaderboard.  It does
+not need to be your real name, but please keep it appropriate for this
+setting.
 
-When we started looking at functions and function applications, we
-wrote an interpreter that did arity checking, i.e. just before making
-a function call, it confirmed that the function definition had as many
-parameters as the call had arguments.
+After submitting, click "Leaderboard" to see the latest standings.
 
-The compiler, however, does no such checking.  This means that
-arguments will silently get dropped when too many are supplied and
-(much worse!) parameters will be bound to junk values when too few are
-supplied; the latter has the very unfortunate effect of possibly
-leaking local variable's values to expressions out of the scope of
-those variables.  (This has important security ramifications.)
+There are 59 compilers included.  Your score will be 15 + 2.5 times
+the number of compilers you are able to eliminate, with a maximum
+score of 100.
 
-The challenge here is that the arity needs to be checked at run-time,
-since we have first class functions. But at run-time, we don't have
-access to the syntax of the function definition or the call.  So in
-order to check the arity of a call, we must emit code to do the
-checking and to compute the relevant information for carrying out the
-check.
+We reserve the right to update the reference interpreter and will
+announce any changes on Discord.
 
-The main high-level idea is that: when compiling a function
-definition, the arity of the function is clear from the number of
-parameters of the definition; when compiling a call, the number of
-arguments is also obvious. Therefore, what's needed is a way for the
-the function and the call to communicate and check their corresponding
-arity information.
+The following updates have been made since the release:
 
-We recommend storing the arity of the function as an additional piece
-of information in the closure during its compilation. Then, during a
-call you can access that arity and check it before making the call.
-Bonus: it makes implementing @racket[procedure-arity] really
-straightforward: you just have to access that number.
+@itemlist[
 
-Just like we've been saying all semester, there are multiple other
-ways of going about this, feel free to design and implement a solution
-that works correctly - and consider the trade-offs! For example,
-another approach would be to treat the arity of the function as if it
-were the first argument of the function. A function of @math{n}
-arguments would then be compiled as a function of @math{n+1}
-arguments.  A call with @math{m} arguments would be compiled as a call
-with @math{m+1} arguments, where the value of the first argument is
-@math{m}.  The emitted code for a function should then check that the
-value of the first argument is equal to @math{n} and signal an error
-when it is not. But how would you implement @racket[procedure-arity]
-in this case? (This is not a rhetorical question, if you have a
-realistic solution to this, send us an e-mail!)
+@item{The interpreter checks for integer overflow and crashes when
+this happens, thereby making overflow behavior unspecified for the compilers.}
 
-Your job is to modify @racket[compile.rkt] and to implement this arity
-checking protocol and the @racket[procedure-arity] primitive. It might
-help to implement the primitive before compiling the calls themselves,
-to partially test your implementation. Unlike previous assignments,
-there are no explicitly marked TODOs (with the exception of
-@racket[procedure-arity]). You have to make sure you modify all places
-where closures are created/accessed to ensure that your changes work
-correctly!
+@item{The interpreter crashes when interpreting unbound variables,
+ making unbound variable behavior unspecified.}
 
-As always, remember to test your code using both the testcases
-provided and by adding your own!
+]
+
+Submissions should be written using the following format:
+
+@codeblock|{
+#lang info
+(define programs
+  (list
+    '[ (add1 1) ]
+    '[ (write-byte 97) ]
+    '[ (define (f x) (+ x x)) (f 5) ]))
+}|
+
+If you'd like to include a program reads data from the standard input
+port, you can add an enties which are two-element lists, where the first
+element is a string that is used as the contents of the input port
+and the second element is the program, for example:
+
+@codeblock|{
+#lang info
+(define programs
+  (list
+    '[ (add1 1) ]
+    '[ (write-byte 97) ]
+    '[ "abc" [ (read-byte) ]]
+    '[ (define (f x) (+ x x)) (f 5) ]))
+}|
+
+
+You may add as many programs as you'd like to the file.
+
 
 @section[#:tag-prefix "a6-" #:style 'unnumbered]{Submitting}
 
-Submit just the @tt{compile.rkt} file on Gradescope.
+You should submit on Gradescope. You should a single file named
+@tt{info.rkt} that conforms to the format shown above.

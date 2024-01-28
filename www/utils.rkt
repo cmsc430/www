@@ -1,6 +1,5 @@
-
 #lang racket
-(provide exercise float-right panopto-vid shell)
+(provide exercise float-right panopto-vid shell shell-result)
 (require scribble/base scribble/core scribble/html-properties
          redex/pict)
 
@@ -47,8 +46,11 @@
                        (parameterize ([current-output-port o]
                                       [current-error-port e])
                          (set! r (proc)))))))))
-  (unless r (error (string-append os es)))
+  ; (unless r (error (string-append os es)))
   (string-append os es))
+
+(define (shell-result c)
+  (with-output-to-string/err (λ () (system #:set-pwd? #t c))))
 
 (define (shell . cs)
   (match cs

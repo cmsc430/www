@@ -1,5 +1,5 @@
 #lang racket
-(provide interp interp-env interp-prim1 apply-function)
+(provide interp interp-env (struct-out Closure) zip)
 (require "ast.rkt"
          "env.rkt"
          "interp-prims.rkt")
@@ -10,110 +10,148 @@
 ;; | Integer
 ;; | Boolean
 ;; | Character
-;; | (Fun f)
 ;; | Eof
 ;; | Void
 ;; | '()
 ;; | (cons Value Value)
 ;; | (box Value)
-;; | Function
-
-;; type Function =
-;; | `(closure ,Formals ,Expr ,Env)
-;; | `(rec-closure ,Lambda ,(-> Env))
+;; | (vector Value ...)
+;; | (string Char ...)
+;; | (Closure [Listof Id] Expr Env)
+(struct Closure (xs e r) #:prefab)
 
 ;; type REnv = (Listof (List Id Value))
 ;; type Defns = (Listof Defn)
 
-;; Prog Defns -> Answer
+;; Prog -> Answer
 (define (interp p)
-  (interp-env (desugar p) '()))
+  (match p
+    [(Prog ds e)
+     (interp-env e '() ds)]))
 
 ;; Expr Env Defns -> Answer
-(define (interp-env e r)
+(define (interp-env e r ds)
   (match e
-    [(Prog '() e) (interp-env e r)] 
     [(Int i)  i]
     [(Bool b) b]
     [(Char c) c]
     [(Eof)    eof]
     [(Empty)  '()]
-    [(Var x)  (lookup r x)]
+    [(Var x)  (interp-var x r ds)]
+    [(Str s)  (string-copy s)]
     [(Prim0 'void) (void)]
     [(Prim0 'read-byte) (read-byte)]
     [(Prim0 'peek-byte) (peek-byte)]
     [(Prim1 p e)
-     (match (interp-env e r)
+     (match (interp-env e r ds)
        ['err 'err]
        [v (interp-prim1 p v)])]
     [(Prim2 p e1 e2)
-     (match (interp-env e1 r)
+     (match (interp-env e1 r ds)
        ['err 'err]
-       [v1 (match (interp-env e2 r)
+       [v1 (match (interp-env e2 r ds)
              ['err 'err]
              [v2 (interp-prim2 p v1 v2)])])]
+    [(Prim3 p e1 e2 e3)
+     (match (interp-env e1 r ds)
+       ['err 'err]
+       [v1 (match (interp-env e2 r ds)
+             ['err 'err]
+             [v2 (match (interp-env e3 r ds)
+                   ['err 'err]
+                   [v3 (interp-prim3 p v1 v2 v3)])])])]
     [(If p e1 e2)
-     (match (interp-env p r)
+     (match (interp-env p r ds)
        ['err 'err]
        [v
         (if v
-            (interp-env e1 r)
-            (interp-env e2 r))])]
+            (interp-env e1 r ds)
+            (interp-env e2 r ds))])]
     [(Begin e1 e2)
-     (match (interp-env e1 r)
+     (match (interp-env e1 r ds)
        ['err 'err]
-       [_ (interp-env e2 r)])]
+       [_    (interp-env e2 r ds)])]
     [(Let x e1 e2)
-     (match (interp-env e1 r)
+     (match (interp-env e1 r ds)
        ['err 'err]
-       [v (interp-env e2 (ext r x v))])]
-    [(LetRec bs e)
-     (letrec ((r* (λ ()
-                    (append
-                     (zip (map car bs)
-                          ;; η-expansion to delay evaluating r*
-                          ;; relies on RHSs being functions
-                          (map (λ (l) (RecClosure l r*))
-                               (map cadr bs)))
-                     r))))
-       (interp-env e (r*)))]
-    [(Lam _ xs e1)
-      (Closure xs e r)]
-    [(App f es)
-     (match (interp-env* (cons f es) r)       
-       [(list (? function? f) vs ...)
-        (apply apply-function f vs)]        
-       [e e])]
-    [_         'err]))
+       [v (interp-env e2 (ext r x v) ds)])]
+    [(Lam _ xs e)
+     (Closure xs e r)]
+    [(App e es)
+     (match (interp-env e r ds)
+       ['err 'err]
+       [f
+        (match (interp-env* es r ds)
+          ['err 'err]
+          [vs
+           (match f
+  	     [(Closure xs e r)        
+              ; check arity matches
+              (if (= (length xs) (length vs))           
+                  (interp-env e (append (zip xs vs) r) ds)
+                  'err)]
+             [_ 'err])])])]
+    [(Match e ps es)
+     (match (interp-env e r ds)
+       ['err 'err]
+       [v
+        (interp-match v ps es r ds)])]))
 
-(define (function? f)
-  (match f
-    [(Closure _ _ _) #t]
-    [(RecClosure _ _) #t]
-    [(? procedure?)  #t]
-    [_ #f]))
+;; Value [Listof Pat] [Listof Expr] Env Defns -> Answer
+(define (interp-match v ps es r ds)
+  (match* (ps es)
+    [('() '()) 'err]
+    [((cons p ps) (cons e es))
+     (match (interp-match-pat p v r)
+       [#f (interp-match v ps es r ds)]
+       [r  (interp-env e r ds)])]))
 
-;; Function Value ... -> Answer
-(define (apply-function f . vs)
-  (match f
-    [(Closure xs e r)
-     (if (= (length xs) (length vs))
-         (interp-env e (append (zip xs vs) r))
-         'errwat)]
-    [(RecClosure (Lam '() xs e) r*)
-      ; You've got to apply the the r* thunk
-     (apply apply-function (Closure xs e (r*)) vs)]
-    [(? procedure? f) (apply f vs)]))
+;; Pat Value Env -> [Maybe Env]
+(define (interp-match-pat p v r)
+  (match p
+    [(PWild) r]
+    [(PVar x) (ext r x v)]
+    [(PLit l) (and (eqv? l v) r)]
+    [(PBox p)
+     (match v
+       [(box v)
+        (interp-match-pat p v r)]
+       [_ #f])]
+    [(PCons p1 p2)
+     (match v
+       [(cons v1 v2)
+        (match (interp-match-pat p1 v1 r)
+          [#f #f]
+          [r1 (interp-match-pat p2 v2 r1)])]
+       [_ #f])]
+    [(PAnd p1 p2)
+     (match (interp-match-pat p1 v r)
+       [#f #f]
+       [r1 (interp-match-pat p2 v r1)])]))
 
+;; Id Env [Listof Defn] -> Answer
+(define (interp-var x r ds)
+  (match (lookup r x)
+    ['err (match (defns-lookup ds x)
+            [(Defn f xs e) (interp-env (Lam f xs e) '() ds)]
+            [#f 'err])]
+    [v v]))
 
 ;; (Listof Expr) REnv Defns -> (Listof Value) | 'err
-(define (interp-env* es r)
+(define (interp-env* es r ds)
   (match es
     ['() '()]
     [(cons e es)
-      (match (interp-env e r)
-       ['err 'errsdf]
-       [v (cons v (interp-env* es r))])]))
+     (match (interp-env e r ds)
+       ['err 'err]
+       [v (match (interp-env* es r ds)
+            ['err 'err]
+            [vs (cons v vs)])])]))
+
+;; Defns Symbol -> [Maybe Defn]
+(define (defns-lookup ds f)
+  (findf (match-lambda [(Defn g _ _) (eq? f g)])
+         ds))
 
 (define (zip xs ys)
   (match* (xs ys)

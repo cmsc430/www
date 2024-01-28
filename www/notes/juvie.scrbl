@@ -13,7 +13,11 @@
 @;(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "iniquity" f))))))
 @;	   '("interp.rkt" "ast.rkt" "parse.rkt" "compile.rkt" "asm/interp.rkt" "asm/printer.rkt"))
 
-@title[#:tag "Juvie"]{Juvie: cleaning up after your mess}
+@(define this-lang "Juvie")
+
+@title[#:tag this-lang]{@|this-lang|: cleaning up after your mess}
+
+@src-code[this-lang]
 
 @emph{Many a man fails to become a thinker for the sole reason that his memory is too good.}
 

@@ -32,8 +32,9 @@ int main(int argc, char** argv)
   result = entry(heap);
 
   print_result(result);
+  
   if (val_typeof(result) != T_VOID)
-    putchar('\n');
+    putchar('\n'); 
 
   free(heap);
   return 0;

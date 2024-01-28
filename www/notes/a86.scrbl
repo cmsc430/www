@@ -2,9 +2,9 @@
 
 @(require (for-label (except-in racket compile)
                      a86))
-          
+
 @(require scribble/examples
-	  redex/reduction-semantics	  
+	  redex/reduction-semantics
           redex/pict
 	  (only-in pict scale)
 	  (only-in racket system)
@@ -67,7 +67,7 @@ int gcd(int n1, int n2) {
 }
 HERE
      )
-      
+
    (parameterize ([current-directory (build-path notes "a86")])
      (save-file "tri.s" (asm-string (tri 36)))
      (save-file "main.c" main.c)
@@ -161,7 +161,7 @@ even at a low-level.
 Without getting too bogged down in the details, here how the
 code works. Instructions execute one after another. There
 are a number of registers which can be used to hold values.
-This code makes use of the @tt{rax} and @tt{rdi} register
+This code makes use of the @tt{rax} and @tt{rbx} register
 (and some other registers are implicitly used and altered by
 the @tt{call}, @tt{push}, @tt{pop} and @tt{ret}
 instructions). The lines like @tt{entry:}, @tt{tri:}, and
@@ -178,7 +178,7 @@ Suppose we start executing at @tt{entry}.
    rbx} to zero. Executing this instruction sets a flag in the
   CPU, which affects subsequent ``conditional'' instructions.
   In this program, the next instruction is a conditional jump.}
- 
+
  @item{@tt{je done} either jumps to the instruction
   following label @tt{done} or proceeds to the next
   instruction, based on the state of the comparison flag. The
@@ -192,7 +192,7 @@ Suppose we start executing at @tt{entry}.
   (register @tt{rsp}).}
 
  @item{@tt{sub rbx, 1} decrements @tt{rbx} by 1.}
- 
+
  @item{@tt{call tri} performs something like a function
   call; it uses memory as a stack to save the current location
   in the code (which is where control should return to after
@@ -222,7 +222,7 @@ Suppose we start executing at @tt{entry}.
   ``output'') is 0.}
 
  @item{@tt{ret} does a ``return,'' either to a prior call to
-  @tt{tri} or the caller of @tt{entry}.}  
+  @tt{tri} or the caller of @tt{entry}.}
  ]
 
 Despite the lower-level mechanisms, this code computes in a
@@ -401,22 +401,20 @@ number.  Easy-peasy:
 It's also easy to go from our data representation to its
 interpretation as an x86 program.
 
-First, we convert the data to a string. There is a function
-provided for converting from a86 to a string representation
-of x86 code in nasm notation, called @racket[asm-string].
-You can use @racket[display] to print this to the current
-output port (or to a file):
+There is a function provided for printing an a86 program as an x86
+program using nasm notation, called @racket[asm-display].  Calling
+this function prints to the current output port, but it's also
+possible to write the output to a file or convert it to a string.
 
-@margin-note{The @racket[asm-string] function knows what OS you are
+@margin-note{The @racket[asm-display] function knows what OS you are
 using and adjusts the label naming convention to use underscores or
 not, so that you don't have to worry about it.}
 
 @ex[
-(display (asm-string (tri 36)))
+(asm-display (tri 36))
     ]
 
-Notice how this generates exactly what you saw in @tt{
- tri.s}.
+Notice how this generates exactly what you saw in @tt{tri.s}.
 
 From here, we can assemble, link, and execute.
 
@@ -537,7 +535,7 @@ save the result of @racket['f]:
 (ex
 (eg (seq (Call 'f)
          (Mov 'rbx 'rax)
-         (Call 'g)         
+         (Call 'g)
          (Add 'rax 'rbx)))
 )
 
@@ -636,13 +634,13 @@ address to jump to, we could've also written it as:
 (ex
 (eg (seq (Sub 'rsp 8)      ; allocate a frame on the stack
                            ; load address of 'fret label into top of stack
-         (Lea (Offset 'rsp 0) 'fret)           
+         (Lea (Offset 'rsp 0) 'fret)
          (Jmp 'f)          ; jump to 'f
          (Label 'fret)     ; <-- return point for "call" to 'f
          (Push 'rax)       ; save result (like before)
          (Sub 'rsp 8)      ; allocate a frame on the stack
                            ; load address of 'gret label into top of stack
-         (Lea (Offset 'rsp 0) 'gret)         
+         (Lea (Offset 'rsp 0) 'gret)
          (Jmp 'g)          ; jump to 'g
          (Label 'gret)     ; <-- return point for "call" to 'g
          (Pop 'rbx)        ; pop saved result from calling 'f
@@ -680,15 +678,21 @@ and @racketmodname[a86/interp], described below
 
 This section describes the instruction set of a86.
 
-There are 16 registers: @racket['rax], @racket['rbx],
-@racket['rcx], @racket['rdx], @racket['rbp], @racket['rsp],
-@racket['rsi], @racket['rdi], @racket['r8], @racket['r9],
-@racket['r10], @racket['r11], @racket['r12], @racket['r13],
-@racket['r14], and @racket['r15]. These registers are
-64-bits wide. There is no analog to the x86 register
-suffixes for accessing low-order bits. Each register plays
-the same role as in x86, so for example @racket['rsp] holds
-the current location of the stack.
+There are 16 registers: @racket['rax], @racket['rbx], @racket['rcx],
+@racket['rdx], @racket['rbp], @racket['rsp], @racket['rsi],
+@racket['rdi], @racket['r8], @racket['r9], @racket['r10],
+@racket['r11], @racket['r12], @racket['r13], @racket['r14], and
+@racket['r15]. These registers are 64-bits wide.  There is also
+@racket['eax] which accesses the lower 32-bits of @racket['rax].
+This is useful in case you need to read or write 32-bits of memory.
+
+The registers @racket['rbx], @racket['rsp], @racket['rbp], and
+@racket['r12] through @racket['r15] are ``callee-saved'' registers,
+meaning they are preserved across function calls (and must be saved
+and restored by any callee code).
+
+Each register plays the same role as in x86, so for example
+@racket['rsp] holds the current location of the stack.
 
 @defproc[(register? [x any/c]) boolean?]{
  A predicate for registers.
@@ -696,6 +700,21 @@ the current location of the stack.
 
 @defproc[(label? [x any/c]) boolean?]{
  A predicate for label @emph{names}, i.e. symbols which are not register names.
+
+ Labels must also follow the NASM restrictions on label names: "Valid
+ characters in labels are letters, numbers, @tt{_}, @tt{$}, @tt{#}, @tt{@"@"}, @tt{~}, @tt{.}, and
+ @tt{?}. The only characters which may be used as the first character of an
+ identifier are letters, @tt{.} (with special meaning), @tt{_}
+ and @tt{?}."
+
+ @ex[
+ (label? 'foo)
+ (label? "foo")
+ (label? 'rax)
+ (label? 'foo-bar)
+ (label? 'foo.bar)
+ ]
+
 }
 
 @defproc[(instruction? [x any/c]) boolean?]{
@@ -704,6 +723,28 @@ the current location of the stack.
 
 @defproc[(offset? [x any/c]) boolean?]{
  A predicate for offsets.
+}
+
+@defproc[(64-bit-integer? [x any/c]) boolean?]{
+ A predicate for determining if a value is an integer that fits in 64-bits.
+
+ @ex[
+ (64-bit-integer? 0)
+ (64-bit-integer? (sub1 (expt 2 64)))
+ (64-bit-integer? (expt 2 64))
+ (64-bit-integer? (- (expt 2 63)))
+ (64-bit-integer? (sub1 (- (expt 2 63))))]
+}
+
+@defproc[(32-bit-integer? [x any/c]) boolean?]{
+ A predicate for determining if a value is an integer that fits in 64-bits.
+
+ @ex[
+ (32-bit-integer? 0)
+ (32-bit-integer? (sub1 (expt 2 32)))
+ (32-bit-integer? (expt 2 32))
+ (32-bit-integer? (- (expt 2 32)))
+ (32-bit-integer? (sub1 (- (expt 2 32))))]
 }
 
 @defproc[(seq [x (or/c instruction? (listof instruction?))] ...) (listof instruction?)]{
@@ -728,7 +769,7 @@ the current location of the stack.
 
  @itemlist[
 
- @item{Programs have at least one label; the first label is used as the entry point.}
+ @item{Programs have at least one label which is declared @racket[Global]; the first label is used as the entry point.}
  @item{All label declarations are unique.}
  @item{All label targets are declared.}
  @item{... other properties may be added in the future.}
@@ -741,16 +782,29 @@ the current location of the stack.
  outermost level of a function that produces a86 code and not
  nested.
 
- @ex[ 
- (prog (Label 'foo))
- (prog (list (Label 'foo)))
+ @ex[
+ (prog (Global 'foo) (Label 'foo))
+ (eval:error (prog (Label 'foo)))
+ (eval:error (prog (list (Label 'foo))))
  (eval:error (prog (Mov 'rax 32)))
  (eval:error (prog (Label 'foo)
                    (Label 'foo)))
  (eval:error (prog (Jmp 'foo)))
- (prog (Label 'foo)
+ (prog (Global 'foo)
+       (Label 'foo)
        (Jmp 'foo))
  ]
+}
+
+@defproc[(symbol->label [s symbol?]) label?]{
+
+  Returns a modified form of a symbol that follows NASM label conventions.
+
+  @ex[
+  (let ([l (symbol->label 'my-great-label)])
+    (seq (Label l)
+         (Jmp l)))
+  ]
 }
 
 @deftogether[(@defstruct*[% ([s string?])]
@@ -765,9 +819,9 @@ the current location of the stack.
 
  @#reader scribble/comment-reader
  (ex
- (display
-  (asm-string
-   (prog (%%% "Start of foo")
+ (asm-display
+   (prog (Global 'foo)
+         (%%% "Start of foo")
          (Label 'foo)
          ; Racket comments won't appear
          (%% "Inputs one argument in rdi")
@@ -775,9 +829,9 @@ the current location of the stack.
          (Add 'rax 'rax)    (% "double it")
          (Sub 'rax 1)       (% "subtract one")
          (%% "we're done!")
-         (Ret)))))
+         (Ret))))
 }
-               
+
 @defstruct*[Offset ([r register?] [i exact-integer?])]{
 
  Creates an memory offset from a register. Offsets are used
@@ -790,17 +844,31 @@ the current location of the stack.
  ]
 }
 
+@defstruct*[Text ()]{
+
+ Declares the start of a text section, which includes instructions to
+ be executed.
+
+}
+
+@defstruct*[Data ()]{
+
+ Declares the start of a data section, which includes data and constants.
+
+}
 
 @defstruct*[Label ([x label?])]{
 
  Creates a label from the given symbol. Each label in a
  program must be unique.  Register names cannot be used
- as label names.
+ as label names and names must follow the NASM restrictions
+ on valid label names (see @racket[label?] for details).
 
  @ex[
  (Label 'fred)
  (eval:error (Label "fred"))
  (eval:error (Label 'rax))
+ (eval:error (Label 'fred-wilma))
  ]
 
 }
@@ -808,8 +876,15 @@ the current location of the stack.
 @defstruct*[Extern ([x label?])]{
 
  Declares an external label.
- 
+
 }
+
+@defstruct*[Global ([x label?])]{
+
+ Declares a label as global, i.e. linkable with other object files.
+
+}
+
 
 @defstruct*[Call  ([x (or/c label? register?)])]{
 
@@ -844,8 +919,8 @@ the current location of the stack.
 
 }
 
-@defstruct*[Mov ([dst (or/c register? offset?)] [src (or/c register? offset? exact-integer?)])]{
-                              
+@defstruct*[Mov ([dst (or/c register? offset?)] [src (or/c register? offset? 64-bit-integer?)])]{
+
  A move instruction. Moves @racket[src] to @racket[dst].
 
  Either @racket[dst] or @racket[src] may be offsets, but not both.
@@ -854,7 +929,7 @@ the current location of the stack.
  (asm-interp
   (prog
    (Global 'entry)
-   (Label 'entry)                   
+   (Label 'entry)
    (Mov 'rbx 42)
    (Mov 'rax 'rbx)
    (Ret)))
@@ -863,23 +938,23 @@ the current location of the stack.
 
 }
 
-@defstruct*[Add ([dst register?] [src (or/c register? offset? exact-integer?)])]{
+@defstruct*[Add ([dst register?] [src (or/c register? offset? 32-bit-integer?)])]{
 
  An addition instruction. Adds @racket[src] to @racket[dst]
  and writes the result to @racket[dst].
- 
+
  @ex[
  (asm-interp
   (prog
    (Global 'entry)
-   (Label 'entry)                   
+   (Label 'entry)
    (Mov 'rax 32)
    (Add 'rax 10)
    (Ret)))
  ]
 }
 
-@defstruct*[Sub ([dst register?] [src (or/c register? offset? exact-integer?)])]{
+@defstruct*[Sub ([dst register?] [src (or/c register? offset? 32-bit-integer?)])]{
 
  A subtraction instruction. Subtracts @racket[src] frrom
  @racket[dst] and writes the result to @racket[dst].
@@ -888,14 +963,14 @@ the current location of the stack.
  (asm-interp
   (prog
    (Global 'entry)
-   (Label 'entry)                   
+   (Label 'entry)
    (Mov 'rax 32)
    (Sub 'rax 10)
    (Ret)))
  ]
 }
 
-@defstruct*[Cmp ([a1 (or/c register? offset?)] [a2 (or/c register? offset? exact-integer?)])]{ 
+@defstruct*[Cmp ([a1 (or/c register? offset?)] [a2 (or/c register? offset? 32-bit-integer?)])]{
  Compare @racket[a1] to @racket[a2].  Doing a comparison
  sets the status flags that affect the conditional instructions like @racket[Je], @racket[Jl], etc.
 
@@ -908,14 +983,14 @@ the current location of the stack.
    (Cmp 'rax 2)
    (Jg 'l1)
    (Mov 'rax 0)
-   (Label 'l1)                   
+   (Label 'l1)
    (Ret)))
- ] 
+ ]
 }
 
 @defstruct*[Jmp ([x (or/c label? register?)])]{
  Jump to label @racket[x].
-               
+
  @ex[
  (asm-interp
   (prog
@@ -932,15 +1007,15 @@ the current location of the stack.
    (Global 'entry)
    (Label 'entry)
    (Mov 'rax 42)
-   (Pop 'rbx)   
+   (Pop 'rbx)
    (Jmp 'rbx)))
  ]
- 
+
 }
 
 @defstruct*[Je ([x (or/c label? register?)])]{
  Jump to label @racket[x] if the conditional flag is set to ``equal.''
-               
+
  @ex[
  (asm-interp
   (prog
@@ -950,14 +1025,14 @@ the current location of the stack.
    (Cmp 'rax 2)
    (Je 'l1)
    (Mov 'rax 0)
-   (Label 'l1)                   
+   (Label 'l1)
    (Ret)))
  ]
 }
 
 @defstruct*[Jne ([x (or/c label? register?)])]{
  Jump to label @racket[x] if the conditional flag is set to ``not equal.''
-               
+
  @ex[
  (asm-interp
   (prog
@@ -967,14 +1042,14 @@ the current location of the stack.
    (Cmp 'rax 2)
    (Jne 'l1)
    (Mov 'rax 0)
-   (Label 'l1)                   
+   (Label 'l1)
    (Ret)))
  ]
 }
 
 @defstruct*[Jl ([x (or/c label? register?)])]{
  Jump to label @racket[x] if the conditional flag is set to ``less than.''
-               
+
  @ex[
  (asm-interp
   (prog
@@ -984,14 +1059,31 @@ the current location of the stack.
    (Cmp 'rax 2)
    (Jl 'l1)
    (Mov 'rax 0)
-   (Label 'l1)                   
+   (Label 'l1)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Jle ([x (or/c label? register?)])]{
+ Jump to label @racket[x] if the conditional flag is set to ``less than or equal.''
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 42)
+   (Cmp 'rax 42)
+   (Jle 'l1)
+   (Mov 'rax 0)
+   (Label 'l1)
    (Ret)))
  ]
 }
 
 @defstruct*[Jg ([x (or/c label? register?)])]{
  Jump to label @racket[x] if the conditional flag is set to ``greater than.''
-               
+
  @ex[
  (asm-interp
   (prog
@@ -1001,12 +1093,359 @@ the current location of the stack.
    (Cmp 'rax 2)
    (Jg 'l1)
    (Mov 'rax 0)
-   (Label 'l1)                   
+   (Label 'l1)
    (Ret)))
  ]
 }
 
-@defstruct*[And ([dst (or/c register? offset?)] [src (or/c register? offset? exact-integer?)])]{
+@defstruct*[Jge ([x (or/c label? register?)])]{
+ Jump to label @racket[x] if the conditional flag is set to ``greater than or equal.''
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 42)
+   (Cmp 'rax 42)
+   (Jg 'l1)
+   (Mov 'rax 0)
+   (Label 'l1)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Jo ([x (or/c label? register?)])]{
+ Jump to @racket[x] if the overflow flag is set.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax (sub1 (expt 2 63)))
+   (Add 'rax 1)
+   (Jo 'l1)
+   (Mov 'rax 0)
+   (Label 'l1)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Jno ([x (or/c label? register?)])]{
+ Jump to @racket[x] if the overflow flag is @emph{not} set.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax (sub1 (expt 2 63)))
+   (Add 'rax 1)
+   (Jno 'l1)
+   (Mov 'rax 0)
+   (Label 'l1)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Jc ([x (or/c label? register?)])]{
+ Jump to @racket[x] if the carry flag is set.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax -1)
+   (Add 'rax 1)
+   (Jc 'l1)
+   (Mov 'rax 0)
+   (Label 'l1)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Jnc ([x (or/c label? register?)])]{
+ Jump to @racket[x] if the carry flag is @emph{not} set.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax -1)
+   (Add 'rax 1)
+   (Jnc 'l1)
+   (Mov 'rax 0)
+   (Label 'l1)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Cmove ([dst register?] [src (or/c register? offset?)])]{
+ Move from @racket[src] to @racket[dst] if the comparison flag is set to equal.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 0)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmove 'rax 'r9)
+   (Ret)))
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 2)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmove 'rax 'r9)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Cmovne ([dst register?] [src (or/c register? offset?)])]{
+ Move from @racket[src] to @racket[dst] if the comparison flag is set to not equal.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 0)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovne 'rax 'r9)
+   (Ret)))
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 2)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovne 'rax 'r9)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Cmovl ([dst register?] [src (or/c register? offset?)])]{
+ Move from @racket[src] to @racket[dst] if the comparison flag is set to less than.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 0)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovl 'rax 'r9)
+   (Ret)))
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax -1)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovl 'rax 'r9)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Cmovle ([dst register?] [src (or/c register? offset?)])]{
+ Move from @racket[src] to @racket[dst] if the comparison flag is set to less than or equal.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 0)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovle 'rax 'r9)
+   (Ret)))
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 2)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovle 'rax 'r9)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Cmovg ([dst register?] [src (or/c register? offset?)])]{
+ Move from @racket[src] to @racket[dst] if the comparison flag is set to greather than.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 0)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovg 'rax 'r9)
+   (Ret)))
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 2)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovg 'rax 'r9)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Cmovge ([dst register?] [src (or/c register? offset?)])]{
+ Move from @racket[src] to @racket[dst] if the comparison flag is set to greater than or equal.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax -1)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovge 'rax 'r9)
+   (Ret)))
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 2)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovge 'rax 'r9)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Cmovo ([dst register?] [src (or/c register? offset?)])]{
+ Move from @racket[src] to @racket[dst] if the overflow flag is set.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax (- (expt 2 63) 1))
+   (Add 'rax 1)
+   (Mov 'r9 1)
+   (Cmovo 'rax 'r9)
+   (Ret)))
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax (- (expt 2 63) 2))
+   (Add 'rax 1)
+   (Mov 'r9 1)
+   (Cmovo 'rax 'r9)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Cmovno ([dst register?] [src (or/c register? offset?)])]{
+ Move from @racket[src] to @racket[dst] if the overflow flag is not set.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax (- (expt 2 63) 1))
+   (Add 'rax 1)
+   (Mov 'r9 1)
+   (Cmovno 'rax 'r9)
+   (Ret)))
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax (- (expt 2 63) 2))
+   (Add 'rax 1)
+   (Mov 'r9 1)
+   (Cmovno 'rax 'r9)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Cmovc ([dst register?] [src (or/c register? offset?)])]{
+ Move from @racket[src] to @racket[dst] if the carry flag is set.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax (- (expt 2 64) 1))
+   (Add 'rax 1)
+   (Mov 'r9 1)
+   (Cmovc 'rax 'r9)
+   (Ret)))
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax (- (expt 2 64) 2))
+   (Add 'rax 1)
+   (Mov 'r9 1)
+   (Cmovc 'rax 'r9)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Cmovnc ([dst register?] [src (or/c register? offset?)])]{
+ Move from @racket[src] to @racket[dst] if the carry flag is not set.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax (- (expt 2 64) 1))
+   (Add 'rax 1)
+   (Mov 'r9 1)
+   (Cmovnc 'rax 'r9)
+   (Ret)))
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax (- (expt 2 64) 2))
+   (Add 'rax 1)
+   (Mov 'r9 1)
+   (Cmovnc 'rax 'r9)
+   (Ret)))
+ ]
+}
+
+
+@defstruct*[And ([dst (or/c register? offset?)] [src (or/c register? offset? 32-bit-integer?)])]{
+
  Compute logical ``and'' of @racket[dst] and @racket[src] and put result in @racket[dst].
 
  @#reader scribble/comment-reader
@@ -1021,7 +1460,7 @@ the current location of the stack.
  )
 }
 
-@defstruct*[Or ([dst (or/c register? offset?)] [src (or/c register? offset? exact-integer?)])]{
+@defstruct*[Or ([dst (or/c register? offset?)] [src (or/c register? offset? 32-bit-integer?)])]{
  Compute logical ``or'' of @racket[dst] and @racket[src] and put result in @racket[dst].
 
  @#reader scribble/comment-reader
@@ -1036,7 +1475,7 @@ the current location of the stack.
  )
 }
 
-@defstruct*[Xor ([dst (or/c register? offset?)] [src (or/c register? offset? exact-integer?)])]{
+@defstruct*[Xor ([dst (or/c register? offset?)] [src (or/c register? offset? 32-bit-integer?)])]{
  Compute logical ``exclusive or'' of @racket[dst] and @racket[src] and put result in @racket[dst].
 
  @#reader scribble/comment-reader
@@ -1091,17 +1530,17 @@ the current location of the stack.
  )
 }
 
-@defstruct*[Push ([a1 (or/c exact-integer? register?)])]{
+@defstruct*[Push ([a1 (or/c 32-bit-integer? register?)])]{
 
  Decrements the stack pointer and then stores the source
  operand on the top of the stack.
- 
+
  @ex[
  (asm-interp
   (prog
    (Global 'entry)
    (Label 'entry)
-   (Mov 'rax 42) 
+   (Mov 'rax 42)
    (Push 'rax)
    (Mov 'rax 0)
    (Pop 'rax)
@@ -1111,13 +1550,13 @@ the current location of the stack.
 
 @defstruct*[Pop ([a1 register?])]{
  Loads the value from the top of the stack to the destination operand and then increments the stack pointer.
- 
+
  @ex[
  (asm-interp
   (prog
    (Global 'entry)
    (Label 'entry)
-   (Mov 'rax 42) 
+   (Mov 'rax 42)
    (Push 'rax)
    (Mov 'rax 0)
    (Pop 'rax)
@@ -1125,9 +1564,23 @@ the current location of the stack.
  ]
 }
 
+@defstruct*[Not ([a1 register?])]{
+Perform bitwise not operation (each 1 is set to 0, and each 0 is set to 1) on the destination operand.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 0)
+   (Not 'rax)
+   (Ret)))
+ ]
+}
+
 @defstruct*[Lea ([dst (or/c register? offset?)] [x label?])]{
  Loads the address of the given label into @racket[dst].
- 
+
  @ex[
  (asm-interp
   (prog
@@ -1142,30 +1595,50 @@ the current location of the stack.
  ]
 }
 
+@defstruct*[Db ([d integer?])]{
+ Psuedo-instruction for declaring 8-bits of initialized static memory.
+}
+
+@defstruct*[Dw ([d integer?])]{
+ Psuedo-instruction for declaring 16-bits of initialized static memory.
+}
+
+@defstruct*[Dd ([d integer?])]{
+ Psuedo-instruction for declaring 32-bits of initialized static memory.
+}
+
+@defstruct*[Dq ([d integer?])]{
+ Psuedo-instruction for declaring 64-bits of initialized static memory.
+}
+
 @section{From a86 to x86}
 
 @defmodule[a86/printer]
 
+@defproc[(asm-display [is (listof instruction?)]) void?]{
+
+ Prints an a86 program to the current output port in nasm syntax.
+
+ @ex[
+ (asm-display (prog (Global 'entry)
+                    (Label 'entry)
+                    (Mov 'rax 42)
+                    (Ret)))
+ ]
+
+}
+
 @defproc[(asm-string [is (listof instruction?)]) string?]{
 
- Converts an a86 program to a string in nasm syntax. This is
- useful in concert with Racket functions for IO in order to
- write programs using concrete syntax that can be passed to
- @tt{nasm}.
+ Converts an a86 program to a string in nasm syntax.
 
  @ex[
  (asm-string (prog (Global 'entry)
                    (Label 'entry)
                    (Mov 'rax 42)
                    (Ret)))
-
- (display
-  (asm-string (prog (Global 'entry)
-                    (Label 'entry)
-                    (Mov 'rax 42)
-                    (Ret))))
  ]
-                                                          
+
 }
 
 @section{An Interpreter for a86}
@@ -1223,7 +1696,7 @@ The simplest form of interpreting an a86 program is to use
                                (Mov 'rax 0)
                                (Jmp 'rax))))
  ]
- 
+
 }
 
 It is often the case that we want our assembly programs to
@@ -1270,7 +1743,7 @@ code:
                     (Sub 'rsp 8)
                     (Call 'gcd)
                     (Add 'rsp 8)
-                    (Ret))))]               
+                    (Ret))))]
 
 This will be particularly relevant for writing a compiler
 where emitted code will make use of functionality defined in
@@ -1296,8 +1769,5 @@ linking error saying a symbol is undefined:
 
  Like @racket[asm-interp], but uses @racket[in] for input and produce the result along
  with any output as a string.
-                                                          
+
 }
-
-
-

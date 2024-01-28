@@ -1,65 +1,96 @@
 #lang racket
-(provide parse parse-e)
+(provide parse parse-define parse-e)
 (require "ast.rkt")
 
-;; S-Expr -> Prog
+;; [Listof S-Expr] -> Prog
 (define (parse s)
   (match s
-    [(list 'begin (and ds (list 'define _ _)) ... e)
-     (Prog (map parse-d ds) (parse-e e))]
-    [e (Prog '() (parse-e e))]))
+    [(cons (and (cons 'define _) d) s)
+     (match (parse s)
+       [(Prog ds e)
+        (Prog (cons (parse-define d) ds) e)])]
+    [(cons e '()) (Prog '() (parse-e e))]
+    [_ (error "program parse error")]))
 
 ;; S-Expr -> Defn
-(define (parse-d s)
+(define (parse-define s)
   (match s
-    [(list 'define (list (? symbol? f) (? symbol? xs) ...) e)
-     (Defn f xs (parse-e e))]
+    [(list 'define (list-rest (? symbol? f) xs) e)
+     (if (andmap symbol? xs)
+         (Defn f xs (parse-e e))
+         (error "parse definition error"))]
     [_ (error "Parse defn error" s)]))
 
 ;; S-Expr -> Expr
 (define (parse-e s)
   (match s
-    [(? integer?)                  (Int s)]
+    [(? exact-integer?)            (Int s)]
     [(? boolean?)                  (Bool s)]
     [(? char?)                     (Char s)]
+    [(? string?)                   (Str s)]
     ['eof                          (Eof)]
     [(? symbol?)                   (Var s)]
     [(list 'quote (list))          (Empty)]
     [(list (? (op? op0) p0))       (Prim0 p0)]
     [(list (? (op? op1) p1) e)     (Prim1 p1 (parse-e e))]
     [(list (? (op? op2) p2) e1 e2) (Prim2 p2 (parse-e e1) (parse-e e2))]
+    [(list (? (op? op3) p3) e1 e2 e3)
+     (Prim3 p3 (parse-e e1) (parse-e e2) (parse-e e3))]
     [(list 'begin e1 e2)
      (Begin (parse-e e1) (parse-e e2))]
     [(list 'if e1 e2 e3)
      (If (parse-e e1) (parse-e e2) (parse-e e3))]
     [(list 'let (list (list (? symbol? x) e1)) e2)
      (Let x (parse-e e1) (parse-e e2))]
-    [(list 'letrec bs e1)
-     (LetRec (parse-bindings bs) (parse-e e1))]
-    [(list 'λ (? symbol-list? as) e1)      (Lam '() as (parse-e e1))]
-    [(list 'lambda (? symbol-list? as) e1) (Lam '() as (parse-e e1))]
-    [(cons f es)
-     (App (parse-e f) (map parse-e es))]
+    [(cons 'match (cons e ms))
+     (parse-match (parse-e e) ms)]
+    [(list (or 'lambda 'λ) xs e)
+     (if (and (list? xs)
+              (andmap symbol? xs))
+         (Lam (gensym 'lambda) xs (parse-e e))
+         (error "parse lambda error"))]
+    [(cons e es)
+     (App (parse-e e) (map parse-e es))]    
     [_ (error "Parse error" s)]))
 
-(define (parse-bindings bs)
-  (match bs
-    ['() '()]
-    [(cons (list (? symbol? x) e1) rest)
-           (cons (list x (parse-e e1)) (parse-bindings rest))]))
+(define (parse-match e ms)
+  (match ms
+    ['() (Match e '() '())]
+    [(cons (list p r) ms)
+     (match (parse-match e ms)
+       [(Match e ps es)
+        (Match e
+               (cons (parse-pat p) ps)
+               (cons (parse-e r) es))])]))
 
-(define (symbol-list? xs)
-  (match xs
-    [(list (? symbol?) ...) xs]))
+(define (parse-pat p)
+  (match p
+    [(? boolean?) (PLit p)]
+    [(? exact-integer?) (PLit p)]
+    [(? char?)    (PLit p)]
+    ['_           (PWild)]
+    [(? symbol?)  (PVar p)]
+    [(list 'quote (list))
+     (PLit '())]
+    [(list 'box p)
+     (PBox (parse-pat p))]
+    [(list 'cons p1 p2)
+     (PCons (parse-pat p1) (parse-pat p2))]
+    [(list 'and p1 p2)
+     (PAnd (parse-pat p1) (parse-pat p2))]))
 
 (define op0
   '(read-byte peek-byte void))
+
 (define op1
   '(add1 sub1 zero? char? write-byte eof-object?
-         integer->char char->integer box unbox empty? car cdr
-         string? string-length))
+         integer->char char->integer
+         box unbox empty? cons? box? car cdr
+         vector? vector-length string? string-length))
 (define op2
-  '(+ - eq? cons string-ref make-string))
+  '(+ - < = cons eq? make-vector vector-ref make-string string-ref))
+(define op3
+  '(vector-set!))
 
 (define (op? ops)
   (λ (x)

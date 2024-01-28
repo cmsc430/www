@@ -1,6 +1,6 @@
 #lang racket
 (provide interp interp-bits)
-(require "ast.rkt" "types.rkt")
+(require "ast.rkt" "types.rkt" "interp-prim-bits.rkt")
 
 ;; Expr -> Value
 (define (interp e)
@@ -9,18 +9,10 @@
 ;; Expr -> Bits
 (define (interp-bits e)
   (match e
-    [(Int i)  (value->bits i)]
-    [(Bool b) (value->bits b)]
-    [(Prim1 'add1 e0)
-     (+ (interp-bits e0) (value->bits 1))]
-    [(Prim1 'sub1 e0)
-     (- (interp-bits e0) (value->bits 1))]
-    [(Prim1 'zero? e)
-     (if (zero? (interp-bits e))
-         val-true
-         val-false)]
+    [(Lit d) (value->bits d)]
+    [(Prim1 p e)
+     (interp-prim1-bits p (interp-bits e))]
     [(If e1 e2 e3)
-     (if (= (interp-bits e1) val-false)
+     (if (= (interp-bits e1) (value->bits #f))
          (interp-bits e3)
          (interp-bits e2))]))
-
