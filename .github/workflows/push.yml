@@ -15,7 +15,7 @@ jobs:
         sudo apt-get install fonts-stix
         sudo apt-get install libunistring-dev
     - name: Install Racket
-      uses: Bogdanp/setup-racket@v1.10
+      uses: Bogdanp/setup-racket@v1.11
       with:
         architecture: 'x64'
         distribution: 'full'
