@@ -30,9 +30,9 @@ jobs:
         xvfb-run raco test -p langs
         make -C www main
     - name: Archive www
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
-        name: github-pages
+        name: www
         path: www/main
   deploy:
     needs: build-and-test
