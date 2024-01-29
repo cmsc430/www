@@ -29,15 +29,15 @@
 		               
 
                (list @wk{1/29}
-	       	           @seclink["Assignment 1"]{A1}
-			     @elem{@secref["OCaml to Racket"]}
+	       	     ""
+	             @elem{@secref["OCaml to Racket"]}
                      @elem{@secref["OCaml to Racket"]})
-#|
-               (list @wk{9/11}
-	       	           @seclink["Assignment 2"]{A2}
- 		                 @elem{@secref["a86"]}
-                     @elem{@secref["Abscond"]})
 
+               (list @wk{2/5}
+                     @seclink["Assignment 1"]{A1}
+                     @elem{@secref["a86"]}
+                     @elem{@secref["Abscond"]})
+#|
                (list @wk{9/18}
 	                   ""
 		                 @itemlist[@item{@secref["Blackmail"]}

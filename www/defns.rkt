@@ -23,10 +23,10 @@
 (define KEY "KEY")
 
 
-(define m1-date "TBD")
-(define m2-date "TBD")
+(define m1-date "March 6")
+(define m2-date "April 17")
 (define midterm-hours "24")
-(define final-date "TBD")
+(define final-date "May 14")
 (define elms-url "https://umd.instructure.com/courses/1359023")
 
 
