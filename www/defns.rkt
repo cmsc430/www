@@ -57,6 +57,6 @@
 
 ;(define discord "TBD")
 (define piazza "https://piazza.com/class/lrs6masma6h2o1/")
-(define gradescope "https://www.gradescope.com/") ; FIXME
+(define gradescope "https://www.gradescope.com/courses/723511")
 
 (define feedback "https://docs.google.com/forms/d/e/1FAIpQLSc80xQELhHb_Ef-tn0DkpH2b6pYadQiT3aYSEJFNqEqBjzdGg/viewform?usp=sf_link")
