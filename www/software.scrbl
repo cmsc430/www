@@ -60,58 +60,11 @@ This course will make use of the following software:
 Instruction for using each system are below:
 
 @itemlist[
-@item{@secref{GRACE}}
 @item{@secref{Linux}}
 @item{@secref{mac}}
 @item{@secref{Windows}}
+@item{@secref{GRACE}}
 ]
-
-@section[#:tag "GRACE"]{Using GRACE}
-
-The @link["http://www.grace.umd.edu/"]{GRACE} system gives students
-access to an x86-64 Linux system that meets all of the system
-requirements for the software in this course.  If you have an
-incompatible system, or if you'd rather avoid installing and setting
-up the software for this course, you can use GRACE.
-
-Before using GRACE, you should locally install an implementation of
-the X.Org X Window System which will enable you to run GUI programs
-from GRACE on your computer (or any other computer that uses X11).  On
-Linux, this is likely set up by default.  On Mac, you will need to
-install @link["https://www.xquartz.org/"]{XQuartz}.  On Windows, you
-can use @link["https://mobaxterm.mobatek.net/"]{MobaXterm}.
-
-To use GRACE, open a terminal on your computer and
-type:
-
-@verbatim|{   ssh -Y <directoryID>@grace.umd.edu}|
-
-You will prompted for your UMD Directory ID password.  After entering
-your password, you will be at the GRACE command line prompt.
-
-The @tt{-Y} command line option sets up X11 forwarding, which lets you
-run GUI applications from GRACE.  If you leave this off, programs like
-DrRacket will fail to launch when started.
-
-Racket and @tt{nasm} are already installed, but you will
-need to modify your @tt{PATH} environment variable so that you can
-execute them from the command-line.  You can do this with the
-following commands:
-
-@verbatim|{
-   # CMSC 430 set up
-   set path = ( /cell_root/software/racket/8.4/sys/bin $path )
-   set path = ( /cell_root/software/nasm/2.15.05/sys/bin/ $path )}|
-
-If you add these lines to the @tt{.path} file in your home directory, then you
-won't have to run this command manually every time you login; it will happen
-automatically.
-
-Once set, you should be able to run commands such as @tt{racket},
-@tt{raco}, and @tt{nasm}.  Other tools such as @tt{gcc} are already
-available.
-
-Finally, you will need to install @secref{langs-package}.
 
 @section[#:tag "Linux"]{Using Linux}
 
@@ -237,6 +190,59 @@ some Linux Distribution. Here is a breakdown of the steps:
 Regardless of the IDE used, you can now run your tests from your Linux
 subsystem by entering the project directory and using the raco command.
 
+@section[#:tag "GRACE"]{Using GRACE}
+
+@margin-note{GRACE is unfortunately not well maintained by the
+university and is recommended only as a last resort.  Please contact
+course staff if you plan to use GRACE for this class so we can help
+make sure everything is set-up properly.}
+
+The @link["http://www.grace.umd.edu/"]{GRACE} system gives students
+access to an x86-64 Linux system that meets all of the system
+requirements for the software in this course.  If you have an
+incompatible system, or if you'd rather avoid installing and setting
+up the software for this course, you can use GRACE.
+
+Before using GRACE, you should locally install an implementation of
+the X.Org X Window System which will enable you to run GUI programs
+from GRACE on your computer (or any other computer that uses X11).  On
+Linux, this is likely set up by default.  On Mac, you will need to
+install @link["https://www.xquartz.org/"]{XQuartz}.  On Windows, you
+can use @link["https://mobaxterm.mobatek.net/"]{MobaXterm}.
+
+To use GRACE, open a terminal on your computer and
+type:
+
+@verbatim|{   ssh -Y <directoryID>@grace.umd.edu}|
+
+You will prompted for your UMD Directory ID password.  After entering
+your password, you will be at the GRACE command line prompt.
+
+The @tt{-Y} command line option sets up X11 forwarding, which lets you
+run GUI applications from GRACE.  If you leave this off, programs like
+DrRacket will fail to launch when started.
+
+Racket and @tt{nasm} are already installed, but you will
+need to modify your @tt{PATH} environment variable so that you can
+execute them from the command-line.  You can do this with the
+following commands:
+
+@verbatim|{
+   # CMSC 430 set up
+   set path = ( /cell_root/software/racket/8.4/sys/bin $path )
+   set path = ( /cell_root/software/nasm/2.15.05/sys/bin/ $path )}|
+
+If you add these lines to the @tt{.path} file in your home directory, then you
+won't have to run this command manually every time you login; it will happen
+automatically.
+
+Once set, you should be able to run commands such as @tt{racket},
+@tt{raco}, and @tt{nasm}.  Other tools such as @tt{gcc} are already
+available.
+
+Finally, you will need to install @secref{langs-package}.
+
+
 @section[#:tag "install-racket"]{Installing Racket}
 
 Racket is available for all major operating systems from:
@@ -245,6 +251,12 @@ Racket is available for all major operating systems from:
 
 We will be using Racket @racket-version, but any version from the past several
 years should work fine.
+
+It's best to install Racket using the Racket installer rather than any
+package management system (e.g. Homebrew) as these bundles are often
+out-of-date, missing features, or will select the wrong platform
+(remember: you need to be running the Intel 64-bit version, even if
+you're on Apple Silicon).
 
 There are two essential references:
 
