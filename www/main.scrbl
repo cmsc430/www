@@ -42,27 +42,17 @@ implement several related languages.
 
 @bold{Office hours:} AVW 4140
 
-Schedule, TBD.
-
-@;{
 @tabular[#:style 'boxed
          #:row-properties '(bottom-border ())
-	 (list (list @bold{Time}  @bold{Monday}          @bold{Tuesday}  @bold{Wednesday}   @bold{Thursday}  @bold{Friday})
-	       (list      "9 AM"  "William"              'cont           "William"          'cont            'cont)
-	       (list     "10 AM"  "William"              'cont           "Ian, William"     'cont            'cont)
-	       (list     "11 AM"  'cont                  "Pierce"        "Ian"              'cont            'cont)
-	       (list     "12 PM"  "Dalton, Fuxiao"       "Pierce"        "Dalton"           'cont            'cont)
-	       (list      "1 PM"  "Dalton, Fuxiao, Ian"  'cont           "Matthew, Wilson"  "Fuxiao"         "Wilson")
-         (list          ""  "Wilson"               'cont           'cont              'cont            'cont)
-	       (list      "2 PM"  "Ian, Wilson"          "Pierce"        "Matthew"          "Fuxiao"         'cont)
-         (list          ""  'cont                  'cont           'cont              "Pierce"         'cont)
-	       (list      "3 PM"  "Matthew, Yuhwan"      "Pierce"        "Matthew, Yuhwan"  "Pierce"         "Vivian")
-	       (list      "4 PM"  "Yuhwan"               'cont           "Yuhwan, Dalton"   'cont            'cont)
-	       (list      "5 PM"  'cont                  "Vivian"        'cont              "Vivian"         'cont)
-	       (list      "6 PM"  'cont                  'cont           'cont              "Vivian"         'cont))]
-}
-
-
+	 (list (list @bold{Time}  @bold{Monday} @bold{Tuesday} @bold{Wednesday} @bold{Thursday}  @bold{Friday})
+	       (list      "9 AM"  'cont         "Deena"        "Deena"          'cont            'cont)
+	       (list     "10 AM"  'cont         "Deena"        "Deena"          'cont            'cont)
+	       (list     "11 AM"  "Advait"      'cont          "Advait"         'cont            'cont)
+	       (list     "12 PM"  'cont         'cont          "Pierce"         'cont            'cont)
+	       (list      "1 PM"  "Kazi"        "Kazi"         "Pierce"         'cont            'cont)
+	       (list      "2 PM"  "Kazi"        "Kazi"         'cont            "Henry"          'cont)
+	       (list      "3 PM"  'cont         'cont          'cont            "Henry"          "Henry")
+	       (list      "4 PM"  'cont         "William"      'cont            "William"        "Henry"))]
 
 @bold{Communications:} @link[@elms-url]{ELMS}, @link[@piazza]{Piazza}
 

@@ -1,66 +1,59 @@
 #lang scribble/manual
-@(require "../defns.rkt"
-          (only-in scribble/html/html div))
+@title[#:tag "Assignment 1" #:style 'unnumbered]{Assignment 1: Racket Primer}
 
-@title[#:tag "Assignment 1" #:style 'unnumbered]{Assignment 1: Learning about Programming Languages}
+@bold{Due: Monday, February 5, 11:59PM}
 
-@bold{Due: Wednesday, January 31, 11:59PM}
+The goal of this assignment is to gain practice programming in Racket.
 
-Find two programming languages that are new to you, and answer the following questions:
+@bold{This is a collaborative assignment.}  You may work with anyone
+you'd like on this assignment, but each person must submit their
+@tt{submit.zip} file on Gradescope.
 
-@itemlist[#:style 'ordered
+You are given a @tt{racket-basics.zip} file (on ELMS under "Files"),
+that contains a README, a Makefile, and a number of Racket modules.
+In each module there are several function ``stubs,'' i.e. incomplete
+function definitions with type signatures, descriptions, and a small
+set of tests.  Each function has a bogus (but type correct) body
+marked with a ``TODO'' comment.  Your job is to replace each of these
+expressions with a correct implementation of the function.
 
-@item{When was the language first introduced, approximately, and who
-developed it initially?}
+The last section of problems deals with functions that operate over a
+representation of expressions in a lambda-calculus-like language and
+asks you to compute a few simple facts about the given expression.
 
-@item{Why was the language created? What community was the language
-aimed at? What is unique, interesting, and novel about the language?}
+Make sure you do not rename any files.  Also make sure not to change
+the name or signature of any function given to you.  You may add any
+additional functions that help you solve the overall problem you're
+tackling.
 
-@item{Show and describe a fragment of code (in the language) that you think
-is particularly interesting, and describe what it does and why it is
-interesting. You don't necessarily need to install the language
-yourself and write your own code from scratch; examples from language
-documentation are fine.}
+@section[#:tag-prefix "a2-" #:style 'unnumbered]{Testing}
 
-@item{Is the language still used today (as far as you can tell) for
-anything?}
+You can test your code in several ways:
 
-]
+@itemlist[
 
+ @item{Running the code in DrRacket will (by default) run the
+  test submodule and print out a report of any test failures.
+  This is actually a configurable preference, but it is on by
+  default.}
 
-You should exclude the following languages from your search: C, C++,
-C#, Java, Javascript, FORTRAN, LISP, OCaml, Pascal, Perl, Python,
-Racket, Ruby, Scheme, SML, Visual Basic.
+ @item{Using the command line @tt{raco test <filename.rkt>} from
+  the same directory as your Racket code will test the module
+  in @tt{<filename.rkt>}.  If you run @tt{raco test .}, it will
+  test all of the Racket files in the current directory.}]
 
-@section[#:style 'unnumbered]{What to turn in}
+Note: running @tt{racket <filename.rkt>} will @bold{not} test the
+file; you need to use @tt{raco} or DrRacket.
 
-Submit a PDF or plain text file containing your write-up via
-@link[@gradescope]{Gradescope}.
+@section[#:tag-prefix "a2-" #:style 'unnumbered]{Submitting}
 
-@;{Until this assignment is officially assigned (see the due date), submissions
-will not be accepted.}
+Use the included Makefile to run @tt{make submit.zip} (or simply
+@tt{make}) to generate an appropriate @tt{submit.zip} file for
+submitting to Gradescope.
 
-@;{We will be using GitHub Classroom.  This means you will work with git
-repositories and turning in your work consists of pushing the
-repository to GitHub.
+@section[#:tag-prefix "a2-" #:style 'unnumbered]{Grading}
 
-You will need a GitHub account.  Please sign up for one (they are
-free) if you don't already have one.
-
-Visit this URL in a browser:
-
-@centered{@link["https://classroom.github.com/a/aVZJ3fsm"]{https://classroom.github.com/a/aVZJ3fsm}}
-
-After signing in, you should see a list of ID numbers.  Select your
-UID from the list to associate your GitHub username with the UID.
-
-Press "Accept this assignment" which will create a repository for your work.
-
-Clone this repository to your machine.  There are two template files
-@tt{lang1.md} and @tt{lang2.md} for you to edit.  There is also an
-example solution in @tt{racket.md}.  You only need to edit
-@tt{lang1.md} and @tt{lang2.md}.  @bold{Do not rename or move these
-files.}
-
-At any point, you may save your work and push the repository.  We will
-grade the last push before the deadline.}
+Your submission will be graded for correctness.  Passing the unit
+tests included in the file is necessary but @bold{not sufficient} to
+receive a perfect score.  You are strongly encouraged to add your own
+tests to ensure the correctness of your solutions.
