@@ -144,10 +144,9 @@ See @secref{Syllabus}.
 
 Write @emph{a compiler} for @tt{MiniRacket -> x86}
 
-But Rome wasn’t built in a day … and neither is any serious software.
+But the Eiffel Tower wasn’t built in a day … and neither is any serious software.
 
 @image{img/Eiffel.jpg}
-Rome wasn’t built in a day
 
 So we will write @emph{many} compilers:
 
