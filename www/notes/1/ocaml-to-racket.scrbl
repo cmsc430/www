@@ -149,7 +149,7 @@ OCaml also has a notation for writing functions:
 This make an anonymous function that consumes two integers and
 produces their sum.
 
-To apply it, we can write it justapoxed with arguments:
+To apply it, we can write it replaced with arguments:
 
 @ocaml-repl{
 # (fun x y -> x + y) 3 4;;
