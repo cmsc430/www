@@ -660,7 +660,7 @@ It is possible to convert between symbols and strings:
 (string->symbol "fred")
 ]
 
-There's also a convient function that produces a symbol that is guaranteed
+There's also a convenient function that produces a symbol that is guaranteed
 to have not been used so far each time you call it:
 
 @ex[
