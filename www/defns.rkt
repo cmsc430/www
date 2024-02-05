@@ -33,10 +33,11 @@
 (define racket-version "8.11")
 
 (define staff
-  (list (list "William Wegand" "wwegand@terpmail.umd.edu")
+  (list (list "Henry Blanchette" "blancheh@umd.edu")
         (list "Pierce Darragh" "pdarragh@umd.edu")
-	(list "Henry Blanchette" "blancheh@umd.edu")
+	(list "Advait Kushe" "akushe@terpmail.umd.edu")
 	(list "Deena Postol" "dpostol@umd.edu")
+        (list "William Wegand" "wwegand@terpmail.umd.edu")
 	(list "Kazi Tasnim Zinat" "kzintas@umd.edu")
 	#;(list "Fuxiao Liu" "fl3es@umd.edu")
 	#;(list "Vivian Chen" "vchen8@terpmail.umd.edu")
@@ -57,6 +58,6 @@
 
 ;(define discord "TBD")
 (define piazza "https://piazza.com/class/lrs6masma6h2o1/")
-(define gradescope "https://www.gradescope.com/") ; FIXME
+(define gradescope "https://www.gradescope.com/courses/723511")
 
 (define feedback "https://docs.google.com/forms/d/e/1FAIpQLSc80xQELhHb_Ef-tn0DkpH2b6pYadQiT3aYSEJFNqEqBjzdGg/viewform?usp=sf_link")
