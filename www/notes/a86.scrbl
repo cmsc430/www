@@ -101,7 +101,7 @@ complicated. For example,
 @link["https://software.intel.com/content/dam/develop/external/us/en/documents-tps/325462-sdm-vol-1-2abcd-3abcd.pdf"]{
  Intel's x86 software developer's manual} is 5,066 pages
 long.
-@link["https://www.amd.com/system/files/TechDocs/40332.pdf"]{
+@link["https://www.amd.com/content/dam/amd/en/documents/processor-tech-docs/programmer-references/40332.pdf"]{
  AMD's manual} is 3,242 pages.
 
 
