@@ -1168,11 +1168,13 @@ also write modules without saving them in a file.  For example:
 
 @ex[
 (module bt racket
-  (provide bt-height)
+  (provide (all-defined-out))
+  (struct leaf () #:prefab)
+  (struct node (v l r) #:prefab)  
   (define (bt-height bt)
     (match bt
-      [`leaf 0]
-      [`(node ,_ ,left ,right)
+      [(leaf) 0]
+      [(node _ left right)
        (+ 1 (max (bt-height left)
                  (bt-height right)))])))
 ]
@@ -1185,7 +1187,7 @@ provided values:
 
 @ex[
 (require 'bt)
-(bt-height 'leaf)
+(bt-height (leaf))
 ]
 
 We could have also used the @tt{#lang racket} shorthand for
@@ -1214,29 +1216,32 @@ provide everything:
   (module+ test
     (require rackunit))
 
+  (struct leaf () #:prefab)
+  (struct node (v l r) #:prefab)  
+
   (define (bt-empty? bt)
     (match bt
-      ['leaf #t]
-      [(cons 'node _) #f]))
+      [(leaf) #t]
+      [_ #f]))
 
   (module+ test
-    (check-equal? (bt-empty? 'leaf) #t)
-    (check-equal? (bt-empty? '(node 3
-                                    (node 7 leaf leaf)
-                                    (node 9 leaf leaf)))
+    (check-equal? (bt-empty? (leaf)) #t)
+    (check-equal? (bt-empty? (node 3
+                                   (node 7 (leaf) (leaf))
+                                   (node 9 (leaf) (leaf))))
                   #f))
 
   (define (bt-height bt)
     (match bt
-      [`leaf 0]
-      [`(node ,_ ,left ,right)
+      [(leaf) 0]
+      [(node _ left right)
        (+ 1 (max (bt-height left)
                  (bt-height right)))]))
 
   (module+ test
-    (check-equal? (bt-height 'leaf) 0)
+    (check-equal? (bt-height (leaf)) 0)
     (code:comment "intentionally wrong test:")
-    (check-equal? (bt-height '(node 3 leaf leaf)) 2)))
+    (check-equal? (bt-height (node 3 (leaf) (leaf))) 2)))
 ]
 
 Requiring this module with make @racket[bt-height], but @emph{it will not run the tests}:
