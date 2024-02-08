@@ -36,16 +36,17 @@
                (list @wk{2/5}
                      @seclink["Assignment 1"]{A1}
                      @elem{@secref["a86"]}
-                     @elem{@secref["Abscond"]})
-#|
-               (list @wk{9/18}
-	                   ""
-		                 @itemlist[@item{@secref["Blackmail"]}
-                               @item{@secref["Con"]}]
-                     @itemlist[@item{@secref["Dupe"]}
-                               @item{@secref{Dodger}}])
+                     @elem{@secref["a86"]})
 
-               (list @wk{9/25}
+               (list @wk{2/12}
+                     @seclink["Assignment 2"]{A2}
+		     @itemlist[@item{@secref["Abscond"]}
+                               @item{@secref["Blackmail"]}]
+                     @itemlist[@item{@secref["Con"]}
+                               @item{@secref["Dupe"]}])
+
+#|
+(list @wk{9/25}
        	       	     @seclink["Assignment 3"]{A3}
 		                 @secref["Evildoer"]
 		                 @secref["Extort"])
