@@ -175,13 +175,13 @@ Suppose we start executing at @tt{entry}.
  @item{@tt{mov rbx, 36} sets the @tt{rbx} register to 36.}
 
  @item{@tt{cmp rbx 0} compares the value in register @tt{
-   rbx} to zero. Executing this instruction sets a flag in the
-  CPU, which affects subsequent ``conditional'' instructions.
+   rbx} to zero. Executing this instruction sets flags in the
+  CPU, which affect subsequent ``conditional'' instructions.
   In this program, the next instruction is a conditional jump.}
 
  @item{@tt{je done} either jumps to the instruction
   following label @tt{done} or proceeds to the next
-  instruction, based on the state of the comparison flag. The
+  instruction, based on the state of the comparison flags. The
   @tt{je} instruction jumps if the comparison was equal, so
   control jumps to done if @tt{rbx} was 0 in this program. If
   not, the next instruction is executed.}
@@ -551,7 +551,8 @@ What's really going on under the hood of @racket[Push] and
 decremented and the value is written to the memory location
 pointed to by the value of @racket['rsp].
 
-The following code is equivalent to what we wrote above:
+The following code is @emph{mostly} equivalent to what we wrote
+above (and we will discuss the difference in the next section):
 
 @#reader scribble/comment-reader
 (ex
@@ -657,6 +658,96 @@ The above shows how to encode @racket[Call] as @racket[Lea],
  ]
 
 
+
+@section[#:tag "a86-flags"]{Flags}
+
+As mentioned earlier, the processor makes use of @emph{flags} to
+handle comparisons. For our purposes, there are four flags to
+be aware of: zero (ZF), sign (SF), carry (CF), and overflow (OF).
+
+These flags are set by each of the arithmetic operations, which
+are appropriately annotated in the @secref{a86-instructions}.
+Each of these operations is binary (meaning they take two
+arguments), and the flags are set according to properties of
+the result of the arithmetic operation. Many of these properties
+look at the most-significant bit (MSB) of the inputs and output.
+
+@itemlist[
+ @item{@bold{ZF} is set when the result is @tt{0}.}
+ @item{@bold{SF} is set when the MSB of the result is set.}
+ @item{@bold{CF} is set when a bit was set beyond the MSB.}
+ @item{@bold{OF} is set when one of two conditions is met:
+
+   @itemlist[#:style 'ordered
+    @item{The MSB of each input is @emph{set} and the MSB of
+          the result is @emph{not set}.}
+    @item{The MSB of each input is @emph{not set} and the MSB
+          of the result is @emph{set}.}
+   ]}
+]
+
+Note that CF is only useful for unsigned arithmetic, while OF
+is only useful for signed arithmetic. In opposite cases, they
+provide no interesting information.
+
+These flags, along with many others, are stored in a special
+FLAGS register that cannot be accessed by normal means. Each
+flag is represented by a single bit in the register, and they
+all have specific bits assigned by the x86 specification. For
+example, CF is bit 0, ZF is bit 6, SF is bit 7, and OF is bit
+11, as indexed from the least-significant bit position (but
+you don't need to know these numbers).
+
+The various conditions that can be tested for correspond to
+combinations of the flags. For example, the @racket[Jc]
+instruction will jump if CF is set, otherwise execution will
+fall through to the next instruction. Most of the condition
+suffixes are straightforward to deduce from their spelling,
+but some are not. The suffixes (e.g., the @tt{c} in @tt{Jc})
+and their meanings are given below. For brevity's sake the
+flags' names are abbreviated by ommitting the F suffix and
+prefixing them with either @tt{+} or @tt{-} to indicate set
+and unset positions, respectively, as needed. Some of the
+meanings require use of the bitwise operators @tt{|} (OR),
+@tt{&} (AND), @tt{^} (XOR), and @tt{=?} (equality).
+
+@tabular[#:style 'boxed
+         #:row-properties '(bottom-border ())
+  (list (list @bold{Suffix} @bold{Flag}      @bold{Suffix} @bold{Flag})
+        (list @tt{z}        @tt{+Z}          @tt{nz}       @tt{-Z})
+        (list @tt{e}        @tt{+Z}          @tt{ne}       @tt{-Z})
+        (list @tt{s}        @tt{+S}          @tt{ns}       @tt{-S})
+        (list @tt{c}        @tt{+C}          @tt{nc}       @tt{-C})
+        (list @tt{o}        @tt{+O}          @tt{no}       @tt{-O})
+        (list @tt{l}        @tt{      (S ^ O)}    @tt{g}        @tt{(-Z & (S =? O))})
+        (list @tt{le}       @tt{(+Z | (S ^ O))}  @tt{ge}       @tt{      (S =? O)}))]
+
+The @tt{e} suffix (``equal?'') is just a synonym
+for the @tt{z} suffix (``zero?''). This is because it is
+common to use the @racket[Cmp] instruction to perform
+comparisons, but @racket[Cmp] is actually identical to
+@racket[Sub] with the exception that the result is not
+stored anywhere (i.e., it is only used for setting flags
+according to subtraction). If two values are subtracted
+and the resulting difference is zero (ZF is set), then the
+values are equal.
+
+
+@subsection{Push and Pop}
+
+In the previous section (@secref{stacks}), it was explained
+that the @racket[Push] and @racket[Pop] operations are
+essentially equivalent to manually adjusting the stack
+pointer and target register. The one difference is that these
+special stack-manipulation operations do not set any flags
+like @racket[Add] and @racket[Sub] do. So while you can
+often choose to manually implement stack manipulation, you'll
+need to use these instructions specifically if you want to
+preserve the condition flags after adjusting the stack.
+
+
+
+
 @section{a86 Reference}
 
 @defmodule[a86 #:no-declare]
@@ -669,10 +760,10 @@ The above shows how to encode @racket[Call] as @racket[Lea],
  run-time system.}
 
 This module provides all of the bindings from
-@racketmodname[a86/ast],@racketmodname[a86/printer],
-and @racketmodname[a86/interp], described below
+@racketmodname[a86/ast], @racketmodname[a86/printer],
+and @racketmodname[a86/interp], described below.
 
-@section{Instruction set}
+@section[#:tag "a86-instructions"]{Instruction set}
 
 @defmodule[a86/ast]
 
@@ -941,7 +1032,7 @@ Each register plays the same role as in x86, so for example
 @defstruct*[Add ([dst register?] [src (or/c register? offset? 32-bit-integer?)])]{
 
  An addition instruction. Adds @racket[src] to @racket[dst]
- and writes the result to @racket[dst].
+ and writes the result to @racket[dst]. Updates the conditional flags.
 
  @ex[
  (asm-interp
@@ -956,8 +1047,9 @@ Each register plays the same role as in x86, so for example
 
 @defstruct*[Sub ([dst register?] [src (or/c register? offset? 32-bit-integer?)])]{
 
- A subtraction instruction. Subtracts @racket[src] frrom
+ A subtraction instruction. Subtracts @racket[src] from
  @racket[dst] and writes the result to @racket[dst].
+ Updates the conditional flags.
 
  @ex[
  (asm-interp
@@ -971,8 +1063,10 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Cmp ([a1 (or/c register? offset?)] [a2 (or/c register? offset? 32-bit-integer?)])]{
- Compare @racket[a1] to @racket[a2].  Doing a comparison
- sets the status flags that affect the conditional instructions like @racket[Je], @racket[Jl], etc.
+ Compare @racket[a1] to @racket[a2] by subtracting @racket[a2] from @racket[a1]
+ and updating the comparison flags. Does not store the result of subtraction.
+
+ In the case of a 32-bit immediate, it is sign-extended to 64-bits.
 
  @ex[
  (asm-interp
@@ -1013,8 +1107,42 @@ Each register plays the same role as in x86, so for example
 
 }
 
+@defstruct*[Jz ([x (or/c label? register?)])]{
+ Jump to label @racket[x] if the zero flag is set.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 42)
+   (Cmp 'rax 2)
+   (Jz 'l1)
+   (Mov 'rax 0)
+   (Label 'l1)
+   (Ret)))
+ ]
+}
+
+@defstruct*[Jnz ([x (or/c label? register?)])]{
+ Jump to label @racket[x] if the zero flag is @emph{not} set.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 42)
+   (Cmp 'rax 2)
+   (Jnz 'l1)
+   (Mov 'rax 0)
+   (Label 'l1)
+   (Ret)))
+ ]
+}
+
 @defstruct*[Je ([x (or/c label? register?)])]{
- Jump to label @racket[x] if the conditional flag is set to ``equal.''
+ An alias for @racket[Jz].
 
  @ex[
  (asm-interp
@@ -1031,7 +1159,7 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Jne ([x (or/c label? register?)])]{
- Jump to label @racket[x] if the conditional flag is set to ``not equal.''
+ An alias for @racket[Jnz].
 
  @ex[
  (asm-interp
@@ -1048,7 +1176,7 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Jl ([x (or/c label? register?)])]{
- Jump to label @racket[x] if the conditional flag is set to ``less than.''
+ Jump to label @racket[x] if the conditional flags are set to ``less than'' (see @secref{a86-flags}).
 
  @ex[
  (asm-interp
@@ -1065,7 +1193,7 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Jle ([x (or/c label? register?)])]{
- Jump to label @racket[x] if the conditional flag is set to ``less than or equal.''
+ Jump to label @racket[x] if the conditional flags are set to ``less than or equal'' (see @secref{a86-flags}).
 
  @ex[
  (asm-interp
@@ -1082,7 +1210,7 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Jg ([x (or/c label? register?)])]{
- Jump to label @racket[x] if the conditional flag is set to ``greater than.''
+ Jump to label @racket[x] if the conditional flags are set to ``greater than'' (see @secref{a86-flags}).
 
  @ex[
  (asm-interp
@@ -1099,7 +1227,7 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Jge ([x (or/c label? register?)])]{
- Jump to label @racket[x] if the conditional flag is set to ``greater than or equal.''
+ Jump to label @racket[x] if the conditional flags are set to ``greater than or equal'' (see @secref{a86-flags}).
 
  @ex[
  (asm-interp
@@ -1183,8 +1311,35 @@ Each register plays the same role as in x86, so for example
  ]
 }
 
+@defstruct*[Cmovz ([dst register?] [src (or/c register? offset?)])]{
+ Move from @racket[src] to @racket[dst] if the zero flag is set.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 0)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovz 'rax 'r9)
+   (Ret)))
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 2)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovz 'rax 'r9)
+   (Ret)))
+ ]
+}
+
+
 @defstruct*[Cmove ([dst register?] [src (or/c register? offset?)])]{
- Move from @racket[src] to @racket[dst] if the comparison flag is set to equal.
+ An alias for @racket[Cmovz].
 
  @ex[
  (asm-interp
@@ -1209,8 +1364,34 @@ Each register plays the same role as in x86, so for example
  ]
 }
 
+@defstruct*[Cmovnz ([dst register?] [src (or/c register? offset?)])]{
+ Move from @racket[src] to @racket[dst] if the zero flag is @emph{not} set.
+
+ @ex[
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 0)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovnz 'rax 'r9)
+   (Ret)))
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax 2)
+   (Cmp 'rax 0)
+   (Mov 'r9 1)
+   (Cmovnz 'rax 'r9)
+   (Ret)))
+ ]
+}
+
 @defstruct*[Cmovne ([dst register?] [src (or/c register? offset?)])]{
- Move from @racket[src] to @racket[dst] if the comparison flag is set to not equal.
+ An alias for @racket[Cmovnz].
 
  @ex[
  (asm-interp
@@ -1236,7 +1417,7 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Cmovl ([dst register?] [src (or/c register? offset?)])]{
- Move from @racket[src] to @racket[dst] if the comparison flag is set to less than.
+ Move from @racket[src] to @racket[dst] if the conditional flags are set to ``less than'' (see @secref{a86-flags}).
 
  @ex[
  (asm-interp
@@ -1262,7 +1443,7 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Cmovle ([dst register?] [src (or/c register? offset?)])]{
- Move from @racket[src] to @racket[dst] if the comparison flag is set to less than or equal.
+ Move from @racket[src] to @racket[dst] if the conditional flags are set to ``less than or equal'' (see @secref{a86-flags}).
 
  @ex[
  (asm-interp
@@ -1288,7 +1469,7 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Cmovg ([dst register?] [src (or/c register? offset?)])]{
- Move from @racket[src] to @racket[dst] if the comparison flag is set to greather than.
+ Move from @racket[src] to @racket[dst] if the conditional flags are set to ``greather than'' (see @secref{a86-flags}).
 
  @ex[
  (asm-interp
@@ -1314,7 +1495,7 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Cmovge ([dst register?] [src (or/c register? offset?)])]{
- Move from @racket[src] to @racket[dst] if the comparison flag is set to greater than or equal.
+ Move from @racket[src] to @racket[dst] if the conditional flags are set to ``greater than or equal'' (see @secref{a86-flags}).
 
  @ex[
  (asm-interp
@@ -1366,7 +1547,7 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Cmovno ([dst register?] [src (or/c register? offset?)])]{
- Move from @racket[src] to @racket[dst] if the overflow flag is not set.
+ Move from @racket[src] to @racket[dst] if the overflow flag is @emph{not} set.
 
  @ex[
  (asm-interp
@@ -1418,7 +1599,7 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Cmovnc ([dst register?] [src (or/c register? offset?)])]{
- Move from @racket[src] to @racket[dst] if the carry flag is not set.
+ Move from @racket[src] to @racket[dst] if the carry flag is @emph{not} set.
 
  @ex[
  (asm-interp
@@ -1446,7 +1627,7 @@ Each register plays the same role as in x86, so for example
 
 @defstruct*[And ([dst (or/c register? offset?)] [src (or/c register? offset? 32-bit-integer?)])]{
 
- Compute logical ``and'' of @racket[dst] and @racket[src] and put result in @racket[dst].
+ Compute logical ``and'' of @racket[dst] and @racket[src] and put result in @racket[dst]. Updates the conditional flags.
 
  @#reader scribble/comment-reader
  (ex
@@ -1461,7 +1642,9 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Or ([dst (or/c register? offset?)] [src (or/c register? offset? 32-bit-integer?)])]{
- Compute logical ``or'' of @racket[dst] and @racket[src] and put result in @racket[dst].
+ Compute logical ``or'' of @racket[dst] and @racket[src] and put result in @racket[dst]. Updates the conditional flags.
+
+ In the case of a 32-bit immediate, it is sign-extended to 64-bits.
 
  @#reader scribble/comment-reader
  (ex
@@ -1476,7 +1659,9 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Xor ([dst (or/c register? offset?)] [src (or/c register? offset? 32-bit-integer?)])]{
- Compute logical ``exclusive or'' of @racket[dst] and @racket[src] and put result in @racket[dst].
+ Compute logical ``exclusive or'' of @racket[dst] and @racket[src] and put result in @racket[dst]. Updates the conditional flags.
+
+ In the case of a 32-bit immediate, it is sign-extended to 64-bits.
 
  @#reader scribble/comment-reader
  (ex
@@ -1492,7 +1677,7 @@ Each register plays the same role as in x86, so for example
 
 @defstruct*[Sal ([dst register?] [i (integer-in 0 63)])]{
  Shift @racket[dst] to the left @racket[i] bits and put result in @racket[dst].
- The leftmost bits are discarded.
+ The leftmost bits are discarded. Updates the conditional flags.
 
  @#reader scribble/comment-reader
  (ex
@@ -1508,7 +1693,8 @@ Each register plays the same role as in x86, so for example
 
 @defstruct*[Sar ([dst register?] [i (integer-in 0 63)])]{
  Shift @racket[dst] to the right @racket[i] bits and put result in @racket[dst].
- The rightmost bits are discarded.
+ The rightmost bits are discarded.  The added leftmost bits are filled with the
+ sign bit of the original. Updates the conditional flags.
 
  @#reader scribble/comment-reader
  (ex
@@ -1534,6 +1720,8 @@ Each register plays the same role as in x86, so for example
 
  Decrements the stack pointer and then stores the source
  operand on the top of the stack.
+
+ In the case of a 32-bit immediate, it is sign-extended to 64-bits.
 
  @ex[
  (asm-interp

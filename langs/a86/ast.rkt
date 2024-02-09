@@ -37,7 +37,7 @@
       (error n "expects register or offset; given ~v" a2))
     (values a a1 a2)))
 
-(define check:arith  
+(define check:arith
   (λ (a a1 a2 n)
     (unless (register? a1)
       (error n "expects register; given ~v" a1))
@@ -88,7 +88,7 @@
     (unless (or (and (exact-integer? a2) (<= 0 a2 63))
                 (eq? 'cl a2))
       (error n "expects exact integer in [0,63]; given ~v" a2))
-    (values a a1 a2)))      
+    (values a a1 a2)))
 
 (define check:offset
   (λ (a r i n)
@@ -150,7 +150,7 @@
   (syntax-case stx ()
     [(instruct Name (x ...) guard)
      (with-syntax ([Name? (datum->syntax stx (string->symbol (string-append (symbol->string (syntax->datum #'Name)) "?")))])
-     #'(begin (provide Name Name?)              
+     #'(begin (provide Name Name?)
               (define-match-expander Name
                 (lambda (stx)
                   (syntax-case stx ()
@@ -170,13 +170,13 @@
                                               (struct->vector i2))))
                  (define hash-proc  (λ (i hash) (hash (struct->vector i))))
                  (define hash2-proc (λ (i hash) (hash (struct->vector i))))]
-                
+
                 #:property prop:custom-print-quotable 'never
                 #:methods gen:custom-write
                 [(define write-proc
 		   (instr-print 'Name)
                    #;(make-constructor-style-printer
-                    (lambda (obj) 'Name)        
+                    (lambda (obj) 'Name)
                     (lambda (obj)
                       (rest (rest (vector->list (struct->vector obj)))))))])
               (define Name? %Name?)))]))
@@ -212,6 +212,8 @@
 (instruct Sub    (dst src) check:arith)
 (instruct Cmp    (a1 a2)   check:src-dest)
 (instruct Jmp    (x)       check:target)
+(instruct Jz     (x)       check:target)
+(instruct Jnz    (x)       check:target)
 (instruct Je     (x)       check:target)
 (instruct Jne    (x)       check:target)
 (instruct Jl     (x)       check:target)
@@ -222,6 +224,8 @@
 (instruct Jno    (x)       check:target)
 (instruct Jc     (x)       check:target)
 (instruct Jnc    (x)       check:target)
+(instruct Cmovz  (dst src) check:cmov)
+(instruct Cmovnz (dst src) check:cmov)
 (instruct Cmove  (dst src) check:cmov)
 (instruct Cmovne (dst src) check:cmov)
 (instruct Cmovl  (dst src) check:cmov)
@@ -238,9 +242,9 @@
 (instruct Sal    (dst i)   check:shift)
 (instruct Sar    (dst i)   check:shift)
 (instruct Push   (a1)      check:push)
+(instruct Pop    (a1)      check:register)
 (instruct Pushf  ()        check:none)
 (instruct Popf   ()        check:none)
-(instruct Pop    (a1)      check:register)
 (instruct Lea    (dst x)   check:lea)
 (instruct Not    (x)       check:register)
 (instruct Div    (den)     check:register)
@@ -340,7 +344,7 @@
     [(cons (Label s) asm)
      (cons s (label-decls asm))]
     [(cons (Extern s) asm)
-     (cons s (label-decls asm))]    
+     (cons s (label-decls asm))]
     [(cons _ asm)
      (label-decls asm)]))
 
@@ -370,7 +374,7 @@
     [(cons (Call (? label? s)) asm)
      (cons s (label-uses asm))]
     [(cons (Lea _ (? label? s)) asm)
-     (cons s (label-uses asm))]    
+     (cons s (label-uses asm))]
     [(cons _ asm)
      (label-uses asm)]))
 
