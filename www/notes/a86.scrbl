@@ -1677,7 +1677,8 @@ Each register plays the same role as in x86, so for example
 
 @defstruct*[Sal ([dst register?] [i (integer-in 0 63)])]{
  Shift @racket[dst] to the left @racket[i] bits and put result in @racket[dst].
- The leftmost bits are discarded. Updates the conditional flags.
+ The most-significant (leftmost) bits are discarded. Updates the conditional
+ flags.
 
  @#reader scribble/comment-reader
  (ex
@@ -1693,8 +1694,9 @@ Each register plays the same role as in x86, so for example
 
 @defstruct*[Sar ([dst register?] [i (integer-in 0 63)])]{
  Shift @racket[dst] to the right @racket[i] bits and put result in @racket[dst].
- The rightmost bits are discarded.  The added leftmost bits are filled with the
- sign bit of the original. Updates the conditional flags.
+ For each shift count, the least-significant (rightmost) bit is shifted into
+ the carry flag. The new most-significant (leftmost) bits are filled with the
+ sign bit of the original @racket[dst] value. Updates the conditional flags.
 
  @#reader scribble/comment-reader
  (ex
@@ -1713,6 +1715,52 @@ Each register plays the same role as in x86, so for example
    (Mov 'rax #b100001101) ; #b100001101 = 269
    (Sar 'rax 6)
    (Ret)))        ; #b100 = 4
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax #b1000000000000000000000000000000000000000000000000000000000000000) ; 1 in MSB
+   (Sar 'rax 6)
+   (Ret))) ; #b1111111000000000000000000000000000000000000000000000000000000000
+ )
+}
+
+@defstruct*[Shl ([dst register?] [i (integer-in 0 63)])]{
+ Alias for @racket[Sal].
+}
+
+@defstruct*[Shr ([dst register?] [i (integer-in 0 63)])]{
+ Shift @racket[dst] to the right @racket[i] bits and put result in @racket[dst].
+ For each shift count, the least-significant (rightmost) bit is shifted into
+ the carry flag, and the most-significant bit is cleared. Updates the
+ conditional flags.
+
+ @#reader scribble/comment-reader
+ (ex
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax #b100000000) ; #b100000000 = 256
+   (Shr 'rax 6)
+   (Ret)))        ; #b100 = 4
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax #b100001101) ; #b100001101 = 269
+   (Shr 'rax 6)
+   (Ret)))        ; #b100 = 4
+
+ (asm-interp
+  (prog
+   (Global 'entry)
+   (Label 'entry)
+   (Mov 'rax #b1000000000000000000000000000000000000000000000000000000000000000) ; 1 in MSB
+   (Shr 'rax 6)
+   (Ret))) ; #b0000001000000000000000000000000000000000000000000000000000000000
  )
 }
 

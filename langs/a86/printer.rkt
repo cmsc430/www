@@ -120,6 +120,14 @@
        (string-append tab "sar "
                       (arg->string a1) ", "
                       (arg->string a2))]
+      [(Shl a1 a2)
+       (string-append tab "shl "
+                      (arg->string a1) ", "
+                      (arg->string a2))]
+      [(Shr a1 a2)
+       (string-append tab "shr "
+                      (arg->string a1) ", "
+                      (arg->string a2))]
       [(And a1 a2)
        (string-append tab "and "
                       (arg->string a1) ", "

@@ -241,6 +241,8 @@
 (instruct Xor    (dst src) check:src-dest)
 (instruct Sal    (dst i)   check:shift)
 (instruct Sar    (dst i)   check:shift)
+(instruct Shl    (dst i)   check:shift)
+(instruct Shr    (dst i)   check:shift)
 (instruct Push   (a1)      check:push)
 (instruct Pop    (a1)      check:register)
 (instruct Pushf  ()        check:none)
