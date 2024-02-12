@@ -1314,6 +1314,12 @@ Each register plays the same role as in x86, so for example
 @defstruct*[Cmovz ([dst register?] [src (or/c register? offset?)])]{
  Move from @racket[src] to @racket[dst] if the zero flag is set.
 
+ Note that the semantics for conditional moves is not what many people expect.
+ The @dst[src] is @emph{always} read, regardless of the condition's evaluation.
+ This means that if your source is illegal (such as an offset beyond the bounds
+ of memory allocated to the current process), a segmentation fault will arise
+ even if the condition ``should have'' prevented the error.
+
  @ex[
  (asm-interp
   (prog
@@ -1339,7 +1345,7 @@ Each register plays the same role as in x86, so for example
 
 
 @defstruct*[Cmove ([dst register?] [src (or/c register? offset?)])]{
- An alias for @racket[Cmovz].
+ An alias for @racket[Cmovz]. See notes on @racket[Cmovz].
 
  @ex[
  (asm-interp
@@ -1366,6 +1372,7 @@ Each register plays the same role as in x86, so for example
 
 @defstruct*[Cmovnz ([dst register?] [src (or/c register? offset?)])]{
  Move from @racket[src] to @racket[dst] if the zero flag is @emph{not} set.
+ See notes on @racket[Cmovz].
 
  @ex[
  (asm-interp
@@ -1391,7 +1398,7 @@ Each register plays the same role as in x86, so for example
 }
 
 @defstruct*[Cmovne ([dst register?] [src (or/c register? offset?)])]{
- An alias for @racket[Cmovnz].
+ An alias for @racket[Cmovnz]. See notes on @racket[Cmovz].
 
  @ex[
  (asm-interp
@@ -1418,6 +1425,7 @@ Each register plays the same role as in x86, so for example
 
 @defstruct*[Cmovl ([dst register?] [src (or/c register? offset?)])]{
  Move from @racket[src] to @racket[dst] if the conditional flags are set to ``less than'' (see @secref{a86-flags}).
+ See also the notes on @racket[Cmovz].
 
  @ex[
  (asm-interp
@@ -1444,6 +1452,7 @@ Each register plays the same role as in x86, so for example
 
 @defstruct*[Cmovle ([dst register?] [src (or/c register? offset?)])]{
  Move from @racket[src] to @racket[dst] if the conditional flags are set to ``less than or equal'' (see @secref{a86-flags}).
+ See also the notes on @racket[Cmovz].
 
  @ex[
  (asm-interp
@@ -1470,6 +1479,7 @@ Each register plays the same role as in x86, so for example
 
 @defstruct*[Cmovg ([dst register?] [src (or/c register? offset?)])]{
  Move from @racket[src] to @racket[dst] if the conditional flags are set to ``greather than'' (see @secref{a86-flags}).
+ See also the notes on @racket[Cmovz].
 
  @ex[
  (asm-interp
@@ -1496,6 +1506,7 @@ Each register plays the same role as in x86, so for example
 
 @defstruct*[Cmovge ([dst register?] [src (or/c register? offset?)])]{
  Move from @racket[src] to @racket[dst] if the conditional flags are set to ``greater than or equal'' (see @secref{a86-flags}).
+ See also the notes on @racket[Cmovz].
 
  @ex[
  (asm-interp
@@ -1522,6 +1533,7 @@ Each register plays the same role as in x86, so for example
 
 @defstruct*[Cmovo ([dst register?] [src (or/c register? offset?)])]{
  Move from @racket[src] to @racket[dst] if the overflow flag is set.
+ See notes on @racket[Cmovz].
 
  @ex[
  (asm-interp
@@ -1548,6 +1560,7 @@ Each register plays the same role as in x86, so for example
 
 @defstruct*[Cmovno ([dst register?] [src (or/c register? offset?)])]{
  Move from @racket[src] to @racket[dst] if the overflow flag is @emph{not} set.
+ See notes on @racket[Cmovz].
 
  @ex[
  (asm-interp
@@ -1574,6 +1587,7 @@ Each register plays the same role as in x86, so for example
 
 @defstruct*[Cmovc ([dst register?] [src (or/c register? offset?)])]{
  Move from @racket[src] to @racket[dst] if the carry flag is set.
+ See notes on @racket[Cmovz].
 
  @ex[
  (asm-interp
@@ -1600,6 +1614,7 @@ Each register plays the same role as in x86, so for example
 
 @defstruct*[Cmovnc ([dst register?] [src (or/c register? offset?)])]{
  Move from @racket[src] to @racket[dst] if the carry flag is @emph{not} set.
+ See notes on @racket[Cmovz].
 
  @ex[
  (asm-interp
