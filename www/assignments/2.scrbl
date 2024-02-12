@@ -1,28 +1,24 @@
 #lang scribble/manual
-@title[#:tag "Assignment 2" #:style 'unnumbered]{Assignment 2: Racket Primer}
+@title[#:tag "Assignment 2" #:style 'unnumbered]{Assignment 2: a86 Primer}
 
-@bold{Due: Wednesday, September 13, 11:59PM}
+@bold{Due: Wednesday, February 14, 11:59PM}
 
-The goal of this assignment is to gain practice programming in Racket.
+The goal of this assignment is to gain practice programming in a86.
 
 @bold{This is a collaborative assignment.}  You may work with anyone
 you'd like on this assignment, but each person must submit their
-@tt{main.rkt} file on Gradescope.
+@tt{submit.zip} file on Gradescope.
 
-You are given a @tt{main.rkt} file (on ELMS under "Files"), that
-contains a number of sections.  In each section there are several
-function ``stubs,'' i.e. incomplete function definitions with type
-signatures, descriptions, and a small set of tests.  Each function has
-a bogus (but type correct) body marked with a ``TODO'' comment.  Your
-job is to replace each of these expressions with a correct
-implementation of the function.
+You are given a @tt{a86-basics.zip} file (on ELMS under "Files"), that
+contains a README, a Makefile, and a number of Racket modules.  In
+each module there are several ``stubs,'' i.e. incomplete definitions
+with type signatures, descriptions, and a small set of tests.  Each
+definition has a bogus (but type correct) body marked with a ``TODO''
+comment.  Your job is to replace each of these expressions with a
+correct implementation of the a86 code.
 
-The last section of problems deals with functions that operate over a
-representation of expressions in a lambda-calculus-like language and
-asks you to compute a few simple facts about the given expression.
-
-Make sure you do not rename the file.  Also make sure not to change
-the name or signature of any function given to you.  You may add any
+Make sure you do not rename any files.  Also make sure not to change
+the name or signature of any definition given to you.  You may add any
 additional functions that help you solve the overall problem you're
 tackling.
 
@@ -37,15 +33,19 @@ You can test your code in several ways:
   This is actually a configurable preference, but it is on by
   default.}
 
- @item{Using the command line @tt{raco test main.rkt} from
-  the same directory as @tt{main.rkt}.}]
+ @item{Using the command line @tt{raco test <filename.rkt>} from
+  the same directory as your Racket code will test the module
+  in @tt{<filename.rkt>}.  If you run @tt{raco test .}, it will
+  test all of the Racket files in the current directory.}]
 
-Note that running @tt{racket main.rkt} from the command line will
-@bold{not} run the tests.
+Note: running @tt{racket <filename.rkt>} will @bold{not} test the
+file; you need to use @tt{raco} or DrRacket.
 
 @section[#:tag-prefix "a2-" #:style 'unnumbered]{Submitting}
 
-Submit your filled-in @tt{main.rkt} file on Gradescope.
+Use the included Makefile to run @tt{make submit.zip} (or simply
+@tt{make}) to generate an appropriate @tt{submit.zip} file for
+submitting to Gradescope.
 
 @section[#:tag-prefix "a2-" #:style 'unnumbered]{Grading}
 

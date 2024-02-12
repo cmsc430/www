@@ -101,7 +101,7 @@ complicated. For example,
 @link["https://software.intel.com/content/dam/develop/external/us/en/documents-tps/325462-sdm-vol-1-2abcd-3abcd.pdf"]{
  Intel's x86 software developer's manual} is 5,066 pages
 long.
-@link["https://www.amd.com/system/files/TechDocs/40332.pdf"]{
+@link["https://www.amd.com/content/dam/amd/en/documents/processor-tech-docs/programmer-references/40332.pdf"]{
  AMD's manual} is 3,242 pages.
 
 
@@ -943,6 +943,8 @@ Each register plays the same role as in x86, so for example
  An addition instruction. Adds @racket[src] to @racket[dst]
  and writes the result to @racket[dst].
 
+ In the case of a 32-bit immediate, it is sign-extended to 64-bits.
+
  @ex[
  (asm-interp
   (prog
@@ -959,6 +961,8 @@ Each register plays the same role as in x86, so for example
  A subtraction instruction. Subtracts @racket[src] frrom
  @racket[dst] and writes the result to @racket[dst].
 
+ In the case of a 32-bit immediate, it is sign-extended to 64-bits.
+
  @ex[
  (asm-interp
   (prog
@@ -974,6 +978,8 @@ Each register plays the same role as in x86, so for example
  Compare @racket[a1] to @racket[a2].  Doing a comparison
  sets the status flags that affect the conditional instructions like @racket[Je], @racket[Jl], etc.
 
+ In the case of a 32-bit immediate, it is sign-extended to 64-bits.
+ 
  @ex[
  (asm-interp
   (prog
@@ -1448,6 +1454,8 @@ Each register plays the same role as in x86, so for example
 
  Compute logical ``and'' of @racket[dst] and @racket[src] and put result in @racket[dst].
 
+ In the case of a 32-bit immediate, it is sign-extended to 64-bits.
+
  @#reader scribble/comment-reader
  (ex
  (asm-interp
@@ -1463,6 +1471,8 @@ Each register plays the same role as in x86, so for example
 @defstruct*[Or ([dst (or/c register? offset?)] [src (or/c register? offset? 32-bit-integer?)])]{
  Compute logical ``or'' of @racket[dst] and @racket[src] and put result in @racket[dst].
 
+ In the case of a 32-bit immediate, it is sign-extended to 64-bits.
+ 
  @#reader scribble/comment-reader
  (ex
  (asm-interp
@@ -1478,6 +1488,8 @@ Each register plays the same role as in x86, so for example
 @defstruct*[Xor ([dst (or/c register? offset?)] [src (or/c register? offset? 32-bit-integer?)])]{
  Compute logical ``exclusive or'' of @racket[dst] and @racket[src] and put result in @racket[dst].
 
+ In the case of a 32-bit immediate, it is sign-extended to 64-bits.
+ 
  @#reader scribble/comment-reader
  (ex
  (asm-interp
@@ -1508,7 +1520,8 @@ Each register plays the same role as in x86, so for example
 
 @defstruct*[Sar ([dst register?] [i (integer-in 0 63)])]{
  Shift @racket[dst] to the right @racket[i] bits and put result in @racket[dst].
- The rightmost bits are discarded.
+ The rightmost bits are discarded.  The added leftmost bits are filled with the
+ sign bit of the original.
 
  @#reader scribble/comment-reader
  (ex
@@ -1535,6 +1548,8 @@ Each register plays the same role as in x86, so for example
  Decrements the stack pointer and then stores the source
  operand on the top of the stack.
 
+ In the case of a 32-bit immediate, it is sign-extended to 64-bits.
+ 
  @ex[
  (asm-interp
   (prog

@@ -55,6 +55,11 @@ and evaluate their results:
 - : bool = false
 }
 
+When the REPL is given an expression, it is evaluated to a value.  In
+the case of OCaml, it prints both the value and its type.  OCaml is
+able to determine the type of the value @emph{before} evaluating the
+expression, thanks to its static type system.
+
 Note that the @tt{;;} is not part of the expression syntax, but is a
 terminator token, signalling to the REPL that the expression is
 complete and ready to be evaluated.
@@ -74,6 +79,10 @@ is slightly different, but both languages agree on numbers, strings,
 and booleans.  OCaml uses a @tt{#} prompt, while Racket uses @tt{>},
 but these differences are immaterial.  The languages are essentially
 the same so far.
+
+Racket doesn't print the type because it does not have a static type
+system like OCaml's and it has no way of predicting the type of value
+an expression will produce before it's evaluated.
 
 
 @section{Basic operations}
@@ -113,7 +122,7 @@ Languages, like people, descend from their ancestors and inherit some
 of their properties.  In the case of notation, Racket inherits the
 Lisp (and Scheme) notation for programs.  It takes a bit of getting
 used to, but once aclimated, the notation should feel lightweight and
-consistent; there is verry little to memorize when it comes to syntax.
+consistent; there is very little to memorize when it comes to syntax.
 
 So in Racket, we would write:
 
@@ -135,6 +144,100 @@ Here the parens are indicating a function application.  The
 ``function'' is the first subexpression within the parens,
 i.e. @racket[1].  Of course, @racket[1] isn't a function and can't be
 applied, hence the error.
+
+@section{Numbers}
+
+Integers in OCaml and Racket look pretty similar, but the two
+languages have differing approaches to numbers overall.  In OCaml, the
+@tt{int} type can represent only fixed bit-width integers.  Hence
+there is a maximal (and minimal) integer.  The variables @tt{max_int}
+and @tt{min_int} are bound to these values, respectively:
+
+@ocaml-repl{
+# max_int;;
+- : int = 4611686018427387903
+# min_int;;
+- : int = -4611686018427387904
+}
+
+What happens when you do something like add 1 to @tt{max_int}?  Mess
+around and find out.
+
+In Racket, integers behave like the integers you learned about in math
+class.  There's no largest or smallest one:
+
+@ex[
+(add1 4611686018427387903)
+]
+
+In principle, you can represent arbitrarily large (or small) integers.
+In practice, you are bounded by the amount of memory available that
+can be used to represent those integers.
+
+Another difference is that in OCaml, integers are disjoint from
+floating point numbers.  They have different literal syntaxes,
+different types, and different operations.  If you want to add a
+floating point number and an integer together, you'll have to
+explicitly convert one of them.
+
+@ocaml-repl{
+# 1 +. 3.14;;
+Error: This expression has type int but an expression was expected of type
+         float
+# (float_of_int 1) +. 3.14;;   
+- : float = 4.14000000000000057
+}
+
+In Racket, operations work on different kinds of numbers and can be
+used without conversions:
+
+@ex[
+(+ 1 3.14)
+]
+
+Moreover, Racket has certain kinds of numbers that are not supported
+(without using libraries) in OCaml.  For example, you can write
+@racket[2/3] to mean the rational number two-thirds in Racket:
+
+@ex[
+2/3
+]
+
+It's worth noting that while this may look like division, it's not: we
+are writing the literal number @racket[2/3].  The division operator,
+like every other operation, would have to be written using prefix
+notation with parentheses:
+
+@ex[
+(/ 2 3)
+]
+
+But notice that division produces exact rational results, not a
+floating point approximation as in OCaml:
+
+@ocaml-repl{
+# 2. /. 3.;;
+- : float = 0.66666666666666663
+}
+
+It's also possible to use complex numbers in Racket.  The
+@racket[sqrt] operation computes the square root of its argument:
+
+@ex[
+(sqrt 16)
+(sqrt 25)
+]
+
+But when given a negative number, it computes a complex result:
+
+@ex[
+(sqrt -1)
+(sqrt -100)
+]
+
+Mostly we will be sticking to using integers and will not taking
+advantage of the advanced numeric system of Racket, but it's worth
+knowing it's there.
 
 
 @section{Functions}
@@ -365,7 +468,10 @@ second component is a list (either the empty list or another
 pair whose second component is a list, etc.).
 
 You can make pairs out of any kind of element and you can
-make lists out of any kind of elements. We can precisely
+make lists out of any kind of elements.
+
+@;{
+We can precisely
 define these sets as:
 
 @#reader scribble/comment-reader
@@ -389,6 +495,7 @@ Or, to give more useful parameterized definitions:
 ;; type (Pairof A B) =
 ;; | (cons A B)
 )
+}
 
 The functions @racket[first] and @racket[rest] operate on
 non-empty @emph{lists}, producing the first element of the
@@ -510,10 +617,11 @@ We can do the same in Racket:
 ]
 
 
-@section{Datatypes}
+@section{Structures}
 
-OCaml has the ability to declare new datatypes.  For example,
-we can define type for binary trees of numbers:
+OCaml has the ability to declare new datatypes using records and
+variants.  For example, we can define type for binary trees of
+integers:
 
 @ocaml-repl{
 # type bt = 
@@ -590,8 +698,8 @@ val bt_height : bt -> int = <fun>
 - : int = 2
 }
 
-We do something very similar in Racket using @emph{
- structures}. A structure type is like a (single) variant of
+We do something very similar in Racket using @emph{structures}.
+A structure type is like a (single) variant of
 a data type in OCaml: it's a way of combining several things
 into one new kind of value.
 
@@ -612,18 +720,18 @@ constructor takes 3 arguments.
 (node 3 (node 2 (leaf) (leaf)) (leaf))
 ]
 
+With these structure definitions in place, we can represent binary
+trees of integers just as in OCaml, and functions that process binary
+trees look very similar:
+
+@;{
 There is no type system in Racket, but we can conceptually still
 define what we mean in a comment.  Just like in OCaml, we can use
 pattern matching to discriminate and deconstruct:
+}
 
 @ex[
-(code:comment "type Bt = (leaf) | (node Integer Bt Bt)")    
-(define (bt-empty? bt)
-  (match bt
-    [(leaf) #t]
-    [(node _ _ _) #f]))
-(bt-empty? (leaf))
-(bt-empty? (node 5 (leaf) (leaf)))
+;(code:comment "type Bt = (leaf) | (node Integer Bt Bt)")    
 (define (bt-height bt)
   (match bt
     [(leaf) 0]
@@ -633,7 +741,17 @@ pattern matching to discriminate and deconstruct:
 (bt-height (leaf))
 (bt-height (node 4 (node 2 (leaf) (leaf)) (leaf)))
 ]
- 
+
+One thing to note here is that in OCaml, the @tt{Node} and @tt{Leaf}
+constructors are part of the @tt{bt} type.  You can't construct a node
+that doesn't conform to the @tt{bt} type definition and you can't
+re-use these constructors in the definition of some other type.
+
+This isn't the case in Racket.  Structures, like pairs and lists, can
+contain any kind of value.  So while it doesn't conform to our idea of
+what a binary tree is: @racket[(node #t "fred" 9)] is a value in
+Racket.
+
 @section{Symbols}
 
 One of the built-in datatypes we will use often in Racket is
@@ -670,12 +788,13 @@ to have not been used so far each time you call it:
 ]
 
 
+@;{
 They can be used to define ``enum'' like datatypes:
 
 @ex[
 (code:comment "type Flintstone = 'fred | 'wilma | 'pebbles")
 ]
-
+}
 
 You can use pattern matching to match symbols:
 
@@ -761,14 +880,10 @@ Functions operating on such trees could be defined as:
 ]
 }
 
-@section{Quote, quasiquote, and unquote}
+@section{Quote}
 
 One of the distinguishing features of languages in the Lisp family
-(such as Scheme and Racket) is the @racket[quote] operator and its
-closely related cousins @racket[quasiquote], @racket[unquote], and
-@racket[unquote-splicing].
-
-Let's start with @racket[quote].
+(such as Scheme and Racket) is the @racket[quote] form.
 
 The ``tick'' character @racket['d] is used as a shorthand for
 @racket[(code:quote d)].
@@ -827,6 +942,7 @@ The kind of things you can construct with the @racket[quote] form are
 often called @bold{s-expressions}, short for @bold{symbolic
 expressions}.
 
+@;{
 We can give a type definition for s-expressions:
 
 @#reader scribble/comment-reader
@@ -838,6 +954,7 @@ We can give a type definition for s-expressions:
 ;; | Symbol
 ;; | (Listof S-Expr)
 )
+}
 
 The reason for this name is because anything you can write
 down as an expression, you can write down inside a
@@ -857,7 +974,7 @@ We will be using (subsets of) s-expressions extensively as our data
 representation of AST and IR expressions, so it's important to gain a
 level of fluency with them now.
 
-
+@;{
 Once you understand @racket[quote], moving on to @racket[quasiquote],
 @racket[unquote], and @racket[unquote-splicing] are pretty
 straight-forward.
@@ -909,7 +1026,9 @@ equivalent to @racket[(list '+ 1 3 4)], or
 
 If the expression inside the @racket[unquote-splicing]
 produces something other than a pair, an error is signalled.
+}
 
+@;{
 @section{Poetry of s-expressions}
 
 The use of structures lets us program in a style very
@@ -1009,6 +1128,12 @@ Moreover, we can embrace quasiquotation at the type-level and write:
 @ex[
 (code:comment "type Bt = `leaf | `(node ,Integer ,Bt ,Bt)")
 ]
+}
+
+@;section{Thinking about types}
+
+
+
 
 @section{Testing, modules, submodules}
 
@@ -1043,11 +1168,13 @@ also write modules without saving them in a file.  For example:
 
 @ex[
 (module bt racket
-  (provide bt-height)
+  (provide (all-defined-out))
+  (struct leaf () #:prefab)
+  (struct node (v l r) #:prefab)  
   (define (bt-height bt)
     (match bt
-      [`leaf 0]
-      [`(node ,_ ,left ,right)
+      [(leaf) 0]
+      [(node _ left right)
        (+ 1 (max (bt-height left)
                  (bt-height right)))])))
 ]
@@ -1060,7 +1187,7 @@ provided values:
 
 @ex[
 (require 'bt)
-(bt-height 'leaf)
+(bt-height (leaf))
 ]
 
 We could have also used the @tt{#lang racket} shorthand for
@@ -1089,29 +1216,32 @@ provide everything:
   (module+ test
     (require rackunit))
 
+  (struct leaf () #:prefab)
+  (struct node (v l r) #:prefab)  
+
   (define (bt-empty? bt)
     (match bt
-      ['leaf #t]
-      [(cons 'node _) #f]))
+      [(leaf) #t]
+      [_ #f]))
 
   (module+ test
-    (check-equal? (bt-empty? 'leaf) #t)
-    (check-equal? (bt-empty? '(node 3
-                                    (node 7 leaf leaf)
-                                    (node 9 leaf leaf)))
+    (check-equal? (bt-empty? (leaf)) #t)
+    (check-equal? (bt-empty? (node 3
+                                   (node 7 (leaf) (leaf))
+                                   (node 9 (leaf) (leaf))))
                   #f))
 
   (define (bt-height bt)
     (match bt
-      [`leaf 0]
-      [`(node ,_ ,left ,right)
+      [(leaf) 0]
+      [(node _ left right)
        (+ 1 (max (bt-height left)
                  (bt-height right)))]))
 
   (module+ test
-    (check-equal? (bt-height 'leaf) 0)
+    (check-equal? (bt-height (leaf)) 0)
     (code:comment "intentionally wrong test:")
-    (check-equal? (bt-height '(node 3 leaf leaf)) 2)))
+    (check-equal? (bt-height (node 3 (leaf) (leaf))) 2)))
 ]
 
 Requiring this module with make @racket[bt-height], but @emph{it will not run the tests}:
