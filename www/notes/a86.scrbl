@@ -101,7 +101,7 @@ complicated. For example,
 @link["https://software.intel.com/content/dam/develop/external/us/en/documents-tps/325462-sdm-vol-1-2abcd-3abcd.pdf"]{
  Intel's x86 software developer's manual} is 5,066 pages
 long.
-@link["https://www.amd.com/system/files/TechDocs/40332.pdf"]{
+@link["https://www.amd.com/content/dam/amd/en/documents/processor-tech-docs/programmer-references/40332.pdf"]{
  AMD's manual} is 3,242 pages.
 
 
@@ -1034,6 +1034,8 @@ Each register plays the same role as in x86, so for example
  An addition instruction. Adds @racket[src] to @racket[dst]
  and writes the result to @racket[dst]. Updates the conditional flags.
 
+ In the case of a 32-bit immediate, it is sign-extended to 64-bits.
+
  @ex[
  (asm-interp
   (prog
@@ -1051,6 +1053,8 @@ Each register plays the same role as in x86, so for example
  @racket[dst] and writes the result to @racket[dst].
  Updates the conditional flags.
 
+ In the case of a 32-bit immediate, it is sign-extended to 64-bits.
+
  @ex[
  (asm-interp
   (prog
@@ -1065,6 +1069,8 @@ Each register plays the same role as in x86, so for example
 @defstruct*[Cmp ([a1 (or/c register? offset?)] [a2 (or/c register? offset? 32-bit-integer?)])]{
  Compare @racket[a1] to @racket[a2] by subtracting @racket[a2] from @racket[a1]
  and updating the comparison flags. Does not store the result of subtraction.
+
+ In the case of a 32-bit immediate, it is sign-extended to 64-bits.
 
  In the case of a 32-bit immediate, it is sign-extended to 64-bits.
 
@@ -1644,6 +1650,8 @@ Each register plays the same role as in x86, so for example
 
  Compute logical ``and'' of @racket[dst] and @racket[src] and put result in @racket[dst]. Updates the conditional flags.
 
+ In the case of a 32-bit immediate, it is sign-extended to 64-bits.
+
  @#reader scribble/comment-reader
  (ex
  (asm-interp
@@ -1661,6 +1669,8 @@ Each register plays the same role as in x86, so for example
 
  In the case of a 32-bit immediate, it is sign-extended to 64-bits.
 
+ In the case of a 32-bit immediate, it is sign-extended to 64-bits.
+
  @#reader scribble/comment-reader
  (ex
  (asm-interp
@@ -1675,6 +1685,8 @@ Each register plays the same role as in x86, so for example
 
 @defstruct*[Xor ([dst (or/c register? offset?)] [src (or/c register? offset? 32-bit-integer?)])]{
  Compute logical ``exclusive or'' of @racket[dst] and @racket[src] and put result in @racket[dst]. Updates the conditional flags.
+
+ In the case of a 32-bit immediate, it is sign-extended to 64-bits.
 
  In the case of a 32-bit immediate, it is sign-extended to 64-bits.
 

@@ -40,7 +40,7 @@ jobs:
       pages: write
       id-token: write
     environment:
-      name: github-pages
+      name: www
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest    
     if: github.ref == 'refs/heads/main'
