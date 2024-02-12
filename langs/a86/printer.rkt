@@ -73,7 +73,7 @@
       [(Plus e1 e2)
        (string-append "(" (exp->string e1) " + " (exp->string e2) ")")]
       [_ (label-symbol->string e)]))
-  
+
   (define tab (make-string 8 #\space))
 
   ;; Instruction -> String
@@ -84,8 +84,8 @@
               (format "~a~a; ~.s" s (make-string (- 40 (string-length s)) #\space) (instruction-annotation i))
               (format "~a ; ~.s" s (instruction-annotation i)))
           s)))
-  
-  
+
+
   ;; Instruction -> String
   (define (simple-instr->string i)
     (match i
@@ -107,7 +107,7 @@
       [(Sub a1 a2)
        (string-append tab "sub "
                       (arg->string a1) ", "
-                      (arg->string a2))]    
+                      (arg->string a2))]
       [(Cmp a1 a2)
        (string-append tab "cmp "
                       (arg->string a1) ", "
@@ -120,6 +120,14 @@
        (string-append tab "sar "
                       (arg->string a1) ", "
                       (arg->string a2))]
+      [(Shl a1 a2)
+       (string-append tab "shl "
+                      (arg->string a1) ", "
+                      (arg->string a2))]
+      [(Shr a1 a2)
+       (string-append tab "shr "
+                      (arg->string a1) ", "
+                      (arg->string a2))]
       [(And a1 a2)
        (string-append tab "and "
                       (arg->string a1) ", "
@@ -127,13 +135,19 @@
       [(Or a1 a2)
        (string-append tab "or "
                       (arg->string a1) ", "
-                      (arg->string a2))]    
+                      (arg->string a2))]
       [(Xor a1 a2)
        (string-append tab "xor "
                       (arg->string a1) ", "
                       (arg->string a2))]
       [(Jmp l)
        (string-append tab "jmp "
+                      (jump-target->string l))]
+      [(Jz l)
+       (string-append tab "jz "
+                      (jump-target->string l))]
+      [(Jnz l)
+       (string-append tab "jnz "
                       (jump-target->string l))]
       [(Je l)
        (string-append tab "je "
@@ -165,6 +179,14 @@
       [(Jnc l)
        (string-append tab "jnc "
                       (jump-target->string l))]
+      [(Cmovz dst src)
+       (string-append tab "cmovz "
+                      (reg->string dst) ", "
+                      (arg->string src))]
+      [(Cmovnz dst src)
+       (string-append tab "cmovnz "
+                      (reg->string dst) ", "
+                      (arg->string src))]
       [(Cmove dst src)
        (string-append tab "cmove "
                       (reg->string dst) ", "
@@ -211,13 +233,13 @@
       [(Push a)
        (string-append tab "push "
                       (arg->string a))]
+      [(Pop r)
+       (string-append tab "pop "
+                      (reg->string r))]
       [(Pushf)
        (string-append tab "pushf")]
       [(Popf)
        (string-append tab "popf")]
-      [(Pop r)
-       (string-append tab "pop "
-                      (reg->string r))]
       [(Lea d (? offset? x))
        (string-append tab "lea "
                       (arg->string d) ", "
