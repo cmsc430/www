@@ -562,7 +562,7 @@ val even_digit : int -> bool = <fun>
 The patterns here, save the last one, are just integer literals.  If
 @tt{n} is the same as any of these integers, the value @tt{true} is
 produced.  The last case uses a "wildcard," which matches anything and
-produces true.
+produces @tt{false}.
 
 Here's an example that matches a tuple, binding each part of the tuple
 to a name and then using those names to construct a different tuple:
