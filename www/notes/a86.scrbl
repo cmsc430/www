@@ -1321,7 +1321,7 @@ Each register plays the same role as in x86, so for example
  Move from @racket[src] to @racket[dst] if the zero flag is set.
 
  Note that the semantics for conditional moves is not what many people expect.
- The @dst[src] is @emph{always} read, regardless of the condition's evaluation.
+ The @racket[src] is @emph{always} read, regardless of the condition's evaluation.
  This means that if your source is illegal (such as an offset beyond the bounds
  of memory allocated to the current process), a segmentation fault will arise
  even if the condition ``should have'' prevented the error.
