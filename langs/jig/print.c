@@ -113,12 +113,12 @@ void print_str(val_str_t* s)
 
 void print_str_char_u(val_char_t c)
 {
-  printf("\\u%04X", c);
+  printf("\\u%04" PRIX64, c);
 }
 
 void print_str_char_U(val_char_t c)
 {
-  printf("\\U%08X", c);
+  printf("\\U%08" PRIX64, c);
 }
 
 void print_str_char(val_char_t c)

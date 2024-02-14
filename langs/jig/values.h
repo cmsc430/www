@@ -22,7 +22,7 @@ typedef enum type_t {
   T_STR,
 } type_t;
 
-typedef uint32_t val_char_t;
+typedef uint64_t val_char_t;
 typedef struct val_box_t {
   val_t val;
 } val_box_t;
