@@ -1,9 +1,9 @@
 #lang crook
-{:= A B C D0 D0.A D1 E0 E1 F H0 H1 I J K}
+{:= A B C D0 D0.A D1 E0 E1 F H0 H1 I J K L}
 (provide {:> A} Lit {:> E0} Prim0 {:> B} Prim1 {:> F} Prim2 {:> H1} Prim3
          {:> C D0} IfZero {:> D0} If {:> E0} Eof {:> E0} Begin {:> F} Let
          {:> F} Var {:> H0} Empty {:> I} Prog {:> I} Defn {:> I} App
-         {:> K} Match {:> K} Box {:> K} Cons {:> K} Conj)
+         {:> K} Match {:> K} Box {:> K} Cons {:> K} Conj {:> L} Lam)
 ;;
 
 {:> I} ;; type Prog = (Prog (Listof Defn) Expr)
@@ -28,8 +28,10 @@
           ;;           | (Case Expr [Listof CaseClause] Expr)
 {:> F}    ;;           | (Let Id Expr Expr)
 {:> F}    ;;           | (Var Id)
-{:> I}    ;;           | (App Id (Listof Expr))
+{:> I L}  ;;           | (App Id (Listof Expr))
+{:> L}    ;;           | (App Expr (Listof Expr))
 {:> K}    ;;           | (Match Expr (Listof Pat) (Listof Expr))
+{:> L}    ;;           | (Lam Id (Listof Id) Expr)
 
 {:> D0.A D1}
 ;; type CondClause = (Clause Expr Expr)
@@ -77,6 +79,7 @@
 {:> F}    (struct Let (x e1 e2) #:prefab)
 {:> F}    (struct Var (x) #:prefab)
 {:> I}    (struct App (f es) #:prefab)
+{:> L}    (struct Lam (f xs e) #:prefab)
 {:> K}    (struct Match (e ps es) #:prefab)
 
 {:> K}    (struct Box (p) #:prefab)

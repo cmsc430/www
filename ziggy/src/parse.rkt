@@ -1,5 +1,5 @@
 #lang crook
-{:= A B C D0 D0.A D1 E0 E1 F H0 H1 I J K}
+{:= A B C D0 D0.A D1 E0 E1 F H0 H1 I J K L}
 (provide parse {:> I} parse-e {:> I} parse-define)
 (require "ast.rkt")
 
@@ -81,8 +81,15 @@
     {:> K}
     [(cons 'match (cons e ms))
      (parse-match (parse-e e) ms)]
+    {:> I L}
     [(cons (? symbol? f) es)
      (App f (map parse-e es))]
+    {:> L}
+    [(list (or 'lambda 'λ) (? (lambda (xs) (and (list? xs) (andmap symbol? xs)) xs) xs) e)
+     (Lam (gensym 'lambda) xs (parse-e e))]    
+    {:> L}
+    [(cons e es)
+     (App (parse-e e) (map parse-e es))]
     [_ (error "Parse error" s)]))
 
 {:> K} ;; Expr [Listof S-Expr]

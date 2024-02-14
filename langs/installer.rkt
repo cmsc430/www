@@ -24,5 +24,6 @@
                                     ("hoax"      . "H1")
                                     ("iniquity"  . "I")
                                     ("jig"       . "J")
-                                    ("knock"     . "K")))
+                                    ("knock"     . "K")
+                                    ("loot"      . "L")))                 
                  (error 'ziggy-pre-installer (format "unsupported lang: ~s" lang-name))))))

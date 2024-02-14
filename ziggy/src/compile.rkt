@@ -1,9 +1,11 @@
 #lang crook
-{:= A B C D0 D0.A D1 E0 E1 F H0 H1 I J K}
+{:= A B C D0 D0.A D1 E0 E1 F H0 H1 I J K L}
 (provide (all-defined-out))
 (require "ast.rkt")
 {:> B}   (require "compile-ops.rkt")
 {:> D0}  (require "types.rkt")
+{:> L}   (require "lambdas.rkt")
+{:> L}   (require "fv.rkt")
 (require a86/ast)
 
 (define rax 'rax)
@@ -11,6 +13,7 @@
 {:> E0} (define rsp 'rsp) {:> E0} ; stack
 {:> H0} (define rdi 'rdi) {:> H0} ; arg
 {:> J}  (define r8  'r8)  {:> J}  ; scratch
+{:> L}  (define r9  'r9)  {:> L}  ; scratch
 {:> F}  (define r15 'r15) {:> F}  ; stack pad (non-volatile)
 
 {:> A I} ;; Expr -> Asm
@@ -28,7 +31,7 @@
         {:> F}    (Push r15)    {:> F} ; save callee-saved register
         {:> H0}   (Push rbx)
         {:> H0}   (Mov rbx rdi) {:> H0} ; recv heap pointer
-        {:> F}    (compile-e e '())
+        {:> F}  (compile-e e '())
         {:> H0}   (Pop rbx)
         {:> F}    (Pop r15)     {:> F} ; restore callee-save register
         (Ret)
@@ -51,14 +54,31 @@
            (Push rbx)    ; save callee-saved register
            (Push r15)
            (Mov rbx rdi) ; recv heap pointer
+           {:> L}
+           (compile-defines-values ds)
+           {:> I L}
            (compile-e e '() {:> J} #f)
+           {:> L}
+           (compile-e e (reverse (define-ids ds)) #f)
+           {:> L}
+           (Add rsp (* 8 (length ds))) {:> L} ;; pop function definitions           
            (Pop r15)     ; restore callee-save register
            (Pop rbx)
            (Ret)
            (compile-defines ds)
+           {:> L}
+           (compile-lambda-defines (lambdas p))
            (Label 'err)
            pad-stack
            (Call 'raise_error))]))
+
+{:> L} ;; [Listof Defn] -> [Listof Id]
+{:> L}
+(define (define-ids ds)
+  (match ds
+    ['() '()]
+    [(cons (Defn f xs e) ds)
+     (cons f (define-ids ds))]))
 
 {:> I} ;; [Listof Defn] -> Asm
 {:> I}
@@ -69,8 +89,8 @@
      (seq (compile-define d)
           (compile-defines ds))]))
 
-{:> I} ;; Defn -> Asm
-{:> I}
+{:> I L} ;; Defn -> Asm
+{:> I L}
 (define (compile-define d)
   (match d
     [(Defn f xs e)
@@ -78,6 +98,48 @@
           (compile-e e (reverse xs) {:> J} #t)
           (Add rsp (* 8 (length xs))) ; pop args
           (Ret))]))
+
+{:> L} ;; Defn -> Asm
+{:> L}
+(define (compile-define d)
+  (match d
+    [(Defn f xs e)
+     (compile-lambda-define (Lam f xs e))]))
+
+{:> L} ;; [Listof Lam] -> Asm
+{:> L}
+(define (compile-lambda-defines ls)
+  (match ls
+    ['() (seq)]
+    [(cons l ls)
+     (seq (compile-lambda-define l)
+          (compile-lambda-defines ls))]))
+
+{:> L} ;; Lam -> Asm
+{:> L}
+(define (compile-lambda-define l)
+  (let ((fvs (fv l)))
+    (match l
+      [(Lam f xs e)
+       (let ((env  (append (reverse fvs) (reverse xs) (list #f))))
+         (seq (Label (symbol->label f))              
+              (Mov rax (Offset rsp (* 8 (length xs))))
+              (Xor rax type-proc)
+              (copy-env-to-stack fvs 8)
+              (compile-e e env #t)
+              (Add rsp (* 8 (length env))) ; pop env
+              (Ret)))])))
+
+{:> L} ;; [Listof Id] Int -> Asm
+{:> L} ;; Copy the closure environment at given offset to stack
+{:> L}
+(define (copy-env-to-stack fvs off)
+  (match fvs
+    ['() (seq)]
+    [(cons _ fvs)
+     (seq (Mov r9 (Offset rax off))
+          (Push r9)
+          (copy-env-to-stack fvs (+ 8 off)))]))
 
 {:> F} ;; type CEnv = (Listof [Maybe Id])
 
@@ -116,9 +178,15 @@
     {:> F}
     [(Let x e1 e2)
      (compile-let x e1 e2 c {:> J} t?)]
-    {:> I}
+    {:> I L}
     [(App f es)
      (compile-app f es c {:> J} t?)]
+    {:> L}
+    [(App e es)
+     (compile-app e es c t?)]
+    {:> L}
+    [(Lam f xs e)
+     (compile-lam f xs e c)]    
     {:> K}
     [(Match e ps es) (compile-match e ps es c t?)]))
 
@@ -239,31 +307,6 @@
        (compile-e e2 (cons x c) {:> J} t?)
        (Add rsp 8)))
 
-{:> J} ;; Id [Listof Expr] CEnv Boolean -> Asm
-{:> J}
-(define (compile-app f es c t?)
-  (if t?
-      (compile-app-tail f es c)
-      (compile-app-nontail f es c)))
-
-{:> J} ;; Id [Listof Expr] CEnv -> Asm
-{:> J}
-(define (compile-app-tail f es c)
-  (seq (compile-es es c)
-       (move-args (length es) (length c))
-       (Add rsp (* 8 (length c)))
-       (Jmp (symbol->label f))))
-
-{:> J} ;; Integer Integer -> Asm
-{:> J}
-(define (move-args i off)
-  (cond [(zero? off) (seq)]
-        [(zero? i)   (seq)]
-        [else
-         (seq (Mov r8 (Offset rsp (* 8 (sub1 i))))
-              (Mov (Offset rsp (* 8 (+ off (sub1 i)))) r8)
-              (move-args (sub1 i) off))]))
-
 {:> I} ;; Id [Listof Expr] CEnv -> Asm
 {:> I} ;; The return address is placed above the arguments, so callee pops
 {:> I} ;; arguments and return address is next frame
@@ -276,8 +319,47 @@
          (Jmp (symbol->label f))
          (Label r))))
 
-{:> Z:FIXME} ;; eats previous paren if we do ({:> I J} compile-app {:> J} compile-app-nontail ...)
+{:> J L} ;; Id [Listof Expr] CEnv Boolean -> Asm
+{:> L}   ;; Expr [Listof Expr] CEnv Boolean -> Asm
 {:> J}
+(define (compile-app {:> J L} f {:> L} e es c t?)
+  (if t?
+      (compile-app-tail {:> J L} f {:> L} e es c)
+      (compile-app-nontail {:> J L} f {:> L} e es c)))
+
+{:> J L} ;; Id [Listof Expr] CEnv -> Asm
+{:> J L}
+(define (compile-app-tail f es c)
+  (seq (compile-es es c)
+       (move-args (length es) (length c))
+       (Add rsp (* 8 (length c)))
+       (Jmp (symbol->label f))))
+
+{:> L} ;; Expr [Listof Expr] CEnv -> Asm
+{:> L}
+(define (compile-app-tail e es c)
+  (seq (compile-es (cons e es) c)
+       (move-args (add1 (length es)) (length c))
+       (Add rsp (* 8 (length c)))
+       (Mov rax (Offset rsp (* 8 (length es))))
+       (assert-proc rax)
+       (Xor rax type-proc)
+       (Mov rax (Offset rax 0))
+       (Jmp rax)))
+
+{:> J} ;; Integer Integer -> Asm
+{:> J}
+(define (move-args i off)
+  (cond [(zero? off) (seq)]
+        [(zero? i)   (seq)]
+        [else
+         (seq (Mov r8 (Offset rsp (* 8 (sub1 i))))
+              (Mov (Offset rsp (* 8 (+ off (sub1 i)))) r8)
+              (move-args (sub1 i) off))]))
+
+{:> Z:FIXME} ;; eats previous paren if we do ({:> I J} compile-app {:> J} compile-app-nontail ...)
+{:> J L} ;; Id [Listof Expr] CEnv -> Asm
+{:> J L}
 (define (compile-app-nontail f es c)
   (let ((r (gensym 'ret)))
     (seq (Lea rax r)
@@ -285,6 +367,89 @@
          (compile-es es (cons #f c))
          (Jmp (symbol->label f))
          (Label r))))
+
+{:> L} ;; Expr [Listof Expr] CEnv -> Asm
+{:> L} ;; The return address is placed above the arguments, so callee pops
+{:> L} ;; arguments and return address is next frame
+{:> L}
+(define (compile-app-nontail e es c)
+  (let ((r (gensym 'ret))
+        (i (* 8 (length es))))
+    (seq (Lea rax r)
+         (Push rax)
+         (compile-es (cons e es) (cons #f c))         
+         (Mov rax (Offset rsp i))
+         (assert-proc rax)
+         (Xor rax type-proc)
+         (Mov rax (Offset rax 0)) ; fetch the code label
+         (Jmp rax)
+         (Label r))))
+
+{:> L} ;; Defns -> Asm
+{:> L} ;; Compile the closures for ds and push them on the stack
+{:> L}
+(define (compile-defines-values ds)
+  (seq (alloc-defines ds 0)
+       (init-defines ds (reverse (define-ids ds)) 8)
+       (add-rbx-defines ds 0)))
+
+{:> L} ;; Defns Int -> Asm
+{:> L} ;; Allocate closures for ds at given offset, but don't write environment yet
+{:> L}
+(define (alloc-defines ds off)
+  (match ds
+    ['() (seq)]
+    [(cons (Defn f xs e) ds)
+     (let ((fvs (fv (Lam f xs e))))
+       (seq (Lea rax (symbol->label f))
+            (Mov (Offset rbx off) rax)         
+            (Mov rax rbx)
+            (Add rax off)
+            (Or rax type-proc)
+            (Push rax)
+            (alloc-defines ds (+ off (* 8 (add1 (length fvs)))))))]))
+
+{:> L} ;; Defns CEnv Int -> Asm
+{:> L} ;; Initialize the environment for each closure for ds at given offset
+{:> L}
+(define (init-defines ds c off)
+  (match ds
+    ['() (seq)]
+    [(cons (Defn f xs e) ds)
+     (let ((fvs (fv (Lam f xs e))))
+       (seq (free-vars-to-heap fvs c off)
+            (init-defines ds c (+ off (* 8 (add1 (length fvs)))))))]))
+
+{:> L} ;; Defns Int -> Asm
+{:> L} ;; Compute adjustment to rbx for allocation of all ds
+{:> L}
+(define (add-rbx-defines ds n)
+  (match ds
+    ['() (seq (Add rbx (* n 8)))]
+    [(cons (Defn f xs e) ds)
+     (add-rbx-defines ds (+ n (add1 (length (fv (Lam f xs e))))))]))
+
+{:> L} ;; Id [Listof Id] Expr CEnv -> Asm
+{:> L}
+(define (compile-lam f xs e c) 
+  (let ((fvs (fv (Lam f xs e))))
+    (seq (Lea rax (symbol->label f))
+         (Mov (Offset rbx 0) rax)
+         (free-vars-to-heap fvs c 8)
+         (Mov rax rbx) ; return value
+         (Or rax type-proc)         
+         (Add rbx (* 8 (add1 (length fvs)))))))
+
+{:> L} ;; [Listof Id] CEnv Int -> Asm
+{:> L} ;; Copy the values of given free variables into the heap at given offset
+{:> L}
+(define (free-vars-to-heap fvs c off)
+  (match fvs
+    ['() (seq)]
+    [(cons x fvs)
+     (seq (Mov r8 (Offset rsp (lookup x c)))
+          (Mov (Offset rbx off) r8)
+          (free-vars-to-heap fvs c (+ off 8)))]))
 
 {:> I} ;; [Listof Expr] CEnv -> Asm
 {:> I}

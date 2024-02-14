@@ -1,6 +1,6 @@
 #lang crook
-{:= B C D0 D0.A D1 E0 E1 F H0 H1 I J K}
-(provide {:> E0} compile-op0 compile-op1 {:> F} compile-op2 {:> H1} compile-op3 {:> F} pad-stack)
+{:= B C D0 D0.A D1 E0 E1 F H0 H1 I J K L}
+(provide {:> E0} compile-op0 compile-op1 {:> F} compile-op2 {:> H1} compile-op3 {:> F} pad-stack {:> L} assert-proc)
 (require "ast.rkt")
 {:> D0} (require "types.rkt")
 (require a86/ast)
@@ -340,6 +340,9 @@
 {:> H1}
 (define assert-string
   (assert-type ptr-mask type-str))
+{:> L}
+(define assert-proc
+  (assert-type ptr-mask type-proc))
 
 {:> E1}
 (define (assert-codepoint)
