@@ -109,4 +109,4 @@
 
 {:> H1}
 (define (char-ref i j)
-  (integer->char (ptr-ref (cast (untag i) _int64 _pointer) _uint32 j)))
+  (integer->char (ptr-ref (cast (untag i) _int64 _pointer) _uint64 j)))

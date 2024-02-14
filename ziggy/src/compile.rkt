@@ -148,8 +148,7 @@
              (compile-string-chars (string->list s) 8)
              (Mov rax rbx)
              (Or rax type-str)
-             (Add rbx
-                  (+ 8 (* 4 (if (odd? len) (add1 len) len))))))))
+             (Add rbx (* 8 (add1 len)))))))
 
 {:> H1} ;; [Listof Char] Integer -> Asm
 {:> H1}
@@ -158,8 +157,8 @@
     ['() (seq)]
     [(cons c cs)
      (seq (Mov rax (char->integer c))
-          (Mov (Offset rbx i) 'eax)
-          (compile-string-chars cs (+ 4 i)))]))
+          (Mov (Offset rbx i) rax)
+          (compile-string-chars cs (+ 8 i)))]))
 
 {:> E0} ;; Op0 -> Asm
 {:> E0}

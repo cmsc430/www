@@ -85,8 +85,7 @@
   (λ (a a1 a2 n)
     (unless (register? a1)
       (error n "expects register; given ~v" a1))
-    (unless (or (and (exact-integer? a2) (<= 0 a2 63))
-                (eq? 'cl a2))
+    (unless (and (exact-integer? a2) (<= 0 a2 63))
       (error n "expects exact integer in [0,63]; given ~v" a2))
     (values a a1 a2)))
 
@@ -280,7 +279,7 @@
 (define offset? Offset?)
 
 (define (register? x)
-  (and (memq x '(cl eax rax rbx rcx rdx rbp rsp rsi rdi r8 r9 r10 r11 r12 r13 r14 r15))
+  (and (memq x '(rax rbx rcx rdx rbp rsp rsi rdi r8 r9 r10 r11 r12 r13 r14 r15))
        #t))
 
 (define (64-bit-integer? x)

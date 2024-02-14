@@ -6,7 +6,6 @@
 (require a86/ast)
 
 (define rax 'rax)
-{:> H1} (define eax 'eax) {:> H1} ; 32-bit load/store
 {:> H0} (define rbx 'rbx) {:> H0} ; heap
 {:> E0} (define rdi 'rdi) {:> E0} ; arg
 {:> F}  (define r8  'r8)  {:> F}  ; scratch in op2
@@ -231,13 +230,9 @@
 
             (Sar rax char-shift)
 
-            (Add r8 1) ; adds 1
-            (Sar r8 1) ; when
-            (Sal r8 1) ; len is odd
-
             (Label loop)
-            (Mov (Offset rbx 0) eax)
-            (Add rbx 4)
+            (Mov (Offset rbx 0) rax)
+            (Add rbx 8)
             (Sub r8 1)
             (Cmp r8 0)
             (Jne loop)
@@ -263,9 +258,9 @@
           (Sub r9 1)
           (Cmp r9 rax)
           (Jl 'err)
-          (Sal rax 2)
+          (Sal rax 3)
           (Add r8 rax)
-          (Mov 'eax (Offset r8 8))
+          (Mov rax (Offset r8 8))
           (Sal rax char-shift)
           (Or rax type-char))]))
 
