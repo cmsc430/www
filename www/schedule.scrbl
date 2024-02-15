@@ -45,6 +45,18 @@
                      @itemlist[@item{@secref["Con"]}
                                @item{@secref["Dupe"]}])
 
+               (list @wk{2/19}
+                     @elem{@seclink["Assignment 2"]{A3} P1}
+		     @itemlist[@item{@secref["Dodger"]}
+                               @item{@secref["Evildoer"]}]
+	             @secref["Extort"])
+
+               (list @wk{2/26}
+                     @elem{@seclink["Assignment 2"]{A3} P2}
+		     @secref{Fraud}
+		     @secref{Fraud})
+
+
 #|
 (list @wk{9/25}
        	       	     @seclink["Assignment 3"]{A3}
