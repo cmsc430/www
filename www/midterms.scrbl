@@ -3,7 +3,7 @@
 @title[#:style '(toc unnumbered)]{Midterms}
 
 There will be two midterm examinations, which will be @bold{take-home}
-exams.  Exams will be distributed at least 48 hours before the due
+exams.  Exams will be distributed at least @midterm-hours hours before the due
 date of the midterm.
 
 @itemlist[
