@@ -56,6 +56,11 @@
 		     @secref{Fraud}
 		     @secref{Fraud})
 
+               (list @wk{3/4}
+                     ""
+		     @secref{Hustle}
+		     @secref["Midterm_1"])
+
 
 #|
 (list @wk{9/25}
