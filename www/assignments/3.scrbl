@@ -10,18 +10,29 @@
 @bold{Part 2 Due: Wednesday, February 28, 11:59PM}
 
 
-The goal of this assignment is to extend the parser, interpreter, and
-compiler with some simple unary numeric and boolean operations and two
-forms of control flow expressions: @racket[cond]-expressions and
-@racket[case]-expressions.
+The goal of this assignment is to extend the language developed in
+@secref{Dupe} with some simple unary numeric and boolean operations
+and two forms of control flow expressions: @racket[cond]-expressions
+and @racket[case]-expressions.
 
+This assignment consists of two parts.  Part 1 asks you to write a
+number of programs in the extended language.  Part 2 asks you to
+implement the language. 
 
-You are given a file @tt{dupe-plus.zip} on ELMS with a starter
-compiler based on the @secref{Dupe} language we studied in class.
+@section[#:tag-prefix "a3-" #:style 'unnumbered]{Part 1}
 
+For this part of the assignment, you must write a number of programs
+in the Dupe+ language.  These programs should be syntactically
+well-formed and @bold{produce a value} when evaluated, i.e. these should
+be programs that do not cause run-time errors.
 
-You are tasked with extending the language in a number of
-ways:
+This exercise will help you understand the features you will be
+implementing in the second part of the assignment and can be used to
+test your compiler.  In fact, we will use the programs you write to
+run against a collection of existing Dupe+ compilers to see if they
+uncover any bugs.  The more bugs you can uncover, the better.
+
+The Dupe+ language extends Dupe in the follow ways:
 
 @itemlist[
 @item{adding new primitive operations,}
@@ -29,13 +40,9 @@ ways:
 @item{adding @racket[case].}
 ]
 
-You may use any a86 instructions you'd like, however it is possible to
-complete the assignment using @racket[Cmp], @racket[Je], @racket[Jg],
-@racket[Jmp], @racket[Label], @racket[Mov], and @racket[Sub].
+@subsection[#:tag-prefix "a3-" #:style 'unnumbered]{Primitives}
 
-@section[#:tag-prefix "a3-" #:style 'unnumbered]{More primitives}
-
-Add the following forms of expression to the language:
+The following new primitves are included in Dupe+:
 
 @itemlist[
 @item{@racket[(abs _e)]: compute the absolute value of @racket[_e],}
@@ -43,42 +50,9 @@ Add the following forms of expression to the language:
 @item{@racket[(not _e)]: compute the logical negation of @racket[_e]; note that the negation of @emph{any} value other than @racket[#f] is @racket[#f] and the negation of @racket[#f] is @racket[#t].}
 ]
 
-There are many ways to implement these at the assembly level. You should try implementing
-these using the limited a86 instruction set.
+@subsection[#:tag-prefix "a3-" #:style 'unnumbered]{Conditional expressions}
 
-To do this, you should:
-@itemlist[
-@item{Study @tt{ast.rkt} and the new forms of expression (i.e. new AST nodes)
-      then update the comment at the top describing what the grammmar should look like.}
-      
-@item{Study @tt{parse.rkt} and add support for parsing these
-expressions. (See @secref[#:tag-prefixes '("a3-")]{parse} for guidance.)}
-
-@item{Update @tt{interp-prim.rkt} and @tt{interp.rkt} to correctly interpret these expressions.}
-
-@item{Make examples of these primitives and potential translations of them
-to assembly.}
-
-@item{Update @tt{compile.rkt} to correctly compile these expressions.}
-
-@item{Check your implementation by running the tests in @tt{test/all.rkt}.}
-]
-
-@section[#:tag-prefix "a3-" #:style 'unnumbered]{Conditional Evaluation with Cond}
-
-The Dupe language we studied included a simple form of performing
-conditional evaluation of sub-expressions:
-
-@racketblock[
-(if _e0 _e1 _e2)
-]
-
-However, in the original paper on Lisp,
-@link["http://jmc.stanford.edu/articles/recursive.html"]{@emph{Recursive
-Functions of Symbolic Expressions and Their Computation by Machine,
-Part I}}, John McCarthy introduced a generalization of @racket[if]
-called ``conditional expressions,'' which we could add to our
-language with the following syntax:
+The following new conditional form is included in Dupe+:
 
 @racketblock[
 (cond [_e-p1 _e-a1]
@@ -101,36 +75,74 @@ does not evaluate to @racket[#f] is found, in which case, the corresponding expr
 @racket[cond] expression.  If no such @racket[_e-pi] exists, the
 expression @racket[_e-an]'s value is the value of the @racket[cond].
 
-@;{
-The formal semantics can be defined as:
+@subsection[#:tag-prefix "a3-" #:style 'unnumbered]{Case expressions}
 
-@(define ((rewrite s) lws)
-   (define lhs (list-ref lws 2))
-   (define rhs (list-ref lws 3))
-   (list "" lhs (string-append " " (symbol->string s) " ") rhs ""))
+The following new case form is included in Dupe+:
 
-@(require (only-in racket add-between))
-@(define-syntax-rule (show-judgment name i j)
-   (with-unquote-rewriter
-      (lambda (lw)
-        (build-lw (lw-e lw) (lw-line lw) (lw-line-span lw) (lw-column lw) (lw-column-span lw)))
-      (with-compound-rewriters (['+ (rewrite '+)]
-                                ['- (rewrite '–)]
-                                ['= (rewrite '=)]
-				['!= (rewrite '≠)])
-        (apply centered
-	   (add-between 
-             (build-list (- j i)
-	                 (λ (n) (begin (judgment-form-cases (list (+ n i)))
-	                               (render-judgment-form name))))
-             (hspace 4))))))
+@racketblock[
+(case _ev
+      [(_d1 ...) _e1]
+      ...
+      [else _en])
+]
 
-@(show-judgment 𝑪 0 1)
-@(show-judgment 𝑪 1 2)
-}
+The @racket[case] expression form is a mechanism for dispatching
+between a number of possible expressions based on a value, much like
+C's notion of a @tt{switch}-statement.
 
-Your task is to extend Dupe with this (restricted) form of @racket[cond].
+The meaning of a @racket[case] expression is computed by evaluating
+the expression @racket[_ev] and then proceeding in order through each
+clause until one is found that has a datum @racket[_di] equal to
+@racket[_ev]'s value.  Once such a clause is found, the corresponding
+expression @racket[_ei] is evaluated and its value is the value of the
+@racket[case] expression.  If no such clause exists, expression
+@racket[_en] is evaluated and its value is the value of the
+@racket[case] expression.
 
+Note that each clause consists of a parenthesized list of
+@emph{datums}, which in the setting of Dupe means either integer or
+boolean literals.
+
+
+@section[#:tag-prefix "a3-" #:style 'unnumbered]{Part 2}
+
+For this part of the assignment, you must extend the parser,
+interpreter, and compiler to implement Dupe+.  You are given a file
+@tt{dupe-plus.zip} on ELMS with a starter compiler based on the
+@secref{Dupe} language we studied in class.
+
+You may use any a86 instructions you'd like, however it is possible to
+complete the assignment using @racket[Cmp], @racket[Je], @racket[Jg],
+@racket[Jmp], @racket[Label], @racket[Mov], and @racket[Sub].
+
+@subsection[#:tag-prefix "a3-" #:style 'unnumbered]{Implementing primitives}
+
+Implement the primitives as described earlier.
+
+There are many ways to implement these at the assembly level. You should try implementing
+these using the limited a86 instruction set.
+
+To do this, you should:
+@itemlist[
+@item{Study @tt{ast.rkt} and the new forms of expression (i.e. new AST nodes)
+      then update the comment at the top describing what the grammmar should look like.}
+      
+@item{Study @tt{parse.rkt} and add support for parsing these
+expressions. (See @secref[#:tag-prefixes '("a3-")]{parse} for guidance.)}
+
+@item{Update @tt{interp-prim.rkt} and @tt{interp.rkt} to correctly interpret these expressions.}
+
+@item{Make examples of these primitives and potential translations of them
+to assembly.}
+
+@item{Update @tt{compile.rkt} to correctly compile these expressions.}
+
+@item{Check your implementation by running the tests in @tt{test/all.rkt}.}
+]
+
+@section[#:tag-prefix "a3-" #:style 'unnumbered]{Implementing cond}
+
+Implement the @racket[cond] expression form as described earlier.
 To do this, you should:
 
 @itemlist[
@@ -147,36 +159,9 @@ expressions based on your examples.}
 @item{Check your implementation by running the tests in @tt{test/all.rkt}.}
 ]
 
-@section[#:tag-prefix "a3-" #:style 'unnumbered]{Dispatching Evaluation with Case}
+@section[#:tag-prefix "a3-" #:style 'unnumbered]{Implementing case}
 
-
-Racket has a mechanism for dispatching between a number of possible
-expressions based on a value, much like C's notion of a
-@tt{switch}-statement.  This is the @racket[case]-expression, which we
-could add to our language with the following syntax:
-
-@racketblock[
-(case _ev
-      [(_d1 ...) _e1]
-      ...
-      [else _en])
-]
-
-The meaning of a @racket[case] expression is computed by evaluating
-the expression @racket[_ev] and then proceeding in order through each
-clause until one is found that has a datum @racket[_di] equal to
-@racket[_ev]'s value.  Once such a clause is found, the corresponding
-expression @racket[_ei] is evaluated and its value is the value of the
-@racket[case] expression.  If no such clause exists, expression
-@racket[_en] is evaluated and its value is the value of the
-@racket[case] expression.
-
-Note that each clause consists of a parenthesized list of
-@emph{datums}, which in the setting of Dupe means either integer or
-boolean literals.
-
-Your task is to extend Dupe with this (restricted) form of @racket[case].
-
+Implement the @racket[case] expression form as described earlier.
 To do this, you should:
 
 @itemlist[
@@ -192,7 +177,7 @@ to assembly.}
 @item{Check your implementation by running the tests in @tt{test/all.rkt}.}
 ]
 
-@section[#:tag-prefix "a3-" #:style 'unnumbered #:tag "parse"]{A Leg Up on Parsing}
+@subsection[#:tag-prefix "a3-" #:style 'unnumbered #:tag "parse"]{A Leg Up on Parsing}
 
 In the past, designing the AST type and structure definitions has
 given students some grief.  Getting stuck at this point means you
@@ -294,6 +279,8 @@ write additional test cases.
 
 @section[#:tag-prefix "a3-" #:style 'unnumbered]{Submitting}
 
-Submit a zip file containing your work to Gradescope.  Use @tt{make
-submit.zip} from within the @tt{dupe-plus} directory to create a zip
-file with the proper structure.
+For part 1, submit to Gradescope a zip file containing well-formed
+Racket files that use the @tt{.rkt} file extension.
+
+For part 2, use @tt{make} from within the @tt{dupe-plus} directory to
+create a zip file containing your work and submit it to Gradescope.
