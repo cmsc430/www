@@ -177,7 +177,7 @@ to assembly.}
 @item{Check your implementation by running the tests in @tt{test/all.rkt}.}
 ]
 
-@subsection[#:tag-prefix "a3-" #:style 'unnumbered #:tag "parse"]{A Leg Up on Parsing}
+@section[#:tag-prefix "a3-" #:style 'unnumbered #:tag "parse"]{A Leg Up on Parsing}
 
 In the past, designing the AST type and structure definitions has
 given students some grief.  Getting stuck at this point means you
