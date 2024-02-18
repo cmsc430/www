@@ -12,10 +12,10 @@
         ;; NOTE: To re-enable any disabled languages, you must also un-comment
         ;; the [pre-install-collection] definition in the [info.rkt] file in
         ;; that language's directory.
-        (cdr (or (assoc lang-name '(#;("abscond"   . "A")
-                                    #;("blackmail" . "B")
-                                    #;("con"       . "C")
-                                    #;("dupe"      . "D0")
+        (cdr (or (assoc lang-name '(("abscond"   . "A")
+                                    ("blackmail" . "B")
+                                    ("con"       . "C")
+                                    ("dupe"      . "D0")
                                     ("dodger"    . "D1")
                                     ("evildoer"  . "E0")
                                     ("extort"    . "E1")
