@@ -4,7 +4,6 @@
          {:> C D0} IfZero {:> D0} If {:> E0} Eof {:> E0} Begin {:> F} Let
          {:> F} Var {:> H0} Empty {:> I} Prog {:> I} Defn {:> I} App
          {:> K} Match {:> K} Box {:> K} Cons {:> K} Conj {:> L} Lam)
-;;
 
 {:> I} ;; type Prog = (Prog (Listof Defn) Expr)
 {:> I} (struct Prog (ds e) #:prefab)
