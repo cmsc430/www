@@ -52,8 +52,8 @@
 {:> E0}   ;;          | 'write-byte | 'eof-object?
 {:> H0}   ;;          | 'box | 'car | 'cdr | 'unbox
 {:> H0}   ;;          | 'empty? | 'cons? | 'box?
-{:> H1}   ;;          | 'vector? | vector-length
-{:> H1}   ;;          | 'string? | string-length
+{:> H1}   ;;          | 'vector? | 'vector-length
+{:> H1}   ;;          | 'string? | 'string-length
 {:> F}    ;; type Op2 = '+ | '- | '< | '=
 {:> H0}   ;;          | 'eq? | 'cons
 {:> H1}   ;;          | 'make-vector | 'vector-ref
