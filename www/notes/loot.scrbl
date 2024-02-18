@@ -422,7 +422,7 @@ the Y-combinator:
 
 
 @ex[
-(define (run . p) (interp (parse p)))
+(define (run . p) (interp (apply parse p)))
 
 (run
  '(λ (t)
