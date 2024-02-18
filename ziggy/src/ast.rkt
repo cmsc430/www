@@ -55,7 +55,7 @@
 {:> H1}   ;;          | 'vector? | vector-length
 {:> H1}   ;;          | 'string? | string-length
 {:> F}    ;; type Op2 = '+ | '- | '< | '=
-{:> H0}   ;;          | eq? | 'cons
+{:> H0}   ;;          | 'eq? | 'cons
 {:> H1}   ;;          | 'make-vector | 'vector-ref
 {:> H1}   ;;          | 'make-string | 'string-ref
 {:> H1}   ;; type Op3 = 'vector-set!
