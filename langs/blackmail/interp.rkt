@@ -10,4 +10,3 @@
     [(Prim1 p e)
      (interp-prim1 p (interp e))]))
 
-

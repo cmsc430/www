@@ -5,17 +5,18 @@
 (require a86/ast)
 
 (define rax 'rax)
+
 ;; Expr -> Asm
-(define (compile e)  
+(define (compile e)
   (prog (Global 'entry)
         (Label 'entry)
         (compile-e e)
-	(Ret)))
+        (Ret)))
 
 ;; Expr -> Asm
 (define (compile-e e)
   (match e
-    [(Lit i)     (seq (Mov rax i))]
+    [(Lit i) (seq (Mov rax i))]
     [(Prim1 p e) (compile-prim1 p e)]
     [(IfZero e1 e2 e3)
      (compile-ifzero e1 e2 e3)]))
@@ -37,3 +38,4 @@
          (Label l1)
          (compile-e e3)
          (Label l2))))
+
