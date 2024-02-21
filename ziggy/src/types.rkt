@@ -59,7 +59,7 @@
         {:> L}
         [(proc-bits? b)
          (lambda _
-           (error "This function is not callable."))]        
+           (error "This function is not callable."))]
         [else (error "invalid bits")]))
 
 (define (value->bits v)
