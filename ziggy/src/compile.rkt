@@ -28,12 +28,15 @@
         {:> E0 F} (Sub rsp 8)
         {:> A F}  (compile-e e)
         {:> E0 F} (Add rsp 8)
-        {:> F}    (Push r15)    {:> F} ; save callee-saved register
+        {:> F}    ;; save callee-saved register
+        {:> F}    (Push r15)
         {:> H0}   (Push rbx)
-        {:> H0}   (Mov rbx rdi) {:> H0} ; recv heap pointer
-        {:> F}  (compile-e e '())
+        {:> H0}   ;; recv heap pointer
+        {:> H0}   (Mov rbx rdi)
+        {:> F}    (compile-e e '())
         {:> H0}   (Pop rbx)
-        {:> F}    (Pop r15)     {:> F} ; restore callee-save register
+        {:> F}    ;; restore callee-save register
+        {:> F}    (Pop r15)
         (Ret)
         {:> E1} ;; Error handler
         {:> E1} (Label 'err)
@@ -61,7 +64,7 @@
            {:> L}
            (compile-e e (reverse (define-ids ds)) #f)
            {:> L}
-           (Add rsp (* 8 (length ds))) {:> L} ;; pop function definitions           
+           (Add rsp (* 8 (length ds))) {:> L} ;; pop function definitions
            (Pop r15)     ; restore callee-save register
            (Pop rbx)
            (Ret)
@@ -122,7 +125,7 @@
     (match l
       [(Lam f xs e)
        (let ((env  (append (reverse fvs) (reverse xs) (list #f))))
-         (seq (Label (symbol->label f))              
+         (seq (Label (symbol->label f))
               (Mov rax (Offset rsp (* 8 (length xs))))
               (Xor rax type-proc)
               (copy-env-to-stack fvs 8)
@@ -151,17 +154,17 @@
     {:> A D0}
     [(Lit i) (seq (Mov rax i))]
     {:> D0}
-    [(Lit d)         (compile-value d)]
+    [(Lit d) (compile-value d)]
     {:> E0}
-    [(Eof)           (compile-value eof)]
+    [(Eof) (compile-value eof)]
     {:> H0}
-    [(Empty)         (compile-value '())]
+    [(Empty) (compile-value '())]
     {:> F}
-    [(Var x)         (compile-variable x c)]
+    [(Var x) (compile-variable x c)]
     {:> E0}
-    [(Prim0 p)       (compile-prim0 p)]
+    [(Prim0 p) (compile-prim0 p)]
     {:> B}
-    [(Prim1 p e)     (compile-prim1 p e {:> F} c)]
+    [(Prim1 p e) (compile-prim1 p e {:> F} c)]
     {:> F}
     [(Prim2 p e1 e2) (compile-prim2 p e1 e2 c)]
     {:> H1}
@@ -186,7 +189,7 @@
      (compile-app e es c t?)]
     {:> L}
     [(Lam f xs e)
-     (compile-lam f xs e c)]    
+     (compile-lam f xs e c)]
     {:> K}
     [(Match e ps es) (compile-match e ps es c t?)]))
 
@@ -235,10 +238,20 @@
   (compile-op0 p))
 
 {:> B F} ;; Op1 Expr -> Asm
-{:> F}   ;; Op1 Expr CEnv -> Asm
-{:> B}
-(define (compile-prim1 p e {:> F} c)
-  (seq (compile-e e {:> F} c {:> J} #f)
+{:> B F}
+(define (compile-prim1 p e)
+  (seq (compile-e e)
+       (compile-op1 p)))
+
+{:> F J} ;; Op1 Expr CEnv -> Asm
+{:> F J}
+(define (compile-prim1 p e c)
+  (seq (compile-e e c)
+       (compile-op1 p)))
+
+{:> J}
+(define (compile-prim1 p e c)
+  (seq (compile-e e c #f)
        (compile-op1 p)))
 
 {:> F} ;; Op2 Expr Expr CEnv -> Asm
@@ -258,7 +271,6 @@
        (Push rax)
        (compile-e e3 (cons #f (cons #f c)) {:> J} #f)
        (compile-op3 p)))
-
 
 {:> C D0} ;; Expr Expr Expr -> Asm
 {:> C D0}
@@ -377,7 +389,7 @@
         (i (* 8 (length es))))
     (seq (Lea rax r)
          (Push rax)
-         (compile-es (cons e es) (cons #f c))         
+         (compile-es (cons e es) (cons #f c))
          (Mov rax (Offset rsp i))
          (assert-proc rax)
          (Xor rax type-proc)
@@ -402,7 +414,7 @@
     [(cons (Defn f xs e) ds)
      (let ((fvs (fv (Lam f xs e))))
        (seq (Lea rax (symbol->label f))
-            (Mov (Offset rbx off) rax)         
+            (Mov (Offset rbx off) rax)
             (Mov rax rbx)
             (Add rax off)
             (Or rax type-proc)
@@ -431,13 +443,13 @@
 
 {:> L} ;; Id [Listof Id] Expr CEnv -> Asm
 {:> L}
-(define (compile-lam f xs e c) 
+(define (compile-lam f xs e c)
   (let ((fvs (fv (Lam f xs e))))
     (seq (Lea rax (symbol->label f))
          (Mov (Offset rbx 0) rax)
          (free-vars-to-heap fvs c 8)
          (Mov rax rbx) ; return value
-         (Or rax type-proc)         
+         (Or rax type-proc)
          (Add rbx (* 8 (add1 (length fvs)))))))
 
 {:> L} ;; [Listof Id] CEnv Int -> Asm
