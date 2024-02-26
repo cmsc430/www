@@ -247,30 +247,30 @@ Now, we won't go so far as to @emph{give} you the code for
 
 @itemlist[
 
-@item{@racket[(abs 1)] parses as @racket[(Prim1 'abs (Int 1))],}
+@item{@racket[(abs 1)] parses as @racket[(Prim1 'abs (Lit 1))],}
 
-@item{@racket[(not #t)] parses as @racket[(Prim1 'not (Bool #t))],}
+@item{@racket[(not #t)] parses as @racket[(Prim1 'not (Lit #t))],}
 
-@item{@racket[(cond [else 5])] parses as @racket[(Cond '() (Int 5))],}
+@item{@racket[(cond [else 5])] parses as @racket[(Cond '() (Lit 5))],}
 
 @item{@racket[(cond [(not #t) 3] [else 5])] parses as @racket[(Cond
-(list (Clause (Prim1 'not (Bool #t)) (Int 3))) (Int 5))],}
+(list (Clause (Prim1 'not (Lit #t)) (Lit 3))) (Lit 5))],}
 
 @item{@racket[(cond [(not #t) 3] [7 4] [else 5])] parses as
-@racket[(Cond (list (Clause (Prim1 'not (Bool #t)) (Int 3)) (Clause
-(Int 7) (Int 4))) (Int 5))],}
+@racket[(Cond (list (Clause (Prim1 'not (Lit #t)) (Lit 3)) (Clause
+(Lit 7) (Lit 4))) (Lit 5))],}
 
 @item{@racket[(case (add1 3) [else 2])] parses as @racket[(Case (Prim1
-'add1 (Int 3)) '() (Int 2))].}
+'add1 (Lit 3)) '() (Lit 2))].}
 
-@item{@racket[(case 4 [(4) 1] [else 2])] parses as @racket[(Case (Int
-4) (list (Clause (list 4) (Int 1))) (Int 2))],}
+@item{@racket[(case 4 [(4) 1] [else 2])] parses as @racket[(Case (Lit
+4) (list (Clause (list 4) (Lit 1))) (Lit 2))],}
 
-@item{@racket[(case 4 [(4 5 6) 1] [else 2])] parses as @racket[(Case (Int
-4) (list (Clause (list 4 5 6) (Int 1))) (Int 2))], and}
+@item{@racket[(case 4 [(4 5 6) 1] [else 2])] parses as @racket[(Case (Lit
+4) (list (Clause (list 4 5 6) (Lit 1))) (Lit 2))], and}
 
-@item{@racket[(case 4 [(4 5 6) 1] [(#t #f) 7] [else 2])] parses as @racket[(Case (Int
-4) (list (Clause (list 4 5 6) (Int 1)) (Clause (list #t #f) (Int 7))) (Int 2))].}
+@item{@racket[(case 4 [(4 5 6) 1] [(#t #f) 7] [else 2])] parses as @racket[(Case (Lit
+4) (list (Clause (list 4 5 6) (Lit 1)) (Clause (list #t #f) (Lit 7))) (Lit 2))].}
 ]
 
 
