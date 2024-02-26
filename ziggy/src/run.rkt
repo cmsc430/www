@@ -22,7 +22,8 @@
       ['err 'err]
       [b (bits->value b)])))
 
-{:> E0} ;; Asm String -> (cons Answer String)
+{:> E0 E1} ;; Asm String -> (cons Value String)
+{:> E0}    ;; Asm String -> (cons Answer String)
 {:> E0}
 (define (run/io is in)
   (parameterize ((current-objs (list (path->string runtime-path))))
