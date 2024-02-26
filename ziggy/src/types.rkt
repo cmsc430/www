@@ -63,8 +63,8 @@
         [else (error "invalid bits")]))
 
 (define (value->bits v)
-  (cond [(eq? v #t) {:> D0 H0} #b011 {:> H0} #b00011000]
-        [(eq? v #f) {:> D0 H0} #b111 {:> H0} #b00111000]
+  (cond [(eq? v #t) {:> D0 D1} #b01 {:> D1 H0} #b011 {:> H0} #b00011000]
+        [(eq? v #f) {:> D0 D1} #b11 {:> D1 H0} #b111 {:> H0} #b00111000]
         [(integer? v) (arithmetic-shift v int-shift)]
         {:> E0} [(eof-object? v) {:> E0 H0} #b1011 {:> H0} #b01011000]
         {:> E0} [(void? v)       {:> E0 H0} #b1111 {:> H0} #b01111000]
