@@ -111,9 +111,9 @@ and strings with strings (what a surprise!):
 
 The @this-lang interpreter is essentially the same as for Hustle,
 although with the addition of ternary primitives, plus an extension of
-the @racket[interp-prims] module:
+the @racket[interp-prim] module:
 
-@codeblock-include["hoax/interp-prims.rkt"]
+@codeblock-include["hoax/interp-prim.rkt"]
 
 Vectors are easy to model in the interpreter because we can rely on
 vectors in the meta-level of Racket.

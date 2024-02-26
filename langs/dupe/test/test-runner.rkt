@@ -36,4 +36,3 @@
     (check-equal? (run '(zero? 4)) #f)
     (check-equal? (run '(zero? 0)) #t)))
 
-

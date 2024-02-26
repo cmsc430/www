@@ -1,5 +1,5 @@
 #lang crook
-{:= D0 D0.A D1 E0 E1 F H0 H1 I J K}
+{:= D0 D0.A D1 E0 E1 F H0 H1 I J K L}
 (provide (all-defined-out))
 {:> H0} (require ffi/unsafe)
 
@@ -10,6 +10,7 @@
 {:> H0} (define type-cons      #b010)
 {:> H1} (define type-vect      #b011)
 {:> H1} (define type-str       #b100)
+{:> L}  (define type-proc      #b101)
 (define int-shift    {:> D0 H0} 1 {:> H0} (+ 1 imm-shift))
 (define mask-int   {:> D0 H0} #b1 {:> H0} #b1111)
 {:> D1}
@@ -55,11 +56,15 @@
              (build-string (heap-ref b)
                            (lambda (j)
                              (char-ref (+ b 8) j))))]
+        {:> L}
+        [(proc-bits? b)
+         (lambda _
+           (error "This function is not callable."))]
         [else (error "invalid bits")]))
 
 (define (value->bits v)
-  (cond [(eq? v #t) {:> D0 H0} #b011 {:> H0} #b00011000]
-        [(eq? v #f) {:> D0 H0} #b111 {:> H0} #b00111000]
+  (cond [(eq? v #t) {:> D0 D1} #b01 {:> D1 H0} #b011 {:> H0} #b00011000]
+        [(eq? v #f) {:> D0 D1} #b11 {:> D1 H0} #b111 {:> H0} #b00111000]
         [(integer? v) (arithmetic-shift v int-shift)]
         {:> E0} [(eof-object? v) {:> E0 H0} #b1011 {:> H0} #b01011000]
         {:> E0} [(void? v)       {:> E0 H0} #b1111 {:> H0} #b01111000]
@@ -110,3 +115,7 @@
 {:> H1}
 (define (char-ref i j)
   (integer->char (ptr-ref (cast (untag i) _int64 _pointer) _uint32 j)))
+
+{:> L}
+(define (proc-bits? v)
+  (= type-proc (bitwise-and v imm-mask)))

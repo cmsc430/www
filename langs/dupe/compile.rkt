@@ -8,7 +8,7 @@
 (define rax 'rax)
 
 ;; Expr -> Asm
-(define (compile e)  
+(define (compile e)
   (prog (Global 'entry)
         (Label 'entry)
         (compile-e e)
@@ -17,8 +17,8 @@
 ;; Expr -> Asm
 (define (compile-e e)
   (match e
-    [(Lit d)         (compile-value d)]
-    [(Prim1 p e)     (compile-prim1 p e)]
+    [(Lit d) (compile-value d)]
+    [(Prim1 p e) (compile-prim1 p e)]
     [(If e1 e2 e3)
      (compile-if e1 e2 e3)]))
 

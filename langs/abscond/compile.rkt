@@ -6,12 +6,12 @@
 (define rax 'rax)
 
 ;; Expr -> Asm
-(define (compile e)  
+(define (compile e)
   (prog (Global 'entry)
         (Label 'entry)
         (compile-e e)
-	(Ret)))
-	
+        (Ret)))
+
 ;; Expr -> Asm
 (define (compile-e e)
   (match e

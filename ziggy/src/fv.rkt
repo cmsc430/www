@@ -1,4 +1,5 @@
-#lang racket
+#lang crook
+{:= L}
 (require "ast.rkt")
 (provide fv)
 
@@ -28,8 +29,8 @@
 ;; Pat -> [Listof Id]
 (define (bv-pat* p)
   (match p
-    [(PVar x) (list x)]
-    [(PCons p1 p2) (append (bv-pat* p1) (bv-pat* p2))]
-    [(PAnd p1 p2) (append (bv-pat* p1) (bv-pat* p2))]
-    [(PBox p) (bv-pat* p)]
-    [_ '()]))
+    [(Var x) (list x)]
+    [(Lit d) '()]
+    [(Box p) (bv-pat* p)]    
+    [(Cons p1 p2) (append (bv-pat* p1) (bv-pat* p2))]
+    [(Conj p1 p2) (append (bv-pat* p1) (bv-pat* p2))]))

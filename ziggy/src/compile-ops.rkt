@@ -1,6 +1,6 @@
 #lang crook
-{:= B C D0 D0.A D1 E0 E1 F H0 H1 I J K}
-(provide {:> E0} compile-op0 compile-op1 {:> F} compile-op2 {:> H1} compile-op3 {:> F} pad-stack)
+{:= B C D0 D0.A D1 E0 E1 F H0 H1 I J K L}
+(provide {:> E0} compile-op0 compile-op1 {:> F} compile-op2 {:> H1} compile-op3 {:> F} pad-stack {:> L} assert-proc)
 (require "ast.rkt")
 {:> D0} (require "types.rkt")
 (require a86/ast)
@@ -27,86 +27,108 @@
 ;; Op1 -> Asm
 (define (compile-op1 p)
   (match p
-    {:> B D0}  ['add1 (Add rax 1)]
-    {:> B D0}  ['sub1 (Sub rax 1)]
-    {:> D0 E1} ['add1 (Add rax (value->bits 1))]
-    {:> E1}    ['add1
-                (seq (assert-integer rax)
-                     (Add rax (value->bits 1)))]
-    {:> D0 E1} ['sub1 (Sub rax (value->bits 1))]
-    {:> E1}    ['sub1
-                (seq (assert-integer rax)
-                     (Sub rax (value->bits 1)))]
-    {:> D0}    ['zero?
-                {:> D0 D1}
-                (seq (Cmp rax 0)
-                     (Mov rax (value->bits #f))
-                     (Mov r9  (value->bits #t))
-                     (Cmove rax r9))
-                {:> D1}
-                (seq {:> E1} (assert-integer rax)
-                     (Cmp rax 0)
-                     if-equal)]
-    {:> D1}   ['char?
-               (seq (And rax mask-char)
-                    (Cmp rax type-char)
-                    if-equal)]
-    {:> D1}   ['char->integer
-               (seq {:> E1} (assert-char rax)
-                    (Sar rax char-shift)
-                    (Sal rax int-shift))]
-    {:> D1}   ['integer->char
-               (seq {:> E1} (assert-codepoint)
-                    (Sar rax int-shift)
-                    (Sal rax char-shift)
-                    (Xor rax type-char))]
-    {:> E0}   ['eof-object?
-               (seq (Cmp rax (value->bits eof))
-                    if-equal)]
-    {:> E0}   ['write-byte
-               (seq {:> E1} assert-byte
-                    {:> F} pad-stack
-                    (Mov rdi rax)
-                    (Call 'write_byte)
-                    {:> F} unpad-stack)]
+    {:> B D0}
+    ['add1 (Add rax 1)]
+    {:> B D0}
+    ['sub1 (Sub rax 1)]
+    {:> D0 E1}
+    ['add1 (Add rax (value->bits 1))]
+    {:> E1}
+    ['add1
+     (seq (assert-integer rax)
+          (Add rax (value->bits 1)))]
+    {:> D0 E1}
+    ['sub1 (Sub rax (value->bits 1))]
+    {:> E1}
+    ['sub1
+     (seq (assert-integer rax)
+          (Sub rax (value->bits 1)))]
+    {:> D0}
+    ['zero?
+     {:> D0 D1}
+     (seq (Cmp rax 0)
+          (Mov rax (value->bits #f))
+          (Mov r9  (value->bits #t))
+          (Cmove rax r9))
+     {:> D1}
+     (seq {:> E1} (assert-integer rax)
+          (Cmp rax 0)
+          if-equal)]
+    {:> D1}
+    ['char?
+     (seq (And rax mask-char)
+          (Cmp rax type-char)
+          if-equal)]
+    {:> D1}
+    ['char->integer
+     (seq {:> E1} (assert-char rax)
+          (Sar rax char-shift)
+          (Sal rax int-shift))]
+    {:> D1}
+    ['integer->char
+     (seq {:> E1} (assert-codepoint)
+          (Sar rax int-shift)
+          (Sal rax char-shift)
+          (Xor rax type-char))]
+    {:> E0}
+    ['eof-object?
+     (seq (Cmp rax (value->bits eof))
+          if-equal)]
+    {:> E0}
+    ['write-byte
+     (seq {:> E1} assert-byte
+          {:> F} pad-stack
+          (Mov rdi rax)
+          (Call 'write_byte)
+          {:> F} unpad-stack)]
 
-    {:> H0}   ['box
-               (seq (Mov (Offset rbx 0) rax) ; memory write
-                    (Mov rax rbx)            ; put box in rax
-                    (Or rax type-box)        ; tag as a box
-                    (Add rbx 8))]
-
-    {:> H0}   ['unbox
-               (seq (assert-box rax)
-                    (Xor rax type-box)
-                    (Mov rax (Offset rax 0)))]
-    {:> H0}    ['car
-                (seq (assert-cons rax)
-                     (Xor rax type-cons)
-                     (Mov rax (Offset rax 8)))]
-    {:> H0}    ['cdr
-                (seq (assert-cons rax)
-                     (Xor rax type-cons)
-                     (Mov rax (Offset rax 0)))]
-
-    {:> H0}    ['empty? (seq (Cmp rax (value->bits '())) if-equal)]
-    {:> H0}    ['cons? (type-pred ptr-mask type-cons)]
-    {:> H0}    ['box?  (type-pred ptr-mask type-box)]
-    {:> H1}    ['vector? (type-pred ptr-mask type-vect)]
-    {:> H1}    ['string? (type-pred ptr-mask type-str)]
-    {:> H1}    ['vector-length
-                (let ((zero (gensym))
-                      (done (gensym)))
-                  (seq (assert-vector rax)
-                       (Xor rax type-vect)
-                       (Cmp rax 0)
-                       (Je zero)
-                       (Mov rax (Offset rax 0))
-                       (Sal rax int-shift)
-                       (Jmp done)
-                       (Label zero)
-                       (Mov rax 0)
-                       (Label done)))]
+    {:> H0}
+    ['box
+     (seq (Mov (Offset rbx 0) rax) ; memory write
+          (Mov rax rbx)            ; put box in rax
+          (Or rax type-box)        ; tag as a box
+          (Add rbx 8))]
+    
+    {:> H0}
+    ['unbox
+     (seq (assert-box rax)
+          (Xor rax type-box)
+          (Mov rax (Offset rax 0)))]
+    {:> H0}
+    ['car
+     (seq (assert-cons rax)
+          (Xor rax type-cons)
+          (Mov rax (Offset rax 8)))]
+    {:> H0}
+    ['cdr
+     (seq (assert-cons rax)
+          (Xor rax type-cons)
+          (Mov rax (Offset rax 0)))]
+    
+    {:> H0}
+    ['empty? (seq (Cmp rax (value->bits '())) if-equal)]
+    {:> H0}
+    ['cons? (type-pred ptr-mask type-cons)]
+    {:> H0}
+    ['box?  (type-pred ptr-mask type-box)]
+    {:> H1}
+    ['vector? (type-pred ptr-mask type-vect)]
+    {:> H1}
+    ['string? (type-pred ptr-mask type-str)]
+    {:> H1}
+    ['vector-length
+     (let ((zero (gensym))
+           (done (gensym)))
+       (seq (assert-vector rax)
+            (Xor rax type-vect)
+            (Cmp rax 0)
+            (Je zero)
+            (Mov rax (Offset rax 0))
+            (Sal rax int-shift)
+            (Jmp done)
+            (Label zero)
+            (Mov rax 0)
+            (Label done)))]
     {:> H1}
     ['string-length
      (let ((zero (gensym))
@@ -340,6 +362,9 @@
 {:> H1}
 (define assert-string
   (assert-type ptr-mask type-str))
+{:> L}
+(define assert-proc
+  (assert-type ptr-mask type-proc))
 
 {:> E1}
 (define (assert-codepoint)

@@ -40,6 +40,10 @@ int64_t val_unwrap_int(val_t x)
 {
   return x >> int_shift;
 }
+val_t val_wrap_byte(unsigned char b)
+{
+  return (b << int_shift) | int_type_tag;
+}
 val_t val_wrap_int(int64_t i)
 {
   return (i << int_shift) | int_type_tag;

@@ -1,7 +1,7 @@
-#lang racket
+#lang crook
+{:= L}
 (require "ast.rkt")
 (provide lambdas)
-
 
 ;; Prog -> [Listof Lam]
 ;; List all of the lambda expressions in p

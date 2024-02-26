@@ -7,7 +7,7 @@
 (define rax 'rax)
 
 ;; Expr -> Asm
-(define (compile e)  
+(define (compile e)
   (prog (Global 'entry)
         (Label 'entry)
         (compile-e e)
@@ -16,8 +16,8 @@
 ;; Expr -> Asm
 (define (compile-e e)
   (match e
-    [(Lit i)         (seq (Mov rax i))]
-    [(Prim1 p e)     (compile-prim1 p e)]))
+    [(Lit i) (seq (Mov rax i))]
+    [(Prim1 p e) (compile-prim1 p e)]))
 
 ;; Op1 Expr -> Asm
 (define (compile-prim1 p e)
