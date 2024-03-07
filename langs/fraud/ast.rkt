@@ -1,13 +1,13 @@
 #lang racket
 (provide Lit Prim0 Prim1 Prim2 If Eof Begin Let
          Var)
-;;
 ;; type Expr = (Lit Datum)
 ;;           | (Eof)
 ;;           | (Prim0 Op0)
 ;;           | (Prim1 Op1 Expr)
 ;;           | (Prim2 Op2 Expr Expr)
 ;;           | (If Expr Expr Expr)
+;;           | (Begin Expr Expr)
 ;;           | (Let Id Expr Expr)
 ;;           | (Var Id)
 

@@ -4,7 +4,8 @@
 (require "types.rkt")
 (require a86/ast)
 
-(define rax 'rax)(define rdi 'rdi) ; arg
+(define rax 'rax)
+(define rdi 'rdi) ; arg
 (define r8  'r8)  ; scratch in op2
 (define r9  'r9)  ; scratch
 
@@ -22,37 +23,37 @@
 (define (compile-op1 p)
   (match p
     ['add1
-                (seq (assert-integer rax)
-                     (Add rax (value->bits 1)))]
+     (seq (assert-integer rax)
+          (Add rax (value->bits 1)))]
     ['sub1
-                (seq (assert-integer rax)
-                     (Sub rax (value->bits 1)))]
+     (seq (assert-integer rax)
+          (Sub rax (value->bits 1)))]
     ['zero?
-                (seq (assert-integer rax)
-                     (Cmp rax 0)
-                     if-equal)]
+     (seq (assert-integer rax)
+          (Cmp rax 0)
+          if-equal)]
     ['char?
-               (seq (And rax mask-char)
-                    (Cmp rax type-char)
-                    if-equal)]
+     (seq (And rax mask-char)
+          (Cmp rax type-char)
+          if-equal)]
     ['char->integer
-               (seq (assert-char rax)
-                    (Sar rax char-shift)
-                    (Sal rax int-shift))]
+     (seq (assert-char rax)
+          (Sar rax char-shift)
+          (Sal rax int-shift))]
     ['integer->char
-               (seq (assert-codepoint)
-                    (Sar rax int-shift)
-                    (Sal rax char-shift)
-                    (Xor rax type-char))]
+     (seq (assert-codepoint)
+          (Sar rax int-shift)
+          (Sal rax char-shift)
+          (Xor rax type-char))]
     ['eof-object?
-               (seq (Cmp rax (value->bits eof))
-                    if-equal)]
+     (seq (Cmp rax (value->bits eof))
+          if-equal)]
     ['write-byte
-               (seq assert-byte
-                    pad-stack
-                    (Mov rdi rax)
-                    (Call 'write_byte)
-                    unpad-stack)]))
+     (seq assert-byte
+          pad-stack
+          (Mov rdi rax)
+          (Call 'write_byte)
+          unpad-stack)]))
 
 
 ;; Op2 -> Asm

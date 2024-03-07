@@ -5,7 +5,8 @@
 (require "types.rkt")
 (require a86/ast)
 
-(define rax 'rax)(define rsp 'rsp) ; stack
+(define rax 'rax)
+(define rsp 'rsp) ; stack
 (define r15 'r15) ; stack pad (non-volatile)
 
 ;; Expr -> Asm
@@ -16,9 +17,11 @@
         (Extern 'write_byte)
         (Extern 'raise_error)
         (Label 'entry)
-        (Push r15)    ; save callee-saved register
+        ;; save callee-saved register
+        (Push r15)
         (compile-e e '())
-        (Pop r15)     ; restore callee-save register
+        ;; restore callee-save register
+        (Pop r15)
         (Ret)
         ;; Error handler
         (Label 'err)
@@ -29,11 +32,11 @@
 ;; Expr CEnv -> Asm
 (define (compile-e e c)
   (match e
-    [(Lit d)         (compile-value d)]
-    [(Eof)           (compile-value eof)]
-    [(Var x)         (compile-variable x c)]
-    [(Prim0 p)       (compile-prim0 p)]
-    [(Prim1 p e)     (compile-prim1 p e c)]
+    [(Lit d) (compile-value d)]
+    [(Eof) (compile-value eof)]
+    [(Var x) (compile-variable x c)]
+    [(Prim0 p) (compile-prim0 p)]
+    [(Prim1 p e) (compile-prim1 p e c)]
     [(Prim2 p e1 e2) (compile-prim2 p e1 e2 c)]
     [(If e1 e2 e3)
      (compile-if e1 e2 e3 c)]
@@ -53,7 +56,9 @@
 
 ;; Op0 -> Asm
 (define (compile-prim0 p)
-  (compile-op0 p));; Op1 Expr CEnv -> Asm
+  (compile-op0 p))
+
+;; Op1 Expr CEnv -> Asm
 (define (compile-prim1 p e c)
   (seq (compile-e e c)
        (compile-op1 p)))
@@ -63,7 +68,8 @@
   (seq (compile-e e1 c)
        (Push rax)
        (compile-e e2 (cons #f c))
-       (compile-op2 p)));; Expr Expr Expr CEnv -> Asm
+       (compile-op2 p)))
+;; Expr Expr Expr CEnv -> Asm
 (define (compile-if e1 e2 e3 c)
   (let ((l1 (gensym 'if))
         (l2 (gensym 'if)))
@@ -74,7 +80,8 @@
          (Jmp l2)
          (Label l1)
          (compile-e e3 c)
-         (Label l2))));; Expr Expr CEnv -> Asm
+         (Label l2))))
+;; Expr Expr CEnv -> Asm
 (define (compile-begin e1 e2 c)
   (seq (compile-e e1 c)
        (compile-e e2 c)))
