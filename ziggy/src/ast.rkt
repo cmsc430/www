@@ -25,6 +25,7 @@
           ;;           | (Cond [Listof CondClause] Expr)
 {:> D0.A D1}
           ;;           | (Case Expr [Listof CaseClause] Expr)
+{:> E0}   ;;           | (Begin Expr Expr)
 {:> F}    ;;           | (Let Id Expr Expr)
 {:> F}    ;;           | (Var Id)
 {:> I L}  ;;           | (App Id (Listof Expr))

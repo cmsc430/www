@@ -5,6 +5,7 @@
 ;;           | (Prim0 Op0)
 ;;           | (Prim1 Op1 Expr)
 ;;           | (If Expr Expr Expr)
+;;           | (Begin Expr Expr)
 ;; type Datum = Integer
 ;;            | Boolean
 ;;            | Character
