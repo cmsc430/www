@@ -49,17 +49,30 @@
                      @elem{@seclink["Assignment 2"]{A3} P1}
 		     @itemlist[@item{@secref["Dodger"]}
                                @item{@secref["Evildoer"]}]
-	             @secref["Extort"])
+	             @secref["Evildoer"])
 
                (list @wk{2/26}
                      @elem{@seclink["Assignment 2"]{A3} P2}
-		     @secref{Fraud}
+		     @secref{Extort}
 		     @secref{Fraud})
 
                (list @wk{3/4}
                      ""
-		     @secref{Hustle}
+		     @secref{Fraud}
 		     @secref["Midterm_1"])
+
+               (list @wk{3/11}
+                     ""
+		     @secref{Fraud}
+		     @secref{Hustle})
+               (list @wk{3/18}
+	             ""
+		     @elem{Spring Break}
+		     @elem{Spring Break})
+               (list @wk{4/1}
+                     @seclink["Assignment 4"]{A4}
+		     @secref{Hustle}
+		     @secref{Iniquity})
 
 
 #|

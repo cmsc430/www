@@ -7,7 +7,7 @@
 
 @(require "../notes/ev.rkt")
 
-@bold{Due: Wednesday, November 1, 11:59PM EST}
+@bold{Due: Monday, April 1, 11:59PM}
 
 The goal of this assignment is to extend a compiler with binding
 forms and primitives that can take any number of arguments.
