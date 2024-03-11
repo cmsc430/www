@@ -31,7 +31,7 @@
 
 @table-of-contents[]
 
-@section{Errors}
+@section[#:tag "errors"]{Errors}
 
 We have added multiple, disjoint types, but mostly swept issues of
 errors under the rug by considering type mismatches as meaningless.
@@ -94,7 +94,7 @@ defined as @racket['err]:
                                 ['= (rewrite '=)]
 				['!= (rewrite '≠)])
         (apply centered
-	   (add-between 
+	   (add-between
              (build-list (- j i)
 	                 (λ (n) (begin (judgment-form-cases (list (+ n i)))
 	                               (render-judgment-form name))))
@@ -206,4 +206,3 @@ usual way again:
 (check-correctness (Prim1 'add1 (Lit 7)))
 (check-correctness (Prim1 'add1 (Lit #f)))
 ]
-
