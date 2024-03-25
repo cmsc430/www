@@ -84,8 +84,6 @@
   (match e
     [(Lit d) d]
     [(Eof)   eof]
-    {:> H0}
-    [(Empty) '()]
     {:> F L}
     [(Var x) (lookup r x)]
     {:> L}

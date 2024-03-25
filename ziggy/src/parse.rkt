@@ -16,7 +16,7 @@
     {:> F}
     [(? symbol?)         (Var s)]
     {:> H0}
-    [(list 'quote (list)) (Empty)]
+    [(list 'quote (list)) (Lit '())]
     {:> E0}
     [(list (? op0? o))   (Prim0 o)]
     {:> B}
@@ -66,7 +66,7 @@
     [(? datum?)               (Lit s)]
     ['eof                     (Eof)]
     [(? symbol?)              (Var s)]
-    [(list 'quote (list))     (Empty)]
+    [(list 'quote (list))     (Lit '())]
     [(list (? op0? p0))       (Prim0 p0)]
     [(list (? op1? p1) e)     (Prim1 p1 (parse-e e))]
     [(list (? op2? p2) e1 e2) (Prim2 p2 (parse-e e1) (parse-e e2))]

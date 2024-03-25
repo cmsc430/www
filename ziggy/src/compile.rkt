@@ -157,8 +157,6 @@
     [(Lit d) (compile-value d)]
     {:> E0}
     [(Eof) (compile-value eof)]
-    {:> H0}
-    [(Empty) (compile-value '())]
     {:> F}
     [(Var x) (compile-variable x c)]
     {:> E0}
