@@ -69,10 +69,15 @@
 	             ""
 		     @elem{Spring Break}
 		     @elem{Spring Break})
-               (list @wk{4/1}
-                     @seclink["Assignment 4"]{A4}
+               (list @wk{3/25}
+	             @elem{@seclink["Assignment 4"]{A4} P1}
 		     @secref{Hustle}
 		     @secref{Iniquity})
+
+               (list @wk{4/1}
+                     @elem{@seclink["Assignment 4"]{A4} P2}
+		     @secref{Iniquity}
+		     @secref{Jig})
 
 
 #|
