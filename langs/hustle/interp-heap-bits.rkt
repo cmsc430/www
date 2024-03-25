@@ -20,7 +20,6 @@
   (match e    
     [(Lit d)  (cons h (value->bits d))]
     [(Eof)    (cons h (value->bits eof))]
-    [(Empty)  (cons h (value->bits '()))]
     [(Var x)  (cons h (lookup r x))]
     [(Prim0 'void) (cons h (value->bits (void)))]
     [(Prim0 'read-byte) (cons h (value->bits (read-byte)))]
