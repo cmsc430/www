@@ -2,7 +2,7 @@
 
 @title[#:tag "Assignment 4" #:style 'unnumbered]{Assignment 4: Let There Be (Many) Variables}
 
-@bold{Part 1 Due: Wednesday, March 28, 11:59PM EST}
+@bold{Part 1 Due: Wednesday, March 27, 11:59PM EST}
 
 @bold{Part 2 Due: Monday, April 8, 11:59PM EST}
 
