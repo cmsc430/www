@@ -72,12 +72,25 @@
                (list @wk{3/25}
 	             @elem{@seclink["Assignment 4"]{A4} P1}
 		     @secref{Hustle}
-		     @secref{Iniquity})
+		     @secref{Hustle})
 
                (list @wk{4/1}
                      @elem{@seclink["Assignment 4"]{A4} P2}
+		     @secref{Hoax}
+		     @secref{Iniquity})
+
+               (list @wk{4/8}
+                     ""
 		     @secref{Iniquity}
 		     @secref{Jig})
+
+
+	       (list @wk{4/15}
+	             ""
+		     @secref{Knock}
+		     @secref["Midterm_2"])
+		     
+
 
 
 #|
