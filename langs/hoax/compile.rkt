@@ -64,8 +64,16 @@
 
 ;; String -> Asm
 (define (compile-string s)
-  ;; TODO
-  (seq))
+  (let ((len (string-length s)))
+    (if (zero? len)
+        (seq (Mov rax type-str))
+        (seq (Mov rax len)
+             (Mov (Offset rbx 0) rax)
+             (compile-string-chars (string->list s) 8)
+             (Mov rax rbx)
+             (Or rax type-str)
+             (Add rbx
+                  (+ 8 (* 4 (if (odd? len) (add1 len) len))))))))
 
 ;; [Listof Char] Integer -> Asm
 (define (compile-string-chars cs i)
