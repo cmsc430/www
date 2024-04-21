@@ -3,7 +3,7 @@
 
 #include "values.h"
 
-val_t entry();
+val_t entry(val_t*);
 extern FILE* in;
 extern FILE* out;
 extern void (*error_handler)();
