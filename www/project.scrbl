@@ -1,663 +1,506 @@
 #lang scribble/manual
 @(require (for-label (except-in racket compile ...) a86))
 @(require "defns.rkt")
+@(require "utils.rkt")
 @(require "notes/ev.rkt")
+@(require "notes/utils.rkt")
 @(require "fancyverb.rkt")
+@(require (for-label (except-in racket ...)))
 
-@title[#:style '(unnumbered)]{Project}
+@title[#:tag "Project" #:style '(unnumbered)]{Project}
 
 The final assessment for this course consists of an individually
 completed project.
 
-Details to be released later in the semester.
+@bold{Due: Tuesday, May 14, 3:30PM EST}
 
-@;{
+@section[#:style 'unnumbered]{Arity Checking, Rest Arguments, Case Functions, and Apply}
 
-Final deliverables are due on the last day of class, July 7.
 
-@elem[#:style "strike"]{There are several projects to choose from,
-described below.}
 
-@emph{Summer update: Typically we allow projects to be chosen from a
-number of options, but for the summer semester we will streamline
-things a bit by settling on a single option.}
+@(ev `(current-directory ,(path->string (build-path notes "iniquity-plus"))))
+@(for-each (λ (f) (ev `(require (file ,f))))
+	   '("ast.rkt" "parse.rkt" "interp.rkt"))
 
-Compared to assignments, the project is more open-ended.  You will
-need to select from a project description below and then select which
-language you'd like to target with your project.  As starter code, you
-can use the source code of any of the course languages.  How you
-implement your project is up to you.  It may involve changes to all
-aspects of the language implementation: the parser, the compiler, and
-the run-time system (however, we do not require an interpreter
-implementation). No tests are provided, so we recommend you write your
-own and suggest focusing on tests @emph{before} trying to implement
-these features.
 
-@elem[#:style "strike"]{In addition to the source code for your
-project, you must write a 2-page document in PDF format, which gives a
-summary of your work and describes how your project is implemented.}
 
-@table-of-contents[]
+The goal of this assignment is to extend a compiler with arity
+checking for function calls, to add new kinds of function parameter
+features, and to add the @racket[apply] form for applying a function
+to a list of arguments.
 
-@;{
-@section{a86 optimizer}
-
-Our compiler is designed to be simple and easy to maintain.  That
-comes at the cost of emitting code that often does needless work.
-Write an a86 optimizer, i.e., a program that takes in a list of a86
-instructions and produces an alternative list of instructions that
-have the same behavior, but will execute more efficiently.
-
-This is a fairly open-ended project, which means you can take a simple
-approach, or you can do a deep-dive on assembly code optimization and
-try to do something very sophisticated.
-
-For a maximum of 95% of the possible points, your optimizer should
-work on any a86 instructions produced by the
-@seclink["Iniquity"]{Iniquity} compiler.  For 100%, your optimizer
-should work on any a86 instructions produced by the
-@seclink["Loot"]{Loot} compiler.
-
-The most important aspect of the optimizer is it must preserve the
-meaning of the original source program.  If running a program with or
-without optimization can produce different results, you will lose
-significant points.
-
-The second important aspect of the optimizer is that it produces more
-efficient code (but this should never come at the expense of
-correctness---otherwise it's trivial to optimize every program!).  You
-should design some experiments demonstrating the impact of your
-optimizations and measure the performance improvement of your optimizer.
-
-Here are some ideas for what you can optimize:
+You are given a file @tt{iniquity-plus.zip} on ELMS with a starter
+compiler similar to the @seclink["Iniquity"]{Iniquity} language we
+studied in class.  You are tasked with:
 
 @itemlist[
 
-@item{Avoid stack references where possible.
+@item{implementing run-time arity checking for function calls,}
 
-For example, you might push something and immediately reference it:
-@racket[(seq (Push _r1) (Mov _r2 (Offset rsp 0)))], which is
-equivalent to @racket[(seq (Push _r1) (Mov _r2 _r1))].  The
-register-to-register move will be faster than accessing the memory on
-the stack.}
+@item{extending function definitions to include ``rest argument''
+parameters for writing variable-arity functions,}
 
-@item{Avoid stack pushes where possible.
+@item{extending function definitions to include
+@racket[case-lambda]-style multiple-arity functions,}
 
-In the previous example, it may be tempting to delete the
-@racket[Push], but that is only valid if that stack element is not
-referenced later before being popped.  And even if the element is not
-referenced, we have to be careful about how the element is popped.
+@item{extending the arity checking features to handle these new forms
+of function definitions, and}
 
-But if you know where the pop occurs and there's no intervening
-references in to the stack or other stack changes, then you can
-improve the code further, e.g. @racket[(seq (Push _r1) (Mov _r2
-(Offset rsp 0)) (Add rsp 8))] can become @racket[(seq (Mov _r2 _r1))].
-}
-
-@item{Statically compute.
-
-Sometimes the compiler emits code for computing something at run-time
-which can instead be computed at compile time.  For example, the
-compiler might emit @racket[(seq (Mov _r 42) (Add _r 12))], but this
-can be simplified to @racket[(seq (Mov _r 54))].}
-
+@item{implementing the @racket[apply] mechanism for applying a function
+to the elements of a list as arguments.}
 ]
 
-There are many, many other kinds of optimizations you might consider.
-To get a sense of the opportunities for optimization, try compiling
-small examples and looking at the assembly code produces.  Try
-hand-optimizing the code, then try to abstract what you did by hand
-and do it programmatically.
-
-@section{Source optimizer}
-
-Another complimentary approach to making programs compute more
-efficiently is to optimize them at the level of source code.  Write a
-source code optimizer, i.e. a program that takes in a program AST and
-produces an alternative AST that has the same behavior, but will
-execute more efficiently.
-
-This is another fairly open-ended project, which means you can take a
-simple approach, or you can do a deep-dive on source code optimization
-and try to do something very sophisticated.
-
-For a maximum of 95% of the possible points, your optimizer should
-work for the @seclink["Iniquity"]{Iniquity} language.  For 100%, your
-optimizer should work for the @seclink["Loot"]{Loot} language (or later).
-
-The most important aspect of the optimizer is it must preserve the
-meaning of the original source program. If running a program with or
-without optimization can produce different results, you will lose
-significant points.
-
-The second important aspect of the optimizer is that it produces more
-efficient code (but this should never come at the expense of
-correctness—otherwise it’s trivial to optimize every program!). You
-should design some experiments demonstrating the impact of your
-optimizations and measure the performance improvement of your
-optimizer.
-
-Here are some ideas for where you can optimize:
-
-@itemlist[
-
-@item{Avoid variable bindings where possible.
-
-Sometimes a program may bind a variable to a value, but then use the
-variable only once, e.g. @racket[(let ((x (add1 7))) (add1 x))].  We
-can instead replace the variable occurrence with it's definition to
-get: @racket[(add1 (add1 7))].  Note that can must be taken to
-@emph{not} do this optimization if it changes the order in which
-effects may happen.  For example, consider
-
-@racketblock[
-(let ((x (read-byte)))
-  (begin (read-byte)
-         (add1 x)))
-]
-
-This is not the same as:
-
-@racketblock[
-(begin (read-byte)
-       (add1 (read-byte)))
-]
-
-because the latter adds one to the second byte of the input stream rather than the first.}
-
-@item{Statically compute.
-
-Sometimes parts of a program can be computed at compile-time rather
-than run-time.  For example, @racket[(add1 41)] can be replaced with
-@racket[42].  Likewise, expressions like @racket[(if #f _e1 _e2)] can
-be replaced by @racket[_e2].}
-
-@item{Inline function calls.
-
-Suppose you have:
-
-@racketblock[
-(define (f x) (add1 x))
-(if (zero? (f 5)) _e1 _e2)
-]
-
-Since the expression @racket[(f 5)] is calling a known function, you
-should be able to transform this call into @racket[(let ((x 5)) (add1
-x))].  Using the previously described optimization, you can further
-optimize this to @racket[(add1 5)], which in turn can be simplified
-to @racket[6].  You can keep going and notice that @racket[(zero? 6)]
-is just @racket[#f], so the whole program can be simplified to:
-
-@racketblock[
-(define (f x) (add1 x))
-_e2
-]
-}
-
-]
-
-Note that the last example can get considerably more complicated in a
-language with first-class functions since it may not be possible to
-know statically which function is being called.
-
-There are many other optimizations you might consider.  Think about
-the kinds of expressions you might write and how they can be
-simplified, then figure out how to do it programmatically.
-}
-
-@section{Multiple return values}
-
-Racket, Scheme, and even x86 support returning more than one value
-from a function call.  Implement Racket's @racket[let-values] and
-@racket[values] forms to add multiple return values.
-
-You may choose to implement this feature for any language that is 
-@seclink["Iniquity"]{Iniquity} or later for a maximum 95% of the
-possible points.  For 100% you'll need to implement the feature for
-Loot or later.
-
-Here are the key features that need to be added:
-
-@itemlist[
-
-@item{@racket[(values _e1 ... _en)] will evaluate @racket[_e1] through
-@racket[_en] and then ``return'' all of their values.}
-
-@item{@racket[(let-values ([(_x1 ... _xn) _e]) _e0)] will evaluate
-@racket[_e], which is expected to be an expression that produces
-@racket[_n] values, which are bound to @racket[_x1] through
-@racket[_xn] in the body expression @racket[_e0].}
-
-]
-
-
-Here are some examples to help illustrate:
-
-@ex[
-
-(let-values ([(x y) (values 1 2)]) (+ x y))
-
-(let-values ([(x) (values 1)]) (add1 x))
-
-(let-values ([() (values)]) 7)
-
-(define (f x)
-  (values x (+ x 1) (+ x 2)))
-  
-(let-values ([(x y z) (f 5)])
-  (cons x (cons y (cons z '()))))
-
-(add1 (values 5))
-
-(let ((x (values 5)))
-  (add1 x))
-
-]
-
-Any time an expression produces a number of values that doesn't match
-what the surrounding context expects, an error should be signaled.
-
-@ex[
-
-(eval:error (add1 (values 1 2)))
-
-(eval:error (let-values ([(x y) 2]) x))
-
-]
-
-The top-level expression may produce any number of values and the
-run-time system should print each of them out, followed by a newline:
-
-@ex[
-(values 1 2 3)
-]
-
-Note there is some symmetry here between function arity checking where
-we make sure the number of arguments matches the number of parameters
-of the function being called and the ``result arity'' checking that is
-required to implement this feature.  This suggests a similar approach
-to implementing this feature, namely designating a register to
-communicate the arity of the result, which should be checked by the
-surrounding context.
-
-You will also need to design an alternative mechanism for
-communicating return values.  Using a single register (@racket['rax])
-works when every expression produces a single result, but now
-expressions may produce an arbitrary number of results and using
-registers will no longer suffice.  (Although you may want to continue
-to use @racket['rax] for the common case of a single result.)  The
-solution for this problem with function parameters was to use the
-stack and a similar approach can work for results too.
-
-
-@subsection{Returning multiple values to the run-time system or @racket[asm-interp]}
-
-In implementing @racket[values], there are two design decisions you
-have to make:
-
-@itemlist[#:style 'ordered
-@item{How are values going to be represented during the execution of a program?}
-@item{How are values going to be communicated back to the run-time system and/or asm-interp when the program completes?}
-]
-
-The answers to (1) and (2) don't necessarily have to be the same.
-
-Note that you can go a long way working on (1) without making any
-changes to the run-time system or @tt{unload-bits-asm.rkt} (which is
-how the result of @racket[asm-interp] is converted back to a Racket
-value).  You can basically punt on (2) and work on (1) by writing
-tests that use multiple values within a computation, but ultimately
-return a single value, e.g. @racket[(let-values ([(x y) (values 1 2)]
-(cons x y)))].
-
-As for (2), here is a suggestion that you are free to adopt, although
-you can implement (2) however you'd like so long as when running an
-executable that returns multiple values it prints the results in a way
-consistent with how Racket prints and that if using
-@racket[asm-interp], your version of @racket[unload/free] produces
-multiple values whenever the program does.
-
-You can return a vector of results at the end of @racket[entry].  This
-means after the instructions for the program, whatever values are
-produced are converted from the internal representation of values
-(i.e., your design for (1)) to a vector and the address (untagged) is
-put into @tt{rax} to be returned to the run-time system and/or
-@racket[asm-interp].
-
-Now both the run-time system and @tt{unload-bits-asm.rkt} need to be
-updated to deal with this change in representation for the result.
-
-In @tt{main.c}, the part that gets the result and prints it:
-
-@fancy-c[
-#<<HERE
-  val_t result = entry(heap);
-  print_result(result);
-  if (val_typeof(result) != T_VOID)
-    putchar('\n');
-HERE
-]
-
-can be changed to getting the vector and printing each element:
-
-@fancy-c[
-#<<HERE
-  val_vect_t *result = entry(heap);
-  for (int i = 0; i < result->len; ++i) {
-    print_result(result->elems[i]);
-    if (val_typeof(result->elems[i]) != T_VOID)
-      putchar('\n');
-  }
-HERE
-]
-
-You'll also need to update the signature of @racket[entry] in
-@tt{runtime.h} to:
-
-@fancy-c["  val_vect_t* entry();"]
-
-You'll also need to make a similar change to @racket[unload/free] in
-@tt{unload-bits-asm.rkt}, which plays the role of the run-time system
-when writing tests that use @racket[asm-interp].
-
-Instead of:
+Unlike previous assignments, you do not need to bring forward your
+past features to this language; there is no need to implement
+@racket[cond], @racket[case], etc.
+
+Be sure to read the entire problem description before starting.  There
+are a number of @secref[#:tag-prefixes '("proj-")]{Suggestions} on how to
+approach the assignment near the end.
+
+
+@section[#:tag-prefix "proj-" #:style 'unnumbered #:tag "arity"]{Checking arity}
+
+In @seclink["Iniquity"]{Iniquity}, we implemented a language with
+function definitions and calls.  We noted that bad things can happen
+when a function is called with the incorrect number of arguments.
+While it's possible to statically check this property of Iniquity
+programs, it's not possible in more expressive languages and arity
+checking must be done at run-time.  You are tasked with implementing
+such a run-time arity checking mechanism.
+
+Here is the basic idea.  You need to add a run-time checking mechanism
+that will cause the following program to signal an error:
 
 @#reader scribble/comment-reader
 (racketblock
-;; Answer* -> Answer
-(define (unload/free a)
-  (match a
-    ['err 'err]
-    [(cons h v) (begin0 (unload-value v)
-                        (free h))]))
+(define (f x y) (+ x y))
+(f 1)
 )
 
-You'll want:
+The function call knows how many arguments are given and the function
+definition knows how many argument are expected.  The generated code
+should check that these two quantities match when the function is called.
+
+A simple way to do this is to pick a designated register that will be
+used for communicating arity information.  The caller should set the
+register to the number of arguments before jumping to the function.
+The function should check this number against the expected number and
+signal an error when they don't match.
+
+
+You should modify @racket[compile-app] and @racket[compile-define] to
+implement this part of the assignment.
+
+@section[#:tag-prefix "proj-" #:style 'unnumbered #:tag "rest"]{Rest
+arguments}
+
+Many languages including JavaScript, C, and Racket provide facilities
+for defining functions that take a ``rest argument'' which allows the
+function to be called with more arguments than expected and these
+additional arguments will be bound to a single value that collects all
+of these arguments.  In Iniquity, as in Racket, the obvious way of
+collecting these arguments into a single value is to use a list.
+
+Here are some examples:
+
+@itemlist[
+
+@item{@racket[(define (f . xs) ...)]: this function takes @emph{any} number
+of arguments and binds @racket[xs] to a list containing all of them,}
+
+@item{@racket[(define (f x . xs) ...)]: this function takes @emph{at
+least} one argument and binds @racket[x] to the first argument and
+@racket[xs] to a list containing the rest.  It's an error to call this function
+with zero arguments.}
+
+@item{@racket[(define (f x y z . xs) ...)]: this function takes
+@emph{at least} three arguments and binds @racket[x], @racket[y], and
+@racket[z] to the first three arguments and @racket[xs] to a list
+containing the rest.  It's an error to call this function with 0, 1,
+or 2 arguments.}
+]
+
+Here are some examples in Racket to get a sense of the behavior:
+
+@ex[
+(define (f . xs) (list xs))
+(f)
+(f 1)
+(f 1 2)
+(f 1 2 3)
+(f 1 2 3 4)
+(define (f x . xs) (list x xs))
+(eval:error (f))
+(f 1)
+(f 1 2)
+(f 1 2 3)
+(f 1 2 3 4)
+(define (f x y z . xs) (list x y z xs))
+(eval:error (f))
+(eval:error (f 1))
+(eval:error (f 1 2))
+(f 1 2 3)
+(f 1 2 4)
+]
+
+The code generated for a function call should not change---other than
+what you did for @secref[#:tag-prefixes '("proj-") "arity"]: it should
+pass all of the arguments on the stack along with information about
+the number of arguments.
+
+The compilation of function definitions that use a rest argument
+should generate code that checks that the given number of arguments is
+acceptable and should generate code to pop all ``extra'' arguments off
+the stack and construct a list which is then bound to the rest
+parameter.
+
+It is worth remembering that arguments are pushed on the stack in such
+a way that the last argument is the element most recently pushed on
+the stack.  This has the benefit of making it easy to pop off the
+extra arguments and to construct a list with the elements in the
+proper order.
+
+HINT: the function definition knows the number of ``required''
+arguments, i.e. the minimum number of arguments the function can be
+called with---call this @math{m}---and the caller communicates how
+many actual arguments have been supplied---call this @math{n}.  The
+compiler needs to generate a loop that pops @math{n-m} times,
+constructing a list with with popped elements, and then finally pushes
+this list in order to bind it to the rest parameter.
+
+@section[#:tag-prefix "proj-" #:style 'unnumbered #:tag "case-lambda"]{Arity dispatch}
+
+Some languages such as Java, Haskell, and Racket make it possible to
+overload a single function name with multiple definitions where the
+dispatch between these different definitions is performed based on the
+number (or kind) of arguments given at a function call.
+
+In Racket, this is accomplished with the @racket[case-lambda] form for
+constructing multiple-arity functions.
+
+Here is an example:
+
+@ex[
+(define f
+  (case-lambda
+    [(x) "got one!"]
+    [(p q) "got two!"]))
+
+(f #t)
+(f #t #f)
+(eval:error (f #t #f 0))
+]
+
+This function can accept @emph{either} one or two arguments.  If given
+one argument, it evaluates the right-hand-side of the first clause
+with @racket[x] bound to that argument.  If given two arguments, it
+evaluates the right-hand-side of the second clause with @racket[p] and
+@racket[q] bound to the arguments.  If given any other number of
+arguments, it signals an error.
+
+A @racket[case-lambda] form can have any number of clauses (including
+zero!) and the first clause for which the number of arguments is
+acceptable is taken when the function is called.
+
+Note that @racket[case-lambda] can be combined with rest arguments too.
+A clause that accepts any number of arguments is written by simply
+listing a parameter name (no parentheses).  A clause that accepts some
+non-zero minimum number of parameters is written with a dotted
+parameter list.
+
+For example:
+
+@ex[
+(define f
+  (case-lambda
+    [(x y z . r) (length r)]
+    [(x) "just one!"]))
+
+(f 1 2 3 4 5 6)
+(f #t)
+(eval:error (f))
+(eval:error (f 1 2))]
+
+This function takes three or more arguments @emph{or} one argument.  Any
+other number of arguments (i.e. zero or two) results in an error.
+
+@ex[
+(define f
+  (case-lambda
+    [(x y z) "three!"]
+    [xs (length xs)]))
+
+(f)
+(f 1 2)
+(f 1 2 3)
+(f 1 2 3 4 5 6)
+]
+
+This function takes any number of arguments, but when given three, it
+produces @racket["three!"]; in all other cases it produces the number
+of arguments.
+
+@section[#:tag-prefix "proj-" #:style 'unnumbered #:tag "apply"]{Apply}
+
+Apply is the yin to the yang of rest arguments (or maybe the other way
+around).  Whereas a rest argument lets a function take arbitrarily
+more arguments and packages them up as a list, @racket[apply] will
+apply a function to a list as though the elements of the list were
+given as arguments.
+
+@ex[
+(define (f x y) (+ x y))
+(apply f (list 1 2))
+(define (flatten ls)
+  (apply append ls))
+(flatten (list (list 1 2) (list 3 4 5) (list 6)))
+(define (sum ls)
+  (apply + ls))
+(sum (list 5 6 7 8))
+]
+
+Here you can see @racket[apply] taking two things: a function and
+single argument which is a list.  It is calling the function with the
+elements of the list as the arguments.
+
+It turns out, @racket[apply] can also take other arguments in addition
+to the list and pass them along to the function.
+
+@ex[
+(define (f x y) (+ x y))
+(apply f 1 (list 2))
+(apply list 1 2 3 4 (list 5 6 7))
+]
+
+Note that if the function expects a certain number of arguments and the list has
+a different number of elements, it results in an arity error:
+
+@ex[
+(define (f x y) (+ x y))
+(eval:error (apply f (list 1 2 3)))
+]
+
+A new form of expression has been added to the @tt{Expr} AST type:
 
 @#reader scribble/comment-reader
 (racketblock
-;; Answer* -> Answer
-(define (unload/free a)
-  (match a
-    ['err 'err]
-    [(cons h vs) (begin0 (unload-values vs)
-                         (free h))]))
-
-(define (unload-values vs)
-  (let ((vec (unload-value (bitwise-xor vs type-vect))))
-    (apply values (vector->list vec))))
+;; type Expr = ...
+;;           | (Apply Id [Listof Expr] Expr)
 )
 
-
-
-Let's say you make these changes to the run-time system and
-@racket[unload/free] before you make any changes to the compiler and
-now you want to adapt the compiler to work with the new set up (before
-trying to do anything with @racket[values]).  You can add the
-following just after the call to @racket[compile-e] for the main expression
-of the program and before restoring volatile registers and returning:
+The parser has been updated to handle concrete syntax of the form:
 
 @#reader scribble/comment-reader
 (racketblock
-;; Create and return unary vector holding the result
-(Mov r8 1)
-(Mov (Offset rbx 0) r8)  ; write size of vector, 1
-(Mov (Offset rbx 8) rax) ; write rax as single element of vector
-(Mov rax rbx)            ; return the pointer to the vector
+(apply _f _e0 ... _en)
 )
 
-In order to return more values, you'd construct a larger vector.
-
-
-@;{
-@section{Exceptions and exception handling}
-
-Exceptions and exception handling mechanisms are widely used in modern
-programming languages.  Implement Racket's @racket[raise] and
-@racket[with-handlers] forms to add exception handling.
-
-You may choose to implement this feature for any language that is
-@seclink["Iniquity"]{Iniquity} or later for a maximum 95% of the
-possible points.  For 100% you'll need to implement the feature for
-Loot or later.
-
-Here are the key features that need to be added:
-
-@itemlist[
-
-@item{@racket[(raise _e)] will evaluate @racket[_e] and then ``raise''
-the value, side-stepping the usual flow of control and instead jump
-to the most recently installed exception handler.}
-
-@item{@racket[(with-handlers ([_p1 _f1] ...) _e)] will install a new
-exception handler during the evaluation of @racket[_e].  If
-@racket[_e] raises an exception that is not caught, the predicates
-should be applied to the raised value until finding the first
-@racket[_pi] that returns true, at which point the corresponding
-function @racket[_fi] is called with the raised value and the result
-of that application is the result of the entire @racket[with-handlers]
-expression.  If @racket[_e] does not raise an error, its value is the
-value of the @racket[with-handler] expression.}
-
+@ex[
+(parse-e '(apply f x y zs))
 ]
 
-Here are some examples to help illustrate:
+Note that the AST for an @racket[apply] expression has the function
+name, an arbitrarily long list of arguments, plus a distinguished last
+argument that should produce a list.  (It is an error if this expression
+produces anything other than a list.)
+
+While it's allowable to have only the function and the list argument,
+it's a syntax error to leave off a list argument altogether:
 
 @ex[
-
-(with-handlers ([string? (λ (s) (cons "got" s))])
-  (raise "a string!"))
-
-(with-handlers ([string? (λ (s) (cons "got" s))]
-                [number? (λ (n) (+ n n))])
-  (raise 10))
-
-(with-handlers ([string? (λ (s) (cons "got" s))]
-                [number? (λ (n) (+ n n))])
-  (+ (raise 10) 30))
-
-(let ((f (λ (x) (raise 10))))
-  (with-handlers ([string? (λ (s) (cons "got" s))]
-                  [number? (λ (n) (+ n n))])
-    (+ (f 10) 30)))
-
-(with-handlers ([string? (λ (s) (cons "got" s))]
-                [number? (λ (n) (+ n n))])
-  'nothing-bad-happens)
-
-(with-handlers ([symbol? (λ (s) (cons 'reraised s))])
-  (with-handlers ([string? (λ (s) (cons "got" s))]
-                  [number? (λ (n) (+ n n))])
-    (raise 'not-handled-by-inner-handler)))
-
+(parse-e '(apply f xs))
+(eval:error (parse-e '(apply f)))
 ]
 
-Notice that when a value is raised, the enclosing context is discard.
-In the third example, the surrounding @racket[(+ [] 30)] part is
-ignored and instead the raised value @racket[10] is given the
-exception handler predicates, selecting the appropriate handler.
-
-Thinking about the implementation, what this means is that a portion
-of the stack needs to be discarded, namely the area between the
-current top of the stack and the stack that was in place when the
-@racket[with-handlers] expression was evaluated.
-
-This suggestions that a @racket[with-handlers] expression should stash
-away the current value of @racket['rsp].  When a @racket[raise]
-happens, it grabs the stashed away value and installs it as the
-current value of @racket['rsp], effectively rolling back the stack to
-its state at the point the exception handler was installed.  It should
-then jump to code that will carry out the applying of the predicates
-and right-hand-side functions.
-
-Since @racket[with-handler]s can be nested, you will need to maintain
-an arbitrarily large collection of exception handlers, each of which
-has a pointer into the stack and a label for the code to handle the
-exception.  This collection should operate like a stack: each
-@racket[with-handlers] expression adds a new handler to the handler
-stack.  If the body expression returns normally, the top-most handler
-should be removed.  When a raise happens, the top-most handler is
-popped and used.
-
-@;{
-@subsection{Additional requirements}
-
-To receive full credit, you will to add the above features to Perp and
-do the following.
-
-After you have a working implementation of @racket[raise] and
-@racket[with-handlers], add a structure definition to your standard
-library: @racket[(struct exn:fail (msg cm))].  Rework the compiler so
-that all run-time errors raise an instance of @racket[struct:fail].
-This enables user-programs to handle run-time errors like this:
+The interpreter also handles @racket[apply] expressions:
 
 @ex[
-
-(with-handlers ([exn:fail? (λ (e) 'OK)])
-  (add1 #f))
-
+(interp (parse '[ (define (f x y) (cons y x))
+                  (apply f (cons 1 (cons 2 '()))) ]))
 ]
 
-(The @racket[cm] field can be ignored; you can always populate it with
-@racket[#f] if you'd like.  It's there just for consistency with
-Racket's @racket[exn:fail].)
-}
+Together with rest arguments, @racket[apply] makes it possible to
+write many functions you may like to use:
+
+@#reader scribble/comment-reader
+(ex
+(interp
+  (parse
+    '[;; an append that works on any number of lists
+      (define (append . xss)
+        (if (empty? xss)
+            '()
+            (if (empty? (car xss))
+                (apply append (cdr xss))
+                (cons (car (car xss))
+                      (apply append (cdr (car xss)) (cdr xss))))))
+       ;; the list function!
+       (define (list . xs) xs)
+
+       (append (list 1 2 3) (list 4) (list 5 6 7))])))
+
+In @tt{compile.rkt}, the @racket[compile-e] has an added case for
+@racket[Apply] AST nodes and calls @racket[compile-apply], which is
+stubbed out for you.  You will need to implement @racket[apply] there.
+
+Here is the idea for @racket[apply]: it is doing something similar to
+a function call, so it needs to make a label for the return point and
+push that on the stack. It then needs to execute all of the given
+arguments, pushing them on the stack (again just like a regular
+function call).  Then it needs to execute the distinguished list
+argument and generate code that will traverse the list at run-time,
+pushing elements on to the stack until reaching the end of the list.
+At this point, all of the arguments, both those given explicitly and
+those in the list are on the stack.  Jump to the function.
 
 
+@section[#:tag-prefix "proj-" #:style 'unnumbered]{Representing the
+syntax of function definitions}
 
-@;{
-For your project you should turn in your extension code, a directory
-of examples that showcase your extension and the differences in
-behavior compared to the original language, and a @bold{short}
-paragraph describing anything you found interesting. Submission will
-be handled by gradescope, with more details to follow.
+The @seclink["Iniquity"]{Iniquity} language has a single function
+definition form: @racket[(define (_f _x ...) _e)] which is represented
+with the following AST type:
 
-The suggested deadline is the last date of classes - May 11th - to
-avoid overlap with finals week. That said, you're free to take a few
-extra days and submit after that deadline until the nominal date
-of the final exam (which would have been on Tuesday, May 18th if it
-was happening). That is a strict deadline, not imposed by me, so make
-sure you have turned in your projects by then.
+@#reader scribble/comment-reader
+(racketblock
+;; type Defn = (Defn Id (Listof Id) Expr)
+(struct Defn (f xs e) #:prefab)
+)
 
-As a first step, you have to pick a project idea as your "assignment"
-for this week. Just write a @bold{short} paragraph with your project
-of choice: what you hope to accomplish and a high-level description of
-your approach. This assignment should be live on Gradescope.
+Because there are three different forms of function definition in
+Iniquity+, we use the following AST representation:
 
-Here are some project ideas that have been discussed throughout the
-semester:
+@#reader scribble/comment-reader
+(racketblock
+;; type Defn = (Defn Id Fun)
+(struct Defn (f fun) #:prefab)
+
+;; type Fun = (FunPlain [Listof Id] Expr)
+;;          | (FunRest [Listof Id] Id Expr)
+;;          | (FunCase [Listof FunCaseClause])
+;; type FunCaseClause = (FunPlain [Listof Id] Expr)
+;;                    | (FunRest [Listof Id] Id Expr)
+(struct FunPlain (xs e)   #:prefab)
+(struct FunRest  (xs x e) #:prefab)
+(struct FunCase  (cs)     #:prefab)
+)
+
+What used to be represented as @racket[(Defn _f _xs _e)] is now
+represented as @racket[(Defn _f (FunPlain _xs _e))].
+
+
+The parser already works for these new forms of function definitions.
+Here are some examples of how function definitions are parsed, but you
+are encouraged to try out more to get a better sense:
+
+@ex[
+(parse-define '(define (f x) x))
+(parse-define '(define (f . xs) xs))
+(parse-define '(define (f x y z . q) q))
+(parse-define
+  '(define f
+     (case-lambda
+       [(x y) 2]
+       [(z) 1]
+       [(a b c . d) "3+"]
+       [q "other"])))
+]
+
+@section[#:tag-prefix "proj-" #:style 'unnumbered]{Starter code}
+
+The compiler code given to you is just an implementation of Iniquity,
+but updated to parse the new forms of function definitions and
+re-organized slightly to match the new AST representation.
+
+The interpreter code given to you works on the full Iniquity+
+language, so you do not need to update @racket[interp.rkt] and can use
+the interpreter to guide your implementation of the compiler.
+
+@ex[
+(interp
+  (parse '[(define (f x) x)
+           (f 1)]))
+(interp
+  (parse '[(define (f . x) x)
+           (f 1)]))
+(interp
+  (parse '[(define (f . x) x)
+           (f)]))
+(interp
+  (parse '[(define (f . x) x)
+           (f 1 2 3 4 5)]))
+(interp
+  (parse '[(define f
+             (case-lambda
+               [(x y) 2]
+               [(z) 1]
+               [(a b c . d) "3+"]
+               [q "other"]))
+	    (cons (f 7)
+	          (cons (f 3 4)
+		        (cons (f)
+			      (cons (f 7 8 9 10 11)
+			            '()))))]))
+]
+
+
+Thus, you should only need to modify @racket[compile.rkt].
+
+A small number of test cases are given as usual.
+
+
+@section[#:tag-prefix "proj-" #:style 'unnumbered]{Suggestions}
+
+This is a tricky project.  The amount of code you have to write is
+pretty small, however you may spend a long time slogging through the
+project if your approach is to hack first, think later.
+
+Here are some suggestions for how to approach the project.  Make
+sure you get each of the pieces working before moving on.
 
 @itemlist[
 
-  @item{Error handling. Currently, our languages return a
-  not-very-informative @tt{'err} symbol when things go wrong. Real
-  languages offer a lot more information: the reason that something
-  went wrong, context, expressions involved, file name, line numbers,
-  etc. This project would aim to improve the error reporting for Loot.
-  Improving that behavior for an interpreter is pretty straightforward
-  and should be an easy first step for this project until you're happy
-  with the output error messages.  Porting that better error behavior
-  on the compiler is a bit more involved - there are multiple possible
-  approaches to this, but hacking on the runtime system is always an
-  option!
-  }
+@item{Start with @secref[#:tag-prefixes '("proj-") "arity"]; this should
+be pretty easy.  Make sure it works for plain function definitions.}
 
-  @item{Typing Loot. We have discussed typing for @tt{Hustle} and its
-  implications in the compiler (deleting a whole lot of assertions), as
-  well as typing for a simple λ calculus. This project would aim
-  to combine the two threads, implementing a type system on top of Loot.
-  There are interesting design decisions here, so feel free to reach out
-  to talk about them!}
+@item{Move on to @secref[#:tag-prefixes '("proj-") "rest"].  You could
+start by emitting code that checks that the arguments are acceptable,
+popping the appropriate number of arguments off (and ignoring the
+elements), then pushing the empty list.  This will work like a rest arg
+in that it should accept any number of arguments beyond the required
+minimum, but the rest argument will always be bound to empty.  Once
+working, try to modify the code to build a list as it pops arguments.
+Test that it works.}
 
-  @item{Loot Optimizations. Sky's the limit here. You can try
-  high-level optimizations (e.g. inlining, λ lifting, dead-code
-  elimination, partial evaluation, etc.) or low-level ones (register
-  allocation, register-based calling conventions etc.). Optimizations
-  can be tricky to get right, so make sure you reuse all the unit
-  tests we have provided throughout the semester and expand upon them!}
+@item{Next you could either tackle @racket[apply] or
+@racket[case-lambda].}
 
-  @item{Whatever feature you want to add! Get in touch to discuss whether
-  its scope is appropriate for a final project.}
+@item{For @secref[#:tag-prefixes '("proj-")
+"case-lambda"], remember that you have a compiler for plain and rest
+argument functions at this point.  That should come in handy.  Think
+of @racket[case-lambda] as generating a set of function definitions
+(with generated names), and then the main work of @racket[case-lambda]
+is determing which of the generated functions to call, given the
+specific number of arguments passed in by the caller.  When you find
+the function that fits, jump to it.  You might start by only handling
+plain function clauses in @racket[case-lambda] before moving on to
+handling rest argument functions, too.}
+
+@item{For @secref[#:tag-prefixes '("proj-") "apply"], at first don't
+worry about arity checking and consider the case where there are no
+explicit arguments given, i.e. focus on @racket[(apply _f _e)].  Once
+you have that working, consider the more general case of
+@racket[(apply _f _e0 ... _e)].  Then figure out how to add in the
+arity checking part.  Finally, make sure you're detecting error cases
+such as when @racket[_e] is not a proper list.}
+
 ]
 
-}
+@section[#:tag-prefix "proj-" #:style 'unnumbered]{Submitting}
 
-@;{
-@section{Pattern matching}
-
-Racket, OCaml, Rust, Scala, and many other programming languages
-support pattern matching.  Extend
-}
-
-@section{Garbage collection}
-
-Racket, OCaml, Java, JavaScript, Ruby, and many, many other languages
-use garbage collection as the means of deallocating memory.  Implement
-a garbage collector.
-
-You may choose to implement this feature for any language that is
-@seclink["Loot"]{Loot} or later.
-
-Here are the key features that need to be added:
-
-@itemlist[
-
-@item{all language constructs that allocate memory should check that
-the current state of the heap can accommodate an allocation before
-performing it, and if not, doing a garbage collection and trying
-again.  If there is still not possible to accommodate the allocation,
-an error should be signaled.}
-
-@item{@racket[(collect-garbage)] will run a garbage collection and
-return void.}
-
-@item{@racket[(current-memory-use)] will return the number of bytes
-current allocated in the heap.  This operation should not run a
-garbage collection and should not trace reachable objects in the heap.
-Instead it should simply return the total size, in bytes, that are
-currently allocated in the heap.}
-
-@item{@racket[(dump-memory-stats)] prints information about the
-current stack and heap and returns void.  See the @tt{iniquity-gc}
-language for an example.}
-]
+Submit a zip file containing your work to Gradescope.  Use @tt{make
+submit.zip} from within the @tt{iniquity-plus} directory to create a zip
+file with the proper structure.
 
 
-
-
-@section{Design your own}
-
-You may also design your own project, however, you will need to submit
-a one-page write-up that documents what you plan to do and how you
-will evaluate whether it is successful.  You must submit this document
-and have it approved by the instructor by November 22.
-}
-
-@section[#:tag "project"]{Submitting}
-
-Submissions should be made on Gradescope.
-
-Your submission should be a zip file containing the following contents:
-
-
-@verbatim|{
-info.rkt
-<lang>/
-}|
-
-where @tt{<lang>} corresponds to the language you have chosen to
-implement for your project, e.g. @tt{iniquity}, @tt{loot}, etc.
-
-The @tt{info.rkt} should contain the following information:
-
-@codeblock|{
-#lang info
-(define project 'values)
-(define language '<lang>)
-}|
-
-The @tt{<lang>} should be @tt{iniquity}, @tt{loot},
-etc. and should be the same as the directory that contains the
-implementation.
-
-}
