@@ -50,9 +50,9 @@ implement several related languages.
 	       (list     "11 AM"  "Advait"      'cont          "Advait"         'cont            'cont)
 	       (list     "12 PM"  'cont         'cont          "Pierce"         'cont            'cont)
 	       (list      "1 PM"  "Kazi"        "Kazi"         "Pierce"         'cont            'cont)
-	       (list      "2 PM"  "Kazi"        "Kazi"         'cont            "Henry"          'cont)
+	       (list      "2 PM"  "Kazi"        "Kazi"         'cont            "Henry"          "Henry")
 	       (list      "3 PM"  'cont         'cont          'cont            "Henry"          "Henry")
-	       (list      "4 PM"  'cont         "William"      'cont            "William"        "Henry"))]
+	       (list      "4 PM"  'cont         "William"      'cont            "William"        'cont))]
 
 @bold{Communications:} @link[@elms-url]{ELMS}, @link[@piazza]{Piazza}
 
