@@ -40,7 +40,7 @@ implement several related languages.
 	        #;(list prof2 prof2-email)
 		staff)]
 
-@bold{Office hours location:} Virtual
+@bold{Office hours location:} Virtual via Zoom (see Piazza for details)
 
 @tabular[#:style 'boxed
          #:row-properties '(bottom-border ())
