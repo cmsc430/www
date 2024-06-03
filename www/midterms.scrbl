@@ -7,8 +7,10 @@ exams.  Exams will be distributed at least @midterm-hours hours before the due
 date of the midterm.
 
 @itemlist[
-  @item{@secref["Midterm_1"], due @m1-date}
-  @item{@secref["Midterm_2"], due @m2-date}
+  @;@item{@secref["Midterm_1"], due @m1-date}
+  @item{Midterm 1, due @m1-date}
+  @;@item{@secref["Midterm_2"], due @m2-date}
+  @item{Midterm 2, due @m2-date}
 ]
 
 @include-section["midterms/1.scrbl"]
