@@ -76,8 +76,7 @@
                (list @wk{3}
                      @day{6/10}
                      @secref{Extort}
-                     @;@seclink["Assignment 2"]{A2}
-                     "A2")
+                     @seclink["Assignment 2"]{A2})
                (list ""
                      @day{6/11}
                      @secref{Fraud}
