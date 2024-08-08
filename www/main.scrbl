@@ -40,19 +40,19 @@ implement several related languages.
 	        #;(list prof2 prof2-email)
 		staff)]
 
-@bold{Office hours:} AVW 4140
+@bold{Office hours:} AVW 4140, Schedule TBD
 
 @tabular[#:style 'boxed
          #:row-properties '(bottom-border ())
 	 (list (list @bold{Time}  @bold{Monday} @bold{Tuesday} @bold{Wednesday} @bold{Thursday}  @bold{Friday})
-	       (list      "9 AM"  'cont         "Deena"        "Deena"          'cont            'cont)
-	       (list     "10 AM"  'cont         "Deena"        "Deena"          'cont            'cont)
-	       (list     "11 AM"  "Advait"      'cont          "Advait"         'cont            'cont)
-	       (list     "12 PM"  'cont         'cont          "Pierce"         'cont            'cont)
-	       (list      "1 PM"  "Kazi"        "Kazi"         "Pierce"         'cont            'cont)
-	       (list      "2 PM"  "Kazi"        "Kazi"         'cont            "Henry"          'cont)
-	       (list      "3 PM"  'cont         'cont          'cont            "Henry"          "Henry")
-	       (list      "4 PM"  'cont         "William"      'cont            "William"        "Henry"))]
+	       (list      "9 AM"  'cont         'cont          'cont            'cont            'cont)
+	       (list     "10 AM"  'cont         'cont          'cont            'cont            'cont)
+	       (list     "11 AM"  'cont         'cont          'cont            'cont            'cont)
+	       (list     "12 PM"  'cont         'cont          'cont            'cont            'cont)
+	       (list      "1 PM"  'cont         'cont          'cont            'cont            'cont)
+	       (list      "2 PM"  'cont         'cont          'cont            'cont            'cont)
+	       (list      "3 PM"  'cont         'cont          'cont            'cont            'cont)
+	       (list      "4 PM"  'cont         'cont          'cont            'cont            'cont))]
 
 @bold{Communications:} @link[@elms-url]{ELMS}, @link[@piazza]{Piazza}
 

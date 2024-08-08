@@ -12,7 +12,7 @@
 (define prof1-email "dvanhorn@cs.umd.edu")
 (define prof1-initials "DVH")
 
-(define semester "spring")
+(define semester "fall")
 (define year "2024")
 (define courseno "CMSC 430")
 
@@ -23,21 +23,22 @@
 (define KEY "KEY")
 
 
-(define m1-date "March 6")
-(define m2-date "April 17")
+(define m1-date "TBD")
+(define m2-date "TBD")
 (define midterm-hours "24")
-(define final-date "May 14")
-(define elms-url "https://umd.instructure.com/courses/1359023")
+(define final-date "TBD")
+(define elms-url "https://umd.instructure.com/courses/1368381")
 
 
-(define racket-version "8.11")
+(define racket-version "8.13")
 
 (define staff
-  (list (list "Henry Blanchette" "blancheh@umd.edu")
-        (list "Pierce Darragh" "pdarragh@umd.edu")
-	(list "Advait Kushe" "akushe@terpmail.umd.edu")
+  (list (list "Pierce Darragh" "pdarragh@umd.edu")
+        (list "Kalyan Bhetwal" "kbhetwal@umd.edu")
+        (list "Justin Frank" "jpfrank@umd.edu")
 	(list "Deena Postol" "dpostol@umd.edu")
-        (list "William Wegand" "wwegand@terpmail.umd.edu")
+        (list "Caspar Popova" "caspar@umd.edu")
+        (list "Emma Shroyer" "eshroyer@umd.edu")
 	(list "Kazi Tasnim Zinat" "kzintas@umd.edu")
 	#;(list "Fuxiao Liu" "fl3es@umd.edu")
 	#;(list "Vivian Chen" "vchen8@terpmail.umd.edu")
@@ -51,13 +52,12 @@
         ))
 
 
-;(define lecture-schedule1 "MW, 2:00-3:15pm")
-(define lecture-schedule1 "MW, 3:30-4:45pm")
+(define lecture-schedule1 "TTh, 2:00-3:15pm")
 
-(define classroom1 "HJP 0226")
+(define classroom1 "LEF 2205")
 
 ;(define discord "TBD")
-(define piazza "https://piazza.com/class/lrs6masma6h2o1/")
-(define gradescope "https://www.gradescope.com/courses/723511")
+(define piazza "https://piazza.com/umd/fall2024/cmsc430/home")
+(define gradescope "https://www.gradescope.com/courses/818295")
 
-(define feedback "https://docs.google.com/forms/d/e/1FAIpQLSc80xQELhHb_Ef-tn0DkpH2b6pYadQiT3aYSEJFNqEqBjzdGg/viewform?usp=sf_link")
+(define feedback "https://forms.gle/A6U3CCR2KyA86UTh6")
