@@ -35,7 +35,7 @@
 (define staff
   (list (list "Pierce Darragh" "pdarragh@umd.edu")
         (list "Kalyan Bhetwal" "kbhetwal@umd.edu")
-        (list "Justin Frank" "jpfrank@umd.edu")
+        ;(list "Justin Frank" "jpfrank@umd.edu")
 	(list "Deena Postol" "dpostol@umd.edu")
         (list "Caspar Popova" "caspar@umd.edu")
         (list "Emma Shroyer" "eshroyer@umd.edu")
