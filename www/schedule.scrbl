@@ -30,12 +30,12 @@
 		               
 
                (list @wk{9/3}
-	       	     ""
+	       	     @seclink["Assignment 1"]{A1}
 	             @elem{@secref["a86"]}                     
                      @elem{@secref["a86"]})
 
                (list @wk{9/10}
-                     @seclink["Assignment 1"]{A1}
+	             @elem{A2}
                      @itemlist[@item{@secref["Abscond"]}
                                @item{@secref["Blackmail"]}]
 	             @itemlist[@item{@secref["Con"]}
@@ -47,7 +47,8 @@
 		     @secref["Evildoer"])
 
                (list @wk{9/24}
-                     @elem{@seclink["Assignment 2"]{A2}}
+	             @elem{A3}
+                     @;elem{@seclink["Assignment 2"]{A2}}
 		     @secref["Evildoer"]
 		     @secref{Extort})
 
@@ -57,7 +58,7 @@
 		     @secref{Fraud})
 
                (list @wk{10/8}
-                     ""
+                     @elem{A4}
 		     @secref{Fraud}
 		     @secref["Midterm_1"])
 
@@ -71,7 +72,8 @@
 		     @secref{Hustle})
 
                (list @wk{10/22}
-                     @elem{@seclink["Assignment 4"]{A4}}
+	             @elem{A5}
+                     @;elem{@seclink["Assignment 4"]{A4}}
 		     @secref{Hoax}
 		     @secref{Iniquity})
 
@@ -82,7 +84,7 @@
 
 
 	       (list @wk{11/5}
-	             ""
+	             @elem{A6}
 		     @secref{Knock}
 		     @secref["Midterm_2"])
 		     
@@ -93,7 +95,8 @@
 		     @secref{Loot})
 
                (list @wk{11/19}
-	             @elem{@seclink["Assignment 5"]{A5}}
+	             @elem{A7}
+	             @;elem{@seclink["Assignment 5"]{A5}}
 		     @secref{Loot}
 		     @secref{Mug})
 
