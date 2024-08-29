@@ -38,22 +38,21 @@
                      @seclink["Assignment 1"]{A1}
                      @itemlist[@item{@secref["Abscond"]}
                                @item{@secref["Blackmail"]}]
-	             @elem{...})
+	             @itemlist[@item{@secref["Con"]}
+                               @item{@secref["Dupe"]}])
                      
                (list @wk{9/17}
-                     @seclink["Assignment 2"]{A2}
-		     @elem{...}
-		     @itemlist[@item{@secref["Con"]}
-                               @item{@secref["Dupe"]}])
+                     ""
+		     @secref["Dodger"]
+		     @secref["Evildoer"])
 
                (list @wk{9/24}
-                     @elem{@seclink["Assignment 2"]{A3} P1}
-		     @itemlist[@item{@secref["Dodger"]}
-                               @item{@secref["Evildoer"]}]
-	             @secref["Evildoer"])
+                     @elem{@seclink["Assignment 2"]{A2}}
+		     @secref["Evildoer"]
+		     @secref{Extort})
 
                (list @wk{10/1}
-                     @elem{@seclink["Assignment 2"]{A3} P2}
+                     ""
 		     @secref{Extort}
 		     @secref{Fraud})
 
@@ -67,12 +66,12 @@
 		     @secref{Fraud}
 		     @secref{Hustle})
                (list @wk{10/22}
-	             @elem{@seclink["Assignment 4"]{A4} P1}
+	             ""
 		     @secref{Hustle}
 		     @secref{Hustle})
 
                (list @wk{10/22}
-                     @elem{@seclink["Assignment 4"]{A4} P2}
+                     @elem{@seclink["Assignment 4"]{A4}}
 		     @secref{Hoax}
 		     @secref{Iniquity})
 
@@ -144,13 +143,13 @@
                                @item{@secref["Dupe"]}])
 
                (list @wk{2/19}
-                     @elem{@seclink["Assignment 2"]{A3} P1}
+                     @elem{@seclink["Assignment 2"]{A3}}
 		     @itemlist[@item{@secref["Dodger"]}
                                @item{@secref["Evildoer"]}]
 	             @secref["Evildoer"])
 
                (list @wk{2/26}
-                     @elem{@seclink["Assignment 2"]{A3} P2}
+                     ""
 		     @secref{Extort}
 		     @secref{Fraud})
 
