@@ -63,7 +63,6 @@
           (Mov rax rbx)            ; put box in rax
           (Or rax type-box)        ; tag as a box
           (Add rbx 8))]
-    
     ['unbox
      (seq (assert-box rax)
           (Xor rax type-box)
@@ -76,38 +75,30 @@
      (seq (assert-cons rax)
           (Xor rax type-cons)
           (Mov rax (Offset rax 0)))]
-    
+
     ['empty? (seq (Cmp rax (value->bits '())) if-equal)]
     ['cons? (type-pred ptr-mask type-cons)]
     ['box?  (type-pred ptr-mask type-box)]
     ['vector? (type-pred ptr-mask type-vect)]
     ['string? (type-pred ptr-mask type-str)]
     ['vector-length
-     (let ((zero (gensym))
-           (done (gensym)))
+     (let ((end (gensym)))
        (seq (assert-vector rax)
             (Xor rax type-vect)
             (Cmp rax 0)
-            (Je zero)
+            (Je end)
             (Mov rax (Offset rax 0))
             (Sal rax int-shift)
-            (Jmp done)
-            (Label zero)
-            (Mov rax 0)
-            (Label done)))]
+            (Label end)))]
     ['string-length
-     (let ((zero (gensym))
-           (done (gensym)))
+     (let ((end (gensym)))
        (seq (assert-string rax)
             (Xor rax type-str)
             (Cmp rax 0)
-            (Je zero)
+            (Je end)
             (Mov rax (Offset rax 0))
             (Sal rax int-shift)
-            (Jmp done)
-            (Label zero)
-            (Mov rax 0)
-            (Label done)))]))
+            (Label end)))]))
 
 
 ;; Op2 -> Asm
@@ -147,129 +138,114 @@
      (seq (Pop r8)
           (Cmp rax r8)
           if-equal)]
-    ['make-vector ;; size value
-     (let ((loop (gensym))
-           (done (gensym))
-           (empty (gensym)))
-       (seq (Pop r8) ;; r8 = size
+    ['make-vector
+     ;; size is first element on stack
+     ;; value is in rax
+     (let ((end (gensym 'end))
+           (loop (gensym 'loop)))
+       (seq (Pop r8)
             (assert-natural r8)
-            (Cmp r8 0) ; special case empty vector
-            (Je empty)
-
-            (Mov r9 rbx)
-            (Or r9 type-vect)
-
-            (Sar r8 int-shift)
+            (Cmp r8 0) ; special case for empty vector
+            (Mov r10 0)
+            (Je end)
+            (Sar r8 4)
+            (Mov r10 rbx)
             (Mov (Offset rbx 0) r8)
             (Add rbx 8)
-
             (Label loop)
+            (Cmp r8 0)
+            (Je end)
             (Mov (Offset rbx 0) rax)
             (Add rbx 8)
             (Sub r8 1)
-            (Cmp r8 0)
-            (Jne loop)
-
-            (Mov rax r9)
-            (Jmp done)
-
-            (Label empty)
-            (Mov rax type-vect)
-            (Label done)))]
-    ['vector-ref ; vector index
+            (Jmp loop)
+            (Label end)
+            (Mov rax r10)
+            (Xor rax type-vect)))]
+    ['vector-ref
+     ;; vector is first element on stack
+     ;; index is in rax
      (seq (Pop r8)
           (assert-vector r8)
-          (assert-integer rax)
-          (Cmp r8 type-vect)
-          (Je 'err) ; special case for empty vector
-          (Cmp rax 0)
-          (Jl 'err)
-          (Xor r8 type-vect)      ; r8 = ptr
-          (Mov r9 (Offset r8 0))  ; r9 = len
-          (Sar rax int-shift)     ; rax = index
-          (Sub r9 1)
-          (Cmp r9 rax)
-          (Jl 'err)
-          (Sal rax 3)
+          (assert-natural rax)
+          (Sar rax 4)             ; decode
+          (Xor r8 type-vect)      ; untag
+          (Cmp r8 0)
+          (Je 'err)
+          (Cmp rax (Offset r8 0)) ; check bound
+          (Jge 'err)
+          (Sal rax 3) ; mult by 8 for byte offset
           (Add r8 rax)
           (Mov rax (Offset r8 8)))]
     ['make-string
-     (let ((loop (gensym))
-           (done (gensym))
-           (empty (gensym)))
-       (seq (Pop r8)
-            (assert-natural r8)
-            (assert-char rax)
-            (Cmp r8 0) ; special case empty string
-            (Je empty)
-
-            (Mov r9 rbx)
-            (Or r9 type-str)
-
-            (Sar r8 int-shift)
-            (Mov (Offset rbx 0) r8)
-            (Add rbx 8)
-
-            (Sar rax char-shift)
-
-            (Add r8 1) ; adds 1
-            (Sar r8 1) ; when
-            (Sal r8 1) ; len is odd
-
-            (Label loop)
-            (Mov (Offset rbx 0) eax)
-            (Add rbx 4)
-            (Sub r8 1)
-            (Cmp r8 0)
-            (Jne loop)
-
-            (Mov rax r9)
-            (Jmp done)
-
-            (Label empty)
-            (Mov rax type-str)
-            (Label done)))]
+     ;; size is first element on stack
+     ;; character is in rax
+     (let ((end (gensym 'end))
+           (loop (gensym 'loop)))
+       (seq
+        (Pop r8)
+        (assert-natural r8)
+        (assert-char rax)
+        (Sar rax 5)
+        (Cmp r8 0) ; special case for empty string
+        (Mov r10 0)
+        (Je end)
+        (Sar r8 4)
+        (Mov r10 rbx)
+        (Mov (Offset rbx 0) r8)
+        (Add rbx 8)
+        (Add r8 1) ; adds 1
+        (Sar r8 1) ; when
+        (Sal r8 1) ; len is odd
+        (Label loop)
+        (Cmp r8 0)
+        (Je end)
+        (Mov (Offset rbx 0) eax)
+        (Add rbx 4)
+        (Sub r8 1)
+        (Jmp loop)
+        (Label end)
+        (Mov rax r10)
+        (Xor rax type-str)))]
     ['string-ref
+     ;; string is first element on stack
+     ;; index is in rax
      (seq (Pop r8)
           (assert-string r8)
-          (assert-integer rax)
-          (Cmp r8 type-str)
-          (Je 'err) ; special case for empty string
-          (Cmp rax 0)
-          (Jl 'err)
-          (Xor r8 type-str)       ; r8 = ptr
-          (Mov r9 (Offset r8 0))  ; r9 = len
-          (Sar rax int-shift)     ; rax = index
-          (Sub r9 1)
-          (Cmp r9 rax)
-          (Jl 'err)
+          (assert-natural rax)
+          (Sar rax 4)
+          (Xor r8 type-str)
+          (Cmp r8 0)
+          (Je 'err)
+          (Cmp rax (Offset r8 0))
+          (Jge 'err)
           (Sal rax 2)
           (Add r8 rax)
-          (Mov 'eax (Offset r8 8))
-          (Sal rax char-shift)
-          (Or rax type-char))]))
+          (Mov eax (Offset r8 8))
+          (Sal rax 5)
+          (Xor rax type-char))]))
 
 ;; Op3 -> Asm
 (define (compile-op3 p)
   (match p
     ['vector-set!
+     ;; vector is second element on stack
+     ;; index is first element on stack
+     ;; value is in rax
      (seq (Pop r10)
           (Pop r8)
           (assert-vector r8)
-          (assert-integer r10)
-          (Cmp r10 0)
-          (Jl 'err)
-          (Xor r8 type-vect)       ; r8 = ptr
-          (Mov r9 (Offset r8 0))   ; r9 = len
-          (Sar r10 int-shift)      ; r10 = index
-          (Sub r9 1)
-          (Cmp r9 r10)
-          (Jl 'err)
-          (Sal r10 3)
+          (assert-natural r10)
+          (Sar r10 4)             ; decode
+          (Xor r8 type-vect)      ; untag
+          (Cmp rax 0)
+          (Je 'err)
+          (Cmp r10 (Offset r8 0)) ; check bound
+          (Jge 'err)
+          (Sal r10 3) ; mult by 8 for byte offset
           (Add r8 r10)
           (Mov (Offset r8 8) rax)
           (Mov rax (value->bits (void))))]))
-
 
 ;; -> Asm
 ;; set rax to #t or #f if comparison flag is equal

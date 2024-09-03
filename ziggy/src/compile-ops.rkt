@@ -117,32 +117,24 @@
     ['string? (type-pred ptr-mask type-str)]
     {:> H1}
     ['vector-length
-     (let ((zero (gensym))
-           (done (gensym)))
+     (let ((end (gensym)))
        (seq (assert-vector rax)
             (Xor rax type-vect)
             (Cmp rax 0)
-            (Je zero)
+            (Je end)
             (Mov rax (Offset rax 0))
             (Sal rax int-shift)
-            (Jmp done)
-            (Label zero)
-            (Mov rax 0)
-            (Label done)))]
+            (Label end)))]
     {:> H1}
     ['string-length
-     (let ((zero (gensym))
-           (done (gensym)))
+     (let ((end (gensym)))
        (seq (assert-string rax)
             (Xor rax type-str)
             (Cmp rax 0)
-            (Je zero)
+            (Je end)
             (Mov rax (Offset rax 0))
             (Sal rax int-shift)
-            (Jmp done)
-            (Label zero)
-            (Mov rax 0)
-            (Label done)))]))
+            (Label end)))]))
 
 
 {:> F} ;; Op2 -> Asm
