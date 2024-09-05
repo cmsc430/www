@@ -1,7 +1,7 @@
 #lang scribble/manual
 @title[#:tag "Assignment 2" #:style 'unnumbered]{Assignment 2: a86 Primer}
 
-@bold{Due: Wednesday, February 14, 11:59PM}
+@bold{Due: Thursday, September 12, 11:59PM}
 
 The goal of this assignment is to gain practice programming in a86.
 
