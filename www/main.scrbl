@@ -45,14 +45,15 @@ implement several related languages.
 @tabular[#:style 'boxed
          #:row-properties '(bottom-border ())
 	 (list (list @bold{Time}  @bold{Monday} @bold{Tuesday} @bold{Wednesday} @bold{Thursday}  @bold{Friday})
-	       (list      "9 AM"  'cont         'cont          'cont            'cont            'cont)
-	       (list     "10 AM"  'cont         'cont          'cont            'cont            'cont)
-	       (list     "11 AM"  'cont         'cont          'cont            'cont            'cont)
-	       (list     "12 PM"  'cont         'cont          'cont            'cont            'cont)
+	       (list      "9 AM"  "Deena"       "Deena"        'cont            'cont            "Caspar")
+	       (list     "10 AM"  "Deena"       "Deena"        'cont            'cont            "Caspar")
+	       (list     "11 AM"  "Deena"       'cont          'cont            'cont            "Caspar")
+	       (list     "12 PM"  "Deena"       'cont          'cont            'cont            'cont)
 	       (list      "1 PM"  'cont         'cont          'cont            'cont            'cont)
 	       (list      "2 PM"  'cont         'cont          'cont            'cont            'cont)
-	       (list      "3 PM"  'cont         'cont          'cont            'cont            'cont)
-	       (list      "4 PM"  'cont         'cont          'cont            'cont            'cont))]
+	       (list      "3 PM"  'cont         'cont          "Caspar"         'cont            'cont)
+	       (list      "4 PM"  'cont         'cont          "Caspar"         'cont            'cont)
+	       (list      "5 PM"  'cont         'cont          "Caspar"         'cont            'cont))]
 
 @bold{Communications:} @link[@elms-url]{ELMS}, @link[@piazza]{Piazza}
 

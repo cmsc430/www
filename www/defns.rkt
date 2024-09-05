@@ -22,7 +22,7 @@
 (define AVW "AVW")
 (define KEY "KEY")
 
-(define office-hour-location (elem IRB " " "4122"))
+(define office-hour-location (elem AVW " " "4122"))
 
 
 (define m1-date "TBD")
