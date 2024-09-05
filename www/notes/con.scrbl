@@ -308,7 +308,7 @@ Again, we formulate correctness as a property that can be tested:
 (define (check-compiler e)
   (check-equal? (asm-interp (compile e))
                 (interp e)
-                e))]
+                (~a e)))]
 
 Generating random Con programs is essentially the same as Blackmail
 programs, and are provided in a @link["con/random.rkt"]{random.rkt}
