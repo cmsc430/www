@@ -25,8 +25,8 @@
 (define office-hour-location (elem AVW " " "4122"))
 
 
-(define m1-date "TBD")
-(define m2-date "TBD")
+(define m1-date "October 10")
+(define m2-date "November 7")
 (define midterm-hours "24")
 (define final-date "TBD")
 (define elms-url "https://umd.instructure.com/courses/1368381")
