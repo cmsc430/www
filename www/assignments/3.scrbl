@@ -5,32 +5,14 @@
 @(require "../../langs/con-plus/semantics.rkt")
 @(require redex/pict)
 
-@bold{Part 1 Due: Wednesday, February 21, 11:59PM}
-
-@bold{Part 2 Due: Wednesday, February 28, 11:59PM}
-
+@bold{Due: Thursday, October 3, 11:59PM}
 
 The goal of this assignment is to extend the language developed in
 @secref{Dupe} with some simple unary numeric and boolean operations
 and two forms of control flow expressions: @racket[cond]-expressions
 and @racket[case]-expressions.
 
-This assignment consists of two parts.  Part 1 asks you to write a
-number of programs in the extended language.  Part 2 asks you to
-implement the language. 
-
-@section[#:tag-prefix "a3-" #:style 'unnumbered]{Part 1}
-
-For this part of the assignment, you must write a number of programs
-in the Dupe+ language.  These programs should be syntactically
-well-formed and @bold{produce a value} when evaluated, i.e. these should
-be programs that do not cause run-time errors.
-
-This exercise will help you understand the features you will be
-implementing in the second part of the assignment and can be used to
-test your compiler.  In fact, we will use the programs you write to
-run against a collection of existing Dupe+ compilers to see if they
-uncover any bugs.  The more bugs you can uncover, the better.
+@section[#:tag-prefix "a3-" #:style 'unnumbered]{Dupe+}
 
 The Dupe+ language extends Dupe in the follow ways:
 
@@ -103,13 +85,11 @@ Note that each clause consists of a parenthesized list of
 @emph{datums}, which in the setting of Dupe means either integer or
 boolean literals.
 
+@section[#:tag-prefix "a3-" #:style 'unnumbered]{Implementing Dupe+}
 
-@section[#:tag-prefix "a3-" #:style 'unnumbered]{Part 2}
-
-For this part of the assignment, you must extend the parser,
-interpreter, and compiler to implement Dupe+.  You are given a file
-@tt{dupe-plus.zip} on ELMS with a starter compiler based on the
-@secref{Dupe} language we studied in class.
+You must extend the parser, interpreter, and compiler to implement
+Dupe+.  You are given a file @tt{dupe-plus.zip} on ELMS with a starter
+compiler based on the @secref{Dupe} language we studied in class.
 
 You may use any a86 instructions you'd like, however it is possible to
 complete the assignment using @racket[Cmp], @racket[Je], @racket[Jg],
