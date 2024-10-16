@@ -2,46 +2,16 @@
 
 @title[#:tag "Assignment 4" #:style 'unnumbered]{Assignment 4: Let There Be (Many) Variables}
 
-@bold{Part 1 Due: Wednesday, March 27, 11:59PM EST}
-
-@bold{Part 2 Due: Monday, April 8, 11:59PM EST}
+@bold{Due: Tuesday, October 29, 11:59PM EST}
 
 The goal of this assignment is to extend a compiler with binding forms and
 primitives that can take any number of arguments.
 
-This assignment consists of two parts. In Part 1 you must submit test programs
-written in the new Fraud+ language. In Part 2 you must implement Fraud+.
 
-@section[#:tag-prefix "a4-" #:style 'unnumbered]{Part 1}
+@section[#:tag-prefix "a4-" #:style 'unnumbered]{Overview}
 
-For the first part of the assignment, you must write test programs in the
-Fraud+ language. These programs should be syntactically well-formed and
-@bold{must produce an answer} when evaluated, i.e., these should be programs
-that either produce values or are expected to return @tt{'err} according to the
-Fraud semantics, but should not cause other errors. (The concept of an
-@emph{answer} was introduced in @seclink["errors"]{Extort}.)
-
-You may write as many test programs as you like, but @bold{each program must be
-written in a separate file}. You can put all of your files in one directory and
-compress ("zip") that directory to submit it. Each program should be formatted
-as usual for a standalone program, i.e., it should have the line @tt{#lang
-racket} at the top and your program expression on a line below that.
-
-Your submission will be graded by running each program on a set of Fraud+
-compilers implemented by students in previous semesters, and your goal is to
-craft test programs that discover bugs in these implementations. Your programs
-will be run on many more compilers than you need to eliminate for a full score;
-this is so students do not all need to find the same bugs. Additionally, we do
-not know for certain that every compiler has a bug, so it may not be possible
-to eliminate all of them. (We randomly select some compilers that pass all of
-our tests so that students have the opportunity to write better tests than us.
-This has helped us find deficiencies in our compilers before.)
-
-
-@section[#:tag-prefix "a4-" #:style 'unnumbered]{Part 2}
-
-For the second part of the assignment, you are given a @tt{fraud-plus.zip} file
-on ELMS with a starter compiler similar to the @seclink["Fraud"]{Fraud}
+For this assignment, you are given a @tt{fraud-plus.zip} file on ELMS
+with a starter compiler similar to the @seclink["Fraud"]{Fraud}
 language we studied in class.
 
 Unlike @seclink["Assignment 3"]{Assignment 3}, the following files have already
@@ -85,7 +55,7 @@ You can test your code in several ways:
   ]
 
 Note that only a small number of tests are given to you, so you should
-write additional test cases. We recommend using your tests from Part 1!
+write additional test cases. 
 
 
 @section[#:tag-prefix "a4-" #:style 'unnumbered]{Fraud+}
