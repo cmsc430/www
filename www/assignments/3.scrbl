@@ -259,8 +259,5 @@ write additional test cases.
 
 @section[#:tag-prefix "a3-" #:style 'unnumbered]{Submitting}
 
-For part 1, submit to Gradescope a zip file containing well-formed
-Racket files that use the @tt{.rkt} file extension.
-
-For part 2, use @tt{make} from within the @tt{dupe-plus} directory to
+To submit, use @tt{make} from within the @tt{dupe-plus} directory to
 create a zip file containing your work and submit it to Gradescope.
