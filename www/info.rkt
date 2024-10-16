@@ -1,4 +1,6 @@
 #lang info
 (define test-omit-paths '("notes/fp/sieve.rkt"
-                          "notes/agreement/example.rkt"
-                          "slides/"))
+                          "notes/agreement/example.rkt"))
+(define deps
+  (list "base" "rackunit"
+        "git+https://github.com/cmsc430/langs.git?path=#main"))
