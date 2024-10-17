@@ -34,7 +34,7 @@ jobs:
         raco make www/main.scrbl
         make -C www main
     - name: Archive www
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-pages-artifact@v4
       with:
         name: github-pages
         path: www/main
