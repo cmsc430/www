@@ -22,8 +22,11 @@ jobs:
         variant: 'CS'
         version: '8.14'
     - name: Install a86 and langs package
-      run: raco pkg install 'https://github.com/cmsc430/a86.git?path=langs#main'
-      run: raco pkg install 'https://github.com/cmsc430/langs.git?path=langs#main'
+      run: |
+        git clone https://github.com/cmsc430/a86.git
+	git clone https://github.com/cmsc430/langs.git
+        raco pkg install --auto a86/
+	raco pkg install --auto langs/
     - name: Build and test
       run: |
         export LINK_DIR=/usr/lib/x86_64-linux-gnu
