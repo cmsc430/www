@@ -21,6 +21,10 @@ jobs:
         distribution: 'full'
         variant: 'CS'
         version: '8.14'
+    - name: Install a86 and langs
+      run: |
+        printf "hi"
+	printf "there"
     - name: Build and test
       run: |
         export LINK_DIR=/usr/lib/x86_64-linux-gnu
