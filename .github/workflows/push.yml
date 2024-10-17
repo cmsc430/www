@@ -24,7 +24,7 @@ jobs:
     - name: Install a86 and langs
       run: |
         printf "hi"
-	printf "there"
+        printf "there"
     - name: Build and test
       run: |
         export LINK_DIR=/usr/lib/x86_64-linux-gnu
