@@ -36,7 +36,7 @@ jobs:
     - name: Archive www
       uses: actions/upload-artifact@v4
       with:
-        name: www
+        name: 'github-pages'
         path: www/main
   deploy:
     needs: build-and-test
