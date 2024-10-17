@@ -4,8 +4,8 @@
 @(require redex/pict
           racket/runtime-path
           scribble/examples
-	  (except-in "../../langs/hustle/semantics.rkt" ext lookup)
-          (prefix-in sem: (only-in "../../langs/hustle/semantics.rkt" ext lookup))
+	  (except-in hustle/semantics ext lookup)
+          (prefix-in sem: (only-in hustle/semantics ext lookup))
 	  "../fancyverb.rkt"
 	  "utils.rkt"
 	  "ev.rkt"
@@ -14,7 +14,7 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(ev '(require rackunit a86))
-@(ev `(current-directory ,(path->string (build-path notes "hustle"))))
+@(ev `(current-directory ,(path->string (build-path langs "hustle"))))
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 @(for-each (λ (f) (ev `(require (file ,f))))
 	   '("interp.rkt" "compile.rkt" "compile-ops.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
@@ -497,12 +497,12 @@ that.  Hence our choice for the layout.
 First, we extend our runtime system's view of values to include
 pointers and use C @tt{struct} to represent them:
 
-@filebox-include[fancy-c "hustle/values.h"]
+@filebox-include[fancy-c hustle "values.h"]
 
 The implementation of @tt{val_typeof} is extended to handle
 pointer types:
 
-@filebox-include[fancy-c "hustle/values.c"]
+@filebox-include[fancy-c hustle "values.c"]
 
 The rest of the run-time system for @this-lang is more involved for two
 main reasons:
@@ -543,11 +543,11 @@ we're going to use @racket['rbx] to store our heap pointer. You can see
 that we do this in the compiler with @racket[(Mov 'rbx 'rdi)] as part
 of our entry code.
 
-@filebox-include[fancy-c "hustle/main.c"]
+@filebox-include[fancy-c hustle "main.c"]
 
 The second complication comes from printing.  Now that values include
 inductively defined data, the printer must recursively traverse these
 values to print them.  It also must account for the wrinkle of how the
 printing of proper and improper lists is different:
 
-@filebox-include[fancy-c "hustle/print.c"]
+@filebox-include[fancy-c hustle "print.c"]

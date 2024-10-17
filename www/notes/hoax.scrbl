@@ -14,7 +14,7 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(ev '(require rackunit a86))
-@(ev `(current-directory ,(path->string (build-path notes "hoax"))))
+@(ev `(current-directory ,(path->string (build-path langs "hoax"))))
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 @(for-each (λ (f) (ev `(require (file ,f))))
 	   '("interp.rkt" "compile.rkt" "compile-ops.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
@@ -375,15 +375,15 @@ wrote by hand above:
 
 First, we extend the value interface to include vectors:
 
-@filebox-include[fancy-c "hoax/values.h"]
+@filebox-include[fancy-c hoax "values.h"]
 
 The implementation of @tt{val_typeof} is extended to handle
 another pointer type:
 
-@filebox-include[fancy-c "hoax/values.c"]
+@filebox-include[fancy-c hoax "values.c"]
 
 Printing is updated to handle vectors and strings.  Note that printing
 of strings seems complicated by this code is actually auto-generated
 from the Unicode specification.
 
-@filebox-include[fancy-c "hoax/print.c"]
+@filebox-include[fancy-c hoax "print.c"]

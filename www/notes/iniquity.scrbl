@@ -12,13 +12,13 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(ev '(require rackunit a86))
-@(ev `(current-directory ,(path->string (build-path notes "iniquity"))))
+@(ev `(current-directory ,(path->string (build-path langs "iniquity"))))
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 @(for-each (λ (f) (ev `(require (file ,f))))
 	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
 @(define (shellbox . s)
-   (parameterize ([current-directory (build-path notes "iniquity")])
+   (parameterize ([current-directory (build-path langs "iniquity")])
      (filebox (emph "shell")
               (fancyverbatim "fish" (apply shell s)))))
 

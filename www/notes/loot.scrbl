@@ -11,7 +11,7 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(ev '(require rackunit a86))
-@(ev `(current-directory ,(path->string (build-path notes "loot"))))
+@(ev `(current-directory ,(path->string (build-path langs "loot"))))
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 @(void (ev '(current-objs '("runtime.o"))))
 @(for-each (λ (f) (ev `(require (file ,f))))
@@ -566,7 +566,7 @@ to be in the (Racket) function:
 We can give it a try:
 
 
-@(ev `(require (file ,(path->string (build-path notes "loot" "interp-defun.rkt")))))
+@(ev `(require (file ,(path->string (build-path langs "loot" "interp-defun.rkt")))))
 
 @ex[
 (define (run . p) (interp (parse p)))
@@ -665,7 +665,7 @@ string after matching a prefix against the regexp:
 
 @codeblock-include["loot/regexp.rkt"]
 
-@(ev `(require (file ,(path->string (build-path notes "loot" "regexp.rkt")))))
+@(ev `(require (file ,(path->string (build-path langs "loot" "regexp.rkt")))))
 
 Let's give it a try:
 @ex[
@@ -681,7 +681,7 @@ by applying defunctionalization.
 
 @codeblock-include["loot/regexp-defun.rkt"]
 
-@(ev `(require (file ,(path->string (build-path notes "loot" "regexp-defun.rkt")))))
+@(ev `(require (file ,(path->string (build-path langs "loot" "regexp-defun.rkt")))))
 
 
 And we get the same results:

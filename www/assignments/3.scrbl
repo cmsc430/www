@@ -2,8 +2,6 @@
 @title[#:tag "Assignment 3" #:style 'unnumbered]{Assignment 3: Primitives, Conditionals, and Dispatch}
 
 @(require (for-label a86 (except-in racket ...)))
-@(require "../../langs/con-plus/semantics.rkt")
-@(require redex/pict)
 
 @bold{Due: Thursday, October 3, 11:59PM}
 

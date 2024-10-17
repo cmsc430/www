@@ -6,6 +6,7 @@
 @(require "notes/utils.rkt")
 @(require "fancyverb.rkt")
 @(require (for-label (except-in racket ...)))
+@(require racket/runtime-path)
 
 @title[#:tag "Project" #:style '(unnumbered)]{Project}
 
@@ -16,9 +17,9 @@ completed project.
 
 @section[#:style 'unnumbered]{Arity Checking, Rest Arguments, Case Functions, and Apply}
 
+@(define-runtime-path iniquity-plus "iniquity-plus/")
 
-
-@(ev `(current-directory ,(path->string (build-path notes "iniquity-plus"))))
+@(ev `(current-directory ,iniquity-plus))
 @(for-each (λ (f) (ev `(require (file ,f))))
 	   '("ast.rkt" "parse.rkt" "interp.rkt"))
 

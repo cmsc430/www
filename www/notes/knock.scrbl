@@ -12,13 +12,13 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(define (shellbox . s)
-   (parameterize ([current-directory (build-path notes "knock")])
+   (parameterize ([current-directory (build-path langs "knock")])
      (filebox (emph "shell")
               (fancyverbatim "fish" (apply shell s)))))
 
 
 @(ev '(require rackunit a86))
-@(ev `(current-directory ,(path->string (build-path notes "knock"))))
+@(ev `(current-directory ,(path->string (build-path langs "knock"))))
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 @(ev '(current-objs '("runtime.o")))
 @(for-each (λ (f) (ev `(require (file ,f))))

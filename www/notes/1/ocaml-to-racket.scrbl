@@ -26,7 +26,7 @@
     (apply fancyverbatim "ocaml" s)))
 
 @(define (shellbox . s)
-   (parameterize ([current-directory (build-path notes "intro")])
+   (parameterize ([current-directory (build-path langs "intro")])
      (filebox (emph "shell")
               (fancyverbatim "fish" (apply shell s)))))
 
@@ -1260,7 +1260,8 @@ Putting it all together, we can write the following code and save it
 in a file called @tt{bt.rkt}.  (You can right-click the file name and
 save the code to try it out.)
 
-@codeblock-include["intro/bt.rkt"]
+@;{FIXME: Fix this!}
+@;codeblock-include["intro/bt.rkt"]
 
 This code follows a coding style that we will use in this course:
 @itemlist[
@@ -1275,11 +1276,11 @@ This code follows a coding style that we will use in this course:
 From the command line, you can run a module's tests using the Racket
 command line testing tool @tt{raco test}:
 
-@shellbox["raco test bt.rkt"]
+@tt{raco test bt.rkt}  @;{FIXME: make this a shellbox}
 
 Or simply give a directory name and test everything within that directory:
 
-@shellbox["raco test ."]
+@tt{raco test .} @;{FIXME: make this a shellbox}
 
 
 

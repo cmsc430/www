@@ -14,11 +14,11 @@
 @(define codeblock-include (make-codeblock-include #'here))
 
 @(ev '(require rackunit a86))
-@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "abscond" f))))))
+@(for-each (λ (f) (ev `(require (file ,(path->string (build-path langs "abscond" f))))))
 	   '("interp.rkt" "ast.rkt" "compile.rkt"))
 
 @(define (shellbox . s)
-   (parameterize ([current-directory (build-path notes "abscond")])
+   (parameterize ([current-directory (build-path langs "abscond")])
      (filebox (emph "shell")
               (fancyverbatim "fish" (apply shell s)))))
 
@@ -26,7 +26,7 @@
 @(define-syntax (shell-expand stx)
    (syntax-case stx ()
      [(_ s ...)
-      (parameterize ([current-directory (build-path notes "abscond")])
+      (parameterize ([current-directory (build-path langs "abscond")])
         (begin (apply shell (syntax->datum #'(s ...)))
 	       #'(void)))]))
 
@@ -292,14 +292,14 @@ So our compiler will emit x86 assembly code.  To make our lives a bit
 easier, we will write the run-time system in C.  Let's start with the
 Abscond runtime:
 
-@filebox-include[fancy-c "abscond/main.c"]
+@filebox-include[fancy-c abscond "main.c"]
 
 This C program provides the main entry point for running an Abscond
 program.  It relies upon a function @tt{print_result} which is defined
 as follows:
 
-@filebox-include[fancy-c "abscond/print.h"]
-@filebox-include[fancy-c "abscond/print.c"]
+@filebox-include[fancy-c abscond "print.h"]
+@filebox-include[fancy-c abscond "print.c"]
 
 Separating out @tt{print_result}, which at this point is just a simple
 @tt{printf} statement, seems like overkill, but it will be useful in
@@ -334,7 +334,7 @@ example.  Let's say the Abscond program is @racket[42].  What should
 the assembly code for this program look like?  Here we have to learn a
 bit about the x86-64 assembly language.
 
-@filebox-include[fancy-nasm "abscond/42.s"]
+@filebox-include[fancy-nasm abscond "42.s"]
 
 @margin-note{Note: on macOS, labels must be prepended with @tt{_},
 while on Linux they are not; e.g. @tt{_entry} vs @tt{entry}.}
@@ -449,7 +449,7 @@ Using a Makefile, we can capture the whole compilation dependencies as:
 @margin-note{Note: the appropriate object file format is detected
 based on the operating system.}
 
-@filebox-include[fancy-make "abscond/Makefile"]
+@filebox-include[fancy-make abscond "Makefile"]
 
 And now compiling Abscond programs is easy-peasy:
 

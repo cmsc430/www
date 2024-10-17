@@ -8,8 +8,8 @@
           "../fancyverb.rkt"
 	  "utils.rkt"
 	  "ev.rkt"
-	  "../../langs/dupe/semantics.rkt"
-          "../../langs/dupe/types.rkt"
+	  dupe/semantics
+          dupe/types
 	  "../utils.rkt")
 
 
@@ -17,7 +17,7 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(ev '(require rackunit a86))
-@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "dupe" f))))))
+@(for-each (λ (f) (ev `(require (file ,(path->string (build-path langs "dupe" f))))))
 	   '("interp.rkt" "interp-prim.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "random.rkt" "types.rkt"))
 
 
@@ -934,7 +934,7 @@ what is being represented and prints it appropriately.
 For the run-time system, we define the bit representations in a header
 file corresponding to the definitions given in @tt{types.rkt}:
 
-@filebox-include[fancy-c "dupe/types.h"]
+@filebox-include[fancy-c dupe "types.h"]
 
 It uses an idiom of ``masking'' in order to examine on
 particular bits of a value. So for example if we want to
@@ -950,18 +950,18 @@ true.
 
 We use the following interface for values in the runtime system:
 
-@filebox-include[fancy-c "dupe/values.h"]
-@filebox-include[fancy-c "dupe/values.c"]
+@filebox-include[fancy-c dupe "values.h"]
+@filebox-include[fancy-c dupe "values.c"]
 
 The @tt{main} function remains largely the same although now we use
 @tt{val_t} in place of @tt{int64_t}:
 
-@filebox-include[fancy-c "dupe/main.c"]
+@filebox-include[fancy-c dupe "main.c"]
 
 And finally, @tt{print_result} is updated to do a case analysis on the
 type of the result and print accordingly:
 
-@filebox-include[fancy-c "dupe/print.c"]
+@filebox-include[fancy-c dupe "print.c"]
 
 @section{Correctness and testing}
 

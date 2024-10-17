@@ -8,7 +8,7 @@
 	  #;(prefix-in sem: (only-in "con/semantics.rkt" ext lookup))
 	  "utils.rkt"
 	  "ev.rkt"
-	  "../../langs/con/semantics.rkt"
+	  con/semantics
 	  "../utils.rkt")
 
 
@@ -17,7 +17,7 @@
 
 
 @(ev '(require rackunit a86))
-@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "con" f))))))
+@(for-each (λ (f) (ev `(require (file ,(path->string (build-path langs "con" f))))))
 	   '("interp.rkt" "compile.rkt" "parse.rkt" "ast.rkt" "random.rkt"))
 
 

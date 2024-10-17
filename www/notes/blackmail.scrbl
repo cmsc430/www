@@ -5,18 +5,18 @@
           redex/pict
 	  "../fancyverb.rkt"
 	  "../utils.rkt"
-	  "../../langs/blackmail/semantics.rkt"
+	  blackmail/semantics
 	  "utils.rkt"
 	  "ev.rkt")
 
 @(define codeblock-include (make-codeblock-include #'here))
 
 @(ev '(require rackunit a86))
-@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "blackmail" f))))))
+@(for-each (λ (f) (ev `(require (file ,(path->string (build-path langs "blackmail" f))))))
 	   '("interp.rkt" "compile.rkt" "random.rkt" "ast.rkt"))
 
 @(define (shellbox . s)
-   (parameterize ([current-directory (build-path notes "blackmail")])
+   (parameterize ([current-directory (build-path langs "blackmail")])
      (filebox (emph "shell")
               (fancyverbatim "fish" (apply shell s)))))
 
@@ -24,7 +24,7 @@
 @(define-syntax (shell-expand stx)
    (syntax-case stx ()
      [(_ s ...)
-      (parameterize ([current-directory (build-path notes "blackmail")])
+      (parameterize ([current-directory (build-path langs "blackmail")])
         (begin (apply shell (syntax->datum #'(s ...)))
 	       #'(void)))]))
 
@@ -208,7 +208,7 @@ increments the contents of a register by some given amount.
 
 Concretely, the program that adds 1 twice to 40 looks like:
 
-@filebox-include[fancy-nasm "blackmail/add1-add1-40.s"]
+@filebox-include[fancy-nasm blackmail "add1-add1-40.s"]
 
 The runtime stays exactly the same as before.
 

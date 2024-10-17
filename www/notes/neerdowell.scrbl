@@ -12,7 +12,7 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(ev '(require rackunit a86))
-@(ev `(current-directory ,(path->string (build-path notes "neerdowell"))))
+@(ev `(current-directory ,(path->string (build-path langs "neerdowell"))))
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 @(void (ev '(current-objs '("runtime.o"))))
 @(for-each (λ (f) (ev `(require (file ,f))))

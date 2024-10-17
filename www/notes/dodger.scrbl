@@ -14,7 +14,7 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(ev '(require rackunit a86))
-@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "dodger" f))))))
+@(for-each (λ (f) (ev `(require (file ,(path->string (build-path langs "dodger" f))))))
 	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt"))
 
 
@@ -198,17 +198,17 @@ need to add run-time support for printing character literals.
 We extend the bit-encoding of values following the pattern we've
 already seen:
 
-@filebox-include[fancy-c "dodger/types.h"]
+@filebox-include[fancy-c dodger "types.h"]
 
 And update the interface for values in the runtime system:
 
-@filebox-include[fancy-c "dodger/values.h"]
-@filebox-include[fancy-c "dodger/values.c"]
+@filebox-include[fancy-c dodger "values.h"]
+@filebox-include[fancy-c dodger "values.c"]
 
 The only other change is that @tt{print_result} is updated to handle
 the case of printing characters:
 
-@filebox-include[fancy-c "dodger/print.c"]
+@filebox-include[fancy-c dodger "print.c"]
 
 Will these pieces in place, we can try out some examples:
 

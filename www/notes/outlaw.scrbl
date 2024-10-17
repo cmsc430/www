@@ -12,7 +12,7 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(define (shellbox . s)
-   (parameterize ([current-directory (build-path notes "outlaw")])
+   (parameterize ([current-directory (build-path langs "outlaw")])
      (filebox (emph "shell")
               (fancyverbatim "fish" (apply shell s)))))
 
@@ -20,7 +20,7 @@
 @(define-syntax (shell-expand stx)
    (syntax-case stx ()
      [(_ s ...)
-      (parameterize ([current-directory (build-path notes "outlaw")])
+      (parameterize ([current-directory (build-path langs "outlaw")])
         (begin (apply shell (syntax->datum #'(s ...)))
 	       #'(void)))]))
 
@@ -28,7 +28,7 @@
 @(shell-expand "racket -t combine.rkt -m a.rkt > a-whole.rkt")
 
 @(ev '(require rackunit a86))
-@(ev `(current-directory ,(path->string (build-path notes "outlaw"))))
+@(ev `(current-directory ,(path->string (build-path langs "outlaw"))))
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 @(void (ev '(current-objs '("runtime.o"))))
 @(for-each (λ (f) (ev `(require (file ,f))))

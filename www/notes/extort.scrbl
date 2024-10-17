@@ -7,7 +7,7 @@
           "../fancyverb.rkt"
 	  "utils.rkt"
 	  "ev.rkt"
-	  "../../langs/extort/semantics.rkt"
+	  extort/semantics
 	  "../utils.rkt")
 
 
@@ -15,10 +15,10 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(ev '(require rackunit a86))
-@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "extort" f))))))
+@(for-each (λ (f) (ev `(require (file ,(path->string (build-path langs "extort" f))))))
 	   '("interp.rkt" "ast.rkt" "parse.rkt" "compile.rkt" "types.rkt"))
 
-@(ev `(current-directory ,(path->string (build-path notes "extort"))))
+@(ev `(current-directory ,(path->string (build-path langs "extort"))))
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 
 @(define this-lang "Extort")
@@ -147,7 +147,7 @@ code that prints and exits in @tt{error_exit}; this is done so that
 the testing framework can intercede and replace the error function,
 but it can be ignored.}
 
-@filebox-include[fancy-c "extort/main.c"]
+@filebox-include[fancy-c extort "main.c"]
 
 Most of the work of error checking happens in the code emitted for
 primitive operations.  Whenever an error is detected, control jumps to

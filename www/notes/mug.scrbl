@@ -12,7 +12,7 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(ev '(require rackunit a86))
-@(ev `(current-directory ,(path->string (build-path notes "mug"))))
+@(ev `(current-directory ,(path->string (build-path langs "mug"))))
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 @(void (ev '(current-objs '("runtime.o"))))
 @(for-each (λ (f) (ev `(require (file ,f))))
@@ -668,7 +668,7 @@ for alphabetic ordering.  If an entry is found, it returns the
 previously seen symbol, otherwise it adds the symbol to the table and
 returns it.
 
-@filebox-include[fancy-c "mug/symbol.c"]
+@filebox-include[fancy-c mug "symbol.c"]
 
 The idea will be that every time a symbol is constructed, we call
 @tt{intern_symbol} to intern it.
@@ -960,9 +960,9 @@ expressions to its own module: @code-link{mug/compile-expr.rkt}.
 
 The top-level compiler is now:
 
-@filebox-include[codeblock "mug/compile.rkt"]
+@filebox-include[codeblock mug "compile.rkt"]
 
 The work of compiling literals and emitting calls to initialize the
 symbol table is contained in its own module:
 
-@filebox-include[codeblock "mug/compile-literals.rkt"]
+@filebox-include[codeblock mug "compile-literals.rkt"]

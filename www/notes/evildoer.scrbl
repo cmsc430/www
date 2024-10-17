@@ -10,7 +10,7 @@
 	  "../utils.rkt")
 
 @(define (shellbox . s)
-   (parameterize ([current-directory (build-path notes "evildoer")])
+   (parameterize ([current-directory (build-path langs "evildoer")])
      (filebox (emph "shell")
               (fancyverbatim "fish" (apply shell s)))))
 
@@ -18,16 +18,16 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(ev '(require rackunit a86))
-@(for-each (λ (f) (ev `(require (file ,(path->string (build-path notes "evildoer" f))))))
+@(for-each (λ (f) (ev `(require (file ,(path->string (build-path langs "evildoer" f))))))
 	   '("interp.rkt" "interp-io.rkt" "compile.rkt" "ast.rkt" "parse.rkt"))
 
-@(ev `(current-directory ,(path->string (build-path notes "evildoer"))))
+@(ev `(current-directory ,(path->string (build-path langs "evildoer"))))
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 
 @(require (for-syntax racket/base))
 @(begin-for-syntax
    (require "utils.rkt")
-   (parameterize ([current-directory (build-path notes "evildoer")])
+   (parameterize ([current-directory (build-path langs "evildoer")])
      (save-file "simple.c"
 #<<HERE
 #include <stdio.h>
@@ -372,14 +372,14 @@ we will define the meaning of effects directly.
 With new values comes the need to add new bit encodings. So
 we add new encodings for @racket[eof] and @racket[void]:
 
-@filebox-include[fancy-c "evildoer/types.h"]
+@filebox-include[fancy-c evildoer "types.h"]
 
 The main run-time file is extended slightly to take care of
 printing the new kinds of values (eof and void). Note that a
 void result causes nothing to be printed:
 
-@filebox-include[fancy-c "evildoer/runtime.h"]
-@filebox-include[fancy-c "evildoer/main.c"]
+@filebox-include[fancy-c evildoer "runtime.h"]
+@filebox-include[fancy-c evildoer "main.c"]
 
 But the real novelty of the Evildoer run-time is that there
 will be new functions that implement @racket[read-byte],
@@ -387,7 +387,7 @@ will be new functions that implement @racket[read-byte],
 functions called @racket[read_byte], @racket[peek_byte] and
 @racket[write_byte]:
 
-@filebox-include[fancy-c "evildoer/io.c"]
+@filebox-include[fancy-c evildoer "io.c"]
 
 The main novely of the @emph{compiler} will be that emits code
 to make calls to these C functions.
@@ -405,7 +405,7 @@ run-time system, which is this C program that invokes an
 assembly program with a label called @tt{entry} and prints
 the result:
 
-@filebox-include[fancy-c "evildoer/simple.c"]
+@filebox-include[fancy-c evildoer "simple.c"]
 
 Now, here is a little program that has a function called @tt{meaning}
 that returns @tt{42}.  The main entry point calls @tt{meaning},
@@ -528,7 +528,7 @@ defined it in any other language that can compile to an
 object file.  So let's write it in C:
 
 
-@filebox-include[fancy-c "evildoer/life.c"]
+@filebox-include[fancy-c evildoer "life.c"]
 
 We can compile it to an object file:
 
@@ -579,7 +579,7 @@ So now let's try calling a C function that takes a
 parameter. Here we have a simple C function that doubles
 it's input:
 
-@filebox-include[fancy-c "evildoer/double.c"]
+@filebox-include[fancy-c evildoer "double.c"]
 
 We can compile it to an object file:
 

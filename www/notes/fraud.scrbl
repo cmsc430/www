@@ -4,8 +4,8 @@
 @(require redex/pict
           racket/runtime-path
           scribble/examples
-	  (except-in "../../langs/fraud/semantics.rkt" ext lookup)
-          (prefix-in sem: (only-in "../../langs/fraud/semantics.rkt" ext lookup))
+	  (except-in fraud/semantics ext lookup)
+          (prefix-in sem: (only-in fraud/semantics ext lookup))
 	  "utils.rkt"
 	  "ev.rkt"
 	  "../utils.rkt")
@@ -13,7 +13,7 @@
 @(define codeblock-include (make-codeblock-include #'h))
 
 @(ev '(require rackunit a86))
-@(ev `(current-directory ,(path->string (build-path notes "fraud"))))
+@(ev `(current-directory ,(path->string (build-path langs "fraud"))))
 @(void (ev '(with-output-to-string (thunk (system "make runtime.o")))))
 @(for-each (λ (f) (ev `(require (file ,f))))
 	   '("interp.rkt" "compile.rkt" "ast.rkt" "parse.rkt" "types.rkt" "translate.rkt"))
@@ -833,7 +833,7 @@ bother with @racket[unpad-stack] because there's no coming back.
 Here is the compiler for primitives that incorporates all of these
 stack-alignment issues, but is otherwise the same as before:
 
-@filebox-include[codeblock "fraud/compile-ops.rkt"]
+@filebox-include[codeblock fraud "compile-ops.rkt"]
 
 @section{Complete @this-lang compiler}
 
@@ -845,7 +845,7 @@ passed to the @racket[compile-op0], @racket[compile-op1] and
 @racket[compile-op2] functions for the purposes of stack alignment
 before calls into the runtime system.
 
-@filebox-include[codeblock "fraud/compile.rkt"]
+@filebox-include[codeblock fraud "compile.rkt"]
 
 Notice that the @racket[lookup] function computes a lexical
 address from an identifier and compile-time environment,

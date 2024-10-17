@@ -15,10 +15,10 @@
 
 @(ev '(require rackunit a86))
 
-@(ev `(current-directory ,(path->string (build-path notes "a86"))))
+@(ev `(current-directory ,(path->string a86)))
 
 @(define (shellbox . s)
-   (parameterize ([current-directory (build-path notes "a86")])
+   (parameterize ([current-directory a86])
      (filebox (emph "shell")
               (fancyverbatim "fish" (apply shell s)))))
 
@@ -68,7 +68,7 @@ int gcd(int n1, int n2) {
 HERE
      )
 
-   (parameterize ([current-directory (build-path notes "a86")])
+   (parameterize ([current-directory a86])
      (save-file "tri.s" (asm-string (tri 36)))
      (save-file "main.c" main.c)
      (save-file "gcd.c" gcd.c)))
@@ -147,7 +147,7 @@ This example is shown using the @(if (eq? (system-type 'os) 'macosx)
 "MacOS" "Linux") naming convention, because that's what operating
 system was used when this web page was built.}
 
-@filebox-include[fancy-nasm "a86/tri.s"]
+@filebox-include[fancy-nasm a86 "tri.s"]
 
 The @math{n}th triangular number is the sum of the integers
 from 0 to @math{n}, so the @math{36}th triangular number is
@@ -258,7 +258,7 @@ To run the object file, we will need to link with a small C program
 that can call the @tt{entry} label of our assembly code and then
 print the result:
 
-@filebox-include[fancy-c "a86/main.c"]
+@filebox-include[fancy-c a86 "main.c"]
 
 Notice that from the C program's perspective, the assembly
 code defines what looks like a C function called @tt{entry}
@@ -1982,7 +1982,7 @@ assembly code when running @racket[asm-interp].
 
 For example, let's implement a GCD function in C:
 
-@filebox-include[fancy-c "a86/gcd.c"]
+@filebox-include[fancy-c a86 "gcd.c"]
 
 First, compile the program to an object file:
 
