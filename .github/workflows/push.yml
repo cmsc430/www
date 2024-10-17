@@ -23,8 +23,10 @@ jobs:
         version: '8.14'
     - name: Install a86 and langs
       run: |
-        printf "hi"
-        printf "there"
+        git clone https://github.com/cmsc430/a86.git
+        git clone https://github.com/cmsc430/langs.git	
+        raco pkg install --auto a86/
+        raco pkg install --auto langs/
     - name: Build and test
       run: |
         export LINK_DIR=/usr/lib/x86_64-linux-gnu
