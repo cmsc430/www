@@ -21,10 +21,13 @@ jobs:
         distribution: 'full'
         variant: 'CS'
         version: '8.14'
+    - name: Install a86 and langs package
+      run: raco pkg install 'https://github.com/cmsc430/a86.git?path=langs#main'
+      run: raco pkg install 'https://github.com/cmsc430/langs.git?path=langs#main'
     - name: Build and test
       run: |
         export LINK_DIR=/usr/lib/x86_64-linux-gnu
-        raco pkg install --auto www/
+        # raco pkg install --auto www/
         raco make www/main.scrbl
         make -C www main
     - name: Archive www
